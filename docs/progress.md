@@ -1,5 +1,16 @@
 # 作業記録
 
+## 2026-10-31 JST — SPU ReverbのCIも成功
+
+- 実装`552a45afdf88635d102dcba910b04be5f60be5cd`をpushし、
+  [CI 41204737497](https://github.com/kyorohiro/tetorica-spu-plugin/actions/runs/41204737497)のoffline / macosが全job成功。
+- 両jobのinstaller11 tests・CTest5/5、auval、公式VST3 validator47/0、
+  実VST3 44.1/48/96kHz・実AU48kHzのReverb / ADSR / MIDI検査をログでも確認した。
+- CIは22:15:26〜22:19:38 JST。artifactのmetadataを[検証JSON](reverb_20261031.json)へ保存した。
+  artifactのdownload・別環境での実行は未確認。検証後にproduction sourceとlockのhash不変を照合した。
+- **次の入口:** PCMの波形選択・描画。実装前に次の区切りをTODOへ追加する。
+  実聴・長時間・実DAW automation録音等は未確認のまま保持する。公開Release・version/tag変更はしていない。
+
 ## 2026-10-31 JST — SPU Reverb実装・実AU/VST3・AU更新完了
 
 - Native SDKへ残響だけを確保なしにclearするAPIを追加、公開`da089d6`へ固定した。
@@ -13,7 +24,7 @@
 - GarageBandで旧schema2 P3/T0/Gain99とReverb Off/Return各25%/All notes、新pageを確認した。
   payloadは更新前後3792bytes同一。最後は録音/再生停止・AU editor表示。
 - [操作・検証・復帰手順](reverb_20261031.md) / [source hash・manifest・SDK CI](reverb_20261031.json)。
-  次: plugin実装をpushしてCI確認。次の機能候補はPCM波形選択・描画。
+  plugin CIも上のチェックポイントの通り成功。次の機能候補はPCM波形選択・描画。
   実聴・長時間・実DAW automation録音等は未確認。公開Release・version/tag変更はしていない。
 
 ## 2026-10-31 JST — SPU Reverbの開始チェックポイント

@@ -23,7 +23,7 @@ AUを既知manifest照合付きで更新し、GarageBand標準AUプリセット�
 Toneの個別切替・保存・再起動後のP3/T1復元も確認済み。
 Program操作後のP3/T0と保存・project再表示も確認した。P11中間画面とToneのみのdirty判定は未確認。
 Pitch Bend / Sustainもcore・実AU/VST3・CIで検証し、installed AU更新とproject復元を完了。
-ADSR編集とSPU Reverbも実装・ローカル検証・installed AU更新済み。
+ADSR編集とSPU Reverbも実装・ローカル検証・installed AU更新済み。Reverbの[CI全job成功](https://github.com/kyorohiro/tetorica-spu-plugin/actions/runs/41204737497)も確認した。
 [ADSR](../adsr_editing_20261031.md) / [Reverb](../reverb_20261031.md)の記録を参照。次はPCMの波形選択・描画が候補。
 
 ### SPU Reverbの今回の区切り（2026-10-31、実装前）
@@ -37,7 +37,7 @@ ADSR編集とSPU Reverbも実装・ローカル検証・installed AU更新済み
 - [x] coreで全presetの残響、左右Return、send復元、panic、分割一致・RT確保・ASanを検証する。初期dry音もbyte一致。
 - [x] 実AU/VST3のparameter・保存復元・旧形式・PCMを検証し、Standaloneの操作とGarageBandの旧state復元・画面を確認する。
 - [x] 検証後に既知manifest付きでinstalled AUを安全に更新する（`au-update-5sucrool`、旧schema2 P3/T0/Gain99復元、原本11files一致）。
-- [ ] TODO・結果をcommit / pushし、plugin CIを確認する。
+- [x] TODO・結果をcommit / pushし、plugin CIを確認する（`552a45a`、[offline / macos全job成功](https://github.com/kyorohiro/tetorica-spu-plugin/actions/runs/41204737497)）。
 
 外部入力Reverbは追加しない。Web・Tauri配布物とproject原本は変更しない。
 Enable Offでwetを即muteし、preset Offで履歴も消す点は、sendのみを止めるWeb UIからの意図した改善とする。

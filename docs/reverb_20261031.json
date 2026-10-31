@@ -297,7 +297,340 @@
     "original_project_start_manifest_files_unchanged": 11
   },
   "ci": {
-    "status": "pending-push"
+    "schema": 1,
+    "repository": "kyorohiro/tetorica-spu-plugin",
+    "source_sha": "552a45afdf88635d102dcba910b04be5f60be5cd",
+    "run": {
+      "conclusion": "success",
+      "created_at": "2026-10-31T13:15:26Z",
+      "event": "push",
+      "head_sha": "552a45afdf88635d102dcba910b04be5f60be5cd",
+      "html_url": "https://github.com/kyorohiro/tetorica-spu-plugin/actions/runs/41204737497",
+      "id": 41204737497,
+      "name": "Verify SPU Plugin",
+      "run_attempt": 1,
+      "run_started_at": "2026-10-31T13:15:26Z",
+      "status": "completed",
+      "updated_at": "2026-10-31T13:19:38Z"
+    },
+    "jobs": [
+      {
+        "completed_at": "2026-10-31T13:16:04Z",
+        "conclusion": "success",
+        "html_url": "https://github.com/kyorohiro/tetorica-spu-plugin/actions/runs/41204737497/job/124547412654",
+        "id": 124547412654,
+        "name": "offline",
+        "started_at": "2026-10-31T13:15:29Z",
+        "status": "completed",
+        "steps": [
+          {
+            "completed_at": "2026-10-31T13:15:31Z",
+            "conclusion": "success",
+            "name": "Set up job",
+            "number": 1,
+            "started_at": "2026-10-31T13:15:30Z",
+            "status": "completed"
+          },
+          {
+            "completed_at": "2026-10-31T13:15:32Z",
+            "conclusion": "success",
+            "name": "Run actions/checkout@v4",
+            "number": 2,
+            "started_at": "2026-10-31T13:15:31Z",
+            "status": "completed"
+          },
+          {
+            "completed_at": "2026-10-31T13:15:32Z",
+            "conclusion": "success",
+            "name": "Verify safe AU installer in temporary directories",
+            "number": 3,
+            "started_at": "2026-10-31T13:15:32Z",
+            "status": "completed"
+          },
+          {
+            "completed_at": "2026-10-31T13:15:33Z",
+            "conclusion": "success",
+            "name": "Initialize pinned native SDK",
+            "number": 4,
+            "started_at": "2026-10-31T13:15:32Z",
+            "status": "completed"
+          },
+          {
+            "completed_at": "2026-10-31T13:15:38Z",
+            "conclusion": "success",
+            "name": "Run cmake --preset offline",
+            "number": 5,
+            "started_at": "2026-10-31T13:15:33Z",
+            "status": "completed"
+          },
+          {
+            "completed_at": "2026-10-31T13:15:59Z",
+            "conclusion": "success",
+            "name": "Run cmake --build --preset offline --parallel 4",
+            "number": 6,
+            "started_at": "2026-10-31T13:15:38Z",
+            "status": "completed"
+          },
+          {
+            "completed_at": "2026-10-31T13:16:02Z",
+            "conclusion": "success",
+            "name": "Run ctest --preset offline",
+            "number": 7,
+            "started_at": "2026-10-31T13:15:59Z",
+            "status": "completed"
+          },
+          {
+            "completed_at": "2026-10-31T13:16:02Z",
+            "conclusion": "success",
+            "name": "Post Run actions/checkout@v4",
+            "number": 14,
+            "started_at": "2026-10-31T13:16:02Z",
+            "status": "completed"
+          },
+          {
+            "completed_at": "2026-10-31T13:16:02Z",
+            "conclusion": "success",
+            "name": "Complete job",
+            "number": 15,
+            "started_at": "2026-10-31T13:16:02Z",
+            "status": "completed"
+          }
+        ]
+      },
+      {
+        "completed_at": "2026-10-31T13:19:38Z",
+        "conclusion": "success",
+        "html_url": "https://github.com/kyorohiro/tetorica-spu-plugin/actions/runs/41204737497/job/124547412842",
+        "id": 124547412842,
+        "name": "macos",
+        "started_at": "2026-10-31T13:15:30Z",
+        "status": "completed",
+        "steps": [
+          {
+            "completed_at": "2026-10-31T13:15:32Z",
+            "conclusion": "success",
+            "name": "Set up job",
+            "number": 1,
+            "started_at": "2026-10-31T13:15:31Z",
+            "status": "completed"
+          },
+          {
+            "completed_at": "2026-10-31T13:15:33Z",
+            "conclusion": "success",
+            "name": "Run actions/checkout@v4",
+            "number": 2,
+            "started_at": "2026-10-31T13:15:32Z",
+            "status": "completed"
+          },
+          {
+            "completed_at": "2026-10-31T13:15:34Z",
+            "conclusion": "success",
+            "name": "Verify safe AU installer in temporary directories",
+            "number": 3,
+            "started_at": "2026-10-31T13:15:33Z",
+            "status": "completed"
+          },
+          {
+            "completed_at": "2026-10-31T13:15:46Z",
+            "conclusion": "success",
+            "name": "Initialize and verify pinned dependencies",
+            "number": 4,
+            "started_at": "2026-10-31T13:15:34Z",
+            "status": "completed"
+          },
+          {
+            "completed_at": "2026-10-31T13:15:46Z",
+            "conclusion": "success",
+            "name": "Run python3 scripts/bootstrap.py --check",
+            "number": 5,
+            "started_at": "2026-10-31T13:15:46Z",
+            "status": "completed"
+          },
+          {
+            "completed_at": "2026-10-31T13:15:54Z",
+            "conclusion": "success",
+            "name": "Run cmake --preset macos",
+            "number": 6,
+            "started_at": "2026-10-31T13:15:46Z",
+            "status": "completed"
+          },
+          {
+            "completed_at": "2026-10-31T13:18:13Z",
+            "conclusion": "success",
+            "name": "Run cmake --build --preset macos --parallel 4",
+            "number": 7,
+            "started_at": "2026-10-31T13:15:54Z",
+            "status": "completed"
+          },
+          {
+            "completed_at": "2026-10-31T13:18:17Z",
+            "conclusion": "success",
+            "name": "Run ctest --preset macos",
+            "number": 8,
+            "started_at": "2026-10-31T13:18:13Z",
+            "status": "completed"
+          },
+          {
+            "completed_at": "2026-10-31T13:18:28Z",
+            "conclusion": "success",
+            "name": "Install and validate the user AU",
+            "number": 9,
+            "started_at": "2026-10-31T13:18:17Z",
+            "status": "completed"
+          },
+          {
+            "completed_at": "2026-10-31T13:19:08Z",
+            "conclusion": "success",
+            "name": "Validate VST3",
+            "number": 10,
+            "started_at": "2026-10-31T13:18:28Z",
+            "status": "completed"
+          },
+          {
+            "completed_at": "2026-10-31T13:19:30Z",
+            "conclusion": "success",
+            "name": "Render and restore the actual VST3",
+            "number": 11,
+            "started_at": "2026-10-31T13:19:08Z",
+            "status": "completed"
+          },
+          {
+            "completed_at": "2026-10-31T13:19:31Z",
+            "conclusion": "success",
+            "name": "Restore embedded state in the actual AU",
+            "number": 12,
+            "started_at": "2026-10-31T13:19:30Z",
+            "status": "completed"
+          },
+          {
+            "completed_at": "2026-10-31T13:19:34Z",
+            "conclusion": "success",
+            "name": "Run actions/upload-artifact@v4",
+            "number": 13,
+            "started_at": "2026-10-31T13:19:31Z",
+            "status": "completed"
+          },
+          {
+            "completed_at": "2026-10-31T13:19:35Z",
+            "conclusion": "success",
+            "name": "Post Run actions/checkout@v4",
+            "number": 26,
+            "started_at": "2026-10-31T13:19:34Z",
+            "status": "completed"
+          },
+          {
+            "completed_at": "2026-10-31T13:19:36Z",
+            "conclusion": "success",
+            "name": "Complete job",
+            "number": 27,
+            "started_at": "2026-10-31T13:19:35Z",
+            "status": "completed"
+          }
+        ]
+      }
+    ],
+    "artifacts": [
+      {
+        "created_at": "2026-10-31T13:19:34Z",
+        "digest": "sha256:915f95fb50332b72488294b5ff984a43894a0ac83804bfc02b9b157ce65409d2",
+        "expired": false,
+        "id": 13043657328,
+        "name": "macos-development-bundles",
+        "size_in_bytes": 2207826,
+        "updated_at": "2026-10-31T13:19:34Z"
+      }
+    ],
+    "log_verification": {
+      "offline": {
+        "job_id": 124547412654,
+        "log_api": "https://api.github.com/repos/kyorohiro/tetorica-spu-plugin/actions/jobs/124547412654/logs",
+        "installer_tests": {
+          "passed": 11,
+          "evidence": "2026-10-31T13:15:32.7770496Z Ran 11 tests in 0.157s",
+          "result": "OK"
+        },
+        "ctest": {
+          "passed": 5,
+          "failed": 0,
+          "evidence": "2026-10-31T13:16:02.1118340Z 100% tests passed, 0 tests failed out of 5"
+        }
+      },
+      "macos": {
+        "job_id": 124547412842,
+        "log_api": "https://api.github.com/repos/kyorohiro/tetorica-spu-plugin/actions/jobs/124547412842/logs",
+        "installer_tests": {
+          "passed": 11,
+          "evidence": "2026-10-31T13:15:34.5266080Z Ran 11 tests in 0.179s"
+        },
+        "ctest": {
+          "passed": 5,
+          "failed": 0,
+          "evidence": "2026-10-31T13:18:17.1654870Z 100% tests passed out of 5"
+        },
+        "auval": {
+          "passed": true,
+          "evidence": "2026-10-31T13:18:28.1971340Z AU VALIDATION SUCCEEDED."
+        },
+        "vst3_validator": {
+          "passed": 47,
+          "failed": 0,
+          "evidence": "2026-10-31T13:19:08.6641300Z Result: 47 tests passed, 0 tests failed"
+        },
+        "actual_vst3": {
+          "sample_rates": [
+            44100,
+            48000,
+            96000
+          ],
+          "verified_suites": [
+            "offline PCM",
+            "scheduler",
+            "embedded state",
+            "ADSR",
+            "Reverb",
+            "IMidiMapping controllers"
+          ],
+          "state_bytes_default": 76,
+          "matched_pass_lines": [
+            "PASS VST3 parameter changes ADSR sampleRate=44100 nineFieldsState=true schema1Migration=true legacyDefaults=true malformedAtomic=true firstRestoreBlock=true sourcePreserved=true disabledOriginalPCM=true blockAutomation=true nextNoteDeferred=true heldNoRetrigger=true applyOffOnRefresh=true",
+            "PASS VST3 parameter changes Reverb sampleRate=44100 full17Params=true firstWetRestore=true sourceSend=true presetAutomationIndependent=true presetsDiffer=true disabledDry=true zeroReturnDry=true stereoReturns=true releasedTail=true panicClears=true offClears=true restoreClearsHistory=true malformedAtomic=true schema1Schema2Legacy=true",
+            "PASS VST3 IMidiMapping controllers sampleRate=44100 bend14Endpoints=true multiPointOffsets=true splitBlocks=true noRetrigger=true sustain64_63=true channel15Isolation=true CC123Pedal=true CC121HeldDeferred=true panicPreservesControllers=true resetRestoreOverflowClear=true liveStateExcluded=true deferredController=true reactivateReset=true releaseTailRetunedNoKON=true restoreDiscardsFutureControllers=true",
+            "PASS VST3 parameter changes ADSR sampleRate=48000 nineFieldsState=true schema1Migration=true legacyDefaults=true malformedAtomic=true firstRestoreBlock=true sourcePreserved=true disabledOriginalPCM=true blockAutomation=true nextNoteDeferred=true heldNoRetrigger=true applyOffOnRefresh=true",
+            "PASS VST3 parameter changes Reverb sampleRate=48000 full17Params=true firstWetRestore=true sourceSend=true presetAutomationIndependent=true presetsDiffer=true disabledDry=true zeroReturnDry=true stereoReturns=true releasedTail=true panicClears=true offClears=true restoreClearsHistory=true malformedAtomic=true schema1Schema2Legacy=true",
+            "PASS VST3 IMidiMapping controllers sampleRate=48000 bend14Endpoints=true multiPointOffsets=true splitBlocks=true noRetrigger=true sustain64_63=true channel15Isolation=true CC123Pedal=true CC121HeldDeferred=true panicPreservesControllers=true resetRestoreOverflowClear=true liveStateExcluded=true deferredController=true reactivateReset=true releaseTailRetunedNoKON=true restoreDiscardsFutureControllers=true",
+            "PASS VST3 parameter changes ADSR sampleRate=96000 nineFieldsState=true schema1Migration=true legacyDefaults=true malformedAtomic=true firstRestoreBlock=true sourcePreserved=true disabledOriginalPCM=true blockAutomation=true nextNoteDeferred=true heldNoRetrigger=true applyOffOnRefresh=true",
+            "PASS VST3 parameter changes Reverb sampleRate=96000 full17Params=true firstWetRestore=true sourceSend=true presetAutomationIndependent=true presetsDiffer=true disabledDry=true zeroReturnDry=true stereoReturns=true releasedTail=true panicClears=true offClears=true restoreClearsHistory=true malformedAtomic=true schema1Schema2Legacy=true",
+            "PASS VST3 IMidiMapping controllers sampleRate=96000 bend14Endpoints=true multiPointOffsets=true splitBlocks=true noRetrigger=true sustain64_63=true channel15Isolation=true CC123Pedal=true CC121HeldDeferred=true panicPreservesControllers=true resetRestoreOverflowClear=true liveStateExcluded=true deferredController=true reactivateReset=true releaseTailRetunedNoKON=true restoreDiscardsFutureControllers=true",
+            "PASS malformed embedded state cases=25 atomicGainStatePCM=true readyRestorePreserved=true legacyGain12=true",
+            "PASS VST3 mapped ingress invalidNormalizedIgnored=true invalidChannelIgnored=true unsupportedCCIgnored=true negativeOffsetIgnored=true points1025Panic=true gainPreserved=true bypassMuteQueueReset=true bypassCrossBlockPedal=true freshUnbypassNote=true bypassClearsReverb=true",
+            "PASS VST3 offline PCM, scheduler, lifecycle, state and instance isolation"
+          ]
+        },
+        "actual_au": {
+          "sample_rates": [
+            48000
+          ],
+          "verified_suites": [
+            "MIDIEvent controllers",
+            "ADSR",
+            "Reverb"
+          ],
+          "matched_pass_lines": [
+            "PASS AU MIDIEvent controllers sampleRate=48000 bend14Endpoints=true multiPointOffsets=true splitBlocks=true noRetrigger=true sustain64_63=true channel15Isolation=true CC123Pedal=true CC121HeldDeferred=true panicPreservesControllers=true resetRestoreOverflowClear=true liveStateExcluded=true deferredController=true reactivateReset=true releaseTailRetunedNoKON=true restoreDiscardsFutureControllers=true",
+            "PASS AU parameters ADSR sampleRate=48000 nineFieldsState=true schema1Migration=true legacyDefaults=true malformedAtomic=true firstRestoreBlock=true sourcePreserved=true disabledOriginalPCM=true blockAutomation=true nextNoteDeferred=true heldNoRetrigger=true applyOffOnRefresh=true",
+            "PASS AU parameters Reverb sampleRate=48000 full17Params=true firstWetRestore=true sourceSend=true presetAutomationIndependent=true presetsDiffer=true disabledDry=true zeroReturnDry=true stereoReturns=true releasedTail=true panicClears=true offClears=true restoreClearsHistory=true malformedAtomic=true schema1Schema2Legacy=true"
+          ]
+        }
+      }
+    },
+    "scope": "Run/job/step and artifact metadata read from GitHub API; pass evidence independently matched against completed job logs. Artifact metadata was inspected, without downloading or executing the uploaded archive locally. No source, GUI, installed AU, or project mutations.",
+    "status": "completed",
+    "local_summary": {
+      "path": "build/reverb-ci-summary.json",
+      "sha256": "c0349441d538b2f62e4131f7c09dc30a782972f9a00cded2e3a9feccbde14fdb"
+    },
+    "production_sources_and_lock_unchanged": true,
+    "artifacts_downloaded_and_runtime_tested": false
   },
   "not_verified": [
     "Physical listening",
