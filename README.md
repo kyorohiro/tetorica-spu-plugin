@@ -82,8 +82,18 @@ reconstruction. Sample 0 (unassigned), sample 255 (Noise), malformed ADPCM and
 selected payloads beyond usable SPU RAM are rejected. The pinned Native SDK
 also requires the repeat-address packet to carry flag 2; structurally valid
 loops without it, including flag 4 alone, are rejected for playback. No sample
-flags are silently rewritten. File UI, live engine replacement and embedded
-VAB state in DAW projects are the next integration steps; see [TODO](docs/issues/TODO.md).
+flags are silently rewritten. File UI and embedded VAB state in DAW projects
+remain subsequent integration steps; see [TODO](docs/issues/TODO.md).
+
+The prepared-engine exchange is now connected at plugin block boundaries.
+`src/VabLoader.h` supplies a non-audio-thread API to prepare a complete VAB Tone
+on a worker. A newer request supersedes earlier work; parse/preparation failure
+keeps the current instrument. The audio side adopts prepared engines without
+allocating, destroying engines, taking an application mutex or notifying a
+worker. Old engines return through a bounded retirement queue; a full queue
+defers the switch. This layer does not make the entire host/framework callback
+lock-free. Plugin UI loading and embedded DAW state remain subsequent steps,
+and no loader thread is started by the current plugin UI.
 
 ## macOS AU / GarageBand verification
 
@@ -109,6 +119,10 @@ See [the AU / GarageBand record](docs/au_garageband_20261031.md).
 - Gain parameter state is supplied by iPlug2; custom VAB/sample state is not implemented.
 - Pitch Bend, Sustain, smooth Gain changes and per-channel CC120 remain TODO.
   Currently CC120 immediately stops all channels; CC123 releases its own channel.
+- Prepared-engine changes start with no held notes and cut the previous tail.
+  Carried MIDI from previous blocks is removed; new current-block host MIDI is
+  retained. Tail crossfades and universal non-render-thread AU MIDI ingress are
+  follow-up work.
 - Sample caches are prepared during construction. The offline tests
   probes C++ new/delete during rendering, not every OS allocation or hard real-time deadline.
 

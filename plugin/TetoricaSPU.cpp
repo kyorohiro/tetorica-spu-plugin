@@ -65,8 +65,8 @@ void TetoricaSPU::OnReset()
 {
   mMidiCount = 0;
   mMidiOverflow = false;
-  mReady = mInstrument.prepare(GetSampleRate());
-  mInstrument.panic();
+  mReady = mEngines.instrument().prepare(GetSampleRate());
+  mEngines.instrument().panic();
 }
 
 void TetoricaSPU::OnActivate(bool active)
@@ -75,7 +75,7 @@ void TetoricaSPU::OnActivate(bool active)
   {
     mMidiCount = 0;
     mMidiOverflow = false;
-    mInstrument.panic();
+    mEngines.instrument().panic();
   }
 }
 
@@ -101,12 +101,12 @@ void TetoricaSPU::ProcessMidiMsg(const iplug::IMidiMsg& msg)
   queued.mOffset = std::max(0, queued.mOffset);
   auto position = mMidiCount++;
   // Stable insertion keeps same-sample NoteOff/NoteOn ordering from the host.
-  while (position > 0 && mMidi[position - 1].mOffset > queued.mOffset)
+  while (position > 0 && mMidi[position - 1].message.mOffset > queued.mOffset)
   {
     mMidi[position] = mMidi[position - 1];
     --position;
   }
-  mMidi[position] = queued;
+  mMidi[position] = {queued, false};
 }
 
 void TetoricaSPU::applyMidi(const iplug::IMidiMsg& msg)
@@ -116,18 +116,18 @@ void TetoricaSPU::applyMidi(const iplug::IMidiMsg& msg)
   {
     case IMidiMsg::kNoteOn:
       if (msg.Velocity() > 0)
-        mInstrument.noteOn(msg.NoteNumber(), msg.Velocity(), msg.Channel());
+        mEngines.instrument().noteOn(msg.NoteNumber(), msg.Velocity(), msg.Channel());
       else
-        mInstrument.noteOff(msg.NoteNumber(), msg.Channel());
+        mEngines.instrument().noteOff(msg.NoteNumber(), msg.Channel());
       break;
     case IMidiMsg::kNoteOff:
-      mInstrument.noteOff(msg.NoteNumber(), msg.Channel());
+      mEngines.instrument().noteOff(msg.NoteNumber(), msg.Channel());
       break;
     case IMidiMsg::kControlChange:
       if (msg.mData1 == 120)
-        mInstrument.panic();
+        mEngines.instrument().panic();
       else if (msg.mData1 == 123)
-        mInstrument.allNotesOff(msg.Channel());
+        mEngines.instrument().allNotesOff(msg.Channel());
       break;
     default:
       break;
@@ -139,7 +139,7 @@ void TetoricaSPU::renderRange(iplug::sample** outputs, int offset, int nFrames, 
   while (nFrames > 0)
   {
     const int count = std::min(nFrames, kScratchFrames);
-    mInstrument.render(mLeft.data(), mRight.data(), count);
+    mEngines.instrument().render(mLeft.data(), mRight.data(), count);
     for (int frame = 0; frame < count; ++frame)
     {
       outputs[0][offset + frame] = static_cast<iplug::sample>(mLeft[frame] * gain);
@@ -154,12 +154,24 @@ void TetoricaSPU::ProcessBlock(iplug::sample**, iplug::sample** outputs, int nFr
 {
   if (mMidiOverflow)
   {
-    mInstrument.panic();
+    mEngines.instrument().panic();
     mMidiCount = 0;
     mMidiOverflow = false;
   }
   if (nFrames <= 0)
     return;
+  if (mEngines.beginBlock(GetSampleRate()))
+  {
+    // A replacement starts with no held notes. Discard events deferred by the
+    // previous instrument, while preserving new events already delivered by
+    // the host for this block (including NoteOn at zero after a state restore).
+    std::size_t kept = 0;
+    for (std::size_t event = 0; event < mMidiCount; ++event)
+      if (!mMidi[event].carried)
+        mMidi[kept++] = mMidi[event];
+    mMidiCount = kept;
+    mReady = true;
+  }
   if (!mReady)
   {
     std::fill_n(outputs[0], nFrames, iplug::sample{});
@@ -172,15 +184,15 @@ void TetoricaSPU::ProcessBlock(iplug::sample**, iplug::sample** outputs, int nFr
   const double gain = std::isfinite(requestedGain) ? std::clamp(requestedGain, 0., 1.) : 0.;
   int offset = 0;
   std::size_t event = 0;
-  while (event < mMidiCount && mMidi[event].mOffset < nFrames)
+  while (event < mMidiCount && mMidi[event].message.mOffset < nFrames)
   {
-    const int nextOffset = mMidi[event].mOffset;
+    const int nextOffset = mMidi[event].message.mOffset;
     renderRange(outputs, offset, nextOffset - offset, gain);
     offset = nextOffset;
     do
     {
-      applyMidi(mMidi[event++]);
-    } while (event < mMidiCount && mMidi[event].mOffset == nextOffset);
+      applyMidi(mMidi[event++].message);
+    } while (event < mMidiCount && mMidi[event].message.mOffset == nextOffset);
   }
   renderRange(outputs, offset, nFrames - offset, gain);
 
@@ -189,7 +201,8 @@ void TetoricaSPU::ProcessBlock(iplug::sample**, iplug::sample** outputs, int nFr
   for (std::size_t remaining = event; remaining < mMidiCount; ++remaining)
   {
     auto msg = mMidi[remaining];
-    msg.mOffset -= nFrames;
+    msg.message.mOffset -= nFrames;
+    msg.carried = true;
     mMidi[remaining - event] = msg;
   }
   mMidiCount -= event;

@@ -5,7 +5,7 @@
 #include "IPlug_include_in_plug_hdr.h"
 
 #if IPLUG_DSP
-#include "SpuInstrument.h"
+#include "SpuEngineExchange.h"
 #include <array>
 #include <cstddef>
 #endif
@@ -40,8 +40,13 @@ private:
   // processing audio. Host offsets are kept across short/variable blocks.
   static constexpr std::size_t kMidiCapacity = 1024;
   static constexpr int kScratchFrames = 256;
-  tetorica::SpuInstrument mInstrument;
-  std::array<iplug::IMidiMsg, kMidiCapacity> mMidi{};
+  tetorica::SpuEngineExchange mEngines;
+  struct QueuedMidi
+  {
+    iplug::IMidiMsg message;
+    bool carried = false;
+  };
+  std::array<QueuedMidi, kMidiCapacity> mMidi{};
   std::size_t mMidiCount = 0;
   bool mMidiOverflow = false;
   bool mReady = false;

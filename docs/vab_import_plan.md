@@ -2,9 +2,11 @@
 
 This records the Phase 3 design. The bounded C++ parser, selected-Tone preparation
 and fresh offline instrument are implemented in `src/VabBank.*` and
-`src/SpuInstrument.*`; `spu_vab_render` exercises them without a DAW. The plugin
-UI still plays its original built-in sine bank. DSP handoff, state and file UI
-remain subsequent steps, not a claim of VAB support in the current plugin UI.
+`src/SpuInstrument.*`; `spu_vab_render` exercises them without a DAW.
+`SpuEngineExchange` now handles prepared-engine ownership at audio block
+boundaries, and `VabLoader` supplies the worker preparation API. The plugin UI
+still plays its original built-in sine bank. State and file UI remain
+subsequent steps, not a claim of VAB support in the current plugin UI.
 
 ## Bounded parser milestone
 
@@ -186,6 +188,10 @@ before widening this supported subset.
 
 ## Prepared-engine handoff
 
+The C++ layer is implemented in `src/SpuEngineExchange.*` and `src/VabLoader.*`.
+The plugin uses the exchange at positive-length block boundaries; its current
+UI does not instantiate a loader or request a new engine yet.
+
 File selection and parsing should not mutate the current audio engine. Prepare
 a complete replacement on a worker, with a request generation so an older slow
 load cannot override a newer request. A failure retains the current instrument.
@@ -197,8 +203,11 @@ sample storage. If the retire queue has no room, defer adoption rather than
 freeing on the callback. Superseded engines that were never adopted may be
 destroyed by the preparing worker after ownership is resolved atomically.
 
-Initially, make a Tone change clear held-note bookkeeping and queued MIDI at the
-commit boundary. Define the transition and any short fade explicitly; held-note
+Initially, make a Tone change clear held-note bookkeeping and MIDI deferred
+from earlier blocks at the commit boundary. Preserve new host events already
+delivered for the current block, including NoteOn at zero after a future state
+restore; the queue must distinguish those from carried events. Define the
+transition and any short fade explicitly; held-note
 retrigger, tail preservation and crossfade are separate future features. If
 the host changed sample rate during preparation, the audio thread may call the
 already allocation-free `prepare(currentHostRate)` before adoption; it must not

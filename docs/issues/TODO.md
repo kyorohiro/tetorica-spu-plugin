@@ -15,15 +15,16 @@ Native Sineの最小プラグインはローカルでbuild・自動検証済み�
 AU / GarageBandでの録音・保存・復元・WAVE書出しを追試済み。
 [AU検証を含む修正版CI](https://github.com/kyorohiro/tetorica-spu-plugin/actions/runs/41183069247)も全job成功。
 [VAB解析・offline音源準備](../vab_offline_20261031.md)も完了。
-次は[VAB取り込み計画](../vab_import_plan.md)のengine handoff・DAW state・UI接続へ進む。
+[音源交換・worker準備](../engine_handoff_20261031.md)も実装・検証済み。
+次は[VAB取り込み計画](../vab_import_plan.md)のDAW state・UI接続へ進む。
 
 ### 音源交換の今回の区切り（2026-10-31）
 
-- [ ] 準備済みengineの所有権を、audio block境界で非待機に交換する層を作る。
-- [ ] 古いrequestの結果・失敗した準備が現在の音源を上書きしない世代管理を実装する。
-- [ ] 旧engineの破棄をaudio callback外へ戻し、退避queue満杯時は交換を延期する。
-- [ ] workerでVAB解析・Tone準備を行う入口と、pluginへの交換層の接続を用意する。
-- [ ] 再生中の交換・sample rate変更・終了時の所有権・競合・callbackのnew/deleteを検証する。
+- [x] 準備済みengineの所有権を、audio block境界で非待機に交換する層を作る。
+- [x] 古いrequestの結果・失敗した準備が現在の音源を上書きしない世代管理を実装する。
+- [x] 旧engineの破棄をaudio callback外へ戻し、退避queue満杯時は交換を延期する。
+- [x] workerでVAB解析・Tone準備を行う入口と、pluginへの交換層の接続を用意する。
+- [x] 再生中の交換・sample rate変更・終了時の所有権・競合・callbackのnew/deleteを検証する。
 - [ ] 結果と次のstate/UI作業を記録し、commit / pushとCI確認を行う。
 
 この区切りではVAB読み込みUIをまだ公開しない。DAW stateを復元した直後に正しい音が出る設計も別途検証する。
@@ -89,6 +90,7 @@ AU / GarageBandでの録音・保存・復元・WAVE書出しを追試済み。
 - [ ] Pitch Bend / Sustainを追加する。
 - [ ] CC120をチャンネル別の即時停止にする（現状はglobal panic、CC123はchannel release）。
 - [ ] Gain変更を滑らかにし、sample単位のautomationの扱いを検討する。
+- [ ] AUでrender thread以外から届くMIDIのbounded ingressを検証・対応する。現状のhost MIDI / lifecycle操作は単一consumerとして直列化される前提。
 - [ ] AU factory presetの名前を初期化し、auvalのpreset-name warningを解消する。
 - [ ] 今後のAU更新時は既存bundleと前回配置したhashを照合し、退避・更新できる手順を用意する（現在のinstallerは新規配置・同一内容の確認だけ）。
 
@@ -96,7 +98,7 @@ AU / GarageBandでの録音・保存・復元・WAVE書出しを追試済み。
 
 - [x] C++ parser・選択Tone準備・新規Native instanceのoffline再生を実装・検証する。
 - [x] オリジナルVABのTone一覧・WAV書出しCLIを用意する（`spu_vab_render`）。
-- [ ] workerで準備したengineを安全に交換する。世代管理・audio thread外の破棄・queue満杯時を検査する。
+- [x] workerで準備したengineを安全に交換する。世代管理・audio thread外の破棄・queue満杯時を検査する。
 - [ ] version付きembedded bank stateを実装する。復元直後の最初のrenderと不正stateのatomic failureを検査する。
 - [ ] VAB読み込み、Program / Tone選択を追加する。
 - [ ] サンプルを含む音色と設定のproject保存・復元を実装する。

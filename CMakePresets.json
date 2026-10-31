@@ -24,8 +24,8 @@
     }
   ],
   "buildPresets": [
-    { "name": "offline", "configurePreset": "offline", "targets": ["spu_instrument_test", "vab_bank_test", "spu_vab_instrument_test", "spu_vab_render"] },
-    { "name": "macos", "configurePreset": "macos", "targets": ["TetoricaSPU-app", "TetoricaSPU-au", "TetoricaSPU-vst3", "spu_instrument_test", "vab_bank_test", "spu_vab_instrument_test", "spu_vab_render"] }
+    { "name": "offline", "configurePreset": "offline", "targets": ["spu_instrument_test", "vab_bank_test", "spu_vab_instrument_test", "spu_engine_exchange_test", "spu_vab_render"] },
+    { "name": "macos", "configurePreset": "macos", "targets": ["TetoricaSPU-app", "TetoricaSPU-au", "TetoricaSPU-vst3", "spu_instrument_test", "vab_bank_test", "spu_vab_instrument_test", "spu_engine_exchange_test", "spu_vab_render"] }
   ],
   "testPresets": [
     { "name": "offline", "configurePreset": "offline", "output": { "outputOnFailure": true } },

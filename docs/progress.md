@@ -1,5 +1,17 @@
 # 作業記録
 
+## 2026-10-31 JST — 音源交換・worker準備のローカル検証完了
+
+- 開始TODOを `058fa89` にcommit / pushしてから実装した。
+- `SpuEngineExchange` / `VabLoader`を追加し、pluginのblock境界とMIDI持ち越し処理へ接続した。
+- 世代・pending pointer・4件retire ringで所有権を管理。audio側でengineの確保・破棄・独自mutex待機・通知をしない。
+- offline / macOS各4 CTest suite、交換テストのASan / TSan、公式VST3 47検査と実VST3の3rate検査が成功。
+- 9 group、104 RT probesでC++ new/delete 0、観測94音源確保/94回収、RT回収0。競合・終了・失敗後連続PCMを検査した。
+- [詳細記録](engine_handoff_20261031.md)に契約・再現コマンド・未検証範囲を記載。
+- AUの別thread MIDI ingressは既存wrapperの制約としてTODOへ追加。今回のhost操作は単一consumerとして直列化する前提。
+- 次はimmutable bank/selection定義とembedded custom state、その直後render、file / Program / Tone UI。
+- UIからVABはまだ公開していない。Release公開・署名・公証・既存AUの更新はしていない。
+
 ## 2026-10-31 JST — 準備済み音源の交換を開始
 
 - cleanな `96ca5cc` から再開。実装前に今回のTODOを追加した。
