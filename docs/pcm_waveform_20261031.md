@@ -64,8 +64,50 @@ StandaloneでTriangleのApply、自由描画、Revert、手描きPCMのApplyとp
 全controlを1回invalidateする修正を追加した。修正後、2回のReverb→PCM直後に表示跡がないことを確認した。
 毎Idleの全描画やvendor変更は行わない。Standaloneは検証後に終了した。
 
-AU更新・GarageBand再表示・CIは次のチェックポイントへ追記する。
 source hashとログは[検証JSON](pcm_waveform_20261031.json)へ保存した。
+
+## AU更新とGarageBand
+
+検証copyを旧Reverb版で保存・終了し、schema3のP3/T0/Gain99へ保存されたことを確認した。
+7filesを`build/pcm-update-project-7cq9x7vw/spu-vab-check.band`へ照合付きで退避。
+旧AU全5filesがReverbの既知manifestと一致する場合だけ、新版へ更新した。
+更新recordは`build/au-backups/au-update-kyijyyf8/manifest.json`。
+
+新binary SHA256は`506642967e747e3bcc54aea8171cc919dcfb40d87d9a1b84ba377b49afda98c3`。
+旧binaryは`6634a6c8ff1001769575b025acf1da765bb4499f8cd7e9f235e8d1ce3fb076c9`。
+source / installed各5files、previous / original各5filesの一致を確認し、更新AUのauvalも成功した。
+既存のfactory preset-name warningは残る。project原本`spu-au-check.band`も開始manifest全11filesと一致する。
+
+GarageBand再起動後、Embedded VAB / Program3 / Tone0 / Gain99 / Project sound restoredと
+Reverb Off / Enable Off / Return各25% / All notes、新しいPCMボタンを画面で確認した。
+更新前後のschema3 payloadは3816bytes、SHA256
+`6d8f5e2f1305475a54c21a0998d46e322042740c6cc07311987ade0a7fea3b03`で一致した。
+最後は録音・再生停止、AU editor表示。独自PCMボタンへのremote clickはhoverのみで切り替わらず、
+AUでのPCM描画操作成功として数えない。Standaloneの実操作とheadless実AUのstate/PCM検査とは区別する。
+
+必要時はhostを保存・終了し、更新後manifestが変わっていない場合のみ戻せる。
+
+```sh
+python3 scripts/install_au.py --rollback build/au-backups/au-update-kyijyyf8/manifest.json
+```
+
+rollbackは実行していない。次回のAU更新expected recordは`docs/pcm_waveform_20261031.json`。
+Release公開・version/tagの更新はしていない。
+
+## Plugin CI
+
+実装`e53d7da7de63445a19c95f527627911f7bf76321`の
+[CI 41207294837](https://github.com/kyorohiro/tetorica-spu-plugin/actions/runs/41207294837)は
+2026-10-31 22:49:22〜22:53:18 JST、offline / macosの全jobが成功した。
+両jobのinstaller11 tests・CTest7/7、auval、公式VST3 validator47/0と、
+実VST3 44.1/48/96kHz・実AU48kHzのPCM / ADSR / Reverb / MIDI suiteをログでも確認した。
+production sourceとdependency lockはローカル検証時のhashと一致する。
+
+artifact `macos-development-bundles`はID `13044727679`、2,244,493 bytes、digest
+`sha256:6c337114e0d9eed983e080ea369ae79880952dc1ba74f35aa2c07bcbc1dc6461`。
+metadataのみ確認し、artifactのdownload・別環境での実行はしていない。
+
+## 残る確認
 
 実聴、長時間realtime、実DAWの独自PCM操作・dirty通知は別の確認範囲。
 live PCM書換え・Software morph・Noise / PMON・Audio入力は今回の範囲外。

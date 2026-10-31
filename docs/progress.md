@@ -1,5 +1,20 @@
 # 作業記録
 
+## 2026-10-31 JST — PCM編集のCI成功・installed AU更新も完了
+
+- 実装`e53d7da7de63445a19c95f527627911f7bf76321`をpushし、
+  [CI 41207294837](https://github.com/kyorohiro/tetorica-spu-plugin/actions/runs/41207294837)のoffline / macosが全job成功。
+  installer11・CTest7/7は両job成功。auval・公式validator47/0、実PCM / ADSR / Reverb / MIDI suiteも全host/rateで成功。
+- CIは22:49:22〜22:53:18 JST。artifact metadata / digestとログ根拠を[検証JSON](pcm_waveform_20261031.json)へ保存。
+  artifactのdownload・別環境での実行は未確認。production sourceとlockはローカル検証時のhash不変。
+- AUはReverbの既知manifestと一致した旧5filesを退避して`au-update-kyijyyf8`で更新、auval成功。
+  新旧bundle各5files・project原本11filesを照合した。
+- GarageBandで旧schema3 P3/T0/Gain99、Reverb Off / Return各25%、PCMボタンを確認した。
+  payloadは更新前後3816bytes完全一致。独自PCMへのAI clickはhoverのみで、Standaloneの操作検証と分ける。
+- **次の入口:** Noise、続いてPMON。実装前に次の区切りをTODOへ追加する。
+  今回の[操作・更新・復帰手順](pcm_waveform_20261031.md)を参照。実聴・長時間・DAW独自PCM操作は未確認。
+  最後は録音/再生停止・AU editor表示。Release公開・version/tag変更はしていない。
+
 ## 2026-10-31 JST — PCM編集の実装・実ホスト検証完了
 
 - TODO `16c4bb5`の後、112-cycleの4形状・単一canvasのdraft / Apply / Revert、Software表示を実装した。
@@ -10,8 +25,8 @@
 - Apply連打のdraft競合をtracked testで修正。GUIでページ切替時の表示跡を検出・修正し、2回の往復で確認した。
   Standaloneで描画・Apply/Revert・手描きPCM保持も確認し、終了した。
 - [詳細](pcm_waveform_20261031.md) / [hash・ログ](pcm_waveform_20261031.json)。
-  次: 実装をpushしてCI確認、旧AU既知manifest照合後の更新・GarageBand旧schema3復元。
-  検証copyは旧Reverb版で保存・終了し7filesをbackupした。まだinstalled AUは旧Reverb版。
+  CIとinstalled AU更新は上のチェックポイントの通り完了。
+  検証copyは旧Reverb版で保存・終了し7filesをbackupした。
 
 ## 2026-10-31 JST — PCM波形選択・描画の開始チェックポイント
 

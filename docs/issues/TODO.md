@@ -24,7 +24,9 @@ Toneの個別切替・保存・再起動後のP3/T1復元も確認済み。
 Program操作後のP3/T0と保存・project再表示も確認した。P11中間画面とToneのみのdirty判定は未確認。
 Pitch Bend / Sustainもcore・実AU/VST3・CIで検証し、installed AU更新とproject復元を完了。
 ADSR編集とSPU Reverbも実装・ローカル検証・installed AU更新済み。Reverbの[CI全job成功](https://github.com/kyorohiro/tetorica-spu-plugin/actions/runs/41204737497)も確認した。
-[ADSR](../adsr_editing_20261031.md) / [Reverb](../reverb_20261031.md)の記録を参照。次はPCMの波形選択・描画が候補。
+[ADSR](../adsr_editing_20261031.md) / [Reverb](../reverb_20261031.md)の記録を参照。
+PCMの4波形・自由描画・Apply / Revertも実装し、実AU/VST3とStandaloneで検証した。
+[PCMの記録](../pcm_waveform_20261031.md)を参照。次の機能候補はNoise、続いてPMON。
 
 ### PCM波形選択・描画の今回の区切り（2026-10-31、実装前）
 
@@ -35,11 +37,11 @@ ADSR編集とSPU Reverbも実装・ローカル検証・installed AU更新済み
 - [x] 値域・finite・長さ・kindの不正入力をcommit前に拒否し、現音源・設定・準備中の正常stateを保つ。VABのProgram/Tone選択は引き続きVABに限定する。
 - [x] 初期Builtin SineのPCM byte一致、cyclic encoderのWeb基準、4形状の音程・音の差・loop、RT確保・交換・保存互換をcoreで検証する。
 - [x] 実AU/VST3でPCM入りstate・最初のNote On・不正stateのatomic性・ADSR/Reverb/MIDI回帰を検証し、Standaloneの描画・Apply/Revert・page切替を確認する。
-- [ ] build / CTest / validator / CIを確認し、結果・制限・次の入口をcommit / pushする。installed AUの更新はhost保存・終了と既知manifest照合を経て行う。
+- [x] build / CTest / validator / CIを確認し、結果・制限・次の入口をcommit / pushする（`e53d7da`、[CI全job成功](https://github.com/kyorohiro/tetorica-spu-plugin/actions/runs/41207294837)）。installed AUはhost保存・終了と既知manifest照合を経て`au-update-kyijyyf8`で更新し、GarageBand旧schema3 P3/T0/Gain99復元を確認した。
 
 初期Builtin SineとVABの既存音は変更しない。PCMの選択・描画は音色stateとして保存し、今回host automation parameterには追加しない。
 波形のlive書き換え・Morph・Noise・PMON・Audio file入力は後続。Morph LFOと外部入力Reverbは追加しない。
-開始時点は`adaba1b`、main / origin同期・clean tree。最終AU既知manifestは[Reverb記録](../reverb_20261031.json)。
+開始時点は`adaba1b`、main / origin同期・clean tree。今回の最終AU既知manifestは[PCM記録](../pcm_waveform_20261031.json)。
 
 ### SPU Reverbの今回の区切り（2026-10-31、実装前）
 
