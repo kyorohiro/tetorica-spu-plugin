@@ -16,6 +16,17 @@ AU / GarageBandでの録音・保存・復元・WAVE書出しを追試済み。
 [AU検証を含む修正版CI](https://github.com/kyorohiro/tetorica-spu-plugin/actions/runs/41183069247)も全job成功。
 次は[VAB取り込み計画](../vab_import_plan.md)の純粋パーサー・Tone準備関数から進む。
 
+### VAB実装の今回の区切り（2026-10-31）
+
+- [ ] UI非依存のC++ VAB v6/v7パーサー（complete / 明示VH+VB）を実装する。
+- [ ] 選択ToneのADPCM・tuning・ADSR・loop・volume/panを検証・準備する。
+- [ ] オリジナルfixtureを独立repoへ取り込み、Web版との結果照合と不正入力の検査を追加する。
+- [ ] 準備したToneをNative音源でoffline演奏し、長いsample・loop・事前cache準備を検査する。
+- [ ] build / 既存pluginの回帰検査を行い、結果と次の入口をcommit / pushする。
+
+この区切りではファイル選択UI・再生中の音色交換・DAWへのVAB保存はまだ公開しない。
+それぞれ音源準備と別に検証してから接続する。
+
 ### 今回進める範囲（2026-10-31）
 
 - [x] AUをユーザー専用Componentsへ新規配置し、auvalで検査する。既存bundleは上書きしない。

@@ -1,5 +1,13 @@
 # 作業記録
 
+## 2026-10-31 JST — VAB解析・音源準備の開始
+
+- cleanな `694c892` から再開。実装前に今回の区切りをTODOへ追加した。
+- pure C++ parser / selected Tone preparationと、Native音源でのoffline検証を進める。
+- parent workspaceのWeb版は照合元のみ。pluginのbuild・実行は親repoに依存させない。
+- UI、再生中のengine handoff、DAW custom stateは後続。現時点でVAB UI対応済みとは扱わない。
+- 次: bounded parserとfixture照合、準備済みToneのNative engine接続。
+
 ## 2026-10-31 JST — 初期チェックポイント
 
 - ユーザーが作成した空のGit repositoryを確認。remoteは `https://github.com/kyorohiro/tetorica-spu-plugin.git`、mainは未commit。
