@@ -1,5 +1,14 @@
 # 作業記録
 
+## 2026-10-31 JST — VAB読み込み・選択UIの開始
+
+- ユーザーから継続の指示。cleanな `619f693` から開始し、実装前に今回のTODOを追加した。
+- complete VABのbounded worker file読込、Program/Tone選択、準備・採用・失敗表示を接続する。
+- 非同期dialogのeditor寿命、host restoreと古いrequestの世代関係、UI起点のhost変更通知を確認する。
+- 既存720×360のGainと鍵盤を維持し、embedded stateからのUI再表示を実装する。
+- 次: worker入力とUIを並行実装し、core / 実AU・VST3回帰と実際のStandalone操作を確認する。
+- 分割VH/VBのdialog、実DAWのdirty判定・保存再起動の最終確認は別項目として記録する。
+
 ## 2026-10-31 JST — embedded DAW stateのCIも成功
 
 - 実装 `57a710923af41c7e60971c1e73aa48e7101977b0` をorigin/mainへpushした。

@@ -19,6 +19,19 @@ AU / GarageBandでの録音・保存・復元・WAVE書出しを追試済み。
 [embedded DAW state](../embedded_state_20261031.md)も実装済みで、[CI全job成功](https://github.com/kyorohiro/tetorica-spu-plugin/actions/runs/41189325333)。
 次は[VAB取り込み計画](../vab_import_plan.md)のファイル読込・Program/Tone UIへ進む。
 
+### VAB UIの今回の区切り（2026-10-31、実装前チェックポイント）
+
+- [ ] complete VABをファイル選択し、1 MiB上限付きでworkerから読む入口を追加する。
+- [ ] Load VAB / Builtin、sparse Program / Tone選択、読込・準備・採用・失敗表示を720×360へ配置する。
+- [ ] editorを閉じた後の非同期dialog callbackを無効化し、古い読み込みが新しい選択・host restoreを上書きしないようにする。
+- [ ] host restore後とeditor再表示時に、保存された音色をUIへ反映する。UI反映だけではengineを再要求しない。
+- [ ] UI起点の成功した音色変更をhostへ通知する。取消・失敗・host restoreでは変更通知しない。
+- [ ] worker file入力・state/音源交換・実AU/VST3の回帰と、可能な範囲の実UI操作を検証する。
+- [ ] 結果、未確認の実DAW操作、再開手順を記録してcommit / pushし、CIを確認する。
+
+complete `.vab`を最初の対象とする。分割VH/VBの複数file dialogは後続。
+元pathは読み込み入力にだけ使用し、DAW stateには既存のembedded bank形式を使用する。
+
 ### DAW stateの今回の区切り（2026-10-31）
 
 - [x] version / size上限付きの、bank bytes・Program/Tone選択・Gainの保存形式を実装する。
