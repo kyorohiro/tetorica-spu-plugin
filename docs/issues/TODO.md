@@ -31,6 +31,21 @@ PCMの4波形・自由描画・Apply / Revertも実装し、実AU/VST3とStandal
 [PMONの記録](../pmon_20261031.md)を参照。Software Morphも実装・検証・AU更新・旧state復元・両repo CI成功済み。
 [Morphの記録](../morph_20261101.md)と[保存・更新記録](../morph_20261101.json)を参照。
 
+### Web音色ファイル読み込みの今回の区切り（2026-11-01、実装前）
+
+- [ ] Web `.spu.json` version1の通常ADPCM / 112 PCM / Morph音色を読み込む。JSONの構文・schema・全値・sampleとwaveform/Morphの整合性を、現在音源やparameterを変更する前に検証する。version2の長いSoftware audioは明示エラーにする。
+- [ ] 任意ADPCMを保持するimmutable source kindを追加し、元bytes・baseFrequencyHz・loopStart・signed左右volume・source ADSR・reverb sendと任意の元PCMを保存する。Webのpreset.pitchはinspector値として保持し、keyboard音程はWebと同じroot基準にする。
+- [ ] parserはサイズ・深さ・配列長を制限し、duplicate / unknown keys・非finite・不正Unicode・不正ADPCMを拒否する。既知のNative repeat flag制限は明示エラーを保ち、黙ってloopやbytesを書き換えない。
+- [ ] Reverb / Noise / PMON / Morphを既存26parameterとA/B定義へ対応させる。Webにないplugin Gainは読み込み時の値を保持する。WebとpluginのMorph Off / ADPCM・16bit carrierの違いを説明し、bit完全一致は約束しない。
+- [ ] workerでfile読込・parse・engine準備を行い、全設定と元sampleをtransactionで採用する。失敗や古い完了・host restore後の完了は現音源・全parameter・正常pendingを壊さない。採用時は保持音と残響を停止し、次のNoteから再生する。
+- [ ] 既存ID0〜25とsource kind0〜2を維持し、state schema8で新sourceを保存する。旧1〜7 / Gain-onlyを読み、不正state・未対応loop時のatomic failureと元fileなし復元を検証する。
+- [ ] 共通file操作から`.vab`と`.spu.json`を読み込めるようにし、import名・状態・エラーを表示する。Source / ADSR / Reverbと720×620を保ち、file dialog/editor closeやpending中の世代管理を検証する。
+- [ ] Webの実writerで作るreference fixtureとC++ parser/coreの対応、実AU/VST3のstate・first block・MIDI / FX回帰、sanitizer / validator / CI、Standalone読込UIを検証し、記録をcommit / pushする。
+- [ ] Web向け書き出し・往復は次の区切りで扱う。Morph OnでWebが現在blendをsampleとして保存する仕様と、pluginの元source保持仕様、Noise+PMONのraw flag差を先に整理する。長いAudio / PSF抽出 / VH+VB UIは今回追加しない。
+
+開始は`883c3d7`、main / origin同期・clean tree。更新前installed AU manifestは[Morph記録](../morph_20261101.json)。
+まずv1読み込みを完成させる。Web / Tauri配布物、Morph LFO、外部入力Reverb、version / tag / release公開は変更しない。
+
 ### Software Morphの今回の区切り（2026-11-01、完了）
 
 - [x] 元Builtin / VAB / PCMを保持したまま、112-sample Wave A / Wave Bを線形blendするSoftware Morphを追加する。初期 / 旧stateはOff、Amount0、A=Sine / B=Saw（既存PCM形状の振幅0.8）。Offは保持した元sampleへ戻る。
