@@ -1,5 +1,23 @@
 # 作業記録
 
+## 2026-10-31 JST — AU独自Load VAB成功、保存・GarageBand再起動も確認
+
+- ユーザーが検証用`build/ui-check/garageband-ui-source.vab`を選択した。
+  当初のエラー報告は訂正され、実際にはP3/T0/Gain99と`Ready. Waiting for an audio block.`が表示された。
+- GarageBandで検証用MIDIを再生すると`Loaded. Play MIDI or the keyboard.`へ遷移した。
+  workerで準備済みの音源を次のaudio blockで採用する設計どおりで、code修正は不要だった。
+- copyのprojectを保存し、独自Load経由のP3/T0/Gain99とfull bank3744 bytesの完全一致を検査した。
+  payload3784 bytes、SHA-256 `f1fa0a3a18ec5e660d7266ee509b6c7f818c9e2c76a04d11fa6d70f1111bae10`。
+  matching candidate1件、conflicting candidate0件。read-only報告は`build/garageband-vab-ui-state.json`。
+- 再生・録音停止後に保存してGarageBandを完全終了し、同じcopyを再起動した。
+  AU editorでEmbedded VAB / P3 / T0 / Gain99 / `Project sound restored.`を確認した。
+  今回の読込元copyはその場に保持している。元pathなしの復元・PCM一致は前のP3/T1試験で確認済み。
+- 残る確認はProgram/Tone個別操作、Toneのみdirty、dialog/popup中のeditor close/reopen。
+  AU toolbarのpreset名が「手動」に変わったことは観測したが、Toneのみのdirty確認とは扱わない。
+- 既存AUとplugin codeは変更していない。通過済みのbuild・CIは再実行しない。
+  元の`spu-au-check.band`全11 fileも開始時manifestとhash一致した。
+  今回の結果を詳細記録・TODOへ反映してcommit / pushする。
+
 ## 2026-10-31 JST — Load VAB dialogを観測、file選択だけ人の操作待ち
 
 - 開始記録`610f5b2`をpush後、ユーザーが開いたAUのopen-panelをCUAで観測した。

@@ -19,17 +19,21 @@ AU / GarageBandでの録音・保存・復元・WAVE書出しを追試済み。
 [embedded DAW state](../embedded_state_20261031.md)も実装済みで、[CI全job成功](https://github.com/kyorohiro/tetorica-spu-plugin/actions/runs/41189325333)。
 VAB file読込・Program/Tone UIを実装し、ローカル検証と[CI全job成功](https://github.com/kyorohiro/tetorica-spu-plugin/actions/runs/41191105787)。[今回の記録](../vab_ui_20261031.md)を参照。
 AUを既知manifest照合付きで更新し、GarageBand標準AUプリセット経由でVAB保存・再起動・UI復元・PCM一致を確認した。
-[今回の記録](../au_vab_garageband_20261031.md)。人のLoad VAB clickでdialogが開くことは確認済み。
-次はfile選択完了とToneのみのdirty判定を確認する。
+[今回の記録](../au_vab_garageband_20261031.md)。人のLoad VAB操作からVAB読込・再生時の採用・保存・再起動後のP3/T0復元も確認済み。
+次はProgram/Toneの個別操作と、Toneのみのdirty判定を確認する。
 
 ### AU独自UIの追試（2026-10-31、開始時記録）
 
 - [x] ユーザーが実際のclickでLoad VABのファイル選択が開くと確認した。
 - [x] 独自load確認用の`build/ui-check/garageband-ui-source.vab`を作成し、元fixtureとのhash一致を確認した。
-- [ ] 開かれたdialogから検証用VABを読み込み、初回のP3/T0とstatusを確認する。
-- [ ] 独自UI経由の選択をprojectへ保存し、embedded stateとeditor再表示を確認する。
-- [ ] CUAで可能な範囲のProgram/Tone操作・変更通知を追試し、残る人の確認と区別して記録する。
-- [ ] 結果・TODOをcommit / pushする。コード修正がなければ通過済み検証を繰り返さない。
+- [x] 開かれたdialogから検証用VABを読み込み、初回のP3/T0とstatusを確認する（Ready→GarageBand再生でLoaded）。
+- [x] 独自UI経由の選択をprojectへ保存し、embedded stateとeditor再表示を確認する（bank完全一致、GarageBand終了・再起動後もP3/T0/Gain99）。
+- [ ] Program/Tone操作・変更通知を人の操作で追試する。CUAでAU独自controlへのclickが届かない制限と区別して記録する。
+- [x] 結果・TODOをcommit / pushする。コード修正がなければ通過済み検証を繰り返さない。
+
+停止中の`Ready. Waiting for an audio block.`は準備済み・採用待ちの正常表示。
+今回の再生でLoadedへ遷移したためロード失敗として扱わない。
+後続のUI改善では、内部処理名より「音を弾くか再生を開始する」案内を検討する。
 
 ### AU更新・GarageBand VAB確認の今回の区切り（2026-10-31、実装前）
 

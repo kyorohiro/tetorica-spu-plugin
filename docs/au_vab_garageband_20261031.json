@@ -34,7 +34,8 @@
       "gain_percent": 99
     },
     "recording_and_playback_stopped": true,
-    "final_editor_open": true
+    "final_editor_open": true,
+    "scope": "Earlier P3/T1 verification through the GarageBand AU preset toolbar; the subsequent custom Load VAB verification is recorded in custom_ui_followup."
   },
   "project_xml_evidence": {
     "candidate_count": 1,
@@ -146,7 +147,7 @@
     }
   },
   "not_verified": [
-    "End-to-end custom VAB file selection, Program/Tone changes in the remote GarageBand AU view; the user confirmed that Load VAB opens its dialog. CUA file-selection input moved to the background document.",
+    "Program/Tone selector changes in the remote GarageBand AU view",
     "Project dirty notification from a plugin Tone-only edit",
     "Closing the AU editor while its file dialog or popup is open",
     "Physical listening, loopback and long realtime endurance",
@@ -172,14 +173,76 @@
     "file_dialog_opened_by_user": true,
     "user_response": "ファイル選択が開く",
     "code_fix_made": false,
+    "error_reproduced": false,
+    "error_report_correction": "The user corrected the earlier error report; no error was reproduced.",
     "prepared_vab_copy": "build/ui-check/garageband-ui-source.vab",
-    "expected_after_custom_file_load": {
+    "source_vab_bytes": 3744,
+    "source_vab_sha256": "71a7de205c0ebe1b8743288d90cd3b0204da9bd81aed9159af31f404d7cf2be6",
+    "exact_original_fixture_match": true,
+    "earlier_cua_file_dialog_attempt": {
+      "completed": false,
+      "observation": "After CUA setValue/Return in the file dialog, focus returned to the main GarageBand region-name editor; unchanged edit was cancelled with Escape. That attempt was not treated as a successful load."
+    },
+    "custom_file_load_completed": true,
+    "load_route": "Plugin Load VAB file dialog, separate from the earlier GarageBand AU preset-toolbar route",
+    "ui_observed_after_custom_file_load": {
+      "kind": "Embedded VAB",
       "program": 3,
       "tone": 0,
       "gain_percent": 99,
-      "status": "Loaded"
+      "status_before_audio_block": "Ready. Waiting for an audio block.",
+      "status_after_garageband_playback": "Loaded. Play MIDI or the keyboard."
     },
-    "cuas_file_selection_completed": false,
-    "observation": "After CUA setValue/Return in the file dialog, focus returned to the main GarageBand region-name editor; unchanged edit was cancelled with Escape. No custom load success is inferred. User was asked to select the prepared file manually."
+    "previous_saved_tone": 1,
+    "playback_adoption_observed": true,
+    "saved_project": "build/spu-vab-check.band",
+    "saved_project_state": {
+      "file": "build/spu-vab-check.band/Alternatives/000/ProjectData",
+      "file_sha256": "4e0389c4d67c3913df2a56c5442870bf155790eb3e77c569113fa9277b986496",
+      "candidate_count": 1,
+      "conflicting_candidates": [],
+      "schema": 1,
+      "kind": "VAB",
+      "program": 3,
+      "tone": 0,
+      "gain_percent": 99,
+      "payload_bytes": 3784,
+      "payload_sha256": "f1fa0a3a18ec5e660d7266ee509b6c7f818c9e2c76a04d11fa6d70f1111bae10",
+      "bank_bytes": 3744,
+      "bank_sha256": "71a7de205c0ebe1b8743288d90cd3b0204da9bd81aed9159af31f404d7cf2be6",
+      "exact_original_vab_match": true,
+      "active_binding_proven_by_extractor": false,
+      "report": "build/garageband-vab-ui-state.json",
+      "file_bytes": 240528,
+      "xml_offset": 118729,
+      "xml_end": 124394,
+      "xml_bytes": 5665,
+      "xml_sha256": "95e552a63efd0707334661610fc4e629c0d26ba09c7c95f7cae8648beccbf9fc",
+      "au_identity": {
+        "type": 1635085685,
+        "subtype": 1416851573,
+        "manufacturer": 1415935090
+      },
+      "au_version": 256,
+      "matches_expected": true
+    },
+    "saved_quit_and_reopened": true,
+    "main_process_exit_confirmed": true,
+    "state_after_quit_matches_saved_selection_and_payload": true,
+    "ui_observed_after_reopen": {
+      "kind": "Embedded VAB",
+      "program": 3,
+      "tone": 0,
+      "gain_percent": 99,
+      "status": "Project sound restored."
+    },
+    "recording_and_playback_stopped": true,
+    "final_editor_open": true,
+    "source_copy_present_at_custom_reopen": true,
+    "host_preset_label_observed": "Manual",
+    "tone_only_project_dirty_proven": false,
+    "program_tone_controls_verified": false,
+    "scope": "Custom file load, playback adoption, project save and reopened UI were verified. The earlier P3/T1 preset-route test separately covered absent source copies and matching audio exports. The Manual label is not evidence of Tone-only project dirty behavior.",
+    "original_project_file_hashes_reverified": 11
   }
 }

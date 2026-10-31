@@ -19,6 +19,7 @@ VAB UI実装は`80f895c`、そのCIと記録は`f312638`。
 ## 更新と検証
 
 installerと更新、GarageBand標準のAUプリセット経由でのVAB保存・再起動・PCM照合が完了。
+その後、独自Load VAB経由でもP3/T0の読込・再生時の採用・保存・再起動後のUI復元を確認した。
 [計測値・manifest・未確認範囲](au_vab_garageband_20261031.json)。
 
 - `scripts/install_au.py`に明示的な`--update`と条件付き`--rollback`を追加した。
@@ -62,13 +63,13 @@ python3 scripts/install_au.py --rollback build/au-backups/au-update-htc4qhrw/man
 
 ```sh
 python3 scripts/check_garageband_vab_state.py build/spu-vab-check.band \
-  --expected-vab tests/fixtures/vab/spu-synth-demo.vab --program 3 --tone 1 --gain 99
+  --expected-vab tests/fixtures/vab/spu-synth-demo.vab --program 3 --tone 0 --gain 99
 ```
 
 これは観測したAU XML断片を検査し、GarageBand全containerや候補のactive bindingを断定しない。
 旧projectではlegacy Gain99の8-byte payloadが1候補見つかった。
 
-## GarageBandで確認できた範囲
+## GarageBand標準AUプリセット経由で確認できた範囲
 
 1. 更新したAUの新UIを開き、旧stateからBuiltin Sine / Gain99%が復元されたことを確認した。
 2. AU独自のLoad VABとBuiltin SineへCUAからclickを送ったが、どちらもstatusが変わらず、hoverだけが見えた。
@@ -120,7 +121,7 @@ FFTでも同じ帯域を確認した。これはデジタル書き出しの解�
 - 現installed AUの全5 file manifestを今回のJSONの`au.file_sha256`へ記録した。
   次のupdateで`--expected docs/au_vab_garageband_20261031.json`として使用できる。
 
-## 人のLoad VAB確認後の追試
+## 独自Load VAB経由の追試
 
 - ユーザーから「ファイル選択が開く」と回答があり、Load VABの実clickでdialogが開くことは確認できた。
   初期化不具合とする根拠はなく、plugin codeは変更していない。
@@ -129,10 +130,25 @@ FFTでも同じ帯域を確認した。これはデジタル書き出しの解�
   これをVAB読み込み成功や、dialogの製品側不具合とは扱わない。
 - 新しい検証用copy `build/ui-check/garageband-ui-source.vab`を用意した。
   SHAは原本と同じ`71a7de205c0ebe1b8743288d90cd3b0204da9bd81aed9159af31f404d7cf2be6`。
-- ユーザーへこのfileの選択を依頼した。初回読込成功時の期待値はP3/T0/Gain99とLoaded表示。
-  それまでの保存済みprojectはP3/T1なので、成功後のT0 state照合で独自loader経由を識別できる。
+- 一度伝えられた「エラー」はユーザーが訂正した。エラーは再現せず、plugin codeの修正は行っていない。
+- 検証用fileの選択後、CUAでEmbedded VAB / P3 / T0 / Gain99と
+  `Ready. Waiting for an audio block.`を確認した。GarageBandで再生すると`Loaded. Play MIDI or the keyboard.`になり、
+  再生停止後にcopy projectを保存した。
+- 保存済みP3/T1からP3/T0へ変わり、独自loader経由の読込を識別できた。
+  `scripts/check_garageband_vab_state.py`を`--program 3 --tone 0 --gain 99`で実行し、
+  candidate 1件・conflict 0件、embedded bank3744 bytesがfixtureと完全一致した。
+  最新reportは`build/garageband-vab-ui-state.json`。
+  payload3784 bytesのSHA-256は`f1fa0a3a18ec5e660d7266ee509b6c7f818c9e2c76a04d11fa6d70f1111bae10`、
+  `Alternatives/000/ProjectData`は`4e0389c4d67c3913df2a56c5442870bf155790eb3e77c569113fa9277b986496`。
+- 保存してGarageBandを終了し、main processの終了を確認した。終了後の保存stateも同じP3/T0とpayload SHAだった。
+  同じcopyを再起動し、録音・再生停止の状態でSettingsを開き、CUAで
+  Embedded VAB / P3 / T0 / Gain99 / `Project sound restored.`を確認した。
+  今回は`garageband-ui-source.vab`を移動していない。元fileなしの復元とPCM照合は、先のP3/T1検証の結果である。
+- 元の`spu-au-check.band`全11 fileのhashが開始時manifestと一致することも再確認した。
+- host preset表示の`Manual`への変化は観測したが、Toneだけの変更やproject dirtyの証拠とは扱わない。
+  保存状態の変化と、DAWが自動的に変更済みと判断することは分けて検証する。
 
-残る確認は、AU独自file選択の完了・Program/Tone変更、Toneだけのproject dirty、
-dialog / popup中のeditor close/reopen。Load VABでdialogが開くことと分けて記録する。
+残る確認は、Program/Tone操作、Toneだけのproject dirty、dialog / popup中のeditor close/reopen。
+独自file選択から保存・再起動後のUI復元までは確認済み。今回は不具合修正がなく、既存の自動検証は繰り返していない。
 
 物理的な実聴・長時間realtime試験、署名・公証・Release公開とは区別する。
