@@ -94,8 +94,8 @@ void SpuInstrument::initialize() {
   for (unsigned voice = 0; voice < kVoiceCount; ++voice) {
     const unsigned base = voice * 16;
     write(base, 0); write(base+2, 0); write(base+4, 0x1000);
-    write(base+6, kSampleAddress/8); write(base+8, 0x000f);
-    write(base+10, 0x1fc0); write(base+14, kSampleAddress/8);
+    write(base+6, kSampleAddress/8); write(base+8, mEnvelope.adsr1);
+    write(base+10, mEnvelope.adsr2); write(base+14, kSampleAddress/8);
   }
   // RAM key-on and loop transitions lazily allocate inside the SDK. Exercise
   // every voice and several complete loops now, keeping this immutable sample
@@ -116,6 +116,7 @@ void SpuInstrument::initializeTone(const vab::PreparedTone& tone) {
   mVolumeLeft=static_cast<unsigned>(std::lround(kVoiceVolume*tone.volumeLeft));
   mVolumeRight=static_cast<unsigned>(std::lround(kVoiceVolume*tone.volumeRight));
   mReverbSend=tone.reverb;
+  mSourceEnvelope=mEnvelope={tone.adsr1,tone.adsr2};
   if (ps1_spu_sample_rate()!=kNativeSampleRate || !ps1_spu_set_mix_headroom(mChip,4) ||
       !ps1_spu_load_ram(mChip,address,tone.adpcm.data(),static_cast<std::uint32_t>(tone.adpcm.size())))
     throw std::runtime_error("Could not load Native SPU VAB Tone");
@@ -142,7 +143,7 @@ void SpuInstrument::initializeTone(const vab::PreparedTone& tone) {
   renderNative(mNativeLeft.data(),mNativeRight.data(),1024);
   for (unsigned voice=0; voice<kVoiceCount; ++voice) {
     const unsigned base=voice*16;
-    write(base+4,0x1000); write(base+8,tone.adsr1); write(base+10,tone.adsr2);
+    write(base+4,0x1000); write(base+8,mEnvelope.adsr1); write(base+10,mEnvelope.adsr2);
   }
   panic();
   mNativeFrames=0;
@@ -181,6 +182,7 @@ void SpuInstrument::noteOn(int note, int velocity, int channel) noexcept {
   const unsigned volumeRight = mVolumeRight * static_cast<unsigned>(velocity) / 127;
   const unsigned base = static_cast<unsigned>(slot)*16;
   write(base, volumeLeft); write(base+2, volumeRight); write(base+4, pitch);
+  write(base+8,mEnvelope.adsr1); write(base+10,mEnvelope.adsr2);
   if (mReverbSend) {
     const unsigned reg=0x198+(slot>=16?2:0);
     write(reg,ps1_spu_read(mChip,reg)|(1u<<(slot%16)));
@@ -251,6 +253,15 @@ void SpuInstrument::panic() noexcept {
   }
   mCursor=0; mOrder=0;
   clearRateHistory();
+}
+void SpuInstrument::setEnvelope(EnvelopeRegisters values,bool live) noexcept {
+  mEnvelope=values;
+  for(unsigned i=0;i<kVoiceCount;++i){
+    write(i*16+8,values.adsr1); write(i*16+10,values.adsr2);
+  }
+  if(live)for(unsigned i=0;i<kVoiceCount;++i)
+    if(mVoices[i].note>=0)
+      mHealthy=(ps1_spu_refresh_envelope(mChip,i)!=0)&&mHealthy;
 }
 int SpuInstrument::activeVoiceCount() const noexcept {
   int count=0;

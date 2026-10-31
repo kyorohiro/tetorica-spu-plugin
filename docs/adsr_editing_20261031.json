@@ -1,0 +1,234 @@
+{
+  "started_on": "2026-10-31",
+  "timezone": "Asia/Tokyo",
+  "start_todo_commit": "896ac3e",
+  "feature": {
+    "parameter_count": 12,
+    "gain_parameter_id": 0,
+    "custom_default": false,
+    "apply_default": true,
+    "apply_on_edge_refreshes": true,
+    "automation": "block boundary, final ordinary parameter point per block",
+    "source_adsr_preserved": true,
+    "state_schema_written": 2,
+    "state_schema_read": [
+      1,
+      2,
+      "legacy-gain-only"
+    ],
+    "state_fixed_bytes": 48,
+    "bank_offset": 32,
+    "live_midi_saved": false
+  },
+  "production_source_sha256": {
+    "src/SpuEnvelope.h": "57f9dc4343c1a0b412f44b57003ea09cd4a6ca59b14ed2caf4a1039fdc7a0b52",
+    "src/SpuInstrument.h": "51e073d95545fdb730e214d0e25ee48eef321d3f95cc93d0d4a03a171b0e07fd",
+    "src/SpuInstrument.cpp": "d357b0d993e328f7ffafac936fd12df6e1d07d54a3b80074a4c6474b972445f6",
+    "src/InstrumentState.h": "078f57baa054fbad456ffc28bd9453532432f104d29c984d1e53a2055aa8c52e",
+    "src/InstrumentState.cpp": "ad7477f1ee96546c618856eb8957edf107a875c4bca5a4d8c94d3ca68093abb1",
+    "plugin/TetoricaSPU.h": "75f9e67f1e612b0ef137f274f1d6d3f8f5275e65bcff13d182af249276492a1f",
+    "plugin/TetoricaSPU.cpp": "e49abdd47036c25643f02562512fd54458be5140aa09873602c1bd4a4b00a8c8",
+    "plugin/InstrumentState.cpp": "cb447751049a69b226112d0db9a05162854823b967f90df056c3a1a91a661723",
+    "plugin/InstrumentUI.cpp": "e7f0229496fc1276457ac051762a83357e9688fb6174508381fe3a5a68d8be7b",
+    "plugin/EnvelopeControl.h": "702aafe98fae705d47ebbe9423d36343a209c776b101f9fbcda0fd9936af3ab3",
+    "plugin/config.h": "27a97ca414061d34864e0338a5d6d51ced5ba3aa762bf3aac347de05eea2141b",
+    "tools/vst3-host/envelope-checks.h": "791ed732b614564a4e317efe29ad6540a0f016e4a85fdc90267810a84c2f8191"
+  },
+  "dependency_lock_sha256": "b25b354914829d3497db1bdf028cfa139701979bfcd7fecd3da41f37160f6336",
+  "checks": {
+    "offline_ctest": {
+      "passed": 5,
+      "failed": 0,
+      "seconds": 2.07
+    },
+    "macos_ctest": {
+      "passed": 5,
+      "failed": 0,
+      "seconds": 2.97
+    },
+    "asan_core_vab": {
+      "passed": 2,
+      "failed": 0,
+      "seconds": 12.82,
+      "diagnostics": 0,
+      "log": "build/adsr-asan/Testing/Temporary/LastTest.log"
+    },
+    "callback_cpp_new_delete": [
+      0,
+      0
+    ],
+    "neutral_demo_sha256": "7a61b56d356ac198c35808b503cf0b61b55a9547b21770eb2a67c97d0cc4aef3",
+    "neutral_demo_matches_previous": true,
+    "actual_vst3_adsr_pcm_rates": [
+      44100,
+      48000,
+      96000
+    ],
+    "actual_au_adsr_pcm_rates": [
+      48000
+    ],
+    "vst3_official_validator": {
+      "passed": 47,
+      "failed": 0
+    },
+    "installer_tests": 11,
+    "auval_succeeded": true,
+    "auval_known_warning": "Preset name is not retained in retrieved class data",
+    "standalone_gui": [
+      "Copy tone -> Custom ADSR",
+      "D graph drag D0->8 and SL15->6",
+      "Typed Release 27 -> R hold and warning",
+      "Attack linear -> exponential",
+      "Apply On -> Off"
+    ],
+    "garageband_gui": [
+      "Original schema1 project opened after AU update",
+      "Embedded VAB / Program3 / Tone0 / Gain99",
+      "Tone ADSR / Apply On",
+      "Project sound restored",
+      "New ADSR panel visible; recording and playback stopped"
+    ]
+  },
+  "logs": {
+    "build/adsr-offline-ctest.log": {
+      "sha256": "2462dc36fda85a3cdb547497fbf00f300406079b35da2b8bb07f66a535b21fc0",
+      "pass_lines": [
+        "100% tests passed, 0 tests failed out of 5"
+      ]
+    },
+    "build/adsr-macos-ctest.log": {
+      "sha256": "4ccef7ed9eabc6cc3a4949761e4f2b445bad263cb3dfa45fdd7e673270a1268c",
+      "pass_lines": [
+        "100% tests passed, 0 tests failed out of 5"
+      ]
+    },
+    "build/adsr-vst3-audio.log": {
+      "sha256": "338ee406deb3e94386534a5c6122d5e7d5f53d5e04da5bb00eccda87a5b520dc",
+      "pass_lines": [
+        "PASS: fixed dependency revisions and VST3 SDK links",
+        "PASS sampleRate=44100 offset=64 peak=0.0373283 c4Hz=261.667 releasePeak=0 restoredGainRatio=0.37 stateBytes=52 independentInstances=true",
+        "PASS scheduler sampleRate=44100 blockEndDeferred=true shortBlocks=true sameOffsetOrder=true unsortedOffsets=true velocityZeroOff=true overflow2049Recovered=true processingRestartSilent=true reactivateSilent=true reconfigureSilent=true",
+        "PASS embedded state sampleRate=44100 sparseTones=3 stereoPan=true firstBlock=true activeRestore=true heldDeferredCleared=true freshNotePreserved=true repeatedRestores=12 embeddedBytes=3744",
+        "PASS VST3 parameter changes ADSR sampleRate=44100 nineFieldsState=true schema1Migration=true legacyDefaults=true malformedAtomic=true firstRestoreBlock=true sourcePreserved=true disabledOriginalPCM=true blockAutomation=true nextNoteDeferred=true heldNoRetrigger=true applyOffOnRefresh=true",
+        "PASS VST3 IMidiMapping controllers sampleRate=44100 bend14Endpoints=true multiPointOffsets=true splitBlocks=true noRetrigger=true sustain64_63=true channel15Isolation=true CC123Pedal=true CC121HeldDeferred=true panicPreservesControllers=true resetRestoreOverflowClear=true liveStateExcluded=true deferredController=true reactivateReset=true releaseTailRetunedNoKON=true restoreDiscardsFutureControllers=true",
+        "PASS sampleRate=48000 offset=64 peak=0.0373283 c4Hz=261.667 releasePeak=0 restoredGainRatio=0.37 stateBytes=52 independentInstances=true",
+        "PASS scheduler sampleRate=48000 blockEndDeferred=true shortBlocks=true sameOffsetOrder=true unsortedOffsets=true velocityZeroOff=true overflow2049Recovered=true processingRestartSilent=true reactivateSilent=true reconfigureSilent=true",
+        "PASS embedded state sampleRate=48000 sparseTones=3 stereoPan=true firstBlock=true activeRestore=true heldDeferredCleared=true freshNotePreserved=true repeatedRestores=12 embeddedBytes=3744",
+        "PASS VST3 parameter changes ADSR sampleRate=48000 nineFieldsState=true schema1Migration=true legacyDefaults=true malformedAtomic=true firstRestoreBlock=true sourcePreserved=true disabledOriginalPCM=true blockAutomation=true nextNoteDeferred=true heldNoRetrigger=true applyOffOnRefresh=true",
+        "PASS VST3 IMidiMapping controllers sampleRate=48000 bend14Endpoints=true multiPointOffsets=true splitBlocks=true noRetrigger=true sustain64_63=true channel15Isolation=true CC123Pedal=true CC121HeldDeferred=true panicPreservesControllers=true resetRestoreOverflowClear=true liveStateExcluded=true deferredController=true reactivateReset=true releaseTailRetunedNoKON=true restoreDiscardsFutureControllers=true",
+        "PASS sampleRate=96000 offset=64 peak=0.0373283 c4Hz=261.667 releasePeak=0 restoredGainRatio=0.37 stateBytes=52 independentInstances=true",
+        "PASS scheduler sampleRate=96000 blockEndDeferred=true shortBlocks=true sameOffsetOrder=true unsortedOffsets=true velocityZeroOff=true overflow2049Recovered=true processingRestartSilent=true reactivateSilent=true reconfigureSilent=true",
+        "PASS embedded state sampleRate=96000 sparseTones=3 stereoPan=true firstBlock=true activeRestore=true heldDeferredCleared=true freshNotePreserved=true repeatedRestores=12 embeddedBytes=3744",
+        "PASS VST3 parameter changes ADSR sampleRate=96000 nineFieldsState=true schema1Migration=true legacyDefaults=true malformedAtomic=true firstRestoreBlock=true sourcePreserved=true disabledOriginalPCM=true blockAutomation=true nextNoteDeferred=true heldNoRetrigger=true applyOffOnRefresh=true",
+        "PASS VST3 IMidiMapping controllers sampleRate=96000 bend14Endpoints=true multiPointOffsets=true splitBlocks=true noRetrigger=true sustain64_63=true channel15Isolation=true CC123Pedal=true CC121HeldDeferred=true panicPreservesControllers=true resetRestoreOverflowClear=true liveStateExcluded=true deferredController=true reactivateReset=true releaseTailRetunedNoKON=true restoreDiscardsFutureControllers=true",
+        "PASS malformed embedded state cases=25 atomicGainStatePCM=true readyRestorePreserved=true legacyGain12=true",
+        "PASS VST3 mapped ingress invalidNormalizedIgnored=true invalidChannelIgnored=true unsupportedCCIgnored=true negativeOffsetIgnored=true points1025Panic=true gainPreserved=true bypassMuteQueueReset=true bypassCrossBlockPedal=true freshUnbypassNote=true",
+        "PASS VST3 offline PCM, scheduler, lifecycle, state and instance isolation"
+      ]
+    },
+    "build/adsr-vst3-validator.log": {
+      "sha256": "0a8e1e9e129e457ea7bec056684bda0966ac4cc4c33f7252b8c8d5de14fa9475",
+      "pass_lines": [
+        "PASS: fixed dependency revisions and VST3 SDK links",
+        "Result: 47 tests passed, 0 tests failed"
+      ]
+    },
+    "build/adsr-au-state.log": {
+      "sha256": "bb4f0b0a9112c5a3c8a95693d84268e357f576e8dcd63d504e0cf3ad36e06d23",
+      "pass_lines": [
+        "PASS AU MIDIEvent controllers sampleRate=48000 bend14Endpoints=true multiPointOffsets=true splitBlocks=true noRetrigger=true sustain64_63=true channel15Isolation=true CC123Pedal=true CC121HeldDeferred=true panicPreservesControllers=true resetRestoreOverflowClear=true liveStateExcluded=true deferredController=true reactivateReset=true releaseTailRetunedNoKON=true restoreDiscardsFutureControllers=true",
+        "PASS AU parameters ADSR sampleRate=48000 nineFieldsState=true schema1Migration=true legacyDefaults=true malformedAtomic=true firstRestoreBlock=true sourcePreserved=true disabledOriginalPCM=true blockAutomation=true nextNoteDeferred=true heldNoRetrigger=true applyOffOnRefresh=true",
+        "PASS: local AU embedded VAB/Gain round-trip, first-render MIDI/PCM, separate instance, malformed CF/state rejection with pending/active preservation, legacy AU migration; no audio device/editor/install"
+      ]
+    },
+    "build/adsr-auval.log": {
+      "sha256": "e25a2c937f621addb0b2672b0b96fdbc39aa5cafda3b6e082a03e3a7137f943e",
+      "pass_lines": [
+        "PASS: TetoricaSPU was discovered by the Audio Component service",
+        "* * PASS",
+        "* * PASS",
+        "* * PASS",
+        "* * PASS",
+        "    PASS",
+        "* * PASS",
+        "    PASS",
+        "    PASS",
+        "* * PASS",
+        "    PASS",
+        "    PASS",
+        "    PASS",
+        "* * PASS",
+        "  -parameter PASS",
+        "  -parameter PASS",
+        "  -parameter PASS",
+        "  -parameter PASS",
+        "  -parameter PASS",
+        "  -parameter PASS",
+        "  -parameter PASS",
+        "  -parameter PASS",
+        "  -parameter PASS",
+        "  -parameter PASS",
+        "  -parameter PASS",
+        "  -parameter PASS",
+        "  PASS",
+        "* * PASS",
+        "* * PASS",
+        "  PASS",
+        "  PASS",
+        "  PASS",
+        "  PASS",
+        "  PASS",
+        "* * PASS",
+        "AU VALIDATION SUCCEEDED."
+      ]
+    }
+  },
+  "au": {
+    "source": "build/macos/out/TetoricaSPU.component",
+    "file_sha256": {
+      "Contents/Info.plist": "94a46fcfc638d76a05aca50d5deedaff2a7a934aee55a816d007b6dff9c9bbc4",
+      "Contents/MacOS/TetoricaSPU": "3cf8e9519bb040553775765721572ef801fb30df575c7f4bdf4bed3802932ee0",
+      "Contents/PkgInfo": "d06a80ba92de0833d0ed03de1b02b7c8913f126d9e8c8931b190765dd5d83b11",
+      "Contents/Resources/Roboto-Regular.ttf": "b2efabca5ea4bc56eea829713706b5cd0788b82aca153bd4adde9b1573933b4f",
+      "Contents/Resources/THIRD_PARTY_NOTICES.txt": "d0686ed57334f5bc617481e976e6d220822dba8fc93b8dd51246455bb818db6e"
+    },
+    "installed": true,
+    "update_report": "build/au-backups/au-update-uw55khkl/manifest.json",
+    "backup_and_archive_verified": true,
+    "old_file_sha256": {
+      "Contents/Info.plist": "94a46fcfc638d76a05aca50d5deedaff2a7a934aee55a816d007b6dff9c9bbc4",
+      "Contents/MacOS/TetoricaSPU": "5123606ad73f7acd5b4896150f9f9d4f09bbac0c59a60be1ffa28f5d8962d869",
+      "Contents/PkgInfo": "d06a80ba92de0833d0ed03de1b02b7c8913f126d9e8c8931b190765dd5d83b11",
+      "Contents/Resources/Roboto-Regular.ttf": "b2efabca5ea4bc56eea829713706b5cd0788b82aca153bd4adde9b1573933b4f",
+      "Contents/Resources/THIRD_PARTY_NOTICES.txt": "d0686ed57334f5bc617481e976e6d220822dba8fc93b8dd51246455bb818db6e"
+    },
+    "rollback_executed": false
+  },
+  "garageband": {
+    "project": "build/spu-vab-check.band",
+    "project_backup_report": "build/adsr-update-project-pfs0qfen/manifest.json",
+    "before_report": "build/adsr-au-project-before.json",
+    "before_report_sha256": "9130c374321c870bad8e68b17a1657778636039a41ed6b6190d2364e29585f5a",
+    "after_report": "build/adsr-au-project-after.json",
+    "after_report_sha256": "1e9ed21bfbe82a9d45816d5e43a517e32cf6e2de252be043dad5ecad9d2c13fb",
+    "payload_unchanged": true,
+    "payload_sha256": "f1fa0a3a18ec5e660d7266ee509b6c7f818c9e2c76a04d11fa6d70f1111bae10",
+    "original_project_start_manifest_files_unchanged": 11
+  },
+  "issues_resolved_during_work": [
+    {
+      "issue": "VST3 inherited ParameterContainer hid the state parameters helper at compile time",
+      "fix": "Renamed helper to stateParameters; final all-format build passed"
+    }
+  ],
+  "ci": {
+    "status": "pending-push"
+  },
+  "not_verified": [
+    "Physical listening",
+    "Long real-time runs",
+    "DAW recording of ADSR automation and in-editor graph gestures",
+    "Graph drag during real DAW editor close/host restore",
+    "Prior Tone-only dirty / Program11 intermediate UI checks"
+  ]
+}

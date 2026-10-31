@@ -34,6 +34,7 @@ void operator delete[](void* value, std::size_t) noexcept { release(value); }
 
 #define CHECK(value) do { if (!(value)) { std::fprintf(stderr,"FAIL line %d: %s\n",__LINE__,#value); std::exit(1); } } while (0)
 using tetorica::SpuInstrument;
+using tetorica::EnvelopeRegisters;
 namespace {
 struct Stereo {
   std::vector<float> left, right;
@@ -78,6 +79,10 @@ double magnitude(const Stereo& pcm,double hz,double rate){
     real+=pcm.left[i]*std::cos(phase);imaginary+=pcm.left[i]*std::sin(phase);
   }
   return std::sqrt(real*real+imaginary*imaginary)/count;
+}
+double energy(const Stereo& pcm){
+  double total=0;for(float value:pcm.left)total+=double(value)*value;
+  return total;
 }
 tetorica::vab::PreparedTone longReleaseTone(){
   tetorica::vab::PreparedTone tone;
@@ -297,6 +302,121 @@ void testControllerPartitionInvariance(){
     }
   }
 }
+void testEnvelopeDefaultsAndOwnership(){
+  SpuInstrument builtin;
+  CHECK(builtin.sourceEnvelope().adsr1==0x000f&&builtin.sourceEnvelope().adsr2==0x1fc0);
+  CHECK(builtin.envelope().adsr1==0x000f&&builtin.envelope().adsr2==0x1fc0);
+  const EnvelopeRegisters custom{0x9234,0xa56b};builtin.setEnvelope(custom,false);
+  CHECK(builtin.envelope().adsr1==custom.adsr1&&builtin.envelope().adsr2==custom.adsr2);
+  CHECK(builtin.prepare(48000));builtin.panic();builtin.resetControllers();
+  CHECK(builtin.envelope().adsr1==custom.adsr1&&builtin.envelope().adsr2==custom.adsr2);
+  CHECK(builtin.sourceEnvelope().adsr1==0x000f&&builtin.sourceEnvelope().adsr2==0x1fc0);
+
+  auto tone=longReleaseTone();tone.adsr1=0x4183;tone.adsr2=0xa56b;
+  SpuInstrument imported(tone);tone.adsr1=tone.adsr2=0; //Source is an owned raw value.
+  CHECK(imported.sourceEnvelope().adsr1==0x4183&&imported.sourceEnvelope().adsr2==0xa56b);
+  imported.setEnvelope({0x000f,0x1fc0});
+  CHECK(imported.envelope().adsr2==0x1fc0); //All16 raw bits, including bit13, follow the caller.
+  CHECK(imported.sourceEnvelope().adsr2==0xa56b);
+}
+void testLiveEnvelopeStages(){
+  for(int stage=0;stage<4;++stage){
+    auto tone=longReleaseTone();
+    tone.adsr1=stage==0?0x400f:stage==1?0x00c0:0x000f;
+    tone.adsr2=0x1fce;
+    SpuInstrument live(tone),deferred(tone);
+    CHECK(live.prepare(44100)&&deferred.prepare(44100));
+    live.noteOn(69,127);deferred.noteOn(69,127);
+    Stereo before(stage==0?101:stage==1?300:1009),copy(static_cast<int>(before.left.size()));
+    render(live,before);render(deferred,copy);CHECK(before.left==copy.left);
+    if(stage==3){
+      live.noteOff(69);deferred.noteOff(69);Stereo tail(53);
+      render(live,tail);render(deferred,tail);
+    }
+    const auto frame=live.nativeFramesRendered();
+    const EnvelopeRegisters patch=stage==0?EnvelopeRegisters{0x100f,0x1fce}:
+      stage==1?EnvelopeRegisters{0x0040,0x1fce}:
+      stage==2?EnvelopeRegisters{0x000f,0x4a0e}:EnvelopeRegisters{0x000f,0x1fc0};
+    live.setEnvelope(patch,true);deferred.setEnvelope(patch,false);
+    CHECK(live.nativeFramesRendered()==frame);
+    CHECK(live.activeVoiceCount()==(stage==3?0:1));
+    Stereo changed(4096),unchanged(4096);render(live,changed);render(deferred,unchanged);
+    CHECK(changed.left.front()==unchanged.left.front()&&changed.right.front()==unchanged.right.front());
+    if(stage==0)CHECK(energy(changed)>energy(unchanged)*4);
+    else CHECK(energy(changed)<energy(unchanged)*.5);
+    if(stage==2||stage==3)CHECK(peak(changed,3000)==0&&peak(unchanged,3000)>.02f);
+  }
+}
+void testDeferredEnvelopeAndNextNote(){
+  auto tone=longReleaseTone();tone.adsr2=0x1fce;
+  SpuInstrument edited(tone),reference(tone),unmodified(tone);
+  for(auto* synth:{&edited,&reference,&unmodified}){CHECK(synth->prepare(44100));synth->noteOn(69,127);}
+  Stereo a(4096),b(4096),c(4096);render(edited,a);render(reference,b);render(unmodified,c);
+  const EnvelopeRegisters slowAttackFastRelease{0x640f,0x1fc0};
+  edited.setEnvelope(slowAttackFastRelease,false);render(edited,a);render(reference,b);
+  CHECK(a.left==b.left&&a.right==b.right); //Old held envelope is bit-identical.
+  edited.noteOff(69);reference.noteOff(69);render(edited,a);render(reference,b);
+  CHECK(a.left==b.left&&a.right==b.right&&peak(a,3000)>.02f); //KOFF retains old RR14.
+  for(auto* synth:{&edited,&reference,&unmodified})synth->panic();
+  reference.setEnvelope(slowAttackFastRelease,false);
+  for(auto* synth:{&edited,&reference,&unmodified})synth->noteOn(69,127);
+  render(edited,a);render(reference,b);render(unmodified,c);
+  CHECK(a.left==b.left&&a.right==b.right);
+  //Ignore the128-native-frame audition crossfade from the preceding tail.
+  CHECK(peak(a,512)<peak(c,512)*.01f);
+  CHECK(edited.sourceEnvelope().adsr1==tone.adsr1&&edited.sourceEnvelope().adsr2==tone.adsr2);
+}
+void testEnvelopePhaseAndExplicitApply(){
+  SpuInstrument live,deferred;CHECK(live.prepare(44100)&&deferred.prepare(44100));
+  live.noteOn(69,127);deferred.noteOn(69,127);
+  Stereo a(4099),b(4099);render(live,a);render(deferred,b);
+  live.setEnvelope({0x7f0f,0x1fc0},true);deferred.setEnvelope({0x7f0f,0x1fc0},false);
+  render(live,a);render(deferred,b);CHECK(a.left==b.left&&a.right==b.right);
+  //AR changes during sustain preserve every sample/phase, not just the first.
+  live.setEnvelope({0x7f03,0x1fc0},true);deferred.setEnvelope({0x7f03,0x1fc0},false);
+  render(live,a);render(deferred,b);CHECK(a.left==b.left&&a.right==b.right);
+  //SL is a future decay target, so editing it during sustain never jumps level.
+  const EnvelopeRegisters falling{0x7f03,0x4a00};
+  live.setEnvelope(falling,false);deferred.setEnvelope(falling,false);
+  render(live,a);render(deferred,b);CHECK(a.left==b.left&&a.right==b.right);
+  live.setEnvelope(live.envelope(),true); //Apply off->on must flush unchanged raw words.
+  render(live,a);render(deferred,b);
+  CHECK(a.left.front()==b.left.front()&&energy(a)<energy(b)*.5&&peak(a,3000)==0);
+}
+void testEnvelopePolyphonyPedalAndRelease(){
+  auto tone=longReleaseTone();tone.adsr2=0x1fce;
+  SpuInstrument live(tone),deferred(tone);
+  for(auto* synth:{&live,&deferred}){
+    CHECK(synth->prepare(44100));synth->setSustain(true,0);
+    for(int i=0;i<24;++i)synth->noteOn(60+i%2,100,i/2);
+  }
+  Stereo a(1009),b(1009);render(live,a);render(deferred,b);CHECK(a.left==b.left);
+  for(auto* synth:{&live,&deferred}){synth->noteOff(60,0);synth->noteOff(60,1);}
+  CHECK(live.activeVoiceCount()==22); //One pedal-held voice and one release tail.
+  const EnvelopeRegisters falling{0x000f,0x4a00};
+  live.setEnvelope(falling,true);deferred.setEnvelope(falling,false);
+  Stereo changed(4096),unchanged(4096);render(live,changed);render(deferred,unchanged);
+  CHECK(changed.left.front()==unchanged.left.front());
+  CHECK(peak(changed,3000)==0&&peak(unchanged,3000)>.02f&&live.activeVoiceCount()==22);
+  live.setSustain(false,0); //Releasing the now-silent deferred key cannot restart it.
+  render(live,changed);CHECK(peak(changed)==0);
+}
+void testEnvelopePartitionInvariance(){
+  for(double rate:{8000.,44100.,48000.,96000.}){
+    SpuInstrument a,b;CHECK(a.prepare(rate)&&b.prepare(rate));
+    a.setEnvelope({0x400f,0x1fce},false);b.setEnvelope({0x400f,0x1fce},false);
+    a.noteOn(69,127);b.noteOn(69,127);
+    Stereo whole(173),parts(173);
+    for(unsigned stage=0;stage<64;++stage){
+      const EnvelopeRegisters values{static_cast<std::uint16_t>((stage*65521)^0x1327),
+        static_cast<std::uint16_t>((stage*27847)^0xa875)};
+      if(stage==37){a.noteOff(69);b.noteOff(69);}
+      a.setEnvelope(values,stage%3!=0);b.setEnvelope(values,stage%3!=0);
+      render(a,whole,173);render(b,parts,7);
+      CHECK(whole.left==parts.left&&whole.right==parts.right);
+    }
+  }
+}
 void testNoCallbackNewDelete() {
   SpuInstrument synth;
   std::array<float,1024> left{},right{};
@@ -309,6 +429,8 @@ void testNoCallbackNewDelete() {
       synth.noteOn(i%128,1+i%127,i%16);
       synth.setPitchBend((i*797)%16384,i%16);
       synth.setSustain(i%3!=0,i%16);
+      synth.setEnvelope({static_cast<std::uint16_t>((i*65521)^0x1327),
+        static_cast<std::uint16_t>((i*27847)^0xa875)},i%3!=0);
       synth.render(left.data(),right.data(),1024);
       if (i%3==0) synth.noteOff(i%128,i%16);
       if (i%11==0) synth.allNotesOff(i%16);
@@ -352,7 +474,9 @@ int main(int argc,char** argv) {
   testMidiOffset(); testNoCallbackNewDelete();
   testPitchBend();testSustainAndAllNotesOff();testDeferredVoiceAllocation();
   testControllerResetPanicAndInvalid();testControllerPartitionInvariance();
+  testEnvelopeDefaultsAndOwnership();testLiveEnvelopeStages();testDeferredEnvelopeAndNextNote();
+  testEnvelopePhaseAndExplicitApply();testEnvelopePolyphonyPedalAndRelease();testEnvelopePartitionInvariance();
   if (argc==3 && std::strcmp(argv[1],"--wav")==0) writeDemo(argv[2]);
-  std::puts("PASS: Native SPU pitch/release/polyphony/channels/panic/partition/isolation/rates/MIDI offsets; per-channel bend/sustain/reset/retrigger/deferred-steal; zero callback C++ new/delete after cache priming");
+  std::puts("PASS: Native SPU pitch/release/polyphony/channels/panic/partition/isolation/rates/MIDI offsets; per-channel bend/sustain/reset/retrigger/deferred-steal; live/deferred ADSR stages/phase/pedal/polyphony; zero callback C++ new/delete after cache priming");
   return 0;
 }

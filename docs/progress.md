@@ -1,5 +1,19 @@
 # 作業記録
 
+## 2026-10-31 JST — ADSR編集・実AU/VST3検証とinstalled AU更新
+
+- Tone原本を保つCustom ADSR、9つのrate/mode、Apply、編集graphとtyped入力を追加した。
+  source raw bit13保持、Off中の旧Release、On edgeでの同値refreshを含む。
+- state2は48+bank bytes。旧schema1/Gain-onlyを読み、全12parametersをtransactionで復元する。
+- Offline/macOS CTest各5/5、ASan core/VAB2/2、実VST3 44.1/48/96kHzと実AU48kHz、公式validator47/0が成功。
+  初期demoは変更前とbyte一致。StandaloneでCopy/graph/typed入力/mode/Applyを操作確認した。
+- GarageBandの検証copyを保存して終了、project7 filesをverified backupした。
+  旧AU全5files照合後`au-update-uw55khkl`で更新し、newsource/installed・oldbackup/archiveの各5files一致、auval成功。
+- 旧projectを開きP3/T0/Gain99・Tone ADSR・Apply On・Project restoredと新panelを確認。
+  embedded payloadは前後同一、元project11 filesは開始manifest同一。最後は録音/再生停止・AU editor表示。
+- [記録・復帰手順](adsr_editing_20261031.md)、[hash/ログ/manifest](adsr_editing_20261031.json)。
+  次: 実装をpushしてCI確認。次の音作り機能はSPU Reverb。実聴・長時間・実DAW automation録音等は未確認。
+
 ## 2026-10-31 JST — ADSR編集の開始チェックポイント
 
 - `ed9bb31`、main/origin同期・clean treeから開始。実装前に今回の範囲をTODOへ保存した。

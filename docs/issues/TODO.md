@@ -23,18 +23,19 @@ AUを既知manifest照合付きで更新し、GarageBand標準AUプリセット�
 Toneの個別切替・保存・再起動後のP3/T1復元も確認済み。
 Program操作後のP3/T0と保存・project再表示も確認した。P11中間画面とToneのみのdirty判定は未確認。
 Pitch Bend / Sustainもcore・実AU/VST3・CIで検証し、installed AU更新とproject復元を完了。
-次の実装は[Web版との移植計画](../spu_synth_parity_plan.md)のADSR編集→SPU Reverb。
+ADSR編集も実装・ローカル検証・installed AU更新済み。[検証記録](../adsr_editing_20261031.md)。次はSPU Reverb。
 
 ### ADSR編集の今回の区切り（2026-10-31、実装前）
 
-- [ ] Tone本来のADSRを保持し、Custom ADSRの有効化・元Toneからのコピーを追加する。初期状態は元Toneを使用する。
-- [ ] Attack / Decay / Sustain level / Sustain / Releaseのrateとmodeをhost parameterとして公開する。Gainの既存indexは変えない。
-- [ ] Apply editsをOnにすると現在のlevel・sample位置からheld / pedal-held / Release音へ反映し、Offなら既存音は離鍵後まで旧設定を保持する。新しいNote Onは編集値を使う。
-- [ ] rate codeを使うADSRの概形と編集controlを追加し、実測msと誤解されないよう表示する。
-- [ ] 新設定をversion付きstateへ保存する。旧schema1・Gain-only stateは元Toneの音を保って復元し、不正stateは音源と全parameterを保持する。
-- [ ] coreのlive / deferred / Release / partition / RT確保と、実AU/VST3でのparameter・state・旧形式回帰を検証する。
-- [ ] Standalone / AU / VST3をbuildし、画面を確認する。検証結果・制限をcommit / pushし、CIを確認する。
-- [ ] 検証後に既知manifest付きでinstalled AUを安全に更新し、検証projectの旧state復元を確認する。
+- [x] Tone本来のADSRを保持し、Custom ADSRの有効化・元Toneからのコピーを追加する。初期状態は元Toneを使用する。
+- [x] Attack / Decay / Sustain level / Sustain / Releaseのrateとmodeをhost parameterとして公開する。Gainの既存indexは変えない。
+- [x] Apply editsをOnにすると現在のlevel・sample位置からheld / pedal-held / Release音へ反映し、Offなら既存音は離鍵後まで旧設定を保持する。新しいNote Onは編集値を使う。
+- [x] rate codeを使うADSRの概形と編集controlを追加し、実測msと誤解されないよう表示する。
+- [x] 新設定をversion付きstateへ保存する。旧schema1・Gain-only stateは元Toneの音を保って復元し、不正stateは音源と全parameterを保持する。
+- [x] coreのlive / deferred / Release / partition / RT確保と、実AU/VST3でのparameter・state・旧形式回帰を検証する。
+- [x] Standalone / AU / VST3をbuildし、Standalone実操作とGarageBandでの旧state復元・新panel表示を確認する。
+- [ ] 検証結果・制限をcommit / pushし、CIを確認する。
+- [x] 検証後に既知manifest付きでinstalled AUを安全に更新し、検証projectの旧state復元を確認する（P3/T0/Gain99、Tone ADSR、Apply On）。
 
 CustomをOffにするとbank内のADSRへ戻る。Custom値はProgram/Toneを切り替えても保持し、Copy toneで明示的に取り込めるようにする。
 live MIDIのBend/Sustainは保存しない。Web版・Native SDKのvendor source・既存project原本は変更しない。

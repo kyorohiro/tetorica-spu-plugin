@@ -6,7 +6,9 @@
 
 #if IPLUG_EDITOR
 #include "IControls.h"
+#include "EnvelopeControl.h"
 #include <algorithm>
+#include <array>
 #include <cstring>
 #include <functional>
 #include <optional>
@@ -178,7 +180,52 @@ void TetoricaSPU::initializeInstrumentUI()
     graphics->AttachControl(new IMultiLineTextControl(IRECT(166, 150, 550, 199),
       mInstrumentUI->status.c_str(), IText(13).WithAlign(EAlign::Near).WithVAlign(EVAlign::Top)),
       kCtrlInstrumentStatus);
-    graphics->AttachControl(new SpuKeyboardControl(IRECT(24, 206, 696, 336), 48, 84),
+    const auto smallStyle = DEFAULT_STYLE.WithLabelText(IText(13))
+      .WithValueText(IText(14)).WithDrawShadows(false);
+    const auto switchStyle = smallStyle.WithShowLabel(false);
+    graphics->AttachControl(new IVToggleControl(IRECT(24, 202, 188, 230),
+      kParamEnvelopeEnabled, "", switchStyle, "Tone ADSR", "Custom ADSR"));
+    auto* copyEnvelope = new IVButtonControl(IRECT(200, 202, 336, 230),
+      [this](IControl*) { copyToneEnvelopeFromUI(); }, "Copy tone ADSR", smallStyle);
+    copyEnvelope->SetTooltip("Copy the original Tone's ADSR and enable Custom ADSR.");
+    graphics->AttachControl(copyEnvelope);
+    auto* liveEnvelope = new IVToggleControl(IRECT(348, 202, 696, 230),
+      kParamEnvelopeLive, "", switchStyle,
+      "Apply to sounding notes: OFF", "Apply to sounding notes: ON");
+    liveEnvelope->SetTooltip("On applies the latest ADSR from each note's current level and sample position. Off keeps existing notes unchanged through Release; new notes use the edits.");
+    graphics->AttachControl(liveEnvelope);
+    graphics->AttachControl(new SpuEnvelopeGraphControl(IRECT(24, 238, 696, 326)),
+      kCtrlEnvelopeGraph);
+    const std::array<int, 5> rateParams{{kParamAttackRate, kParamDecayRate,
+      kParamSustainLevel, kParamSustainRate, kParamReleaseRate}};
+    const std::array<const char*, 5> rateNames{{"Attack rate", "Decay rate",
+      "Sustain level", "Sustain rate", "Release rate"}};
+    for (int index = 0; index < 5; ++index)
+    {
+      const float x = 24.f + index * 136.f;
+      auto* knob = new IVKnobControl(IRECT(x, 330, x + 112, 412),
+        rateParams[index], rateNames[index], smallStyle, true);
+      knob->SetTooltip(index == 2 ? "Sustain threshold: (code + 1) / 16; zero is not silence." :
+        "Raw SPU rate code, not milliseconds. Zero is fastest; larger codes are slower or hold.");
+      graphics->AttachControl(knob, kCtrlEnvelopeFirst + index);
+    }
+    const std::array<int, 4> modeParams{{kParamAttackExponential,
+      kParamSustainDecrease, kParamSustainExponential, kParamReleaseExponential}};
+    const std::array<const char*, 4> modeOff{{"Attack: linear", "Sustain: up",
+      "Sustain: linear", "Release: linear"}};
+    const std::array<const char*, 4> modeOn{{"Attack: exp", "Sustain: down",
+      "Sustain: exp", "Release: exp"}};
+    for (int index = 0; index < 4; ++index)
+    {
+      const float x = 24.f + index * 172.f;
+      graphics->AttachControl(new IVToggleControl(IRECT(x, 418, x + 156, 446),
+        modeParams[index], "", switchStyle, modeOff[index], modeOn[index]),
+        kCtrlEnvelopeFirst + 5 + index);
+    }
+    graphics->AttachControl(new ITextControl(IRECT(24, 449, 696, 469),
+      "Custom preview - enable Custom ADSR to use the edits.",
+      IText(12).WithAlign(EAlign::Near)), kCtrlEnvelopeStatus);
+    graphics->AttachControl(new SpuKeyboardControl(IRECT(24, 478, 696, 602), 48, 84),
       kCtrlKeyboard);
     updateInstrumentControls();
   };
@@ -197,6 +244,9 @@ void TetoricaSPU::OnUIOpen()
 
 void TetoricaSPU::closeInstrumentUI() noexcept
 {
+  if (auto* graphics = GetUI())
+    if (auto* graph = graphics->GetControlWithTag(kCtrlEnvelopeGraph))
+      static_cast<SpuEnvelopeGraphControl*>(graph)->CancelPointerEdit();
   if (mInstrumentUI && mInstrumentUI->lifetime)
   {
     const auto lifetime = mInstrumentUI->lifetime;
@@ -406,6 +456,59 @@ void TetoricaSPU::updateInstrumentControls()
       auto* menu = static_cast<SpuMenuControl*>(control);
       if (std::strcmp(menu->GetLabelStr(), label.c_str())) menu->SetLabelStr(label.c_str());
     }
+
+  const bool custom = GetParam(kParamEnvelopeEnabled)->Bool();
+  for (int tag = kCtrlEnvelopeFirst; tag <= kCtrlEnvelopeLast; ++tag)
+    if (auto* control = graphics->GetControlWithTag(tag))
+      if (control->IsDisabled() == custom) control->SetDisabled(!custom);
+  if (auto* graph = graphics->GetControlWithTag(kCtrlEnvelopeGraph))
+  {
+    if (graph->IsDisabled() == custom) graph->SetDisabled(!custom);
+    graph->SetDirty(false);
+  }
+  if (auto* control = graphics->GetControlWithTag(kCtrlEnvelopeStatus))
+  {
+    const char* message = !custom ? "Custom preview is disabled. New notes use the original Tone ADSR." :
+      GetParam(kParamReleaseRate)->Int() >= 27 ?
+      "Release 27-31 holds indefinitely. Use All sound off to stop immediately." :
+      "Rate codes: 0 = fastest. Drag A / D / S / R; drag D vertically for sustain level.";
+    auto* text = static_cast<ITextControl*>(control);
+    if (std::strcmp(text->GetStr(), message)) text->SetStr(message);
+  }
+}
+
+void TetoricaSPU::copyToneEnvelopeFromUI()
+{
+  if (!GetUI() || !mInstrumentUI) return;
+  // The UI already owns parsed authoring metadata. Do not read the live SPU or
+  // request an engine replacement merely to copy envelope parameters.
+  tetorica::EnvelopeRegisters envelope;
+  const auto& ui = *mInstrumentUI;
+  if (ui.definition && ui.bank)
+    for (const auto& tone : ui.bank->tones)
+      if (tone.program == ui.definition->program() && tone.index == ui.definition->tone())
+      { envelope = {tone.adsr1, tone.adsr2}; break; }
+  const std::array<std::pair<int, double>, 10> edits{{
+    {kParamAttackRate, double((envelope.adsr1 >> 8) & 127)},
+    {kParamAttackExponential, double((envelope.adsr1 >> 15) & 1)},
+    {kParamDecayRate, double((envelope.adsr1 >> 4) & 15)},
+    {kParamSustainLevel, double(envelope.adsr1 & 15)},
+    {kParamSustainRate, double((envelope.adsr2 >> 6) & 127)},
+    {kParamSustainDecrease, double((envelope.adsr2 >> 14) & 1)},
+    {kParamSustainExponential, double((envelope.adsr2 >> 15) & 1)},
+    {kParamReleaseRate, double(envelope.adsr2 & 31)},
+    {kParamReleaseExponential, double((envelope.adsr2 >> 5) & 1)},
+    {kParamEnvelopeEnabled, 1.}
+  }};
+  for (const auto& edit : edits)
+  {
+    const double normalized = GetParam(edit.first)->ToNormalized(edit.second);
+    BeginInformHostOfParamChangeFromUI(edit.first);
+    SendParameterValueFromUI(edit.first, normalized);
+    SendParameterValueFromDelegate(edit.first, normalized, true);
+    EndInformHostOfParamChangeFromUI(edit.first);
+  }
+  updateInstrumentControls();
 }
 
 void TetoricaSPU::notifyHostOfInstrumentEdit()

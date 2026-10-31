@@ -2,6 +2,7 @@
 // Copyright (c) 2026 kyorohiro
 #pragma once
 
+#include "SpuEnvelope.h"
 #include <array>
 #include <cstdint>
 
@@ -46,6 +47,16 @@ public:
   void resetControllers(int channel = -1) noexcept; // Neutral bend; release pedal only.
   void allNotesOff(int channel = -1) noexcept;      // Key releases, respecting pedal.
   void panic() noexcept; // Immediate mute; controllers retained until reset/prepare.
+  // The original Tone values never change. Current authored ADSR survives
+  // prepare/panic and applies to future Note On, including retriggered voices.
+  EnvelopeRegisters sourceEnvelope() const noexcept { return mSourceEnvelope; }
+  EnvelopeRegisters envelope() const noexcept { return mEnvelope; }
+  // Both raw words reach every voice before an optional live refresh. Live
+  // updates preserve current level/sample position, including Release tails;
+  // false leaves each running note's latched ADSR until its next Note On.
+  // Calling with unchanged words and live=true explicitly applies a deferred
+  // edit. No key on/off, sample upload, cache reset or allocation is performed.
+  void setEnvelope(EnvelopeRegisters values, bool live = true) noexcept;
   void render(float* left, float* right, int frames) noexcept;
 
   int activeVoiceCount() const noexcept; // Physically held keys; pedal-held/releasing excluded.
@@ -81,6 +92,7 @@ private:
   double mRootFrequencyHz = kNativeSampleRate / 112.0;
   unsigned mVolumeLeft = 0x0c00, mVolumeRight = 0x0c00;
   bool mReverbSend = false;
+  EnvelopeRegisters mSourceEnvelope{}, mEnvelope{};
   double mRatio = 1;
   double mPhase = 0;
   bool mRateInitialized = false;

@@ -3,6 +3,7 @@
 #pragma once
 
 #include "VabBank.h"
+#include "SpuEnvelope.h"
 #include <array>
 #include <cstddef>
 #include <cstdint>
@@ -13,8 +14,9 @@ namespace tetorica {
 
 inline constexpr std::size_t kStateHeaderBytes=32;
 inline constexpr std::array<std::uint8_t,8> kStateMagic{{'T','S','P','U','S','T','0','1'}};
-inline constexpr std::uint32_t kStateSchemaVersion=1;
-inline constexpr std::size_t kMaxStateBytes=vab::kMaxFileBytes+40;
+inline constexpr std::uint32_t kStateSchemaVersion=2;
+inline constexpr std::size_t kStateFixedBytes=48;
+inline constexpr std::size_t kMaxStateBytes=vab::kMaxFileBytes+kStateFixedBytes;
 
 // Factory-created immutable authoring data, independent of mutable audio state.
 // Full bank bytes are owned so saved projects never require the original path.
@@ -48,13 +50,16 @@ private:
 struct SavedInstrumentState {
   std::shared_ptr<const InstrumentDefinition> definition;
   double gainPercent=100;
+  EnvelopeSettings envelope{};
 };
 
 // Pure bounded codec: no native SDK, filesystem, audio callbacks or handles.
 // Throws on malformed/oversized/unsupported state; requires an exact total size.
-std::vector<std::uint8_t> encodeState(const InstrumentDefinition& definition,double gainPercent);
+std::vector<std::uint8_t> encodeState(const InstrumentDefinition& definition,double gainPercent,
+                                    EnvelopeSettings envelope={});
 std::vector<std::uint8_t> encodeState(
-    const std::shared_ptr<const InstrumentDefinition>& definition,double gainPercent);
+    const std::shared_ptr<const InstrumentDefinition>& definition,double gainPercent,
+    EnvelopeSettings envelope={});
 SavedInstrumentState decodeState(vab::BytesView bytes);
 
 class SpuInstrument;

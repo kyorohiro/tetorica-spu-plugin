@@ -15,6 +15,11 @@ namespace {
 void gain(double value) {
   if(!std::isfinite(value)||value<0||value>100)fail("SPU state: Gain must be finite 0-100 percent");
 }
+void envelope(const EnvelopeSettings& value) {
+  // Custom parameters cover the documented fields only. The source Tone's
+  // reserved bit13 is retained separately and merged by the DSP wrapper.
+  if(value.custom.adsr2&0x2000)fail("SPU state: reserved custom ADSR2 bit13 must be zero");
+}
 std::size_t selected(const vab::Bank& bank,std::uint32_t program,std::uint32_t tone) {
   if(program>127||tone>15)fail("SPU state: Program/Tone is out of range");
   for(std::size_t i=0;i<bank.tones.size();++i)
@@ -73,11 +78,13 @@ std::shared_ptr<const InstrumentDefinition> InstrumentDefinition::fromVabFlatInd
       Kind::Vab,std::move(owned),prepared.tone.program,prepared.tone.index));
 }
 
-std::vector<std::uint8_t> encodeState(const InstrumentDefinition& definition,double gainPercent) {
+std::vector<std::uint8_t> encodeState(const InstrumentDefinition& definition,double gainPercent,
+                                    EnvelopeSettings settings) {
   gain(gainPercent);
+  envelope(settings);
   const auto& bank=definition.bankBytes();
   if(bank.size()>vab::kMaxFileBytes)fail("SPU state: VAB exceeds 1 MiB");
-  std::vector<std::uint8_t> bytes(40+bank.size());
+  std::vector<std::uint8_t> bytes(kStateFixedBytes+bank.size());
   std::copy(kStateMagic.begin(),kStateMagic.end(),bytes.begin());
   putWord(bytes.data()+8,kStateSchemaVersion);
   putWord(bytes.data()+12,static_cast<std::uint32_t>(bytes.size()));
@@ -86,30 +93,44 @@ std::vector<std::uint8_t> encodeState(const InstrumentDefinition& definition,dou
   putWord(bytes.data()+28,static_cast<std::uint32_t>(bank.size()));
   std::copy(bank.begin(),bank.end(),bytes.begin()+kStateHeaderBytes);
   putGain(bytes.data()+kStateHeaderBytes+bank.size(),gainPercent);
+  putWord(bytes.data()+40+bank.size(),std::uint32_t(settings.custom.adsr1)|
+    (std::uint32_t(settings.custom.adsr2)<<16));
+  putWord(bytes.data()+44+bank.size(),(settings.enabled?1u:0u)|(settings.live?2u:0u));
   return bytes;
 }
 
 std::vector<std::uint8_t> encodeState(
-    const std::shared_ptr<const InstrumentDefinition>& definition,double gainPercent) {
+    const std::shared_ptr<const InstrumentDefinition>& definition,double gainPercent,
+    EnvelopeSettings settings) {
   if(!definition)throw std::invalid_argument("SPU state: missing instrument definition");
-  return encodeState(*definition,gainPercent);
+  return encodeState(*definition,gainPercent,settings);
 }
 
 SavedInstrumentState decodeState(vab::BytesView bytes) {
   if(!bytes.data&&bytes.size)throw std::invalid_argument("SPU state: null input");
   if(bytes.size<40||bytes.size>kMaxStateBytes)fail("SPU state: invalid total length");
   if(std::memcmp(bytes.data,kStateMagic.data(),kStateMagic.size()))fail("SPU state: invalid signature");
-  if(word(bytes.data+8)!=kStateSchemaVersion)fail("SPU state: unsupported schema");
+  const auto version=word(bytes.data+8);
+  if(version!=1&&version!=kStateSchemaVersion)fail("SPU state: unsupported schema");
   if(word(bytes.data+12)!=bytes.size)fail("SPU state: declared length differs");
   const auto kind=word(bytes.data+16),program=word(bytes.data+20),tone=word(bytes.data+24),n=word(bytes.data+28);
-  if(n>vab::kMaxFileBytes||std::uint64_t(n)+40!=bytes.size)fail("SPU state: invalid bank length");
+  const auto fixed=version==1?40:kStateFixedBytes;
+  if(n>vab::kMaxFileBytes||std::uint64_t(n)+fixed!=bytes.size)fail("SPU state: invalid bank length");
   if(kind>1)fail("SPU state: unsupported instrument kind");
   if(kind==0&&(n||program||tone))fail("SPU state: builtin must not contain a bank or selection");
   if(kind==1&&(!n||program>127||tone>15))fail("SPU state: invalid VAB selection");
-  const auto gainPercent=readGain(bytes.data+bytes.size-8);gain(gainPercent);
-  if(kind==0)return {InstrumentDefinition::builtin(),gainPercent};
+  const auto gainPercent=readGain(bytes.data+32+n);gain(gainPercent);
+  EnvelopeSettings settings;
+  if(version==2) {
+    const auto packed=word(bytes.data+40+n),flags=word(bytes.data+44+n);
+    if(flags&~3u)fail("SPU state: unknown envelope flags");
+    settings.custom={static_cast<std::uint16_t>(packed),static_cast<std::uint16_t>(packed>>16)};
+    settings.enabled=(flags&1)!=0;settings.live=(flags&2)!=0;
+    envelope(settings);
+  }
+  if(kind==0)return {InstrumentDefinition::builtin(),gainPercent,settings};
   std::vector<std::uint8_t> bank(bytes.data+kStateHeaderBytes,bytes.data+kStateHeaderBytes+n);
-  return {InstrumentDefinition::fromVab(std::move(bank),program,tone),gainPercent};
+  return {InstrumentDefinition::fromVab(std::move(bank),program,tone),gainPercent,settings};
 }
 
 } // namespace tetorica

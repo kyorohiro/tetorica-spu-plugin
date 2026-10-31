@@ -5,9 +5,9 @@ Initial development targets macOS Standalone, AUv2 and VST3. Not a published rel
 
 Current prototype: original built-in Sine, MIDI Note On/Off and velocity,
 24 voices, channel-aware note ownership, Pitch Bend, Sustain, All sound off,
-Gain and mouse keyboard.
+Gain, custom ADSR editing and mouse keyboard.
 Load a complete VAB from the editor and select a Program and Tone to audition.
-The bank, selection and Gain are embedded in the DAW project state.
+The bank, selection, Gain and ADSR settings are embedded in the DAW project state.
 Additional SPU controls remain planned. The same VAB parser and selected-Tone
 engine can also be exercised with the offline tool below.
 
@@ -82,7 +82,7 @@ channels, as does the editor's **All sound off** button.
 MIDI offsets are honored inside blocks, including multiple controller points
 in a VST3 block. The plugin supplies a bounded adapter for mapped VST3 MIDI CCs
 without changing its pinned framework. Normal Gain and bypass parameters
-continue through the framework.
+continue through the framework, along with the ADSR parameters.
 
 Wheel/pedal positions are live MIDI input, not preset data. UI bank/Tone changes
 retain them for subsequent notes; successful project-state restore, audio reset,
@@ -90,6 +90,36 @@ deactivation and MIDI overflow recovery return them to neutral. Invalid state
 restore leaves the existing instrument and controller state intact.
 VST3 bypass also clears held/deferred notes and controllers, so input from
 bypassed blocks is not replayed when processing resumes.
+
+## ADSR editing
+
+The default **Tone ADSR** mode uses the built-in instrument's or selected VAB
+Tone's original envelope. **Copy tone ADSR** copies that envelope into the
+editor and enables **Custom ADSR**. You can also enable Custom directly to use
+the previously edited values. Custom values stay in place across bank/Program/
+Tone changes; switching back to Tone ADSR restores that source's envelope.
+
+Attack, Decay, Sustain level, Sustain rate and Release use the SPU's raw codes.
+Rate zero is fastest; larger codes slow the envelope or hold it. Sustain level
+is `(code + 1) / 16`, so level zero is not silence. Attack, Sustain and Release
+have linear/exponential modes; Sustain can rise or fall. Decay is exponential.
+The graph previews the custom envelope's shape, not measured time. Drag A, D,
+S or R horizontally to change a rate, and D vertically to change Sustain level.
+The knobs also accept typed values. Controls are dimmed while Tone ADSR plays.
+
+**Apply to sounding notes** starts On. Changes keep each note's current level
+and sample position, including pedal-held notes and release tails. They do not
+restart samples or trigger a new attack. With Apply Off, existing notes retain
+their ADSR through Release and new Note Ons use the edited values. Turning
+Apply back On immediately applies the latest settings to sounding notes.
+Unlike the current Web editor, the On toggle itself performs this update.
+Release codes 27–31 hold indefinitely in this core; **All sound off** stops them.
+
+All ADSR controls are host parameters; Gain retains parameter ID 0. Automation
+is applied at audio-block boundaries, using the framework's final parameter
+point for each block. MIDI Note/Bend/Sustain offsets remain sample-accurate.
+Envelope edits write registers and refresh the native envelope without sample
+uploads, engine replacement or application-level audio-thread allocations.
 
 ## VAB offline preview
 
@@ -145,10 +175,12 @@ the engine exchange.
 ## Embedded DAW state
 
 Custom state now embeds the complete original VAB, sparse Program/Tone selection
-and Gain. Restoring a project prepares a fresh SPU synchronously before reporting
+and Gain, custom ADSR and Apply settings. Restoring a project prepares a fresh SPU synchronously before reporting
 success; it does not need an external sample path. Malformed or unsupported state
 keeps the current sound, parameters and an already prepared pending replacement.
 Previous Gain-only AU/VST3 state remains readable and migrates to Built-in Sine.
+Schema 1 VAB/Gain states also remain readable and use their original Tone ADSR.
+Schema 2 keeps the original bank bytes and adds the custom ADSR settings.
 
 The actual AU and VST3 have been tested for embedded-bank round-trip, separate
 instances, immediate first-render MIDI/PCM and malformed-state rejection. VST3

@@ -10,6 +10,17 @@ TetoricaSPU::TetoricaSPU(const iplug::InstanceInfo& info)
 : iplug::Plugin(info, iplug::MakeConfig(kNumParams, 1))
 {
   GetParam(kParamGain)->InitDouble("Gain", 100., 0., 100., 0.1, "%");
+  GetParam(kParamEnvelopeEnabled)->InitBool("Custom ADSR", false);
+  GetParam(kParamAttackRate)->InitInt("Attack rate", 0, 0, 127);
+  GetParam(kParamAttackExponential)->InitBool("Attack exponential", false);
+  GetParam(kParamDecayRate)->InitInt("Decay rate", 0, 0, 15);
+  GetParam(kParamSustainLevel)->InitInt("Sustain level", 15, 0, 15);
+  GetParam(kParamSustainRate)->InitInt("Sustain rate", 127, 0, 127);
+  GetParam(kParamSustainDecrease)->InitBool("Sustain decrease", false);
+  GetParam(kParamSustainExponential)->InitBool("Sustain exponential", false);
+  GetParam(kParamReleaseRate)->InitInt("Release rate", 0, 0, 31);
+  GetParam(kParamReleaseExponential)->InitBool("Release exponential", false);
+  GetParam(kParamEnvelopeLive)->InitBool("Apply ADSR while playing", true);
 
 #if IPLUG_EDITOR
   mMakeGraphicsFunc = [this]() {
@@ -34,6 +45,7 @@ void TetoricaSPU::OnReset()
   resetControllerCache();
   mReady = mEngines.instrument().prepare(GetSampleRate());
   mEngines.instrument().panic();
+  mEnvelopeApplied = false;
 }
 
 void TetoricaSPU::OnActivate(bool active)
@@ -141,6 +153,39 @@ void TetoricaSPU::applyControllerCache() noexcept
   }
 }
 
+void TetoricaSPU::applyEnvelopeParameters() noexcept
+{
+  // Host parameters are read at block boundaries. Named editing changes only
+  // interpreted bits; the selected Tone's uninterpreted ADSR2 bit13 survives.
+  auto& instrument = mEngines.instrument();
+  const auto source = instrument.sourceEnvelope();
+  auto envelope = source;
+  const auto value = [this](int index, int maximum) noexcept {
+    const double raw = GetParam(index)->Value();
+    return std::isfinite(raw) ? static_cast<unsigned>(
+      std::clamp(std::round(raw), 0., static_cast<double>(maximum))) : 0u;
+  };
+  if (value(kParamEnvelopeEnabled, 1))
+  {
+    envelope.adsr1 = static_cast<std::uint16_t>(
+      (value(kParamAttackExponential, 1) << 15) |
+      (value(kParamAttackRate, 127) << 8) |
+      (value(kParamDecayRate, 15) << 4) | value(kParamSustainLevel, 15));
+    envelope.adsr2 = static_cast<std::uint16_t>((source.adsr2 & 0x2000) |
+      (value(kParamSustainExponential, 1) << 15) |
+      (value(kParamSustainDecrease, 1) << 14) |
+      (value(kParamSustainRate, 127) << 6) |
+      (value(kParamReleaseExponential, 1) << 5) | value(kParamReleaseRate, 31));
+  }
+  const bool live = value(kParamEnvelopeLive, 1) != 0;
+  if (!mEnvelopeApplied || envelope.adsr1 != mAppliedEnvelope.adsr1 ||
+      envelope.adsr2 != mAppliedEnvelope.adsr2 || (live && !mAppliedEnvelopeLive))
+    instrument.setEnvelope(envelope, live);
+  mAppliedEnvelope = envelope;
+  mAppliedEnvelopeLive = live;
+  mEnvelopeApplied = true;
+}
+
 void TetoricaSPU::discardCarriedMidi() noexcept
 {
   std::size_t kept = 0;
@@ -183,6 +228,7 @@ void TetoricaSPU::ProcessBlock(iplug::sample**, iplug::sample** outputs, int nFr
   if (mEngines.beginBlock(GetSampleRate()))
   {
     applyControllerCache();
+    mEnvelopeApplied = false;
     // A UI replacement starts with no held notes, but physical wheel/pedal
     // input still belongs to the MIDI stream. Preserve carried controllers,
     // especially a pedal-up at the block boundary, and discard old note events.
@@ -204,6 +250,8 @@ void TetoricaSPU::ProcessBlock(iplug::sample**, iplug::sample** outputs, int nFr
     mMidiCount = 0;
     return;
   }
+
+  applyEnvelopeParameters();
 
   const double requestedGain = GetParam(kParamGain)->Value() / 100.;
   const double gain = std::isfinite(requestedGain) ? std::clamp(requestedGain, 0., 1.) : 0.;

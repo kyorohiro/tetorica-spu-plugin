@@ -13,6 +13,7 @@
 #include "public.sdk/source/vst/hosting/plugprovider.h"
 #include "InstrumentState.h"
 #include "midi-controller-checks.h"
+#include "envelope-checks.h"
 #include "pluginterfaces/vst/ivstmidicontrollers.h"
 
 #include <algorithm>
@@ -209,6 +210,20 @@ public:
     int32 queueIndex=0,pointIndex=0;auto* queue=parameters.addParameterData(id,queueIndex);
     require(queue,"Cannot add adversarial host parameter");
     ok(queue->addPoint(offset,value,pointIndex),"Cannot add adversarial parameter point");
+  }
+  void envelopeParameterForTest(int index,double plainValue) {
+    require(index>=1&&index<=11,"Invalid ADSR test parameter ID");
+    const ParamID id=static_cast<ParamID>(index);
+    const double normalized=controller->plainParamToNormalized(id,plainValue);
+    ok(controller->setParamNormalized(id,normalized),"ADSR controller parameter rejected");
+    parameterForTest(id,normalized,0);
+  }
+  std::vector<std::uint8_t> envelopeBodyForTest() {
+    auto bytes=savedBytes();require(bytes.size()>=4,"Missing VST3 state trailer");
+    bytes.resize(bytes.size()-4);return bytes;
+  }
+  bool tryEnvelopeRestoreForTest(std::vector<std::uint8_t> body) {
+    body.insert(body.end(),4,0);return tryRestore(body);
   }
   void restoreForMidiTest(const std::vector<std::uint8_t>& bytes) {
     require(tryRestore(bytes),"Controller test state restore failed");parameters.clearQueue();
@@ -667,12 +682,12 @@ void checkStateFailures(const PluginFactory& factory,const ClassInfo& info) {
   const auto on=note(true,0);sameStereo(target,reference,{on});
   std::vector<StateBytes> invalid;
   auto mutate=[&](std::size_t offset,std::uint32_t value){auto state=valid;put32(state,offset,value);invalid.push_back(std::move(state));};
-  mutate(0,0);mutate(8,2);mutate(12,1);mutate(16,9);mutate(20,127);mutate(24,99);mutate(28,0xffffffff);
+  mutate(0,0);mutate(8,3);mutate(12,1);mutate(16,9);mutate(20,127);mutate(24,99);mutate(28,0xffffffff);
   for(const auto length:{std::size_t(0),std::size_t(1),std::size_t(7),std::size_t(8),std::size_t(12),
       std::size_t(31),std::size_t(39),valid.size()-5,valid.size()-1})
     invalid.emplace_back(valid.begin(),valid.begin()+length);
   for(const double gain:{-1.,101.,std::numeric_limits<double>::infinity(),std::numeric_limits<double>::quiet_NaN()}) {
-    auto state=valid;putDouble(state,state.size()-12,gain);invalid.push_back(std::move(state));
+    auto state=valid;putDouble(state,32+bank.size(),gain);invalid.push_back(std::move(state));
   }
   auto oversized=valid;oversized.resize(tetorica::kMaxStateBytes+5);invalid.push_back(std::move(oversized));
   auto trailing=valid;trailing.push_back(0);invalid.push_back(std::move(trailing));
@@ -730,6 +745,10 @@ int main(int argc, char** argv) {
           checkRate(factory, info, rate);
           checkScheduler(factory, info, rate);
           checkEmbeddedState(factory,info,rate);
+          tetorica::test::checkEnvelopes([&] {
+            auto instance=std::make_unique<Instance>(factory,info,rate);instance->allowAsymmetric();
+            instance->start();return instance;
+          },rate,"VST3 parameter changes",originalBank());
           tetorica::test::checkControllers([&] {
             auto instance=std::make_unique<Instance>(factory,info,rate);instance->start();return instance;
           },rate,"VST3 IMidiMapping");

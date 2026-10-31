@@ -11,7 +11,8 @@ Web版`docs/synth-spu`にある音作り機能を、Native SPU pluginへ段階�
 
 pluginでは、24 physical voicesによる演奏、velocity、Note On/Off、Release、panic、
 complete VAB v6/v7の読み込み、Program/Tone選択、bank bytesを含むDAW stateを実装済み。
-VAB由来のADSR・tuning・loop・volume/panを使用するが、これらを編集する画面はまだない。
+VAB由来のADSR・tuning・loop・volume/panを使用する。ADSRはCustom overrideによる編集も実装した。
+ほかの元Tone設定の編集UIは後続。[ADSRの検証記録](adsr_editing_20261031.md)を参照。
 reverb sendは保持するものの、共有reverbは初期Offである。
 Gainは現在0〜100%。WebのMaster 200%とは異なる。
 

@@ -18,6 +18,17 @@
 enum EParams
 {
   kParamGain = 0,
+  kParamEnvelopeEnabled,
+  kParamAttackRate,
+  kParamAttackExponential,
+  kParamDecayRate,
+  kParamSustainLevel,
+  kParamSustainRate,
+  kParamSustainDecrease,
+  kParamSustainExponential,
+  kParamReleaseRate,
+  kParamReleaseExponential,
+  kParamEnvelopeLive,
   kNumParams
 };
 
@@ -29,7 +40,11 @@ enum ECtrlTags
   kCtrlBankLabel,
   kCtrlProgram,
   kCtrlTone,
-  kCtrlInstrumentStatus
+  kCtrlInstrumentStatus,
+  kCtrlEnvelopeGraph,
+  kCtrlEnvelopeStatus,
+  kCtrlEnvelopeFirst,
+  kCtrlEnvelopeLast = kCtrlEnvelopeFirst + 8
 };
 
 class TetoricaSPU final : public iplug::Plugin
@@ -86,6 +101,7 @@ private:
     std::uint64_t revision, tetorica::SpuEngineExchange::Generation generation,
     std::uint32_t program, std::uint32_t tone);
   void updateInstrumentControls();
+  void copyToneEnvelopeFromUI();
   void notifyHostOfInstrumentEdit();
   std::shared_ptr<InstrumentUIState> mInstrumentUI;
   std::atomic<std::uint64_t> mInstrumentUIRevision{0};
@@ -93,6 +109,7 @@ private:
   void applyMidi(const iplug::IMidiMsg& msg);
   void resetControllerCache() noexcept;
   void applyControllerCache() noexcept;
+  void applyEnvelopeParameters() noexcept;
   void discardCarriedMidi() noexcept;
   void renderRange(iplug::sample** outputs, int offset, int nFrames, double gain);
 
@@ -120,6 +137,9 @@ private:
   // Bend is stored as the signed displacement from raw MIDI center 8192.
   std::array<std::int16_t, 16> mBend{};
   std::array<bool, 16> mSustain{};
+  tetorica::EnvelopeRegisters mAppliedEnvelope{};
+  bool mEnvelopeApplied = false;
+  bool mAppliedEnvelopeLive = true;
   std::array<float, kScratchFrames> mLeft{};
   std::array<float, kScratchFrames> mRight{};
 #endif

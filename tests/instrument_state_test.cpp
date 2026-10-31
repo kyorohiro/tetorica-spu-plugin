@@ -52,6 +52,12 @@ void word(Bytes& bytes,std::size_t at,std::uint32_t value){
   for(unsigned i=0;i<4;++i)bytes[at+i]=static_cast<std::uint8_t>(value>>(i*8));
 }
 SavedInstrumentState decode(const Bytes& bytes){return decodeState({bytes.data(),bytes.size()});}
+bool sameEnvelope(EnvelopeSettings a,EnvelopeSettings b){
+  return a.custom.adsr1==b.custom.adsr1&&a.custom.adsr2==b.custom.adsr2&&a.enabled==b.enabled&&a.live==b.live;
+}
+Bytes schema1(Bytes bytes){
+  bytes.resize(bytes.size()-8);word(bytes,8,1);word(bytes,12,static_cast<std::uint32_t>(bytes.size()));return bytes;
+}
 struct Stereo{std::vector<float> left,right;explicit Stereo(std::size_t n):left(n),right(n){}};
 void render(SpuInstrument& engine,Stereo& out){engine.render(out.left.data(),out.right.data(),static_cast<int>(out.left.size()));CHECK(engine.healthy());}
 float peak(const Stereo& out){float p=0;for(auto v:out.left)p=std::max(p,std::abs(v));return p;}
@@ -62,10 +68,11 @@ void codec(){
   const auto builtin=Def::builtin();
   CHECK(builtin->kind()==Def::Kind::Builtin&&builtin->bankBytes().empty()&&builtin->program()==0&&builtin->tone()==0);
   const auto encoded=encodeState(builtin,37.5);
-  CHECK(encoded.size()==40&&std::equal(kStateMagic.begin(),kStateMagic.end(),encoded.begin()));
-  CHECK(encoded[8]==1&&encoded[12]==40&&encoded[16]==0);
+  CHECK(encoded.size()==48&&std::equal(kStateMagic.begin(),kStateMagic.end(),encoded.begin()));
+  CHECK(encoded[8]==2&&encoded[12]==48&&encoded[16]==0);
   CHECK(encoded[37]==0xc0&&encoded[38]==0x42&&encoded[39]==0x40); //LE binary64 37.5.
   auto restored=decode(encoded);CHECK(restored.gainPercent==37.5&&restored.definition==builtin);
+  CHECK(sameEnvelope(restored.envelope,{}));
   auto bytes=fixture();const auto original=bytes;
   auto selected=Def::fromVab(bytes,3,1);std::fill(bytes.begin(),bytes.end(),0);
   CHECK(selected->bankBytes()==original&&selected->program()==3&&selected->tone()==1);
@@ -80,6 +87,25 @@ void codec(){
     CHECK(read.gainPercent==value&&read.definition->bankBytes()==original&&read.definition->program()==3&&read.definition->tone()==1);
     CHECK(encodeState(read.definition,read.gainPercent)==wire);
   }
+  for(unsigned flags=0;flags<4;++flags){
+    EnvelopeSettings settings{{0xa937,0xd7bb},bool(flags&1),bool(flags&2)};
+    const auto wire=encodeState(selected,37,settings);const auto read=decode(wire);
+    CHECK(wire.size()==original.size()+48&&sameEnvelope(settings,read.envelope));
+    CHECK(encodeState(read.definition,read.gainPercent,read.envelope)==wire);
+    CHECK(read.definition->bankBytes()==original);
+    // v1 has no authored override; migration must never infer custom values
+    // from the new extension or overwrite the original bank's ADSR metadata.
+    const auto old=schema1(wire);const auto migrated=decode(old);
+    CHECK(migrated.definition->bankBytes()==original&&migrated.gainPercent==37&&sameEnvelope(migrated.envelope,{}));
+    CHECK(encodeState(migrated.definition,migrated.gainPercent,migrated.envelope).size()==wire.size());
+  }
+  auto sourceReserved=original;sourceReserved[0x820+19]|=0x20;
+  const auto sourceState=decode(encodeState(Def::fromVab(sourceReserved,3,0),37));
+  CHECK(sourceState.definition->bankBytes()==sourceReserved); //Source bit13 remains legal and exact.
+  EnvelopeSettings reserved;reserved.custom.adsr2|=0x2000;
+  rejects([&]{encodeState(builtin,37,reserved);});
+  const auto oldBuiltin=decode(schema1(encoded));
+  CHECK(oldBuiltin.definition==builtin&&sameEnvelope(oldBuiltin.envelope,{}));
   const auto shot=decode(encodeState(Def::fromVab(original,11,0),99.));
   CHECK(shot.definition->program()==11&&shot.definition->tone()==0);
   rejects([&]{Def::fromVab(original,0,0);});rejects([&]{Def::fromVab(original,3,16);});
@@ -90,7 +116,7 @@ void codec(){
 }
 void malformed(){
   const auto good=encodeState(Def::fromVab(fixture(),3,0),25.);
-  for(std::size_t n=0;n<40;++n)rejects([&]{decodeState({good.data(),n});});
+  for(std::size_t n=0;n<48;++n)rejects([&]{decodeState({good.data(),n});});
   rejects([&]{decodeState({nullptr,40});});rejects([&]{decodeState({nullptr,0});});
   rejects([&]{decodeState({good.data(),kMaxStateBytes+1});});
   for(const auto at:{0u,7u,8u,12u,16u,20u,24u,28u}){
@@ -98,6 +124,10 @@ void malformed(){
   }
   auto trailing=good;trailing.push_back(0);rejects([&]{decode(trailing);});
   auto truncated=good;truncated.pop_back();rejects([&]{decode(truncated);});
+  for(auto flags:{4u,8u,0xffffffffu}){auto bad=good;word(bad,bad.size()-4,flags);rejects([&]{decode(bad);});}
+  {auto bad=good;bad[bad.size()-5]|=0x20;rejects([&]{decode(bad);});} //Custom ADSR2 bit13.
+  {auto bad=good;word(bad,8,1);rejects([&]{decode(bad);});} //v1 cannot carry a v2 tail.
+  {auto bad=schema1(good);word(bad,8,2);rejects([&]{decode(bad);});} //v2 requires all eight extension bytes.
   for(auto n:{0u,1u,1048577u}){auto bad=good;word(bad,28,n);rejects([&]{decode(bad);});}
   for(const auto field:{20u,24u,28u}){
     auto bad=encodeState(Def::builtin(),25);word(bad,field,1);rejects([&]{decode(bad);});
@@ -108,7 +138,7 @@ void malformed(){
   auto bad=good;bad[32+0xe20+16]=0x50;rejects([&]{decode(bad);}); //Selected predictor.
   bad=good;word(bad,20,11);word(bad,24,1);rejects([&]{decode(bad);});
   for(auto bits:{0x7ff0000000000000ull,0x7ff8000000000000ull,0xbff0000000000000ull,0x4059400000000000ull}){
-    bad=good;for(unsigned i=0;i<8;++i)bad[bad.size()-8+i]=static_cast<std::uint8_t>(bits>>(i*8));
+    bad=good;for(unsigned i=0;i<8;++i)bad[bad.size()-16+i]=static_cast<std::uint8_t>(bits>>(i*8));
     rejects([&]{decode(bad);});
   }
 }
@@ -225,5 +255,5 @@ void concurrentSnapshots(){
 int main(){
   codec();malformed();immediateRestore();snapshotsAndAtomicFailure();
   callbackAndDefinitionLifetime();loaderMetadata();concurrentSnapshots();
-  std::puts("PASS immutable embedded VAB state, strict codec, sparse selection, immediate PCM restore, snapshots, failure atomicity, RT lifetime and concurrent collection");
+  std::puts("PASS immutable VAB state, schema2 ADSR/flags, schema1 migration/source preservation, strict codec, immediate PCM restore, snapshots, failure atomicity, RT lifetime and concurrent collection");
 }

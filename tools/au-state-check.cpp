@@ -4,6 +4,7 @@
 // no installation into ~/Library/Audio/Plug-Ins and no external sample path in state.
 #include "InstrumentState.h"
 #include "vst3-host/midi-controller-checks.h"
+#include "vst3-host/envelope-checks.h"
 #include <AudioToolbox/AudioToolbox.h>
 #include <CoreFoundation/CoreFoundation.h>
 #include <algorithm>
@@ -125,6 +126,16 @@ public:
   }
   std::vector<std::uint8_t> savedBytes() const {
     const auto state=save();return body(state.get());
+  }
+  void envelopeParameterForTest(int index,double plainValue) {
+    require(index>=1&&index<=11,"Invalid AU ADSR test parameter ID");
+    ok(AudioUnitSetParameter(mUnit,static_cast<AudioUnitParameterID>(index),
+      kAudioUnitScope_Global,0,static_cast<AudioUnitParameterValue>(plainValue),0),"AU ADSR parameter rejected");
+  }
+  std::vector<std::uint8_t> envelopeBodyForTest() const { return savedBytes(); }
+  bool tryEnvelopeRestoreForTest(const std::vector<std::uint8_t>& bytes) {
+    const auto state=save();const auto dictionary=withData(state.get(),bytes);
+    return restore(dictionary.get())==noErr;
   }
   void restoreForMidiTest(const std::vector<std::uint8_t>& bytes) {
     const auto state=save();const auto dictionary=withData(state.get(),bytes);
@@ -285,6 +296,7 @@ int main(int argc, char** argv)
     require(decoded.definition->kind() == tetorica::InstrumentDefinition::Kind::Builtin &&
       decoded.gainPercent == 17., "Legacy AU state did not migrate to a builtin definition");
     tetorica::test::checkControllers([&] { return std::make_unique<Instance>(component); },48000,"AU MIDIEvent");
+    tetorica::test::checkEnvelopes([&] { return std::make_unique<Instance>(component); },48000,"AU parameters",bank);
     std::cout << "PASS: local AU embedded VAB/Gain round-trip, first-render MIDI/PCM, separate instance, "
       "malformed CF/state rejection with pending/active preservation, legacy AU migration; no audio device/editor/install\n";
   }
