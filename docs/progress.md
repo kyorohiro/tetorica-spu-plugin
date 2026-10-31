@@ -1,5 +1,13 @@
 # 作業記録
 
+## 2026-10-31 JST — embedded DAW stateの開始
+
+- cleanな `56c1c0e` から再開。実装前にstate用TODOを追加した。
+- bank bytes・sparse Program / Tone選択・Gainをboundedなversion付きchunkへ保存する。
+- audio側はmutable handleを保存処理へ共有しない。復元は同期準備を終えてからpublishし、最初のrenderを検査する。
+- 不正state時に音源・Gain・pending requestを変えず、従来のGain-only stateも読み戻す方針。
+- 次: immutable定義とcodec、iPlug custom state接続、実VST3の復元・MIDI試験。
+
 ## 2026-10-31 JST — 音源交換のCIも成功
 
 - 実装 `cb8d3f6af992c6fd2b9b7c64fad240b3cf578c6c` をorigin/mainへpushした。

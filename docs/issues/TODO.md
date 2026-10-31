@@ -18,6 +18,17 @@ AU / GarageBandでの録音・保存・復元・WAVE書出しを追試済み。
 [音源交換・worker準備](../engine_handoff_20261031.md)も実装・検証済み。
 次は[VAB取り込み計画](../vab_import_plan.md)のDAW state・UI接続へ進む。
 
+### DAW stateの今回の区切り（2026-10-31）
+
+- [ ] version / size上限付きの、bank bytes・Program/Tone選択・Gainの保存形式を実装する。
+- [ ] immutableな音色定義をengineと一緒に管理し、保存時に再生中のhandleへ触れない。
+- [ ] state復元を成功と返す前に解析・cache準備を完了する。失敗時は音源とGainを保持する。
+- [ ] pluginのcustom stateへ接続し、従来のGain-only状態も復元できるようにする。
+- [ ] 実VST3で埋め込みVABの別instance復元・直後の先頭block・不正state・持ち越しMIDIを検査する。
+- [ ] build / sanitizer / AU・VST3回帰とCIを確認し、結果・次のUI作業をcommit / pushする。
+
+この区切りではファイル選択UIはまだ公開しない。VABを含むstateを実際のpluginへ復元する入口で検証する。
+
 ### 音源交換の今回の区切り（2026-10-31）
 
 - [x] 準備済みengineの所有権を、audio block境界で非待機に交換する層を作る。
