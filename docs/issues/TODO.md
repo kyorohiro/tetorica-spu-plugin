@@ -21,6 +21,14 @@ VAB file読込・Program/Tone UIを実装し、ローカル検証と[CI全job成
 AUを既知manifest照合付きで更新し、GarageBand標準AUプリセット経由でVAB保存・再起動・UI復元・PCM一致を確認した。
 [今回の記録](../au_vab_garageband_20261031.md)。次はAU独自ボタンの人によるclickと、Toneのみのdirty判定を確認する。
 
+### AU独自UIの追試（2026-10-31、開始時記録）
+
+- [x] ユーザーが実際のclickでLoad VABのファイル選択が開くと確認した。
+- [ ] 開かれたdialogから検証用VABを読み込み、初回のP3/T0とstatusを確認する。
+- [ ] 独自UI経由の選択をprojectへ保存し、embedded stateとeditor再表示を確認する。
+- [ ] CUAで可能な範囲のProgram/Tone操作・変更通知を追試し、残る人の確認と区別して記録する。
+- [ ] 結果・TODOをcommit / pushする。コード修正がなければ通過済み検証を繰り返さない。
+
 ### AU更新・GarageBand VAB確認の今回の区切り（2026-10-31、実装前）
 
 - [x] 既存AUの既知manifestを照合し、退避・staging・更新・条件付きrollbackの手順を追加・検証する。

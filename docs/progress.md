@@ -1,5 +1,11 @@
 # 作業記録
 
+## 2026-10-31 JST — 人のLoad VAB操作が成功、独自UIの追試を再開
+
+- ユーザーが「ファイル選択が開く」と回答した。人のLoad VAB clickは動作すると確認できた。
+- `1e641b0`から再開。アプリ不具合を理由とする修正は行わず、開いたdialogから独自UI経由のVAB読込を進める。
+- 次: 現在の画面を読み、検証用VAB→P3/T0→project保存とstate照合。Program/ToneのCUA操作は別に切り分ける。
+
 ## 2026-10-31 JST — GarageBand VAB保存・再起動とCI成功、独自clickは人の確認待ち
 
 - installer・state検査scriptを`ece046c`へ保存し、[CI 41192817552](https://github.com/kyorohiro/tetorica-spu-plugin/actions/runs/41192817552)は全job成功。
