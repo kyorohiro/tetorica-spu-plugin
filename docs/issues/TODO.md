@@ -23,19 +23,21 @@ AUを既知manifest照合付きで更新し、GarageBand標準AUプリセット�
 Toneの個別切替・保存・再起動後のP3/T1復元も確認済み。
 Program操作後のP3/T0と保存・project再表示も確認した。P11中間画面とToneのみのdirty判定は未確認。
 Pitch Bend / Sustainもcore・実AU/VST3・CIで検証し、installed AU更新とproject復元を完了。
-ADSR編集も実装・ローカル検証・installed AU更新済み。[検証記録](../adsr_editing_20261031.md)。次はSPU Reverb。
+ADSR編集とSPU Reverbも実装・ローカル検証・installed AU更新済み。
+[ADSR](../adsr_editing_20261031.md) / [Reverb](../reverb_20261031.md)の記録を参照。次はPCMの波形選択・描画が候補。
 
 ### SPU Reverbの今回の区切り（2026-10-31、実装前）
 
-- [ ] Native SDKへ確保・RAM/cache破棄を伴わない残響clear APIを追加・検証し、公開commitへ固定依存を更新する。通常resetをaudio callbackで呼ばない。
-- [ ] Off＋7種の共有近似preset、Enable、Return L/R（初期25%）、All notes / Tone sendを公開する。元VABのsend flagは保持する。
-- [ ] 手動の非Off preset選択で自動Enableする。automation / host restoreは各parameterの保存値をそのまま使う。
-- [ ] 発音・ADSR・sample位置を保ってpreset / return / sendを変更する。Enable Offは即dryへ戻し残響を裏で減衰、preset OffとAll sound offは残響履歴も消す。
-- [ ] 720×620のADSR / Reverb page切替で画面を整理し、bank・Gain・keyboardを共通に保つ。実機完全再現ではなくcoreの近似presetと表示する。
-- [ ] 既存parameter ID0〜11を保ち、新設定をschema3へ保存する。schema1/2・Gain-onlyはReverb Offで互換復元し、不正stateは全設定と現在音を保つ。
-- [ ] coreで全presetの残響、左右Return、held / release / pedal / send復元、panic再発音、分割一致・RT確保・ASanを検証する。初期dry音の一致も確認する。
-- [ ] 実AU/VST3のparameter・保存復元・旧形式・PCMを検証し、Standalone / GarageBandの画面を確認する。
-- [ ] 検証後に既知manifest付きでinstalled AUを安全に更新する。TODO・結果をcommit / pushし、CIを確認する。
+- [x] Native SDKへ確保・RAM/cache破棄を伴わない残響clear APIを追加・検証し、公開commitへ固定依存を更新する（`da089d6`、SDK CI全検証成功）。通常resetをaudio callbackで呼ばない。
+- [x] Off＋7種の共有近似preset、Enable、Return L/R（初期25%）、All notes / Tone sendを公開する。元VABのsend flagは保持する。
+- [x] 手動の非Off preset選択で自動Enableする。automation / host restoreは各parameterの保存値をそのまま使う。
+- [x] 発音・ADSR・sample位置を保ってpreset / return / sendを変更する。Enable Offは即dryへ戻し残響を裏で減衰、preset OffとAll sound offは残響履歴も消す。
+- [x] 720×620のADSR / Reverb page切替で画面を整理し、bank・Gain・keyboardを共通に保つ。実機完全再現ではなくcoreの近似presetと表示する。
+- [x] 既存parameter ID0〜11を保ち、新設定をschema3へ保存する。schema1/2・Gain-onlyはReverb Offで互換復元し、不正stateは全設定と現在音を保つ。
+- [x] coreで全presetの残響、左右Return、send復元、panic、分割一致・RT確保・ASanを検証する。初期dry音もbyte一致。
+- [x] 実AU/VST3のparameter・保存復元・旧形式・PCMを検証し、Standaloneの操作とGarageBandの旧state復元・画面を確認する。
+- [x] 検証後に既知manifest付きでinstalled AUを安全に更新する（`au-update-5sucrool`、旧schema2 P3/T0/Gain99復元、原本11files一致）。
+- [ ] TODO・結果をcommit / pushし、plugin CIを確認する。
 
 外部入力Reverbは追加しない。Web・Tauri配布物とproject原本は変更しない。
 Enable Offでwetを即muteし、preset Offで履歴も消す点は、sendのみを止めるWeb UIからの意図した改善とする。
@@ -237,7 +239,9 @@ complete `.vab`を最初の対象とする。分割VH/VBの複数file dialogは�
 - [ ] 分割VH/VBのファイル選択を追加する（parserとoffline APIは対応済み）。
 - [ ] Native SDKのrepeat先packetにflag 2がないloopを別途修正・検証する。現在のengineは明示的に拒否、parserは元bytesを保持する。
 - [x] ADSRをhost parameter / state / graph編集へ公開する（[実AU/VST3・GUI検証](../adsr_editing_20261031.md)）。
-- [ ] SPU Reverb、Noise、PMONを順に公開する。
+- [x] SPU Reverbをpreset / Enable / Return / sendとstateへ公開する（[検証記録](../reverb_20261031.md)）。
+- [ ] PCMの波形選択・描画、Noise、PMONを順に公開する。
+- [ ] 実DAWでReverb automation録音・AU独自UIのpreset / Enable / Return操作を追試する。headless PCMとStandalone操作の検証とは分ける。
 - [ ] 実DAWでADSR automation録音・graph drag中のeditor close / host restoreを追試する。headless PCMとStandalone操作の検証とは分ける。
 - [ ] 必要に応じてsoftware morph等のWeb版機能を移す（SPU実機機能とは表示を分ける）。
 

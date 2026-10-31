@@ -1,0 +1,309 @@
+{
+  "started_on": "2026-10-31",
+  "timezone": "Asia/Tokyo",
+  "start_todo_commit": "0b71e3a",
+  "features": {
+    "parameter_count": 17,
+    "existing_parameter_ids_preserved": [
+      0,
+      11
+    ],
+    "reverb_parameter_ids": {
+      "preset": 12,
+      "enabled": 13,
+      "return_left_percent": 14,
+      "return_right_percent": 15,
+      "tone_send": 16
+    },
+    "preset_ids": [
+      "off",
+      "room",
+      "studio-small",
+      "studio-medium",
+      "studio-large",
+      "hall",
+      "space-echo",
+      "half-echo"
+    ],
+    "default": {
+      "preset": "off",
+      "enabled": false,
+      "tone_send": false,
+      "return_left": 0.25,
+      "return_right": 0.25
+    },
+    "manual_preset_auto_enables": true,
+    "automation_and_restore_enable_independent": true,
+    "enable_off_mutes_wet_and_decays_silently": true,
+    "off_preset_clears_history": true,
+    "panic_clears_history": true,
+    "repeated_panic_skips_redundant_delay_clear": true,
+    "state_schema_written": 3,
+    "state_schema_read": [
+      1,
+      2,
+      3,
+      "legacy-gain-only"
+    ],
+    "state_fixed_bytes": 72,
+    "bank_offset": 32,
+    "live_delay_history_saved": false
+  },
+  "production_source_sha256": {
+    "src/SpuReverb.h": "561640d5623d071d0321d75fee957f4d8745be4d3fda991a2e9316b5e2a1b2ea",
+    "src/SpuInstrument.h": "3c2ca930b928cbcd82ae7e18bfc8533092b5836ab716737e3872540ff75977f6",
+    "src/SpuInstrument.cpp": "05628360d786ba64d666de477ed8f86dfccb045e5f4b1a64ba07ea4261f7864b",
+    "src/InstrumentState.h": "3d66fa9346aff141773e08da59900f4cf2fb99a094aaa9054ee34159596cc792",
+    "src/InstrumentState.cpp": "4d53aa71b1a74549df93d14de6cee2edb8b5956d6074d51987d49180c3b69fb1",
+    "plugin/TetoricaSPU.h": "79802c00d763f9348001a54b8bd1431df631534e45455641f7b57878f5513906",
+    "plugin/TetoricaSPU.cpp": "b3e6af545d6713ea8cbc40c738bb8505347dec8ee182cd9953a05995dfe1b06c",
+    "plugin/InstrumentState.cpp": "c25ffc778cef3b81ff4389e0b3135e5a5526ceba440e54f725f52c4d24efaeb4",
+    "plugin/InstrumentUI.cpp": "4d1198015c935b7991203266fdd4a32c68613f4b5143f52ac5ad1e377d88d5fd",
+    "tools/vst3-host/envelope-checks.h": "22822f3fdd9f3a291d907ee1a82af46f1907b4dff10ad0323460674989bba55c",
+    "tools/vst3-host/reverb-checks.h": "89148f35585179c70af82a070e9785ca433b359ede77332f0343f09fc51edb74",
+    "tools/vst3-host/main.cpp": "9b752b6834685e81a5f251183d8fb1075865833f11ce9554140d24dbbdc47c27",
+    "tools/au-state-check.cpp": "2419a783a877d6f31cccf4ef82611df36099451eef63bf347d6b09964979f08d",
+    "scripts/check_garageband_vab_state.py": "f7dd16dc6919b5f55c33bacc7abf9c23a09c7fe27995391583a8dc560ab39d78"
+  },
+  "dependency_lock_sha256": "08af77a81a9599599f38ba9fe92b85833f9548fdcf35255bbba1666ce036943c",
+  "native_sdk": {
+    "previous_commit": "cf1747387eb2b66323124959d7b356b936197784",
+    "commit": "da089d684b1fcd0209f06bccce937a99148ee607",
+    "api": "ps1_spu_clear_reverb",
+    "allocation_free": true,
+    "ram_register_voice_cache_preserved": true,
+    "local_fixture_and_wasm_parity_passed": true,
+    "ci": {
+      "run_id": 41203348557,
+      "url": "https://github.com/kyorohiro/tetorica-soundchip-native/actions/runs/41203348557",
+      "conclusion": "success",
+      "started_utc": "2026-10-31T12:57:04Z",
+      "completed_updated_utc": "2026-10-31T13:00:56Z",
+      "native_jobs_passed": 5,
+      "wasm_jobs_passed": 7,
+      "release_job": "skipped",
+      "macos_arm64_ctest_passed": 31,
+      "ps1_wasm_checks_each": 6,
+      "native_wasm_compared_interleaved_samples": 99342,
+      "native_wasm_max_absolute_error": 0,
+      "ps1_artifact": {
+        "id": 13043615440,
+        "name": "verified-sdk-archives-ps1_spu",
+        "size_in_bytes": 2603721,
+        "digest": "sha256:16f50c932e899ffdb97e848086d91461ce02027b0d2613f3446d49ad3131f1e2",
+        "downloaded_and_runtime_tested": false
+      }
+    }
+  },
+  "checks": {
+    "offline_ctest": {
+      "passed": 5,
+      "failed": 0,
+      "seconds": 2.69
+    },
+    "macos_ctest": {
+      "passed": 5,
+      "failed": 0,
+      "seconds": 2.52
+    },
+    "asan_core_vab": {
+      "passed": 2,
+      "failed": 0,
+      "seconds": 15.47,
+      "diagnostics": 0,
+      "log": "build/reverb-asan/Testing/Temporary/LastTest.log"
+    },
+    "core_callback_cpp_new_delete": [
+      0,
+      0
+    ],
+    "neutral_demo_sha256": "7a61b56d356ac198c35808b503cf0b61b55a9547b21770eb2a67c97d0cc4aef3",
+    "neutral_demo_matches_previous": true,
+    "actual_vst3_reverb_rates": [
+      44100,
+      48000,
+      96000
+    ],
+    "actual_au_reverb_rates": [
+      48000
+    ],
+    "vst3_host_bypass_clears_reverb": true,
+    "vst3_official_validator": {
+      "passed": 47,
+      "failed": 0
+    },
+    "installer_tests": 11,
+    "auval_succeeded": true,
+    "auval_known_warning": "Preset name is not retained in retrieved class data",
+    "standalone_gui": [
+      "Default Reverb page, Off and Enable Off",
+      "Room selection auto-enables",
+      "Left return typed 40.5%, right remains 25%",
+      "Tone send warning for Builtin",
+      "ADSR/Reverb page roundtrip retains settings and common keyboard",
+      "Enable Off retains Room and both return values"
+    ],
+    "garageband_gui": [
+      "Old schema2 project restored after update",
+      "Embedded VAB / Program3 / Tone0 / Gain99 / Project sound restored",
+      "Reverb Off / Enable Off / Return L25 R25 / All notes",
+      "Recording and playback stopped, AU editor open"
+    ]
+  },
+  "logs": {
+    "build/reverb-offline-ctest.log": {
+      "sha256": "cea85caf110d50ef5d8617221224f188364bd6224d09ad5c1ff84a5f15d27329",
+      "pass_lines": [
+        "100% tests passed, 0 tests failed out of 5"
+      ]
+    },
+    "build/reverb-macos-ctest.log": {
+      "sha256": "26476672c32f29c7f045f08792e230d6575ba64438bfd6e78750ce4a7ab68926",
+      "pass_lines": [
+        "100% tests passed, 0 tests failed out of 5"
+      ]
+    },
+    "build/reverb-vst3-audio.log": {
+      "sha256": "3feb981d4e84e08aa29070614758f410cb7fe128ead5935503adcb470a9ef05c",
+      "pass_lines": [
+        "PASS: fixed dependency revisions and VST3 SDK links",
+        "PASS sampleRate=44100 offset=64 peak=0.0373283 c4Hz=261.667 releasePeak=0 restoredGainRatio=0.37 stateBytes=76 independentInstances=true",
+        "PASS scheduler sampleRate=44100 blockEndDeferred=true shortBlocks=true sameOffsetOrder=true unsortedOffsets=true velocityZeroOff=true overflow2049Recovered=true processingRestartSilent=true reactivateSilent=true reconfigureSilent=true",
+        "PASS embedded state sampleRate=44100 sparseTones=3 stereoPan=true firstBlock=true activeRestore=true heldDeferredCleared=true freshNotePreserved=true repeatedRestores=12 embeddedBytes=3744",
+        "PASS VST3 parameter changes ADSR sampleRate=44100 nineFieldsState=true schema1Migration=true legacyDefaults=true malformedAtomic=true firstRestoreBlock=true sourcePreserved=true disabledOriginalPCM=true blockAutomation=true nextNoteDeferred=true heldNoRetrigger=true applyOffOnRefresh=true",
+        "PASS VST3 parameter changes Reverb sampleRate=44100 full17Params=true firstWetRestore=true sourceSend=true presetAutomationIndependent=true presetsDiffer=true disabledDry=true zeroReturnDry=true stereoReturns=true releasedTail=true panicClears=true offClears=true restoreClearsHistory=true malformedAtomic=true schema1Schema2Legacy=true",
+        "PASS VST3 IMidiMapping controllers sampleRate=44100 bend14Endpoints=true multiPointOffsets=true splitBlocks=true noRetrigger=true sustain64_63=true channel15Isolation=true CC123Pedal=true CC121HeldDeferred=true panicPreservesControllers=true resetRestoreOverflowClear=true liveStateExcluded=true deferredController=true reactivateReset=true releaseTailRetunedNoKON=true restoreDiscardsFutureControllers=true",
+        "PASS sampleRate=48000 offset=64 peak=0.0373283 c4Hz=261.667 releasePeak=0 restoredGainRatio=0.37 stateBytes=76 independentInstances=true",
+        "PASS scheduler sampleRate=48000 blockEndDeferred=true shortBlocks=true sameOffsetOrder=true unsortedOffsets=true velocityZeroOff=true overflow2049Recovered=true processingRestartSilent=true reactivateSilent=true reconfigureSilent=true",
+        "PASS embedded state sampleRate=48000 sparseTones=3 stereoPan=true firstBlock=true activeRestore=true heldDeferredCleared=true freshNotePreserved=true repeatedRestores=12 embeddedBytes=3744",
+        "PASS VST3 parameter changes ADSR sampleRate=48000 nineFieldsState=true schema1Migration=true legacyDefaults=true malformedAtomic=true firstRestoreBlock=true sourcePreserved=true disabledOriginalPCM=true blockAutomation=true nextNoteDeferred=true heldNoRetrigger=true applyOffOnRefresh=true",
+        "PASS VST3 parameter changes Reverb sampleRate=48000 full17Params=true firstWetRestore=true sourceSend=true presetAutomationIndependent=true presetsDiffer=true disabledDry=true zeroReturnDry=true stereoReturns=true releasedTail=true panicClears=true offClears=true restoreClearsHistory=true malformedAtomic=true schema1Schema2Legacy=true",
+        "PASS VST3 IMidiMapping controllers sampleRate=48000 bend14Endpoints=true multiPointOffsets=true splitBlocks=true noRetrigger=true sustain64_63=true channel15Isolation=true CC123Pedal=true CC121HeldDeferred=true panicPreservesControllers=true resetRestoreOverflowClear=true liveStateExcluded=true deferredController=true reactivateReset=true releaseTailRetunedNoKON=true restoreDiscardsFutureControllers=true",
+        "PASS sampleRate=96000 offset=64 peak=0.0373283 c4Hz=261.667 releasePeak=0 restoredGainRatio=0.37 stateBytes=76 independentInstances=true",
+        "PASS scheduler sampleRate=96000 blockEndDeferred=true shortBlocks=true sameOffsetOrder=true unsortedOffsets=true velocityZeroOff=true overflow2049Recovered=true processingRestartSilent=true reactivateSilent=true reconfigureSilent=true",
+        "PASS embedded state sampleRate=96000 sparseTones=3 stereoPan=true firstBlock=true activeRestore=true heldDeferredCleared=true freshNotePreserved=true repeatedRestores=12 embeddedBytes=3744",
+        "PASS VST3 parameter changes ADSR sampleRate=96000 nineFieldsState=true schema1Migration=true legacyDefaults=true malformedAtomic=true firstRestoreBlock=true sourcePreserved=true disabledOriginalPCM=true blockAutomation=true nextNoteDeferred=true heldNoRetrigger=true applyOffOnRefresh=true",
+        "PASS VST3 parameter changes Reverb sampleRate=96000 full17Params=true firstWetRestore=true sourceSend=true presetAutomationIndependent=true presetsDiffer=true disabledDry=true zeroReturnDry=true stereoReturns=true releasedTail=true panicClears=true offClears=true restoreClearsHistory=true malformedAtomic=true schema1Schema2Legacy=true",
+        "PASS VST3 IMidiMapping controllers sampleRate=96000 bend14Endpoints=true multiPointOffsets=true splitBlocks=true noRetrigger=true sustain64_63=true channel15Isolation=true CC123Pedal=true CC121HeldDeferred=true panicPreservesControllers=true resetRestoreOverflowClear=true liveStateExcluded=true deferredController=true reactivateReset=true releaseTailRetunedNoKON=true restoreDiscardsFutureControllers=true",
+        "PASS malformed embedded state cases=25 atomicGainStatePCM=true readyRestorePreserved=true legacyGain12=true",
+        "PASS VST3 mapped ingress invalidNormalizedIgnored=true invalidChannelIgnored=true unsupportedCCIgnored=true negativeOffsetIgnored=true points1025Panic=true gainPreserved=true bypassMuteQueueReset=true bypassCrossBlockPedal=true freshUnbypassNote=true bypassClearsReverb=true",
+        "PASS VST3 offline PCM, scheduler, lifecycle, state and instance isolation"
+      ]
+    },
+    "build/reverb-vst3-validator.log": {
+      "sha256": "2efc07e1d99ce3f1e2bcf12b16f67c6396f2be9b7b878baefd32867fa467abd6",
+      "pass_lines": [
+        "PASS: fixed dependency revisions and VST3 SDK links",
+        "Result: 47 tests passed, 0 tests failed"
+      ]
+    },
+    "build/reverb-au-state.log": {
+      "sha256": "348d0d4f7bae9f9219edcf0252709dde6d058c77553f0ccf767e6142076301b4",
+      "pass_lines": [
+        "PASS AU MIDIEvent controllers sampleRate=48000 bend14Endpoints=true multiPointOffsets=true splitBlocks=true noRetrigger=true sustain64_63=true channel15Isolation=true CC123Pedal=true CC121HeldDeferred=true panicPreservesControllers=true resetRestoreOverflowClear=true liveStateExcluded=true deferredController=true reactivateReset=true releaseTailRetunedNoKON=true restoreDiscardsFutureControllers=true",
+        "PASS AU parameters ADSR sampleRate=48000 nineFieldsState=true schema1Migration=true legacyDefaults=true malformedAtomic=true firstRestoreBlock=true sourcePreserved=true disabledOriginalPCM=true blockAutomation=true nextNoteDeferred=true heldNoRetrigger=true applyOffOnRefresh=true",
+        "PASS AU parameters Reverb sampleRate=48000 full17Params=true firstWetRestore=true sourceSend=true presetAutomationIndependent=true presetsDiffer=true disabledDry=true zeroReturnDry=true stereoReturns=true releasedTail=true panicClears=true offClears=true restoreClearsHistory=true malformedAtomic=true schema1Schema2Legacy=true",
+        "PASS: local AU embedded VAB/Gain round-trip, first-render MIDI/PCM, separate instance, malformed CF/state rejection with pending/active preservation, legacy AU migration; no audio device/editor/install"
+      ]
+    },
+    "build/reverb-auval.log": {
+      "sha256": "f5fc1dafd8a3bdd90ed2e43409aefa05a0abe131157603c542a9234dc2583460",
+      "pass_lines": [
+        "PASS: TetoricaSPU was discovered by the Audio Component service",
+        "* * PASS",
+        "* * PASS",
+        "* * PASS",
+        "* * PASS",
+        "    PASS",
+        "* * PASS",
+        "    PASS",
+        "    PASS",
+        "* * PASS",
+        "    PASS",
+        "    PASS",
+        "    PASS",
+        "* * PASS",
+        "  -parameter PASS",
+        "  -parameter PASS",
+        "  -parameter PASS",
+        "  -parameter PASS",
+        "  -parameter PASS",
+        "  -parameter PASS",
+        "  -parameter PASS",
+        "  -parameter PASS",
+        "  -parameter PASS",
+        "  -parameter PASS",
+        "  -parameter PASS",
+        "  -parameter PASS",
+        "  -parameter PASS",
+        "  -parameter PASS",
+        "  -parameter PASS",
+        "  -parameter PASS",
+        "  -parameter PASS",
+        "  PASS",
+        "* * PASS",
+        "* * PASS",
+        "  PASS",
+        "  PASS",
+        "  PASS",
+        "  PASS",
+        "  PASS",
+        "* * PASS",
+        "AU VALIDATION SUCCEEDED."
+      ]
+    },
+    "build/reverb-installer-tests.log": {
+      "sha256": "832d9649f13f24d3956ce3febf3193cd636451a8622343584b62d19177eafa49",
+      "pass_lines": [
+        "OK"
+      ]
+    }
+  },
+  "au": {
+    "source": "build/macos/out/TetoricaSPU.component",
+    "file_sha256": {
+      "Contents/Info.plist": "94a46fcfc638d76a05aca50d5deedaff2a7a934aee55a816d007b6dff9c9bbc4",
+      "Contents/MacOS/TetoricaSPU": "6634a6c8ff1001769575b025acf1da765bb4499f8cd7e9f235e8d1ce3fb076c9",
+      "Contents/PkgInfo": "d06a80ba92de0833d0ed03de1b02b7c8913f126d9e8c8931b190765dd5d83b11",
+      "Contents/Resources/Roboto-Regular.ttf": "b2efabca5ea4bc56eea829713706b5cd0788b82aca153bd4adde9b1573933b4f",
+      "Contents/Resources/THIRD_PARTY_NOTICES.txt": "d0686ed57334f5bc617481e976e6d220822dba8fc93b8dd51246455bb818db6e"
+    },
+    "installed": true,
+    "update_report": "build/au-backups/au-update-5sucrool/manifest.json",
+    "old_file_sha256": {
+      "Contents/Info.plist": "94a46fcfc638d76a05aca50d5deedaff2a7a934aee55a816d007b6dff9c9bbc4",
+      "Contents/MacOS/TetoricaSPU": "3cf8e9519bb040553775765721572ef801fb30df575c7f4bdf4bed3802932ee0",
+      "Contents/PkgInfo": "d06a80ba92de0833d0ed03de1b02b7c8913f126d9e8c8931b190765dd5d83b11",
+      "Contents/Resources/Roboto-Regular.ttf": "b2efabca5ea4bc56eea829713706b5cd0788b82aca153bd4adde9b1573933b4f",
+      "Contents/Resources/THIRD_PARTY_NOTICES.txt": "d0686ed57334f5bc617481e976e6d220822dba8fc93b8dd51246455bb818db6e"
+    },
+    "backup_and_archive_verified": true,
+    "rollback_executed": false
+  },
+  "garageband": {
+    "project": "build/spu-vab-check.band",
+    "backup_report": "build/reverb-update-project-fiiiermr/manifest.json",
+    "backup_files_verified": 7,
+    "initial_report": "build/reverb-au-project-before.json",
+    "saved_before_report": "build/reverb-au-project-saved-before.json",
+    "after_report": "build/reverb-au-project-after.json",
+    "after_report_sha256": "d74436f7553447ddf1712f2dc73251ac46367d2fae39989b1b0695a4f16cf72a",
+    "payload_schema": 2,
+    "payload_bytes": 3792,
+    "payload_sha256": "95d30615c15890d680162f7587f51da7f76f0ee62c0994706e2ceb07b700cbf0",
+    "payload_unchanged_after_update": true,
+    "bank_bytes": 3744,
+    "bank_sha256": "71a7de205c0ebe1b8743288d90cd3b0204da9bd81aed9159af31f404d7cf2be6",
+    "original_project_start_manifest_files_unchanged": 11
+  },
+  "ci": {
+    "status": "pending-push"
+  },
+  "not_verified": [
+    "Physical listening",
+    "Long real-time runs",
+    "DAW recording of Reverb automation",
+    "AU custom preset/toggle gesture through the real editor",
+    "Previous Tone-only dirty / Program11 / dialog-close cases"
+  ]
+}

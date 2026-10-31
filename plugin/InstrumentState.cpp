@@ -10,12 +10,12 @@
 
 namespace {
 using Parameters=std::array<double,kNumParams>;
-static_assert(kNumParams==12,"Update the state parameter mapping when adding parameters");
+static_assert(kNumParams==17,"Update the state parameter mapping when adding parameters");
 unsigned field(const Parameters& values,int index,unsigned maximum)
 {
   const double value=values[index];
   if(!std::isfinite(value)||value<0||value>maximum||std::floor(value)!=value)
-    throw std::runtime_error("Invalid authored ADSR parameter");
+    throw std::runtime_error("Invalid authored discrete parameter");
   return static_cast<unsigned>(value);
 }
 tetorica::EnvelopeSettings envelope(const Parameters& p)
@@ -30,6 +30,15 @@ tetorica::EnvelopeSettings envelope(const Parameters& p)
     (field(p,kParamReleaseExponential,1)<<5)|(field(p,kParamSustainRate,127)<<6)|
     (field(p,kParamSustainDecrease,1)<<14)|(field(p,kParamSustainExponential,1)<<15));
   return result;
+}
+tetorica::ReverbSettings reverb(const Parameters& p)
+{
+  tetorica::ReverbSettings result;
+  result.preset=static_cast<tetorica::ReverbPreset>(field(p,kParamReverbPreset,7));
+  result.enabled=field(p,kParamReverbEnabled,1)!=0;
+  result.useToneSend=field(p,kParamReverbToneSend,1)!=0;
+  result.volumeLeft=p[kParamReverbLeft]/100.;result.volumeRight=p[kParamReverbRight]/100.;
+  return result; // The pure codec validates finite return ranges before allocation.
 }
 Parameters stateParameters(const tetorica::SavedInstrumentState& state)
 {
@@ -46,6 +55,11 @@ Parameters stateParameters(const tetorica::SavedInstrumentState& state)
   p[kParamSustainExponential]=(words.adsr2>>15)&1;
   p[kParamReleaseRate]=words.adsr2&31;
   p[kParamReleaseExponential]=(words.adsr2>>5)&1;
+  p[kParamReverbPreset]=static_cast<std::uint32_t>(state.reverb.preset);
+  p[kParamReverbEnabled]=state.reverb.enabled?1:0;
+  p[kParamReverbToneSend]=state.reverb.useToneSend?1:0;
+  p[kParamReverbLeft]=state.reverb.volumeLeft*100.;
+  p[kParamReverbRight]=state.reverb.volumeRight*100.;
   return p;
 }
 }
@@ -68,7 +82,7 @@ bool TetoricaSPU::SerializeState(iplug::IByteChunk& chunk) const
       position=next;
     }
     const auto definition = mEngines.snapshotDefinition();
-    const auto bytes = tetorica::encodeState(definition, values[kParamGain], envelope(values));
+    const auto bytes = tetorica::encodeState(definition, values[kParamGain], envelope(values), reverb(values));
     if (chunk.Size() < 0 || bytes.size() > static_cast<std::size_t>(
           std::numeric_limits<int>::max() - chunk.Size()))
       return false;
@@ -126,7 +140,7 @@ int TetoricaSPU::UnserializeState(const iplug::IByteChunk& chunk, int startPos)
     discardCarriedMidi();
     mMidiOverflow = false;
     // This trusted complete parameter chunk was fully validated and allocated
-    // above. The framework sets all 12 values and calls OnParamReset.
+    // above. The framework sets all 17 values and calls OnParamReset.
     UnserializeParams(params, 0);
     // A host restore can arrive off the UI thread. Only publish a revision
     // here; OnIdle will refresh its model without requesting another engine.

@@ -24,6 +24,18 @@ namespace {
 using namespace iplug;
 using namespace iplug::igraphics;
 
+constexpr std::array<const char*, 8> kReverbNames{{"Off", "Room", "Studio Small",
+  "Studio Medium", "Studio Large", "Hall", "Space Echo", "Half Echo"}};
+
+void editParameter(TetoricaSPU& plugin, int parameter, double value)
+{
+  const double normalized = plugin.GetParam(parameter)->ToNormalized(value);
+  plugin.BeginInformHostOfParamChangeFromUI(parameter);
+  plugin.SendParameterValueFromUI(parameter, normalized);
+  plugin.SendParameterValueFromDelegate(parameter, normalized, true);
+  plugin.EndInformHostOfParamChangeFromUI(parameter);
+}
+
 class SpuKeyboardControl final : public IVKeyboardControl
 {
 public:
@@ -109,6 +121,7 @@ struct TetoricaSPU::InstrumentUIState
   std::uint64_t revision = 0;
   bool baselineInitialized = false;
   bool pickerOpen = false;
+  bool reverbPage = true;
   std::string status = "Play MIDI from your DAW or the keyboard.";
 };
 
@@ -183,17 +196,21 @@ void TetoricaSPU::initializeInstrumentUI()
     const auto smallStyle = DEFAULT_STYLE.WithLabelText(IText(13))
       .WithValueText(IText(14)).WithDrawShadows(false);
     const auto switchStyle = smallStyle.WithShowLabel(false);
+    graphics->AttachControl(new IVButtonControl(IRECT(560, 162, 624, 196),
+      [this](IControl*) { showInstrumentPage(false); }, "ADSR", smallStyle), kCtrlPageEnvelope);
+    graphics->AttachControl(new IVButtonControl(IRECT(632, 162, 696, 196),
+      [this](IControl*) { showInstrumentPage(true); }, "Reverb", smallStyle), kCtrlPageReverb);
     graphics->AttachControl(new IVToggleControl(IRECT(24, 202, 188, 230),
-      kParamEnvelopeEnabled, "", switchStyle, "Tone ADSR", "Custom ADSR"));
+      kParamEnvelopeEnabled, "", switchStyle, "Tone ADSR", "Custom ADSR"), kCtrlEnvelopeEnabled);
     auto* copyEnvelope = new IVButtonControl(IRECT(200, 202, 336, 230),
       [this](IControl*) { copyToneEnvelopeFromUI(); }, "Copy tone ADSR", smallStyle);
     copyEnvelope->SetTooltip("Copy the original Tone's ADSR and enable Custom ADSR.");
-    graphics->AttachControl(copyEnvelope);
+    graphics->AttachControl(copyEnvelope, kCtrlEnvelopeCopy);
     auto* liveEnvelope = new IVToggleControl(IRECT(348, 202, 696, 230),
       kParamEnvelopeLive, "", switchStyle,
       "Apply to sounding notes: OFF", "Apply to sounding notes: ON");
     liveEnvelope->SetTooltip("On applies the latest ADSR from each note's current level and sample position. Off keeps existing notes unchanged through Release; new notes use the edits.");
-    graphics->AttachControl(liveEnvelope);
+    graphics->AttachControl(liveEnvelope, kCtrlEnvelopeLive);
     graphics->AttachControl(new SpuEnvelopeGraphControl(IRECT(24, 238, 696, 326)),
       kCtrlEnvelopeGraph);
     const std::array<int, 5> rateParams{{kParamAttackRate, kParamDecayRate,
@@ -225,6 +242,34 @@ void TetoricaSPU::initializeInstrumentUI()
     graphics->AttachControl(new ITextControl(IRECT(24, 449, 696, 469),
       "Custom preview - enable Custom ADSR to use the edits.",
       IText(12).WithAlign(EAlign::Near)), kCtrlEnvelopeStatus);
+
+    graphics->AttachControl(new ITextControl(IRECT(24, 205, 696, 238),
+      "SPU Reverb", IText(22).WithAlign(EAlign::Near)), kCtrlReverbHeading);
+    auto* presetMenu = new SpuMenuControl(IRECT(24, 248, 424, 286), "Shared preset: Off",
+      [this](IPopupMenu& menu, SpuMenuControl::Choice& choice) {
+        for (int preset = 0; preset < static_cast<int>(kReverbNames.size()); ++preset)
+          menu.AddItem(new IPopupMenu::Item(kReverbNames[preset],
+            GetParam(kParamReverbPreset)->Int() == preset ? IPopupMenu::Item::kChecked : 0, preset));
+        choice = [this](int preset) { chooseReverbPresetFromUI(preset); };
+      });
+    presetMenu->SetTooltip("Selecting a preset enables reverb. Off silences and clears the shared effect.");
+    graphics->AttachControl(presetMenu, kCtrlReverbPreset);
+    graphics->AttachControl(new IVToggleControl(IRECT(440, 248, 696, 286),
+      kParamReverbEnabled, "", switchStyle, "Enable reverb: OFF", "Enable reverb: ON"), kCtrlReverbEnabled);
+    graphics->AttachControl(new IVKnobControl(IRECT(56, 298, 244, 414),
+      kParamReverbLeft, "Return left", smallStyle, true), kCtrlReverbLeft);
+    graphics->AttachControl(new IVKnobControl(IRECT(272, 298, 460, 414),
+      kParamReverbRight, "Return right", smallStyle, true), kCtrlReverbRight);
+    auto* toneSend = new IVToggleControl(IRECT(488, 317, 696, 358),
+      kParamReverbToneSend, "", switchStyle, "Send: all notes", "Send: Tone setting");
+    toneSend->SetTooltip("All notes sends every keyboard voice to reverb. Tone setting follows the original VAB send flag; Builtin Sine has no original send.");
+    graphics->AttachControl(toneSend, kCtrlReverbToneSend);
+    graphics->AttachControl(new IMultiLineTextControl(IRECT(24, 420, 696, 446),
+      "One shared effect for all voices. Named core approximations of PS1 reverb.",
+      IText(12).WithAlign(EAlign::Near).WithVAlign(EVAlign::Top)), kCtrlReverbInfo);
+    graphics->AttachControl(new ITextControl(IRECT(24, 449, 696, 469),
+      "Off: dry output. Choose a preset to enable reverb.",
+      IText(12).WithAlign(EAlign::Near)), kCtrlReverbStatus);
     graphics->AttachControl(new SpuKeyboardControl(IRECT(24, 478, 696, 602), 48, 84),
       kCtrlKeyboard);
     updateInstrumentControls();
@@ -475,6 +520,63 @@ void TetoricaSPU::updateInstrumentControls()
     auto* text = static_cast<ITextControl*>(control);
     if (std::strcmp(text->GetStr(), message)) text->SetStr(message);
   }
+
+  for (int tag = kCtrlEnvelopeGraph; tag <= kCtrlEnvelopeLive; ++tag)
+    if (auto* control = graphics->GetControlWithTag(tag))
+      if (control->IsHidden() != ui.reverbPage) control->Hide(ui.reverbPage);
+  for (int tag = kCtrlReverbHeading; tag <= kCtrlReverbStatus; ++tag)
+    if (auto* control = graphics->GetControlWithTag(tag))
+      if (control->IsHidden() == ui.reverbPage) control->Hide(!ui.reverbPage);
+  for (const auto tag : {kCtrlPageEnvelope, kCtrlPageReverb})
+    if (auto* control = graphics->GetControlWithTag(tag))
+    {
+      const char* label = tag == kCtrlPageReverb ?
+        (ui.reverbPage ? "> Reverb" : "Reverb") : (ui.reverbPage ? "ADSR" : "> ADSR");
+      auto* button = static_cast<IVButtonControl*>(control);
+      if (std::strcmp(button->GetLabelStr(), label)) button->SetLabelStr(label);
+    }
+  const int preset = std::clamp(GetParam(kParamReverbPreset)->Int(), 0, 7);
+  if (auto* control = graphics->GetControlWithTag(kCtrlReverbPreset))
+  {
+    const auto label = std::string("Shared preset: ") + kReverbNames[preset];
+    auto* menu = static_cast<SpuMenuControl*>(control);
+    if (std::strcmp(menu->GetLabelStr(), label.c_str())) menu->SetLabelStr(label.c_str());
+  }
+  if (auto* control = graphics->GetControlWithTag(kCtrlReverbStatus))
+  {
+    bool sourceSend = false;
+    if (vab)
+      for (const auto& tone : ui.bank->tones)
+        if (tone.program == ui.definition->program() && tone.index == ui.definition->tone())
+        { sourceSend = (tone.mode & 4) != 0; break; }
+    const char* message = preset == 0 ? "Off: dry output. Choose a preset to enable reverb." :
+      !GetParam(kParamReverbEnabled)->Bool() ? "Bypassed. Preset and return levels are kept." :
+      GetParam(kParamReverbToneSend)->Bool() && !sourceSend ?
+        "This Tone has no reverb send. Choose All notes to hear reverb." :
+      GetParam(kParamReverbLeft)->Value() == 0 && GetParam(kParamReverbRight)->Value() == 0 ?
+        "Both returns are 0%. Raise a return to hear reverb." :
+        "Reverb enabled. Returns add wet sound to the original dry sound.";
+    auto* text = static_cast<ITextControl*>(control);
+    if (std::strcmp(text->GetStr(), message)) text->SetStr(message);
+  }
+}
+
+void TetoricaSPU::showInstrumentPage(bool reverb)
+{
+  if (!GetUI() || !mInstrumentUI) return;
+  if (reverb)
+    if (auto* graph = GetUI()->GetControlWithTag(kCtrlEnvelopeGraph))
+      static_cast<SpuEnvelopeGraphControl*>(graph)->CancelPointerEdit();
+  mInstrumentUI->reverbPage = reverb;
+  updateInstrumentControls();
+}
+
+void TetoricaSPU::chooseReverbPresetFromUI(int preset)
+{
+  if (!GetUI() || preset < 0 || preset >= static_cast<int>(kReverbNames.size())) return;
+  editParameter(*this, kParamReverbPreset, preset);
+  editParameter(*this, kParamReverbEnabled, preset != 0 ? 1. : 0.);
+  updateInstrumentControls();
 }
 
 void TetoricaSPU::copyToneEnvelopeFromUI()
@@ -501,13 +603,7 @@ void TetoricaSPU::copyToneEnvelopeFromUI()
     {kParamEnvelopeEnabled, 1.}
   }};
   for (const auto& edit : edits)
-  {
-    const double normalized = GetParam(edit.first)->ToNormalized(edit.second);
-    BeginInformHostOfParamChangeFromUI(edit.first);
-    SendParameterValueFromUI(edit.first, normalized);
-    SendParameterValueFromDelegate(edit.first, normalized, true);
-    EndInformHostOfParamChangeFromUI(edit.first);
-  }
+    editParameter(*this, edit.first, edit.second);
   updateInstrumentControls();
 }
 

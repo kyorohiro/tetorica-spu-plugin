@@ -21,6 +21,12 @@ TetoricaSPU::TetoricaSPU(const iplug::InstanceInfo& info)
   GetParam(kParamReleaseRate)->InitInt("Release rate", 0, 0, 31);
   GetParam(kParamReleaseExponential)->InitBool("Release exponential", false);
   GetParam(kParamEnvelopeLive)->InitBool("Apply ADSR while playing", true);
+  GetParam(kParamReverbPreset)->InitEnum("Reverb preset", 0,
+    {"Off", "Room", "Studio Small", "Studio Medium", "Studio Large", "Hall", "Space Echo", "Half Echo"});
+  GetParam(kParamReverbEnabled)->InitBool("Enable reverb", false);
+  GetParam(kParamReverbLeft)->InitDouble("Reverb return left", 25., 0., 100., 0.1, "%");
+  GetParam(kParamReverbRight)->InitDouble("Reverb return right", 25., 0., 100., 0.1, "%");
+  GetParam(kParamReverbToneSend)->InitBool("Use Tone reverb send", false);
 
 #if IPLUG_EDITOR
   mMakeGraphicsFunc = [this]() {
@@ -195,6 +201,26 @@ void TetoricaSPU::discardCarriedMidi() noexcept
   mMidiCount = kept;
 }
 
+void TetoricaSPU::applyReverbParameters() noexcept
+{
+  // These are independent saved parameters. Only a manual preset selection
+  // enables the UI checkbox; host automation and restore keep its exact value.
+  const double preset = GetParam(kParamReverbPreset)->Value();
+  const double enabled = GetParam(kParamReverbEnabled)->Value();
+  const double toneSend = GetParam(kParamReverbToneSend)->Value();
+  if (!std::isfinite(preset) || preset < 0 || preset > 7 || std::floor(preset) != preset ||
+      !std::isfinite(enabled) || enabled < 0 || enabled > 1 || std::floor(enabled) != enabled ||
+      !std::isfinite(toneSend) || toneSend < 0 || toneSend > 1 || std::floor(toneSend) != toneSend)
+    return;
+  tetorica::ReverbSettings settings;
+  settings.preset = static_cast<tetorica::ReverbPreset>(static_cast<unsigned>(preset));
+  settings.enabled = enabled != 0;
+  settings.useToneSend = toneSend != 0;
+  settings.volumeLeft = GetParam(kParamReverbLeft)->Value() / 100.;
+  settings.volumeRight = GetParam(kParamReverbRight)->Value() / 100.;
+  mEngines.instrument().setReverb(settings);
+}
+
 void TetoricaSPU::renderRange(iplug::sample** outputs, int offset, int nFrames, double gain)
 {
   while (nFrames > 0)
@@ -252,6 +278,7 @@ void TetoricaSPU::ProcessBlock(iplug::sample**, iplug::sample** outputs, int nFr
   }
 
   applyEnvelopeParameters();
+  applyReverbParameters();
 
   const double requestedGain = GetParam(kParamGain)->Value() / 100.;
   const double gain = std::isfinite(requestedGain) ? std::clamp(requestedGain, 0., 1.) : 0.;

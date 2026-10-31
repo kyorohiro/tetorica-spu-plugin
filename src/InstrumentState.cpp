@@ -20,6 +20,13 @@ void envelope(const EnvelopeSettings& value) {
   // reserved bit13 is retained separately and merged by the DSP wrapper.
   if(value.custom.adsr2&0x2000)fail("SPU state: reserved custom ADSR2 bit13 must be zero");
 }
+void reverb(const ReverbSettings& value) {
+  if(static_cast<std::uint32_t>(value.preset)>static_cast<std::uint32_t>(ReverbPreset::HalfEcho))
+    fail("SPU state: unsupported reverb preset");
+  for(double volume:{value.volumeLeft,value.volumeRight})
+    if(!std::isfinite(volume)||volume<0||volume>1)
+      fail("SPU state: reverb return must be finite 0-1");
+}
 std::size_t selected(const vab::Bank& bank,std::uint32_t program,std::uint32_t tone) {
   if(program>127||tone>15)fail("SPU state: Program/Tone is out of range");
   for(std::size_t i=0;i<bank.tones.size();++i)
@@ -79,9 +86,10 @@ std::shared_ptr<const InstrumentDefinition> InstrumentDefinition::fromVabFlatInd
 }
 
 std::vector<std::uint8_t> encodeState(const InstrumentDefinition& definition,double gainPercent,
-                                    EnvelopeSettings settings) {
+                                    EnvelopeSettings settings,ReverbSettings effects) {
   gain(gainPercent);
   envelope(settings);
+  reverb(effects);
   const auto& bank=definition.bankBytes();
   if(bank.size()>vab::kMaxFileBytes)fail("SPU state: VAB exceeds 1 MiB");
   std::vector<std::uint8_t> bytes(kStateFixedBytes+bank.size());
@@ -96,14 +104,18 @@ std::vector<std::uint8_t> encodeState(const InstrumentDefinition& definition,dou
   putWord(bytes.data()+40+bank.size(),std::uint32_t(settings.custom.adsr1)|
     (std::uint32_t(settings.custom.adsr2)<<16));
   putWord(bytes.data()+44+bank.size(),(settings.enabled?1u:0u)|(settings.live?2u:0u));
+  putWord(bytes.data()+48+bank.size(),static_cast<std::uint32_t>(effects.preset));
+  putWord(bytes.data()+52+bank.size(),(effects.enabled?1u:0u)|(effects.useToneSend?2u:0u));
+  putGain(bytes.data()+56+bank.size(),effects.volumeLeft);
+  putGain(bytes.data()+64+bank.size(),effects.volumeRight);
   return bytes;
 }
 
 std::vector<std::uint8_t> encodeState(
     const std::shared_ptr<const InstrumentDefinition>& definition,double gainPercent,
-    EnvelopeSettings settings) {
+    EnvelopeSettings settings,ReverbSettings effects) {
   if(!definition)throw std::invalid_argument("SPU state: missing instrument definition");
-  return encodeState(*definition,gainPercent,settings);
+  return encodeState(*definition,gainPercent,settings,effects);
 }
 
 SavedInstrumentState decodeState(vab::BytesView bytes) {
@@ -111,26 +123,35 @@ SavedInstrumentState decodeState(vab::BytesView bytes) {
   if(bytes.size<40||bytes.size>kMaxStateBytes)fail("SPU state: invalid total length");
   if(std::memcmp(bytes.data,kStateMagic.data(),kStateMagic.size()))fail("SPU state: invalid signature");
   const auto version=word(bytes.data+8);
-  if(version!=1&&version!=kStateSchemaVersion)fail("SPU state: unsupported schema");
+  if(version<1||version>kStateSchemaVersion)fail("SPU state: unsupported schema");
   if(word(bytes.data+12)!=bytes.size)fail("SPU state: declared length differs");
   const auto kind=word(bytes.data+16),program=word(bytes.data+20),tone=word(bytes.data+24),n=word(bytes.data+28);
-  const auto fixed=version==1?40:kStateFixedBytes;
+  const auto fixed=version==1?40:version==2?48:kStateFixedBytes;
   if(n>vab::kMaxFileBytes||std::uint64_t(n)+fixed!=bytes.size)fail("SPU state: invalid bank length");
   if(kind>1)fail("SPU state: unsupported instrument kind");
   if(kind==0&&(n||program||tone))fail("SPU state: builtin must not contain a bank or selection");
   if(kind==1&&(!n||program>127||tone>15))fail("SPU state: invalid VAB selection");
   const auto gainPercent=readGain(bytes.data+32+n);gain(gainPercent);
   EnvelopeSettings settings;
-  if(version==2) {
+  if(version>=2) {
     const auto packed=word(bytes.data+40+n),flags=word(bytes.data+44+n);
     if(flags&~3u)fail("SPU state: unknown envelope flags");
     settings.custom={static_cast<std::uint16_t>(packed),static_cast<std::uint16_t>(packed>>16)};
     settings.enabled=(flags&1)!=0;settings.live=(flags&2)!=0;
     envelope(settings);
   }
-  if(kind==0)return {InstrumentDefinition::builtin(),gainPercent,settings};
+  ReverbSettings effects;
+  if(version>=3) {
+    const auto preset=word(bytes.data+48+n),flags=word(bytes.data+52+n);
+    if(flags&~3u)fail("SPU state: unknown reverb flags");
+    effects.preset=static_cast<ReverbPreset>(preset);
+    effects.enabled=(flags&1)!=0;effects.useToneSend=(flags&2)!=0;
+    effects.volumeLeft=readGain(bytes.data+56+n);effects.volumeRight=readGain(bytes.data+64+n);
+    reverb(effects);
+  }
+  if(kind==0)return {InstrumentDefinition::builtin(),gainPercent,settings,effects};
   std::vector<std::uint8_t> bank(bytes.data+kStateHeaderBytes,bytes.data+kStateHeaderBytes+n);
-  return {InstrumentDefinition::fromVab(std::move(bank),program,tone),gainPercent,settings};
+  return {InstrumentDefinition::fromVab(std::move(bank),program,tone),gainPercent,settings,effects};
 }
 
 } // namespace tetorica

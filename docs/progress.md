@@ -1,5 +1,21 @@
 # 作業記録
 
+## 2026-10-31 JST — SPU Reverb実装・実AU/VST3・AU更新完了
+
+- Native SDKへ残響だけを確保なしにclearするAPIを追加、公開`da089d6`へ固定した。
+  SDK CI 41203348557はNative5 / WASM7の全12検証成功、Release job skipped。
+- 8preset、Enable、左右Return、All notes / Tone send、ADSR/Reverb pageを追加。
+  手動preset選択でEnableを更新、automation/restoreは独立値を保つ。17params・schema3は旧1/2/legacy互換。
+- Offline/macOS CTest各5/5、ASan core/VAB2/2、実VST3 44.1/48/96kHzと実AU48kHzのFX/ADSR/MIDI suite、
+  公式validator47/0が成功。初期demoはbyte一致。Standaloneの操作を確認した。
+- 検証copyを旧AUで保存→schema2へ移行した後7filesをverified backup。
+  旧AU全5filesを照合し`au-update-5sucrool`で更新、新旧bundle各5files・原本11files一致、auval成功。
+- GarageBandで旧schema2 P3/T0/Gain99とReverb Off/Return各25%/All notes、新pageを確認した。
+  payloadは更新前後3792bytes同一。最後は録音/再生停止・AU editor表示。
+- [操作・検証・復帰手順](reverb_20261031.md) / [source hash・manifest・SDK CI](reverb_20261031.json)。
+  次: plugin実装をpushしてCI確認。次の機能候補はPCM波形選択・描画。
+  実聴・長時間・実DAW automation録音等は未確認。公開Release・version/tag変更はしていない。
+
 ## 2026-10-31 JST — SPU Reverbの開始チェックポイント
 
 - `34e3a92`、main/origin同期・clean treeから開始。実装前に今回の範囲をTODOへ保存した。

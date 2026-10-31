@@ -5,9 +5,9 @@ Initial development targets macOS Standalone, AUv2 and VST3. Not a published rel
 
 Current prototype: original built-in Sine, MIDI Note On/Off and velocity,
 24 voices, channel-aware note ownership, Pitch Bend, Sustain, All sound off,
-Gain, custom ADSR editing and mouse keyboard.
+Gain, custom ADSR editing, shared SPU Reverb and mouse keyboard.
 Load a complete VAB from the editor and select a Program and Tone to audition.
-The bank, selection, Gain and ADSR settings are embedded in the DAW project state.
+The bank, selection, Gain, ADSR and Reverb settings are embedded in the DAW project state.
 Additional SPU controls remain planned. The same VAB parser and selected-Tone
 engine can also be exercised with the offline tool below.
 
@@ -121,6 +121,35 @@ point for each block. MIDI Note/Bend/Sustain offsets remain sample-accurate.
 Envelope edits write registers and refresh the native envelope without sample
 uploads, engine replacement or application-level audio-thread allocations.
 
+## SPU Reverb
+
+The **ADSR / Reverb** page buttons share the same bank, Gain and keyboard.
+Choose a **Shared preset** to enable Reverb automatically: Room, Studio Small,
+Studio Medium, Studio Large, Hall, Space Echo or Half Echo. These are the pinned
+core's named approximations of PS1 Reverb, not a complete hardware algorithm.
+The initial preset is **Off** and Return left/right start at 25%.
+
+The Return knobs add wet sound to the unchanged dry sound. Each output channel
+has its own return level. **Send: all notes** sends every keyboard voice to the
+shared effect. **Send: Tone setting** follows the original selected VAB Tone's
+send flag; Builtin Sine has no original send. The source flag is retained when
+changing this control or saving the bank.
+
+Turning **Enable reverb** Off immediately mutes wet output, keeps the selected
+preset/return values and lets the effect decay silently. Selecting **Off** also
+clears its history. **All sound off**, audio reset and deactivation clear voices
+and effect history, so old tails cannot return after restarting. Selecting a
+different active preset keeps the current voices and effect history.
+This immediate bypass and Off-history clearing differs from the Web editor's
+send-only Enable switch. Preset selection auto-enables only through the editor;
+DAW automation and project restore retain the independent Enable value.
+
+All five Reverb controls are host parameters, IDs 12–16. Changes apply at block
+boundaries without retriggering notes or replacing the instrument. Clearing
+effect history uses the Native SDK's allocation-free `ps1_spu_clear_reverb` API;
+it preserves sample RAM, registers and warmed ADPCM caches. Bypassed processing
+does not repeatedly clear delay buffers on every host block.
+
 ## VAB offline preview
 
 ```sh
@@ -138,7 +167,7 @@ original synthetic fixture. This preview does not open an audio device.
 its data and selected-Tone preparation retains original ADPCM through its first
 END, tuning, ADSR, loop position and approximate static volume/pan. A fresh
 `SpuInstrument(preparedTone)` primes caches before it can enter a render callback.
-Imported reverb send is retained; the shared Reverb is still off.
+Imported reverb send is retained; shared Reverb starts Off and can be edited in the plugin.
 
 This is selected-Tone audition, not song playback or automatic key-zone/layer
 reconstruction. Sample 0 (unassigned), sample 255 (Noise), malformed ADPCM and
@@ -175,12 +204,15 @@ the engine exchange.
 ## Embedded DAW state
 
 Custom state now embeds the complete original VAB, sparse Program/Tone selection
-and Gain, custom ADSR and Apply settings. Restoring a project prepares a fresh SPU synchronously before reporting
+and Gain, custom ADSR, Apply and Reverb settings. Restoring a project prepares a fresh SPU synchronously before reporting
 success; it does not need an external sample path. Malformed or unsupported state
 keeps the current sound, parameters and an already prepared pending replacement.
 Previous Gain-only AU/VST3 state remains readable and migrates to Built-in Sine.
 Schema 1 VAB/Gain states also remain readable and use their original Tone ADSR.
 Schema 2 keeps the original bank bytes and adds the custom ADSR settings.
+Schema 3 adds the shared Reverb settings. Schema 1/2 and Gain-only states restore
+with Reverb Off, preserving the original sound. Live delay history is not saved;
+restoring a project starts the effect with empty buffers.
 
 The actual AU and VST3 have been tested for embedded-bank round-trip, separate
 instances, immediate first-render MIDI/PCM and malformed-state rejection. VST3

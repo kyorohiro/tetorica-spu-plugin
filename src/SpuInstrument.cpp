@@ -22,6 +22,39 @@ constexpr std::array<std::uint8_t, 64> kSineAdpcm{{
   38,0,188,188,171,171,170,154,154,169,153,169,153,170,169,155,
   38,3,172,187,204,204,237,221,255,14,240,2,33,34,51,67
 }};
+// Preset register constants by pSXAuthor/R. Belmont, BSD-3-Clause, retained
+// from the pinned SDK's spu_tables.cpp. Its Echo/Delay entries have no effect
+// configuration and are deliberately not exposed. This is the native effect.
+constexpr std::array<std::array<std::uint16_t,32>,8> kReverbRegisters{{
+  {},
+  {{0x007d,0x005b,0x6d80,0x54b8,0xbed0,0,0,0xba80,
+    0x5800,0x5300,0x04d6,0x0333,0x03f0,0x0227,0x0374,0x01ef,
+    0x0334,0x01b5,0,0,0,0,0,0,0,0,0x01b4,0x0136,0x00b8,0x005c,0x8000,0x8000}},
+  {{0x0033,0x0025,0x70f0,0x4fa8,0xbce0,0x4410,0xc0f0,0x9c00,
+    0x5280,0x4ec0,0x03e4,0x031b,0x03a4,0x02af,0x0372,0x0266,
+    0x031c,0x025d,0x025c,0x018e,0x022f,0x0135,0x01d2,0x00b7,
+    0x018f,0x00b5,0x00b4,0x0080,0x004c,0x0026,0x8000,0x8000}},
+  {{0x00b1,0x007f,0x70f0,0x4fa8,0xbce0,0x4510,0xbef0,0xb4c0,
+    0x5280,0x4ec0,0x0904,0x076b,0x0824,0x065f,0x07a2,0x0616,
+    0x076c,0x05ed,0x05ec,0x042e,0x050f,0x0305,0x0462,0x02b7,
+    0x042f,0x0265,0x0264,0x01b2,0x0100,0x0080,0x8000,0x8000}},
+  {{0x00e3,0x00a9,0x6f60,0x4fa8,0xbce0,0x4510,0xbef0,0xa680,
+    0x5680,0x52c0,0x0dfb,0x0b58,0x0d09,0x0a3c,0x0bd9,0x0973,
+    0x0b59,0x08da,0x08d9,0x05e9,0x07ec,0x04b0,0x06ef,0x03d2,
+    0x05ea,0x031d,0x031c,0x0238,0x0154,0x00aa,0x8000,0x8000}},
+  {{0x01a5,0x0139,0x6000,0x5000,0x4c00,0xb800,0xbc00,0xc000,
+    0x6000,0x5c00,0x15ba,0x11bb,0x14c2,0x10bd,0x11bc,0x0dc1,
+    0x11c0,0x0dc3,0x0dc0,0x09c1,0x0bc4,0x07c1,0x0a00,0x06cd,
+    0x09c2,0x05c1,0x05c0,0x041a,0x0274,0x013a,0x8000,0x8000}},
+  {{0x033d,0x0231,0x7e00,0x5000,0xb400,0xb000,0x4c00,0xb000,
+    0x6000,0x5400,0x1ed6,0x1a31,0x1d14,0x183b,0x1bc2,0x16b2,
+    0x1a32,0x15ef,0x15ee,0x1055,0x1334,0x0f2d,0x11f6,0x0c5d,
+    0x1056,0x0ae1,0x0ae0,0x07a2,0x0464,0x0232,0x8000,0x8000}},
+  {{0x0017,0x0013,0x70f0,0x4fa8,0xbce0,0x4510,0xbef0,0x8500,
+    0x5f80,0x54c0,0x0371,0x02af,0x02e5,0x01df,0x02b0,0x01d7,
+    0x0358,0x026a,0x01d6,0x011e,0x012d,0x00b1,0x011f,0x0059,
+    0x01a0,0x00e3,0x0058,0x0040,0x0028,0x0014,0x8000,0x8000}}
+}};
 bool validChannel(int channel) { return channel >= 0 && channel < 16; }
 
 void validateTone(const vab::PreparedTone& tone) {
@@ -79,6 +112,7 @@ bool SpuInstrument::write(unsigned offset, unsigned value) noexcept {
   return ok;
 }
 bool SpuInstrument::renderNative(float* left, float* right, unsigned count) noexcept {
+  if(count&&mReverb.preset!=ReverbPreset::Off)mReverbMayHaveTail=true;
   const bool ok = ps1_spu_render(mChip, left, right, count) != 0;
   mHealthy = mHealthy && ok;
   if (ok) mNativeFrames += count;
@@ -115,7 +149,7 @@ void SpuInstrument::initializeTone(const vab::PreparedTone& tone) {
   mRootFrequencyHz=tone.rootFrequencyHz;
   mVolumeLeft=static_cast<unsigned>(std::lround(kVoiceVolume*tone.volumeLeft));
   mVolumeRight=static_cast<unsigned>(std::lround(kVoiceVolume*tone.volumeRight));
-  mReverbSend=tone.reverb;
+  mSourceReverbSend=tone.reverb;
   mSourceEnvelope=mEnvelope={tone.adsr1,tone.adsr2};
   if (ps1_spu_sample_rate()!=kNativeSampleRate || !ps1_spu_set_mix_headroom(mChip,4) ||
       !ps1_spu_load_ram(mChip,address,tone.adpcm.data(),static_cast<std::uint32_t>(tone.adpcm.size())))
@@ -252,7 +286,14 @@ void SpuInstrument::panic() noexcept {
     mVoices[i] = Voice{};
   }
   mCursor=0; mOrder=0;
+  clearReverbTail();
   clearRateHistory();
+}
+void SpuInstrument::clearReverbTail() noexcept {
+  if(!mReverbMayHaveTail)return;
+  const bool ok=ps1_spu_clear_reverb(mChip)!=0;
+  mHealthy=ok&&mHealthy;
+  if(ok)mReverbMayHaveTail=false;
 }
 void SpuInstrument::setEnvelope(EnvelopeRegisters values,bool live) noexcept {
   mEnvelope=values;
@@ -262,6 +303,27 @@ void SpuInstrument::setEnvelope(EnvelopeRegisters values,bool live) noexcept {
   if(live)for(unsigned i=0;i<kVoiceCount;++i)
     if(mVoices[i].note>=0)
       mHealthy=(ps1_spu_refresh_envelope(mChip,i)!=0)&&mHealthy;
+}
+bool SpuInstrument::setReverb(ReverbSettings settings) noexcept {
+  const auto preset=static_cast<std::uint32_t>(settings.preset);
+  if(preset>=kReverbRegisters.size()||!std::isfinite(settings.volumeLeft)||
+      settings.volumeLeft<0||settings.volumeLeft>1||!std::isfinite(settings.volumeRight)||
+      settings.volumeRight<0||settings.volumeRight>1)return false;
+  if(settings.preset==mReverb.preset&&settings.enabled==mReverb.enabled&&
+      settings.useToneSend==mReverb.useToneSend&&settings.volumeLeft==mReverb.volumeLeft&&
+      settings.volumeRight==mReverb.volumeRight)return mHealthy;
+  if(settings.preset!=mReverb.preset){
+    for(unsigned i=0;i<32;++i)write(0x1c0+i*2,kReverbRegisters[preset][i]);
+    if(settings.preset==ReverbPreset::Off)clearReverbTail();
+  }
+  const bool enabled=settings.enabled&&settings.preset!=ReverbPreset::Off;
+  write(0x184,enabled?static_cast<unsigned>(std::lround(settings.volumeLeft*0x7fff)):0);
+  write(0x186,enabled?static_cast<unsigned>(std::lround(settings.volumeRight*0x7fff)):0);
+  mReverbSend=enabled&&(!settings.useToneSend||mSourceReverbSend);
+  write(0x198,mReverbSend?0xffff:0);write(0x19a,mReverbSend?0x00ff:0);
+  write(0x1aa,(ps1_spu_read(mChip,0x1aa)&~0x80u)|(enabled?0x80u:0));
+  mReverb=settings;
+  return mHealthy;
 }
 int SpuInstrument::activeVoiceCount() const noexcept {
   int count=0;

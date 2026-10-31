@@ -35,6 +35,8 @@ void operator delete[](void* value, std::size_t) noexcept { release(value); }
 #define CHECK(value) do { if (!(value)) { std::fprintf(stderr,"FAIL line %d: %s\n",__LINE__,#value); std::exit(1); } } while (0)
 using tetorica::SpuInstrument;
 using tetorica::EnvelopeRegisters;
+using tetorica::ReverbPreset;
+using tetorica::ReverbSettings;
 namespace {
 struct Stereo {
   std::vector<float> left, right;
@@ -417,12 +419,146 @@ void testEnvelopePartitionInvariance(){
     }
   }
 }
+bool sameReverb(ReverbSettings a,ReverbSettings b){
+  return a.preset==b.preset&&a.enabled==b.enabled&&a.useToneSend==b.useToneSend&&
+    a.volumeLeft==b.volumeLeft&&a.volumeRight==b.volumeRight;
+}
+void testReverbDefaultsAndValidation(){
+  auto tone=longReleaseTone();tone.adsr2=0x1fc0;tone.reverb=true;
+  SpuInstrument imported(tone);tone.reverb=false;SpuInstrument dry(tone),builtin;
+  CHECK(imported.sourceReverbSend()&&!dry.sourceReverbSend()&&!builtin.sourceReverbSend());
+  CHECK(sameReverb(imported.reverb(),{})&&imported.setReverb({}));
+  CHECK(imported.prepare(44100)&&dry.prepare(44100));
+  imported.noteOn(69,127);dry.noteOn(69,127);Stereo a(8192),b(8192);
+  render(imported,a);render(dry,b);CHECK(a.left==b.left&&a.right==b.right);
+  const ReverbSettings disabled{ReverbPreset::Room,false,false,.3,.4};
+  CHECK(imported.setReverb(disabled));render(imported,a);render(dry,b);
+  CHECK(a.left==b.left&&a.right==b.right); //A selected but disabled preset is exact dry.
+  for(int kind=0;kind<7;++kind){
+    auto invalid=disabled;
+    switch(kind){
+      case 0:invalid.preset=static_cast<ReverbPreset>(8);break;
+      case 1:invalid.preset=static_cast<ReverbPreset>(0xffffffffu);break;
+      case 2:invalid.volumeLeft=-.01;break;
+      case 3:invalid.volumeRight=1.01;break;
+      case 4:invalid.volumeLeft=std::numeric_limits<double>::quiet_NaN();break;
+      case 5:invalid.volumeRight=std::numeric_limits<double>::infinity();break;
+      case 6:invalid.volumeLeft=-std::numeric_limits<double>::infinity();break;
+    }
+    CHECK(!imported.setReverb(invalid)&&sameReverb(imported.reverb(),disabled)&&imported.healthy());
+    render(imported,a);render(dry,b);CHECK(a.left==b.left&&a.right==b.right);
+  }
+  CHECK(imported.sourceReverbSend());
+}
+void testReverbPresetsAndStereoReturns(){
+  std::vector<float> previous;
+  for(unsigned preset=0;preset<8;++preset){
+    SpuInstrument wet,dry;CHECK(wet.prepare(44100)&&dry.prepare(44100));
+    wet.noteOn(69,127);dry.noteOn(69,127);
+    Stereo before(1009),copy(1009);render(wet,before);render(dry,copy);
+    ReverbSettings settings{static_cast<ReverbPreset>(preset),true,false,0,.75};
+    const auto frames=wet.nativeFramesRendered();CHECK(wet.setReverb(settings));
+    CHECK(wet.nativeFramesRendered()==frames&&wet.activeVoiceCount()==1);
+    Stereo a(8192),b(8192);render(wet,a);render(dry,b);
+    CHECK(a.left==b.left); //Muted return preserves every dry sample/phase without KON.
+    if(preset){CHECK(a.right!=b.right);if(!previous.empty())CHECK(a.right!=previous);previous=a.right;}
+    else CHECK(a.right==b.right);
+    wet.noteOff(69);dry.noteOff(69);Stereo tail(16000);render(wet,tail);
+    CHECK(peak(tail,2048)==0);
+    float right=0;for(std::size_t i=2048;i<tail.right.size();++i)right=std::max(right,std::abs(tail.right[i]));
+    CHECK(preset?right>.00001f:right==0);
+    if(preset){
+      settings.volumeLeft=.75;settings.volumeRight=0;CHECK(wet.setReverb(settings));
+      Stereo flipped(4096);render(wet,flipped);
+      CHECK(peak(flipped)>.00001f);
+      CHECK(std::all_of(flipped.right.begin(),flipped.right.end(),[](float v){return v==0;}));
+    }
+  }
+}
+void testReverbBypassDecayAndToneSend(){
+  SpuInstrument a,b;for(auto* synth:{&a,&b}){
+    CHECK(synth->prepare(44100));CHECK(synth->setReverb({ReverbPreset::Room,true,false,.75,.75}));
+    synth->noteOn(69,127);
+  }
+  Stereo out(8192),reference(8192);render(a,out);render(b,reference);
+  a.noteOff(69);b.noteOff(69);Stereo release(1024);render(a,release);render(b,release);
+  auto disabled=a.reverb();disabled.enabled=false;CHECK(a.setReverb(disabled));
+  render(a,out);render(b,reference);CHECK(peak(out)==0&&peak(reference)>.00001f);
+  disabled.enabled=true;CHECK(a.setReverb(disabled));render(a,out);render(b,reference);
+  CHECK(out.left==reference.left&&out.right==reference.right); //Hidden tail kept decaying, not frozen/cleared.
+
+  auto tone=longReleaseTone();tone.adsr2=0x1fc0;
+  SpuInstrument filtered(tone),dry(tone);tone.reverb=true;SpuInstrument sourceSend(tone);
+  const ReverbSettings toneSend{ReverbPreset::Room,true,true,.75,.75};
+  for(auto* synth:{&filtered,&dry,&sourceSend}){CHECK(synth->prepare(44100));synth->noteOn(69,127);}
+  CHECK(filtered.setReverb(toneSend)&&sourceSend.setReverb(toneSend));
+  render(filtered,out);render(dry,reference);CHECK(out.left==reference.left);
+  render(sourceSend,out);CHECK(out.left!=reference.left); //Mode bit4 selects imported Tone sends.
+  auto all=toneSend;all.useToneSend=false;CHECK(filtered.setReverb(all));
+  render(filtered,out);render(dry,reference);CHECK(out.left.front()==reference.left.front()&&out.left!=reference.left);
+  CHECK(!filtered.sourceReverbSend()&&sourceSend.sourceReverbSend());
+}
+void testReverbOffPanicAndPrepare(){
+  for(double rate:{44100.,48000.}){
+    SpuInstrument wet,dry,fresh;for(auto* synth:{&wet,&dry,&fresh})CHECK(synth->prepare(rate));
+    const ReverbSettings effect{ReverbPreset::SpaceEcho,true,false,.75,.75};
+    CHECK(wet.setReverb(effect));wet.noteOn(69,127);dry.noteOn(69,127);
+    Stereo before(16384),reference(16384);render(wet,before);render(dry,reference);
+    auto off=effect;off.preset=ReverbPreset::Off;CHECK(wet.setReverb(off));
+    Stereo settle(16);render(wet,settle);render(dry,settle);
+    Stereo out(257),copy(257);render(wet,out);render(dry,copy);
+    CHECK(out.left==copy.left&&out.right==copy.right&&wet.activeVoiceCount()==1);
+    CHECK(wet.setReverb(effect)&&dry.setReverb(effect));render(wet,out);render(dry,copy);
+    CHECK(out.left==copy.left&&out.right==copy.right); //Equals a fresh effect at the same sample phase.
+    render(wet,before);wet.panic();wet.panic();render(wet,before);CHECK(peak(before)==0);
+    CHECK(sameReverb(wet.reverb(),effect));CHECK(fresh.setReverb(effect));
+    render(fresh,reference);CHECK(peak(reference)==0); //Align continuous host-rate adapter time.
+    wet.noteOn(69,127);fresh.noteOn(69,127);render(wet,before);render(fresh,reference);
+    CHECK(before.left==reference.left&&before.right==reference.right);
+    wet.panic();wet.panic();render(wet,before);CHECK(peak(before)==0); //Rendering after clear dirties history again.
+    wet.noteOn(69,127);render(wet,before);CHECK(wet.prepare(rate));render(wet,before);
+    CHECK(peak(before)==0&&sameReverb(wet.reverb(),effect));
+  }
+}
+void testOneShotReverbSendRestored(){
+  auto tone=longReleaseTone();tone.adsr2=0x1fc0;tone.reverb=true;
+  tone.adpcm[1]=0;tone.adpcm[49]=1;tone.loopStartSamples.reset();
+  SpuInstrument a(tone),b(tone);CHECK(a.prepare(44100)&&b.prepare(44100));
+  const ReverbSettings effect{ReverbPreset::Room,true,true,.75,.75};
+  CHECK(a.setReverb(effect)&&b.setReverb(effect));
+  Stereo out(4096),reference(4096);
+  for(int slot=0;slot<24;++slot){
+    a.noteOn(40+slot,100,slot%16);b.noteOn(40+slot,100,slot%16);
+    render(a,out);render(b,reference);CHECK(out.left==reference.left&&peak(out)>.00001f);
+    auto disabled=effect;disabled.enabled=false;CHECK(b.setReverb(disabled)&&b.setReverb(effect));
+    //Only b receives an explicit send-mask restore. a must restore the bit at
+    //Note On after Native one-shot END cleared it, including slots15/16/23.
+    a.noteOn(40+slot,100,slot%16);b.noteOn(40+slot,100,slot%16);
+    render(a,out);render(b,reference);CHECK(out.left==reference.left&&out.right==reference.right);
+  }
+}
+void testReverbPartitionInvariance(){
+  for(double rate:{8000.,44100.,48000.,96000.}){
+    SpuInstrument a,b;CHECK(a.prepare(rate)&&b.prepare(rate));a.noteOn(69,127);b.noteOn(69,127);
+    Stereo whole(4099),parts(4099);
+    for(unsigned stage=0;stage<24;++stage){
+      const ReverbSettings settings{static_cast<ReverbPreset>(stage%8),stage%3!=0,stage%5==0,
+        double(stage%5)/4,double(stage%3)/2};
+      CHECK(a.setReverb(settings)&&b.setReverb(settings));
+      if(stage==5){a.noteOff(69);b.noteOff(69);}
+      if(stage==11||stage==20){a.panic();a.panic();b.panic();b.panic();}
+      if(stage==12){a.noteOn(60,127);b.noteOn(60,127);}
+      render(a,whole,4099);render(b,parts,7);
+      CHECK(whole.left==parts.left&&whole.right==parts.right);
+    }
+  }
+}
 void testNoCallbackNewDelete() {
   SpuInstrument synth;
   std::array<float,1024> left{},right{};
   gAllocations=gFrees=0;
   gTrackAllocations=true;
-  bool prepared=true;
+  bool prepared=true,reverb=true;
   for (double rate : {44100.,48000.,96000.,8000.}) {
     prepared=synth.prepare(rate)&&prepared;
     for (int i=0; i<240; ++i) {
@@ -431,17 +567,19 @@ void testNoCallbackNewDelete() {
       synth.setSustain(i%3!=0,i%16);
       synth.setEnvelope({static_cast<std::uint16_t>((i*65521)^0x1327),
         static_cast<std::uint16_t>((i*27847)^0xa875)},i%3!=0);
+      reverb=synth.setReverb({static_cast<ReverbPreset>(i%8),i%5!=0,i%3==0,
+        double(i%101)/100.,.5})&&reverb;
       synth.render(left.data(),right.data(),1024);
       if (i%3==0) synth.noteOff(i%128,i%16);
       if (i%11==0) synth.allNotesOff(i%16);
-      if (i%29==0) synth.panic();
+      if (i%29==0) {synth.panic();synth.panic();}
       if (i%37==0) synth.resetControllers(i%16);
     }
     synth.allNotesOff();synth.resetControllers();
     for (int i=0; i<64; ++i) synth.render(left.data(),right.data(),1024);
   }
   gTrackAllocations=false;
-  CHECK(prepared && synth.healthy());
+  CHECK(prepared && reverb && synth.healthy());
   CHECK(gAllocations==0 && gFrees==0);
 }
 void word(FILE* file,std::uint32_t value,int count) {
@@ -476,7 +614,9 @@ int main(int argc,char** argv) {
   testControllerResetPanicAndInvalid();testControllerPartitionInvariance();
   testEnvelopeDefaultsAndOwnership();testLiveEnvelopeStages();testDeferredEnvelopeAndNextNote();
   testEnvelopePhaseAndExplicitApply();testEnvelopePolyphonyPedalAndRelease();testEnvelopePartitionInvariance();
+  testReverbDefaultsAndValidation();testReverbPresetsAndStereoReturns();testReverbBypassDecayAndToneSend();
+  testReverbOffPanicAndPrepare();testOneShotReverbSendRestored();testReverbPartitionInvariance();
   if (argc==3 && std::strcmp(argv[1],"--wav")==0) writeDemo(argv[2]);
-  std::puts("PASS: Native SPU pitch/release/polyphony/channels/panic/partition/isolation/rates/MIDI offsets; per-channel bend/sustain/reset/retrigger/deferred-steal; live/deferred ADSR stages/phase/pedal/polyphony; zero callback C++ new/delete after cache priming");
+  std::puts("PASS: Native SPU pitch/release/polyphony/channels/panic/partition/isolation/rates/MIDI offsets; per-channel bend/sustain/reset/retrigger/deferred-steal; live/deferred ADSR; all reverb presets/stereo/bypass/Tone-send/one-shot/clear; zero callback C++ new/delete after cache priming");
   return 0;
 }

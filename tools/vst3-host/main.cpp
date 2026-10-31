@@ -14,6 +14,7 @@
 #include "InstrumentState.h"
 #include "midi-controller-checks.h"
 #include "envelope-checks.h"
+#include "reverb-checks.h"
 #include "pluginterfaces/vst/ivstmidicontrollers.h"
 
 #include <algorithm>
@@ -211,18 +212,18 @@ public:
     require(queue,"Cannot add adversarial host parameter");
     ok(queue->addPoint(offset,value,pointIndex),"Cannot add adversarial parameter point");
   }
-  void envelopeParameterForTest(int index,double plainValue) {
-    require(index>=1&&index<=11,"Invalid ADSR test parameter ID");
+  void plainParameterForTest(int index,double plainValue) {
+    require(index>=1&&index<=16,"Invalid sound parameter ID");
     const ParamID id=static_cast<ParamID>(index);
     const double normalized=controller->plainParamToNormalized(id,plainValue);
     ok(controller->setParamNormalized(id,normalized),"ADSR controller parameter rejected");
     parameterForTest(id,normalized,0);
   }
-  std::vector<std::uint8_t> envelopeBodyForTest() {
+  std::vector<std::uint8_t> stateBodyForTest() {
     auto bytes=savedBytes();require(bytes.size()>=4,"Missing VST3 state trailer");
     bytes.resize(bytes.size()-4);return bytes;
   }
-  bool tryEnvelopeRestoreForTest(std::vector<std::uint8_t> body) {
+  bool tryStateRestoreForTest(std::vector<std::uint8_t> body) {
     body.insert(body.end(),4,0);return tryRestore(body);
   }
   void restoreForMidiTest(const std::vector<std::uint8_t>& bytes) {
@@ -576,9 +577,22 @@ void checkMappedIngress(const PluginFactory& factory,const ClassInfo& info) {
   bypassed.renderMidi({tetorica::test::off(15)});renderBlocks(bypassed,400);
   require(peak(bypassed.render())<1e-7,
     "Cross-block bypass pedal events replayed out of time and stranded a voice");
+  // The reserved host bypass path must clear effect history as well as keys.
+  // Feed a long-enough held note to fill Space Echo before bypassing it.
+  const tetorica::ReverbSettings echo{tetorica::ReverbPreset::SpaceEcho,true,false,1,1};
+  auto wetState=tetorica::encodeState(tetorica::InstrumentDefinition::builtin(),100,{},echo);
+  wetState.insert(wetState.end(),4,0);
+  require(bypassed.tryRestore(wetState),"Wet bypass fixture restore failed");
+  bypassed.allowAsymmetric();bypassed.renderMidi({tetorica::test::on()});renderBlocks(bypassed,120);
+  bypassed.renderMidi({tetorica::test::off()});
+  require(peak(renderBlocks(bypassed,16))>1e-5,"Wet bypass fixture had no released effect tail");
+  bypassed.parameterForTest(bypassId,1.,0);
+  require(peak(bypassed.render())==0,"Host bypass leaked a Reverb tail");
+  bypassed.parameterForTest(bypassId,0.,0);
+  require(peak(renderBlocks(bypassed,120))==0,"Unbypass resurrected old Reverb history");
   std::cout<<"PASS VST3 mapped ingress invalidNormalizedIgnored=true invalidChannelIgnored=true"
     <<" unsupportedCCIgnored=true negativeOffsetIgnored=true points1025Panic=true gainPreserved=true"
-    <<" bypassMuteQueueReset=true bypassCrossBlockPedal=true freshUnbypassNote=true\n";
+    <<" bypassMuteQueueReset=true bypassCrossBlockPedal=true freshUnbypassNote=true bypassClearsReverb=true\n";
 }
 using StateBytes=std::vector<std::uint8_t>;
 StateBytes originalBank() {
@@ -682,7 +696,7 @@ void checkStateFailures(const PluginFactory& factory,const ClassInfo& info) {
   const auto on=note(true,0);sameStereo(target,reference,{on});
   std::vector<StateBytes> invalid;
   auto mutate=[&](std::size_t offset,std::uint32_t value){auto state=valid;put32(state,offset,value);invalid.push_back(std::move(state));};
-  mutate(0,0);mutate(8,3);mutate(12,1);mutate(16,9);mutate(20,127);mutate(24,99);mutate(28,0xffffffff);
+  mutate(0,0);mutate(8,4);mutate(12,1);mutate(16,9);mutate(20,127);mutate(24,99);mutate(28,0xffffffff);
   for(const auto length:{std::size_t(0),std::size_t(1),std::size_t(7),std::size_t(8),std::size_t(12),
       std::size_t(31),std::size_t(39),valid.size()-5,valid.size()-1})
     invalid.emplace_back(valid.begin(),valid.begin()+length);
@@ -746,6 +760,10 @@ int main(int argc, char** argv) {
           checkScheduler(factory, info, rate);
           checkEmbeddedState(factory,info,rate);
           tetorica::test::checkEnvelopes([&] {
+            auto instance=std::make_unique<Instance>(factory,info,rate);instance->allowAsymmetric();
+            instance->start();return instance;
+          },rate,"VST3 parameter changes",originalBank());
+          tetorica::test::checkReverbs([&] {
             auto instance=std::make_unique<Instance>(factory,info,rate);instance->allowAsymmetric();
             instance->start();return instance;
           },rate,"VST3 parameter changes",originalBank());

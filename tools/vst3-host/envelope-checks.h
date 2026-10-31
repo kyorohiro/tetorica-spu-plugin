@@ -31,20 +31,20 @@ inline double envelopePeak(const std::vector<float>& pcm,std::size_t first=0) {
 // the VST3 host adapter converts through IEditController's official mapping.
 template<class Instance> void author(Instance& instance,EnvelopeSettings s) {
   const auto a=s.custom.adsr1,b=s.custom.adsr2;
-  instance.envelopeParameterForTest(1,s.enabled?1:0);
-  instance.envelopeParameterForTest(2,(a>>8)&127);
-  instance.envelopeParameterForTest(3,(a>>15)&1);
-  instance.envelopeParameterForTest(4,(a>>4)&15);
-  instance.envelopeParameterForTest(5,a&15);
-  instance.envelopeParameterForTest(6,(b>>6)&127);
-  instance.envelopeParameterForTest(7,(b>>14)&1);
-  instance.envelopeParameterForTest(8,(b>>15)&1);
-  instance.envelopeParameterForTest(9,b&31);
-  instance.envelopeParameterForTest(10,(b>>5)&1);
-  instance.envelopeParameterForTest(11,s.live?1:0);
+  instance.plainParameterForTest(1,s.enabled?1:0);
+  instance.plainParameterForTest(2,(a>>8)&127);
+  instance.plainParameterForTest(3,(a>>15)&1);
+  instance.plainParameterForTest(4,(a>>4)&15);
+  instance.plainParameterForTest(5,a&15);
+  instance.plainParameterForTest(6,(b>>6)&127);
+  instance.plainParameterForTest(7,(b>>14)&1);
+  instance.plainParameterForTest(8,(b>>15)&1);
+  instance.plainParameterForTest(9,b&31);
+  instance.plainParameterForTest(10,(b>>5)&1);
+  instance.plainParameterForTest(11,s.live?1:0);
 }
 template<class Instance> SavedInstrumentState saved(Instance& instance) {
-  const auto bytes=instance.envelopeBodyForTest();return decodeState({bytes.data(),bytes.size()});
+  const auto bytes=instance.stateBodyForTest();return decodeState({bytes.data(),bytes.size()});
 }
 }
 
@@ -55,40 +55,40 @@ template<class Factory> void checkEnvelopes(Factory make,double rate,const char*
   const auto selected=InstrumentDefinition::fromVab(bank,3,1);
   const EnvelopeSettings authored{{0xa937,0xd7bb},false,false}; //Every one of the nine fields is non-default.
   auto edited=make(),reference=make();
-  requireEnvelope(edited->tryEnvelopeRestoreForTest(encodeState(selected,37)),"ADSR fixture restore failed");
+  requireEnvelope(edited->tryStateRestoreForTest(encodeState(selected,37)),"ADSR fixture restore failed");
   author(*edited,authored);edited->renderMidi({});
-  const auto serialized=edited->envelopeBodyForTest();
+  const auto serialized=edited->stateBodyForTest();
   auto decoded=decodeState({serialized.data(),serialized.size()});
   requireEnvelope(equal(decoded.envelope,authored)&&decoded.gainPercent==37&&decoded.definition->bankBytes()==bank&&
     decoded.definition->program()==3&&decoded.definition->tone()==1,"Nine ADSR parameter fields/flags or source Tone failed state serialization");
-  requireEnvelope(reference->tryEnvelopeRestoreForTest(serialized),"Authored ADSR state restore failed");
+  requireEnvelope(reference->tryStateRestoreForTest(serialized),"Authored ADSR state restore failed");
   // Reset the edited engine too: compare the exact immediate first block,
   // including current NoteOn offset, without a preceding warm-up process call.
-  requireEnvelope(edited->tryEnvelopeRestoreForTest(serialized),"ADSR immediate re-restore failed");
+  requireEnvelope(edited->tryStateRestoreForTest(serialized),"ADSR immediate re-restore failed");
   requireEnvelope(edited->renderMidi(on)==reference->renderMidi(on),"First post-restore ADSR PCM differs");
   for(int i=0;i<8;++i)requireEnvelope(edited->renderMidi({})==reference->renderMidi({}),"Restored ADSR PCM diverged");
 
   std::vector<Bytes> invalid;
-  auto bad=serialized;word(bad,bad.size()-4,4);invalid.push_back(bad);
-  bad=serialized;bad[bad.size()-5]|=0x20;invalid.push_back(bad);
-  bad=serialized;word(bad,8,3);invalid.push_back(bad);
+  auto bad=serialized;word(bad,44+bank.size(),4);invalid.push_back(bad);
+  bad=serialized;bad[43+bank.size()]|=0x20;invalid.push_back(bad);
+  bad=serialized;word(bad,8,4);invalid.push_back(bad);
   bad=serialized;bad.pop_back();invalid.push_back(bad);
   for(const auto& bytes:invalid) {
-    requireEnvelope(!edited->tryEnvelopeRestoreForTest(bytes),"Malformed ADSR state accepted");
-    requireEnvelope(edited->envelopeBodyForTest()==serialized,"Rejected ADSR state changed a parameter/source snapshot");
+    requireEnvelope(!edited->tryStateRestoreForTest(bytes),"Malformed ADSR state accepted");
+    requireEnvelope(edited->stateBodyForTest()==serialized,"Rejected ADSR state changed a parameter/source snapshot");
     requireEnvelope(edited->renderMidi({})==reference->renderMidi({}),"Rejected ADSR state interrupted held PCM");
   }
 
   // Schema1 has no custom extension and must migrate to original source ADSR,
   // even when replacing a live schema2 override with all fields authored.
-  auto old=serialized;old.resize(old.size()-8);word(old,8,1);word(old,12,static_cast<std::uint32_t>(old.size()));
-  requireEnvelope(edited->tryEnvelopeRestoreForTest(old),"Schema1 ADSR migration rejected");
+  auto old=serialized;old.resize(40+bank.size());word(old,8,1);word(old,12,static_cast<std::uint32_t>(old.size()));
+  requireEnvelope(edited->tryStateRestoreForTest(old),"Schema1 ADSR migration rejected");
   requireEnvelope(equal(saved(*edited).envelope,{})&&saved(*edited).definition->bankBytes()==bank,"Schema1 failed to restore default override/original VAB");
-  requireEnvelope(reference->tryEnvelopeRestoreForTest(encodeState(selected,37)),"Original ADSR reference restore failed");
+  requireEnvelope(reference->tryStateRestoreForTest(encodeState(selected,37)),"Original ADSR reference restore failed");
   requireEnvelope(edited->renderMidi(on)==reference->renderMidi(on),"Schema1 original ADSR first-block PCM changed");
   Bytes legacy(8);constexpr std::uint64_t legacyGain=0x4031000000000000ull; //17.0, binary64 LE.
   for(unsigned i=0;i<8;++i)legacy[i]=static_cast<std::uint8_t>(legacyGain>>(i*8));
-  requireEnvelope(edited->tryEnvelopeRestoreForTest(serialized)&&edited->tryEnvelopeRestoreForTest(legacy),
+  requireEnvelope(edited->tryStateRestoreForTest(serialized)&&edited->tryStateRestoreForTest(legacy),
     "Legacy Gain migration over authored ADSR failed");
   const auto migratedLegacy=saved(*edited);
   requireEnvelope(equal(migratedLegacy.envelope,{})&&migratedLegacy.gainPercent==17&&
@@ -100,8 +100,8 @@ template<class Factory> void checkEnvelopes(Factory make,double rate,const char*
   const EnvelopeSettings slow{{0x640f,0x1fc0},true,true};
   auto fast=make(),slowRestored=make(),slowAutomated=make(),off=make();
   auto disabled=slow;disabled.enabled=false;
-  requireEnvelope(off->tryEnvelopeRestoreForTest(encodeState(builtin,100,disabled)),"Disabled custom ADSR restore failed");
-  requireEnvelope(slowRestored->tryEnvelopeRestoreForTest(encodeState(builtin,100,slow)),"Slow ADSR restore failed");
+  requireEnvelope(off->tryStateRestoreForTest(encodeState(builtin,100,disabled)),"Disabled custom ADSR restore failed");
+  requireEnvelope(slowRestored->tryStateRestoreForTest(encodeState(builtin,100,slow)),"Slow ADSR restore failed");
   author(*slowAutomated,slow); // Host automation arrives before this process boundary.
   const auto original=fast->renderMidi(on),disabledPCM=off->renderMidi(on);
   const auto restoredPCM=slowRestored->renderMidi(on),automatedPCM=slowAutomated->renderMidi(on);
@@ -114,7 +114,7 @@ template<class Factory> void checkEnvelopes(Factory make,double rate,const char*
   // envelope. Compare against a pristine engine with the same deferred tuple.
   auto next=make(),nextReference=make();auto deferredSlow=slow;deferredSlow.live=false;
   author(*next,deferredSlow);
-  requireEnvelope(nextReference->tryEnvelopeRestoreForTest(encodeState(builtin,100,deferredSlow)),"Deferred next-note restore failed");
+  requireEnvelope(nextReference->tryStateRestoreForTest(encodeState(builtin,100,deferredSlow)),"Deferred next-note restore failed");
   requireEnvelope(next->renderMidi(on)==nextReference->renderMidi(on),"Apply-off ignored ADSR on the next NoteOn");
 
   // Editing only Attack and SL while already in Sustain must not retrigger or
@@ -127,7 +127,7 @@ template<class Factory> void checkEnvelopes(Factory make,double rate,const char*
   requireEnvelope(live->renderMidi({})==held->renderMidi({}),"Live Attack/SL edit retriggered a sustained voice");
   author(*live,{{0x7f03,0x4a00},true,false});
   for(int i=0;i<4;++i)requireEnvelope(live->renderMidi({})==held->renderMidi({}),"Apply-off changed the held voice");
-  live->envelopeParameterForTest(11,1); // No rate/word change: Apply edge alone must refresh.
+  live->plainParameterForTest(11,1); // No rate/word change: Apply edge alone must refresh.
   std::vector<float> changed,unchanged;
   for(int i=0;i<static_cast<int>(std::ceil(rate/44100.*16));++i) {
     const auto a=live->renderMidi({}),b=held->renderMidi({});

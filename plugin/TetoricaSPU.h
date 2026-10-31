@@ -6,6 +6,7 @@
 
 #if IPLUG_DSP
 #include "SpuEngineExchange.h"
+#include "SpuReverb.h"
 #include "VabLoader.h"
 #include <array>
 #include <atomic>
@@ -29,6 +30,11 @@ enum EParams
   kParamReleaseRate,
   kParamReleaseExponential,
   kParamEnvelopeLive,
+  kParamReverbPreset,
+  kParamReverbEnabled,
+  kParamReverbLeft,
+  kParamReverbRight,
+  kParamReverbToneSend,
   kNumParams
 };
 
@@ -44,7 +50,20 @@ enum ECtrlTags
   kCtrlEnvelopeGraph,
   kCtrlEnvelopeStatus,
   kCtrlEnvelopeFirst,
-  kCtrlEnvelopeLast = kCtrlEnvelopeFirst + 8
+  kCtrlEnvelopeLast = kCtrlEnvelopeFirst + 8,
+  kCtrlEnvelopeEnabled,
+  kCtrlEnvelopeCopy,
+  kCtrlEnvelopeLive,
+  kCtrlPageEnvelope,
+  kCtrlPageReverb,
+  kCtrlReverbHeading,
+  kCtrlReverbPreset,
+  kCtrlReverbEnabled,
+  kCtrlReverbLeft,
+  kCtrlReverbRight,
+  kCtrlReverbToneSend,
+  kCtrlReverbInfo,
+  kCtrlReverbStatus
 };
 
 class TetoricaSPU final : public iplug::Plugin
@@ -102,6 +121,8 @@ private:
     std::uint32_t program, std::uint32_t tone);
   void updateInstrumentControls();
   void copyToneEnvelopeFromUI();
+  void showInstrumentPage(bool reverb);
+  void chooseReverbPresetFromUI(int preset);
   void notifyHostOfInstrumentEdit();
   std::shared_ptr<InstrumentUIState> mInstrumentUI;
   std::atomic<std::uint64_t> mInstrumentUIRevision{0};
@@ -110,6 +131,7 @@ private:
   void resetControllerCache() noexcept;
   void applyControllerCache() noexcept;
   void applyEnvelopeParameters() noexcept;
+  void applyReverbParameters() noexcept;
   void discardCarriedMidi() noexcept;
   void renderRange(iplug::sample** outputs, int offset, int nFrames, double gain);
 

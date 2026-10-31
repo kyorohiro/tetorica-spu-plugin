@@ -5,6 +5,7 @@
 #include "InstrumentState.h"
 #include "vst3-host/midi-controller-checks.h"
 #include "vst3-host/envelope-checks.h"
+#include "vst3-host/reverb-checks.h"
 #include <AudioToolbox/AudioToolbox.h>
 #include <CoreFoundation/CoreFoundation.h>
 #include <algorithm>
@@ -127,13 +128,14 @@ public:
   std::vector<std::uint8_t> savedBytes() const {
     const auto state=save();return body(state.get());
   }
-  void envelopeParameterForTest(int index,double plainValue) {
-    require(index>=1&&index<=11,"Invalid AU ADSR test parameter ID");
+  void plainParameterForTest(int index,double plainValue) {
+    require(index>=1&&index<=16,"Invalid AU sound parameter ID");
     ok(AudioUnitSetParameter(mUnit,static_cast<AudioUnitParameterID>(index),
       kAudioUnitScope_Global,0,static_cast<AudioUnitParameterValue>(plainValue),0),"AU ADSR parameter rejected");
   }
-  std::vector<std::uint8_t> envelopeBodyForTest() const { return savedBytes(); }
-  bool tryEnvelopeRestoreForTest(const std::vector<std::uint8_t>& bytes) {
+  std::vector<std::uint8_t> stateBodyForTest() const { return savedBytes(); }
+  const std::vector<float>& right() const { return mLastRight; }
+  bool tryStateRestoreForTest(const std::vector<std::uint8_t>& bytes) {
     const auto state=save();const auto dictionary=withData(state.get(),bytes);
     return restore(dictionary.get())==noErr;
   }
@@ -175,6 +177,7 @@ public:
     ok(AudioUnitRender(mUnit, &flags, &timestamp, 0, frames,
       reinterpret_cast<AudioBufferList*>(&buffers)), "Offline AU render failed");
     mPosition += frames;
+    mLastRight.assign(right.begin(),right.begin()+frames);
     for (int i = 0; i < frames; ++i)
       require(std::isfinite(left[i]) && std::isfinite(right[i]) &&
         std::abs(left[i]) <= 1 && std::abs(right[i]) <= 1, "AU PCM is nonfinite or out of bounds");
@@ -183,6 +186,7 @@ public:
 private:
   AudioUnit mUnit = nullptr;
   double mPosition = 0;
+  std::vector<float> mLastRight;
 };
 
 void rejected(Instance& instance, CFPropertyListRef bad, const std::vector<std::uint8_t>& expected)
@@ -297,6 +301,7 @@ int main(int argc, char** argv)
       decoded.gainPercent == 17., "Legacy AU state did not migrate to a builtin definition");
     tetorica::test::checkControllers([&] { return std::make_unique<Instance>(component); },48000,"AU MIDIEvent");
     tetorica::test::checkEnvelopes([&] { return std::make_unique<Instance>(component); },48000,"AU parameters",bank);
+    tetorica::test::checkReverbs([&] { return std::make_unique<Instance>(component); },48000,"AU parameters",bank);
     std::cout << "PASS: local AU embedded VAB/Gain round-trip, first-render MIDI/PCM, separate instance, "
       "malformed CF/state rejection with pending/active preservation, legacy AU migration; no audio device/editor/install\n";
   }

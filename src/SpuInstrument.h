@@ -3,6 +3,7 @@
 #pragma once
 
 #include "SpuEnvelope.h"
+#include "SpuReverb.h"
 #include <array>
 #include <cstdint>
 
@@ -57,6 +58,13 @@ public:
   // Calling with unchanged words and live=true explicitly applies a deferred
   // edit. No key on/off, sample upload, cache reset or allocation is performed.
   void setEnvelope(EnvelopeRegisters values, bool live = true) noexcept;
+  ReverbSettings reverb() const noexcept { return mReverb; }
+  bool sourceReverbSend() const noexcept { return mSourceReverbSend; }
+  // Shared preset effect. Disabled retains the selected preset while muting
+  // returns/sends; hidden delay history continues to decay. Off clears history.
+  // All validation precedes mutation. Invalid tuples are ignored and return
+  // false. Panic/prepare clear wet tails while preserving authored settings.
+  bool setReverb(ReverbSettings settings) noexcept;
   void render(float* left, float* right, int frames) noexcept;
 
   int activeVoiceCount() const noexcept; // Physically held keys; pedal-held/releasing excluded.
@@ -77,6 +85,7 @@ private:
   unsigned pitchFor(int note, int channel) const noexcept;
   void releaseVoice(unsigned voice) noexcept;
   void clearRateHistory() noexcept;
+  void clearReverbTail() noexcept;
   void initialize();
   void initializeTone(const vab::PreparedTone& tone);
 
@@ -92,6 +101,9 @@ private:
   double mRootFrequencyHz = kNativeSampleRate / 112.0;
   unsigned mVolumeLeft = 0x0c00, mVolumeRight = 0x0c00;
   bool mReverbSend = false;
+  bool mSourceReverbSend = false;
+  bool mReverbMayHaveTail = false;
+  ReverbSettings mReverb{};
   EnvelopeRegisters mSourceEnvelope{}, mEnvelope{};
   double mRatio = 1;
   double mPhase = 0;

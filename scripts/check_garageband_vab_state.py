@@ -14,7 +14,7 @@ import plistlib
 import struct
 
 MAX_BANK = 1024 * 1024
-MAX_STATE = MAX_BANK + 48
+MAX_STATE = MAX_BANK + 72
 MAX_PROJECT_DATA = 64 * 1024 * 1024
 MAX_XML = 2 * 1024 * 1024
 MAX_ALTERNATIVES = 128
@@ -88,11 +88,13 @@ def decode_payload(payload):
         return dict(result, schema='legacy-gain-only', kind='Builtin',
                     program=0, tone=0, gain_percent=gain,
                     envelope={'enabled': False, 'live': True, 'adsr1': 0x000f, 'adsr2': 0x1fc0},
+                    reverb={'preset': 0, 'enabled': False, 'use_tone_send': False,
+                            'volume_left': .25, 'volume_right': .25},
                     bank_bytes=0, bank_sha256=None), b''
     if len(payload) < 40 or payload[:8] != b'TSPUST01':
         raise ValueError('Expected complete TSPUST01 custom state or legacy Gain')
     schema, total, kind, program, tone, size = struct.unpack_from('<6I', payload, 8)
-    if schema not in (1, 2) or total != len(payload) or size > MAX_BANK or total != (40 if schema == 1 else 48) + size:
+    if schema not in (1, 2, 3) or total != len(payload) or size > MAX_BANK or total != {1: 40, 2: 48, 3: 72}[schema] + size:
         raise ValueError('Invalid state schema, total or bank length')
     if kind not in (0, 1) or program > 127 or tone > 15:
         raise ValueError('Invalid state kind or sparse selection')
@@ -103,14 +105,19 @@ def decode_payload(payload):
     gain, = struct.unpack_from('<d', payload, 32 + size)
     if not math.isfinite(gain) or not 0 <= gain <= 100:
         raise ValueError('Invalid custom-state Gain')
-    packed, flags = struct.unpack_from('<2I', payload, 40 + size) if schema == 2 else (0x1fc0000f, 2)
+    packed, flags = struct.unpack_from('<2I', payload, 40 + size) if schema >= 2 else (0x1fc0000f, 2)
     if flags & ~3 or packed & 0x20000000:
         raise ValueError('Unknown envelope flags or reserved custom ADSR2 bit13')
+    preset, effects, left, right = struct.unpack_from('<2I2d', payload, 48 + size) if schema >= 3 else (0, 0, .25, .25)
+    if preset > 7 or effects & ~3 or any(not math.isfinite(value) or not 0 <= value <= 1 for value in (left, right)):
+        raise ValueError('Invalid reverb preset, flags or return volumes')
     bank = payload[32:32 + size]
     return dict(result, schema=schema, kind='VAB' if kind else 'Builtin',
                 program=program, tone=tone, gain_percent=gain,
                 envelope={'enabled': bool(flags & 1), 'live': bool(flags & 2),
                           'adsr1': packed & 65535, 'adsr2': packed >> 16},
+                reverb={'preset': preset, 'enabled': bool(effects & 1), 'use_tone_send': bool(effects & 2),
+                        'volume_left': left, 'volume_right': right},
                 bank_bytes=size, bank_sha256=sha(bank) if size else None), bank
 
 

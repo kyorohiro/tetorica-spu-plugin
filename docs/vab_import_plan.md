@@ -138,11 +138,11 @@ instrument RAM: these are separate validation stages.
 ## SDK API and cache preparation
 
 This repository pins the Native SDK at
-`cf1747387eb2b66323124959d7b356b936197784`. Its public header is
+`da089d684b1fcd0209f06bccce937a99148ee607` (see `dependencies.lock.json`). Its public header is
 `vendor/tetorica-soundchip-native/native/include/tetorica/ps1_spu.h`; the actual
 C ABI header and core are in the SDK's `vendor/mame-ps1-spu/` directory.
 Use `ps1_spu_create/destroy`, `ps1_spu_load_ram`, `ps1_spu_write`,
-`ps1_spu_audition_key`, and `ps1_spu_render`. Each handle is independently owned
+`ps1_spu_audition_key`, `ps1_spu_clear_reverb`, and `ps1_spu_render`. Each handle is independently owned
 and must not be accessed concurrently. Native rendering is always 44.1 kHz;
 the plugin's continuous host-rate adapter remains outside this core.
 
