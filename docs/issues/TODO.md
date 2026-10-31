@@ -27,7 +27,8 @@ ADSR編集とSPU Reverbも実装・ローカル検証・installed AU更新済み
 [ADSR](../adsr_editing_20261031.md) / [Reverb](../reverb_20261031.md)の記録を参照。
 PCMの4波形・自由描画・Apply / Revertも実装し、実AU/VST3とStandaloneで検証した。
 [PCMの記録](../pcm_waveform_20261031.md)を参照。Noiseも実装・ローカル検証済み。
-[Noiseの記録](../noise_20261031.md)を参照。次の機能候補はPMON。
+[Noiseの記録](../noise_20261031.md)を参照。PMONも実装・検証・AU更新・CI成功済み。
+[PMONの記録](../pmon_20261031.md)を参照。次の機能候補はsoftware morph。
 
 ### PMONの今回の区切り（2026-10-31、実装前）
 
@@ -39,10 +40,12 @@ PCMの4波形・自由描画・Apply / Revertも実装し、実AU/VST3とStandal
 - [x] Native SDKへ同一長host PCMの確保なし更新APIを追加する。112framesのprivate cacheを非audioで常設し、波形 / Depth変更はcursor・Gaussian履歴・ADSRをresetせず更新する。元VABの最大RAM容量とrepeat復元を保つ。SDK公開commitとlockを固定する。
 - [x] Source / ADSR / Reverbの3タブと720×620を維持する。SourceにSample / SPU Noise / Sample + PMON、Modulator / Ratio / Depth / Decay、carrier編集へ戻る操作を置く。元sample・PCM draftを保持し、Reverbの初期表示を維持する。
 - [x] coreで12音・live変更・Decay latch・pair controller・全RAM / repeat回帰・分割一致・C++確保/破棄0・初期Sine byte一致を検証する。実AU/VST3で24params / state / automation / 旧互換 / atomic failureを検証する。
-- [ ] StandaloneのSource / PMON操作、build / CTest / sanitizer / validator / CIを確認する。検証済み範囲・実聴等の未確認範囲を記録し、commit / pushする。
-- [ ] host保存・終了、既知manifest照合・退避後にinstalled AUを更新し、GarageBand検証用projectの旧state復元を確認する。
+- [x] StandaloneのSource / PMON操作、build / CTest / sanitizer / validator / CIを確認する。検証済み範囲・実聴等の未確認範囲を記録し、commit / pushする。
+- [x] host保存・終了、既知manifest照合・退避後にinstalled AUを更新し、GarageBand検証用projectの旧state復元を確認する。
 
 開始時点は`d73a05e`、main / origin同期・clean tree。更新前AU manifestは[Noise記録](../noise_20261031.json)。
+実装`d4698d5`、[CI全job成功](https://github.com/kyorohiro/tetorica-spu-plugin/actions/runs/41212257829)。
+2026-11-01 JSTに検証を完了し、現在のinstalled AU manifestは[PMON記録](../pmon_20261031.json)。
 任意voice間の配線、Morph LFO、外部入力Reverb、Web / Tauri配布変更は今回の範囲に含めない。
 
 ### Noiseモードの今回の区切り（2026-10-31、実装前）
@@ -290,7 +293,7 @@ complete `.vab`を最初の対象とする。分割VH/VBの複数file dialogは�
 - [ ] Native SDKのrepeat先packetにflag 2がないloopを別途修正・検証する。現在のengineは明示的に拒否、parserは元bytesを保持する。
 - [x] ADSRをhost parameter / state / graph編集へ公開する（[実AU/VST3・GUI検証](../adsr_editing_20261031.md)）。
 - [x] SPU Reverbをpreset / Enable / Return / sendとstateへ公開する（[検証記録](../reverb_20261031.md)）。
-- [ ] PCMの波形選択・描画、Noise、PMONを順に公開する。
+- [x] PCMの波形選択・描画、Noise、PMONを順に公開する。
 - [ ] 実DAWでReverb automation録音・AU独自UIのpreset / Enable / Return操作を追試する。headless PCMとStandalone操作の検証とは分ける。
 - [ ] 実DAWでADSR automation録音・graph drag中のeditor close / host restoreを追試する。headless PCMとStandalone操作の検証とは分ける。
 - [ ] 必要に応じてsoftware morph等のWeb版機能を移す（SPU実機機能とは表示を分ける）。

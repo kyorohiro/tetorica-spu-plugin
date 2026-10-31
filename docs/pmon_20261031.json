@@ -1,0 +1,888 @@
+{
+  "started_on": "2026-10-31",
+  "completed_on": "2026-11-01",
+  "timezone": "Asia/Tokyo",
+  "start_todo_commit": "b0f89a3",
+  "production_commit": "d4698d59d3b908e9fa35c064742d43156eedb87e",
+  "native_sdk_commit": "d0c27501b885f1e8e12febba4ba2f11fe1230086",
+  "features": {
+    "parameter_count": 24,
+    "existing_parameter_ids_preserved": [
+      0,
+      18
+    ],
+    "pmon_parameter_ids": {
+      "enabled": 19,
+      "waveform": 20,
+      "ratio": 21,
+      "depth": 22,
+      "decay": 23
+    },
+    "default": {
+      "enabled": false,
+      "waveform": "Sine",
+      "ratio": 1,
+      "depth": 0.5,
+      "decay_ms": 500
+    },
+    "waveforms": [
+      "Sine",
+      "Triangle",
+      "Saw",
+      "Square"
+    ],
+    "ratio_range": [
+      0.01,
+      16
+    ],
+    "depth_range": [
+      0,
+      1
+    ],
+    "decay_ms_range": [
+      0,
+      5000
+    ],
+    "decay_zero_means_hold": true,
+    "decay_is_approximate_and_latched_at_note_on": true,
+    "paired_note_limit": 12,
+    "modulator_physical_voices": "even",
+    "carrier_physical_voices": "odd",
+    "live_without_retrigger": [
+      "waveform",
+      "ratio",
+      "depth"
+    ],
+    "modulator_dry_and_reverb_send": false,
+    "carrier_uses_retained_sample_and_adsr": true,
+    "source_and_pcm_draft_retained": true,
+    "source_mode_change_stops_notes_and_reverb": true,
+    "raw_both_enabled_saved": true,
+    "effective_mode_priority": [
+      "Noise",
+      "PMON",
+      "Sample"
+    ],
+    "private_host_modulator_frames": 112,
+    "physical_sample_ram_capacity_unchanged": true,
+    "modulator_pcm_generation_and_update_is_software": true,
+    "pitch_modulation_uses_native_spu": true,
+    "web_adpcm_modulator_bit_exact_claimed": false,
+    "state_schema_written": 6,
+    "state_schema_read": [
+      1,
+      2,
+      3,
+      4,
+      5,
+      6,
+      "legacy-gain-only"
+    ],
+    "fixed_state_bytes": 112,
+    "pmon_offsets_after_payload": {
+      "flags": 80,
+      "waveform": 84,
+      "ratio": 88,
+      "depth": 96,
+      "decay": 104
+    }
+  },
+  "production_source_sha256": {
+    "CMakeLists.txt": "e418552d8b72bdbb14a62823e5b778e9fc0aa13cac50a823afb48ee1d1d5a54b",
+    "CMakePresets.json": "03c38757c17a5d3a2acec76bc8c943e17199887864e307fb43e626189519a4f6",
+    "dependencies.lock.json": "9501dc4142b20b59f88dde829043bf704a206ab0baa54b3f2c535e33d4ece12a",
+    "plugin/InstrumentState.cpp": "92abd4268f261cd44b5a0811d70f4cd7f3ba2045ffbe01de3d7f4a7486cd07b8",
+    "plugin/InstrumentUI.cpp": "c56e6444309bbe0d48764a74b5058397ad3fd01215f46a360758fdc5cd9bd6a6",
+    "plugin/TetoricaSPU.cpp": "4837a6f104c9aa8a804b52d01fd07a482433aaecc3cf3eb4b79953b702214663",
+    "plugin/TetoricaSPU.h": "1ba7cc75894d8cc36e854e3aae3b8d82eb71083997fd764349a843ebef00ba36",
+    "scripts/check_garageband_vab_state.py": "387afe9c45eef6dcb924765a4833b1275052eae372a28ff25e8952a95b8f1a50",
+    "src/InstrumentState.cpp": "246cdc25a92d7d5e278831615f134377c609f2d95045a7a0b6e5f6ee5c0fe16e",
+    "src/InstrumentState.h": "00c8f98315f5baa0f589ad7b44dc69046d9d6efb14a1859fa8e6e2a22ad06dab",
+    "src/SpuInstrument.cpp": "0abf5b618adae3f840304a530f53570401fc1c755f06b85950c58684771d5aaf",
+    "src/SpuInstrument.h": "522f7987a4a6f586ff109a3e82fd232be99c23630713e200af2ccc0158475c7c",
+    "src/SpuPmon.h": "c0f7dbd553cb337b1a76c8535093f2af9d171f1fbfb29acc4440d662894172ac",
+    "tests/instrument_state_test.cpp": "fff6657df12daf7e63babba70da7b5ad95bfb653fa3207751475b3e9c906cbba",
+    "tests/spu_pmon_test.cpp": "600d7103cd35950570c115c0a5a49197efb60c683ab11097a3a14b6d7781d165",
+    "tools/au-state-check.cpp": "0afdc572648dba54ebac3cd4388340607176aa33cb7070b111507705b578ebf9",
+    "tools/vst3-host/envelope-checks.h": "3a792cd313354ad550156b4fa103c76a659f7c07a97acb2bbd81a1214b9e8ad4",
+    "tools/vst3-host/main.cpp": "9d8b5f2abd5173ea83f2bf991f6400265b6f374bd03df46f20fc0f0ba4c9f48a",
+    "tools/vst3-host/noise-checks.h": "e60c2f764437300a4fe87bebbccaaca0e109dc546115d2cdcca2fa2dda366c22",
+    "tools/vst3-host/pmon-checks.h": "557be2d06fc1b65f667f3f8432ffeefad20bbb1288323d5f001abd5d0d1918fe"
+  },
+  "dependency_lock_sha256": "9501dc4142b20b59f88dde829043bf704a206ab0baa54b3f2c535e33d4ece12a",
+  "local_verification": {
+    "installer_tests": {
+      "passed": 11,
+      "failed": 0
+    },
+    "offline": {
+      "passed": 9,
+      "failed": 0,
+      "seconds": 4.28,
+      "log": {
+        "path": "build/offline/Testing/Temporary/LastTest.log",
+        "sha256": "652c402154bfd2f0972cb0a7aeb4e1a888c1ea0d4625066a7806052bc2d1c0c8",
+        "bytes": 8009
+      }
+    },
+    "macos": {
+      "passed": 9,
+      "failed": 0,
+      "seconds": 4.6,
+      "log": {
+        "path": "build/macos/Testing/Temporary/LastTest.log",
+        "sha256": "01628e476ad5b2b86c81320a3f7af08ec3725daecc46a1c879bbd5386ffd94b8",
+        "bytes": 7973
+      }
+    },
+    "asan": {
+      "previous_suites_passed": 8,
+      "previous_suites_seconds": [
+        2.38,
+        0.25,
+        6.27,
+        9.25,
+        0.46,
+        5.89,
+        2.31,
+        1.79
+      ],
+      "corrected_pmon_passed": true,
+      "corrected_pmon_seconds": 11.17,
+      "pmon_log": {
+        "path": "build/pmon-asan/Testing/Temporary/LastTest.log",
+        "sha256": "26776fe510ea212644e3f95ab875c01f40b739be1778cc1e58c069a8d7af6521",
+        "bytes": 907
+      },
+      "first_pmon_failure": "Incorrect oracle required dry reference phase after modulator decay. Phase integrates modulation history; corrected to free-phase 440Hz residual, Hold difference, held-edit exact invariance and next-key effect. Production core unchanged."
+    },
+    "strict_cpp_syntax": {
+      "passed": true,
+      "flags": [
+        "-std=c++17",
+        "-Wall",
+        "-Wextra",
+        "-Wpedantic",
+        "-Werror"
+      ]
+    },
+    "actual_vst3": {
+      "passed": true,
+      "sample_rates": [
+        44100,
+        48000,
+        96000
+      ],
+      "pmon_full24_state": true,
+      "paired_midi": true,
+      "legacy_and_atomic_failure": true,
+      "existing_midi_adsr_reverb_pcm_noise": true
+    },
+    "actual_au": {
+      "passed": true,
+      "sample_rates": [
+        48000
+      ],
+      "pmon_full24_state": true,
+      "paired_midi": true,
+      "legacy_and_atomic_failure": true,
+      "existing_midi_adsr_reverb_pcm_noise": true,
+      "sandbox_initial_registration_failed": true,
+      "outside_sandbox_passed": true
+    },
+    "official_vst3_validator": {
+      "passed": 47,
+      "failed": 0
+    },
+    "auval": {
+      "passed": true,
+      "global_parameters": 24,
+      "known_warning": "Preset name is not retained in retrieved class data"
+    },
+    "initial_sine_wav": {
+      "path": "/private/tmp/tetorica-spu-pmon-demo.wav",
+      "sha256": "7a61b56d356ac198c35808b503cf0b61b55a9547b21770eb2a67c97d0cc4aef3",
+      "matches_previous": true
+    },
+    "core_logs": {
+      "strict_compile.log": {
+        "path": "build/pmon-core/verification/strict_compile.log",
+        "sha256": "61d19014098169af69c5c4a045ad7b4a4a9f3f9b633d9f07a4ee31c216e7d8a4",
+        "bytes": 188
+      },
+      "pmon_compatibility.log": {
+        "path": "build/pmon-core/verification/pmon_compatibility.log",
+        "sha256": "3f14dd1236de2991ff7c58b6878defdee2de60c936c6ba7669918b821e17d0be",
+        "bytes": 777
+      }
+    },
+    "sdk": {
+      "native_release_fixture": {
+        "path": "/Users/kyorohiro/development8/wfm/hello_ymfm/w/tetorica-soundchip-native/build/pmon-sdk/Testing/Temporary/LastTest.log",
+        "sha256": "d84a4ca8fcc0d2dc10a01e75b3b2f22959a3ad383a16d9e226a6a6f9ab0bfba1",
+        "bytes": 1051
+      },
+      "native_asan_fixture": {
+        "path": "/Users/kyorohiro/development8/wfm/hello_ymfm/w/tetorica-soundchip-native/build/pmon-sdk-asan/Testing/Temporary/LastTest.log",
+        "sha256": "bac7ac8faaf1d87f6be096569308db86ed5c75b1889a3d223c4905f166f41ae4",
+        "bytes": 1061
+      },
+      "wasm_smoke_passed": true,
+      "native_wasm_samples": 99342,
+      "native_wasm_max_error": 0,
+      "source_inventory_passed": true
+    }
+  },
+  "standalone_ui": {
+    "verified": true,
+    "initial_page": "Reverb",
+    "source_modes": [
+      "Sample",
+      "SPU Noise",
+      "Sample + PMON"
+    ],
+    "tested_pmon": {
+      "waveform": "Square",
+      "ratio": 2,
+      "depth": 0.25,
+      "decay_ms": 0
+    },
+    "typed_knobs_and_hold_label": true,
+    "settings_survive_reverb_and_noise_roundtrip": true,
+    "edit_carrier_keeps_unapplied_triangle_draft": true,
+    "remote_numeric_entry_escape_used": true,
+    "physical_listening_verified": false
+  },
+  "bundles": {
+    "standalone": {
+      "Contents/Info.plist": "1fec046b5560e89705ce207b4372e154e72e7e97951f2e0c4a23789827cf58c6",
+      "Contents/MacOS/TetoricaSPU": "efa7e5d493b17e8221d7f2efb93162f92f57831a6bf6909998c7566b96f50ad8",
+      "Contents/PkgInfo": "82502191c9484b04d685374f9879a0066069c49b8acae7a04b01d38d07e8eca0",
+      "Contents/Resources/Roboto-Regular.ttf": "b2efabca5ea4bc56eea829713706b5cd0788b82aca153bd4adde9b1573933b4f",
+      "Contents/Resources/THIRD_PARTY_NOTICES.txt": "d0686ed57334f5bc617481e976e6d220822dba8fc93b8dd51246455bb818db6e",
+      "Contents/Resources/TetoricaSPU-macOS-MainMenu.nib": "7ba57e13c5fdbc1f77eaf801fd49f7762dfbef93a2ce6526e547901f66d4719e"
+    },
+    "au": {
+      "Contents/Info.plist": "94a46fcfc638d76a05aca50d5deedaff2a7a934aee55a816d007b6dff9c9bbc4",
+      "Contents/MacOS/TetoricaSPU": "91b7b11e7ce3920c05c0beeabc2f560779731e8e3e1793324012ed387134b1d8",
+      "Contents/PkgInfo": "d06a80ba92de0833d0ed03de1b02b7c8913f126d9e8c8931b190765dd5d83b11",
+      "Contents/Resources/Roboto-Regular.ttf": "b2efabca5ea4bc56eea829713706b5cd0788b82aca153bd4adde9b1573933b4f",
+      "Contents/Resources/THIRD_PARTY_NOTICES.txt": "d0686ed57334f5bc617481e976e6d220822dba8fc93b8dd51246455bb818db6e"
+    },
+    "vst3": {
+      "Contents/Info.plist": "0fe9965eadefafb0be705d9e3bba5a6df3c6e2561b608bdbf267d7f831e5d644",
+      "Contents/MacOS/TetoricaSPU": "fc3ff5a64bef2cd47ad35c9957ce564a60af0088f92ff981f37fa38427b15f2d",
+      "Contents/PkgInfo": "d06a80ba92de0833d0ed03de1b02b7c8913f126d9e8c8931b190765dd5d83b11",
+      "Contents/Resources/Roboto-Regular.ttf": "b2efabca5ea4bc56eea829713706b5cd0788b82aca153bd4adde9b1573933b4f",
+      "Contents/Resources/THIRD_PARTY_NOTICES.txt": "d0686ed57334f5bc617481e976e6d220822dba8fc93b8dd51246455bb818db6e"
+    }
+  },
+  "au": {
+    "file_sha256": {
+      "Contents/Info.plist": "94a46fcfc638d76a05aca50d5deedaff2a7a934aee55a816d007b6dff9c9bbc4",
+      "Contents/MacOS/TetoricaSPU": "91b7b11e7ce3920c05c0beeabc2f560779731e8e3e1793324012ed387134b1d8",
+      "Contents/PkgInfo": "d06a80ba92de0833d0ed03de1b02b7c8913f126d9e8c8931b190765dd5d83b11",
+      "Contents/Resources/Roboto-Regular.ttf": "b2efabca5ea4bc56eea829713706b5cd0788b82aca153bd4adde9b1573933b4f",
+      "Contents/Resources/THIRD_PARTY_NOTICES.txt": "d0686ed57334f5bc617481e976e6d220822dba8fc93b8dd51246455bb818db6e"
+    },
+    "update": {
+      "schema": 1,
+      "operation": "au-update",
+      "state": "installed",
+      "created_utc": "2026-10-31T14:57:44.225752+00:00",
+      "source": "/Users/kyorohiro/development8/wfm/hello_ymfm/w/tetorica-spu-plugin/build/macos/out/TetoricaSPU.component",
+      "destination": "/Users/kyorohiro/Library/Audio/Plug-Ins/Components/TetoricaSPU.component",
+      "backup_directory": "/Users/kyorohiro/development8/wfm/hello_ymfm/w/tetorica-spu-plugin/build/au-backups/au-update-h1yq3u0x",
+      "backup_component": "/Users/kyorohiro/development8/wfm/hello_ymfm/w/tetorica-spu-plugin/build/au-backups/au-update-h1yq3u0x/previous.component",
+      "staged_component": "/Users/kyorohiro/development8/wfm/hello_ymfm/w/tetorica-spu-plugin/build/au-backups/au-update-h1yq3u0x/staged.component",
+      "old_archive": "/Users/kyorohiro/development8/wfm/hello_ymfm/w/tetorica-spu-plugin/build/au-backups/au-update-h1yq3u0x/original.component",
+      "component": {
+        "type": "aumu",
+        "subtype": "Tspu",
+        "manufacturer": "Tetr",
+        "version": 256
+      },
+      "old_sha256": {
+        "Contents/Info.plist": "94a46fcfc638d76a05aca50d5deedaff2a7a934aee55a816d007b6dff9c9bbc4",
+        "Contents/MacOS/TetoricaSPU": "c0bc04981a80e2610a7026749c4fb44aa69b6c1bbc07cb5124314100bc8ef327",
+        "Contents/PkgInfo": "d06a80ba92de0833d0ed03de1b02b7c8913f126d9e8c8931b190765dd5d83b11",
+        "Contents/Resources/Roboto-Regular.ttf": "b2efabca5ea4bc56eea829713706b5cd0788b82aca153bd4adde9b1573933b4f",
+        "Contents/Resources/THIRD_PARTY_NOTICES.txt": "d0686ed57334f5bc617481e976e6d220822dba8fc93b8dd51246455bb818db6e"
+      },
+      "new_sha256": {
+        "Contents/Info.plist": "94a46fcfc638d76a05aca50d5deedaff2a7a934aee55a816d007b6dff9c9bbc4",
+        "Contents/MacOS/TetoricaSPU": "91b7b11e7ce3920c05c0beeabc2f560779731e8e3e1793324012ed387134b1d8",
+        "Contents/PkgInfo": "d06a80ba92de0833d0ed03de1b02b7c8913f126d9e8c8931b190765dd5d83b11",
+        "Contents/Resources/Roboto-Regular.ttf": "b2efabca5ea4bc56eea829713706b5cd0788b82aca153bd4adde9b1573933b4f",
+        "Contents/Resources/THIRD_PARTY_NOTICES.txt": "d0686ed57334f5bc617481e976e6d220822dba8fc93b8dd51246455bb818db6e"
+      }
+    },
+    "previous_expected_record": "docs/noise_20261031.json",
+    "new_source_and_installed_all5_match": true,
+    "previous_and_original_backup_all5_match": true,
+    "rollback_executed": false
+  },
+  "garageband": {
+    "project": "build/spu-vab-check.band",
+    "project_backup": "build/pmon-update-project-nm4lmnew/spu-vab-check.band",
+    "project_backup_file_count": 7,
+    "gui_reopen_restored": {
+      "program": 3,
+      "tone": 0,
+      "gain_percent": 99,
+      "status": "Project sound restored.",
+      "reverb_preset": "Off",
+      "reverb_enabled": false,
+      "return_left_percent": 25,
+      "return_right_percent": 25,
+      "send": "all notes"
+    },
+    "record_and_playback_stopped": true,
+    "before": {
+      "project": "/Users/kyorohiro/development8/wfm/hello_ymfm/w/tetorica-spu-plugin/build/spu-vab-check.band",
+      "mode": "expected-vab",
+      "files": [
+        {
+          "file": "/Users/kyorohiro/development8/wfm/hello_ymfm/w/tetorica-spu-plugin/build/spu-vab-check.band/ProjectData",
+          "bytes": 169544,
+          "sha256": "b8abb99c1c6e208293ced2a8246573331794a31a4ee0dbdbd8e313ba8f3eae66",
+          "xml_fragments": 1,
+          "unparsed_xml_fragments": 0
+        },
+        {
+          "file": "/Users/kyorohiro/development8/wfm/hello_ymfm/w/tetorica-spu-plugin/build/spu-vab-check.band/Alternatives/000/ProjectData",
+          "bytes": 287657,
+          "sha256": "c4356287343448e53639e8538ff6f939b17e54f1d30b213ce6939acf7751642f",
+          "xml_fragments": 1,
+          "unparsed_xml_fragments": 0
+        }
+      ],
+      "matching_au_candidates": [
+        {
+          "file": "/Users/kyorohiro/development8/wfm/hello_ymfm/w/tetorica-spu-plugin/build/spu-vab-check.band/Alternatives/000/ProjectData",
+          "xml_offset": 118729,
+          "xml_end": 124446,
+          "xml_bytes": 5717,
+          "xml_sha256": "42d4a563e4dd9900e88e1758b8e1673e6fe5acd37a8a7734fb51f4bdb951b19b",
+          "au_identity": {
+            "type": 1635085685,
+            "subtype": 1416851573,
+            "manufacturer": 1415935090
+          },
+          "au_version": 256,
+          "payload_bytes": 3824,
+          "payload_sha256": "44300ded2d90d2ef8131d5a7985bba189309fd9e3bf4f59d6513ef6a15c84876",
+          "schema": 5,
+          "kind": "VAB",
+          "program": 3,
+          "tone": 0,
+          "gain_percent": 99.0,
+          "envelope": {
+            "enabled": false,
+            "live": true,
+            "adsr1": 15,
+            "adsr2": 8128
+          },
+          "reverb": {
+            "preset": 0,
+            "enabled": false,
+            "use_tone_send": false,
+            "volume_left": 0.25,
+            "volume_right": 0.25
+          },
+          "noise": {
+            "enabled": false,
+            "clock": 48
+          },
+          "pmon": {
+            "enabled": false,
+            "waveform": 0,
+            "ratio": 1.0,
+            "depth": 0.5,
+            "decay_ms": 500.0
+          },
+          "bank_bytes": 3744,
+          "bank_sha256": "71a7de205c0ebe1b8743288d90cd3b0204da9bd81aed9159af31f404d7cf2be6",
+          "pcm_samples": null,
+          "pcm_sha256": null,
+          "matches_expected": true
+        }
+      ],
+      "expected": {
+        "file": "build/ui-check/garageband-ui-source.vab",
+        "bytes": 3744,
+        "sha256": "71a7de205c0ebe1b8743288d90cd3b0204da9bd81aed9159af31f404d7cf2be6",
+        "program": 3,
+        "tone": 0,
+        "gain_percent": 99.0
+      },
+      "expected_candidate_indices": [
+        0
+      ],
+      "conflicting_candidate_indices": [],
+      "passed": true,
+      "active_selection_proven": false,
+      "scope": "Observed AU XML fragments and exact embedded bytes only; not a GarageBand container decoder or active-track binding. Multiple/history candidates are reported, never silently selected. GUI reopen and audio export verify the active instrument separately."
+    },
+    "after": {
+      "project": "build/spu-vab-check.band",
+      "mode": "expected-vab",
+      "files": [
+        {
+          "file": "build/spu-vab-check.band/ProjectData",
+          "bytes": 169544,
+          "sha256": "b8abb99c1c6e208293ced2a8246573331794a31a4ee0dbdbd8e313ba8f3eae66",
+          "xml_fragments": 1,
+          "unparsed_xml_fragments": 0
+        },
+        {
+          "file": "build/spu-vab-check.band/Alternatives/000/ProjectData",
+          "bytes": 287657,
+          "sha256": "c4356287343448e53639e8538ff6f939b17e54f1d30b213ce6939acf7751642f",
+          "xml_fragments": 1,
+          "unparsed_xml_fragments": 0
+        }
+      ],
+      "matching_au_candidates": [
+        {
+          "file": "build/spu-vab-check.band/Alternatives/000/ProjectData",
+          "xml_offset": 118729,
+          "xml_end": 124446,
+          "xml_bytes": 5717,
+          "xml_sha256": "42d4a563e4dd9900e88e1758b8e1673e6fe5acd37a8a7734fb51f4bdb951b19b",
+          "au_identity": {
+            "type": 1635085685,
+            "subtype": 1416851573,
+            "manufacturer": 1415935090
+          },
+          "au_version": 256,
+          "payload_bytes": 3824,
+          "payload_sha256": "44300ded2d90d2ef8131d5a7985bba189309fd9e3bf4f59d6513ef6a15c84876",
+          "schema": 5,
+          "kind": "VAB",
+          "program": 3,
+          "tone": 0,
+          "gain_percent": 99.0,
+          "envelope": {
+            "enabled": false,
+            "live": true,
+            "adsr1": 15,
+            "adsr2": 8128
+          },
+          "reverb": {
+            "preset": 0,
+            "enabled": false,
+            "use_tone_send": false,
+            "volume_left": 0.25,
+            "volume_right": 0.25
+          },
+          "noise": {
+            "enabled": false,
+            "clock": 48
+          },
+          "pmon": {
+            "enabled": false,
+            "waveform": 0,
+            "ratio": 1.0,
+            "depth": 0.5,
+            "decay_ms": 500.0
+          },
+          "bank_bytes": 3744,
+          "bank_sha256": "71a7de205c0ebe1b8743288d90cd3b0204da9bd81aed9159af31f404d7cf2be6",
+          "pcm_samples": null,
+          "pcm_sha256": null,
+          "matches_expected": true
+        }
+      ],
+      "expected": {
+        "file": "build/ui-check/garageband-ui-source.vab",
+        "bytes": 3744,
+        "sha256": "71a7de205c0ebe1b8743288d90cd3b0204da9bd81aed9159af31f404d7cf2be6",
+        "program": 3,
+        "tone": 0,
+        "gain_percent": 99.0
+      },
+      "expected_candidate_indices": [
+        0
+      ],
+      "conflicting_candidate_indices": [],
+      "passed": true,
+      "active_selection_proven": false,
+      "scope": "Observed AU XML fragments and exact embedded bytes only; not a GarageBand container decoder or active-track binding. Multiple/history candidates are reported, never silently selected. GUI reopen and audio export verify the active instrument separately."
+    },
+    "schema5_payload_unchanged": true,
+    "saved_after_update": false,
+    "original_project": "build/spu-au-check.band",
+    "original_project_all11_files_unchanged": true,
+    "pmon_custom_ui_or_automation_recording_verified": false
+  },
+  "ci": {
+    "plugin": {
+      "run_id": 41212257829,
+      "url": "https://github.com/kyorohiro/tetorica-spu-plugin/actions/runs/41212257829",
+      "head_sha": "d4698d59d3b908e9fa35c064742d43156eedb87e",
+      "conclusion": "success",
+      "raw_summary": {
+        "path": "build/pmon-ci-summary.json",
+        "bytes": 8537,
+        "sha256": "8e5f4bbc087e5a5bfc8eef3642da99180bcf611ba884b275ff7d3367eba59438"
+      },
+      "run_metadata": {
+        "conclusion": "success",
+        "created_at": "2026-10-31T14:53:56Z",
+        "head_sha": "d4698d59d3b908e9fa35c064742d43156eedb87e",
+        "html_url": "https://github.com/kyorohiro/tetorica-spu-plugin/actions/runs/41212257829",
+        "id": 41212257829,
+        "run_started_at": "2026-10-31T14:53:56Z",
+        "status": "completed",
+        "updated_at": "2026-10-31T14:58:15Z"
+      },
+      "result": {
+        "successfulJobs": 2,
+        "failedSteps": [],
+        "workflowConclusion": "success"
+      },
+      "artifacts": [
+        {
+          "created_at": "2026-10-31T14:58:09Z",
+          "digest": "sha256:64ffae637c3fa44c57ae49bae7a23bfed73bac6dc8f0f86447523132005fec5c",
+          "expired": false,
+          "expires_at": "2027-01-29T14:53:57Z",
+          "id": 13047166174,
+          "name": "macos-development-bundles",
+          "size_in_bytes": 2261575,
+          "updated_at": "2026-10-31T14:58:09Z"
+        }
+      ],
+      "artifact_downloaded_or_executed": false,
+      "jobs": [
+        {
+          "id": 124569520894,
+          "name": "offline",
+          "status": "completed",
+          "conclusion": "success",
+          "started_at": "2026-10-31T14:53:59Z",
+          "completed_at": "2026-10-31T14:54:39Z",
+          "html_url": null
+        },
+        {
+          "id": 124569521121,
+          "name": "macos",
+          "status": "completed",
+          "conclusion": "success",
+          "started_at": "2026-10-31T14:54:01Z",
+          "completed_at": "2026-10-31T14:58:14Z",
+          "html_url": null
+        }
+      ],
+      "log_evidence_scope": {
+        "status": "not acquired",
+        "reason": "Additional job-log retrieval was stopped after long API waits at parent request. Successful job/step metadata is retained; specific installer/CTest/auval/validator/PCM/ADSR/Reverb/MIDI/Noise/PMON PASS counts are not independently asserted from plugin logs in this record."
+      },
+      "acquisition_notes": [
+        "Matching exact implementation source SHA confirmed.",
+        "Both offline and macos jobs completed success.",
+        "Artifact metadata includes ID/name/bytes/digest.",
+        "No new network call was made to finalize these records."
+      ]
+    },
+    "sdk": {
+      "run_id": 41211900991,
+      "url": "https://github.com/kyorohiro/tetorica-soundchip-native/actions/runs/41211900991",
+      "head_sha": "d0c27501b885f1e8e12febba4ba2f11fe1230086",
+      "conclusion": "success",
+      "validation_jobs_succeeded": 12,
+      "release_job": "intentionally skipped",
+      "raw_summary": {
+        "path": "build/pmon-sdk-ci-summary.json",
+        "bytes": 99242,
+        "sha256": "c49b30b65cd3e8a5983ea8b1868883211dd98e214b5391fb79fc8779d45ea838"
+      },
+      "run_metadata": {
+        "conclusion": "success",
+        "created_at": "2026-10-31T14:49:17Z",
+        "head_sha": "d0c27501b885f1e8e12febba4ba2f11fe1230086",
+        "html_url": "https://github.com/kyorohiro/tetorica-soundchip-native/actions/runs/41211900991",
+        "id": 41211900991,
+        "run_attempt": 1,
+        "run_started_at": "2026-10-31T14:49:17Z",
+        "status": "completed",
+        "updated_at": "2026-10-31T14:53:15Z"
+      },
+      "result": {
+        "successfulValidationJobs": 12,
+        "nativeSuccessful": 5,
+        "wasmSuccessful": 7,
+        "releaseJob": "skipped on this main-branch push",
+        "failedSteps": []
+      },
+      "artifacts": [
+        {
+          "created_at": "2026-10-31T14:50:23Z",
+          "digest": "sha256:d425e1301007ca997a749d472fb6f7591fec9f683b173f98b2bd96979e576648",
+          "expired": false,
+          "expires_at": "2026-11-14T14:50:23Z",
+          "id": 13047105190,
+          "name": "verified-sdk-archives-msm5205",
+          "size_in_bytes": 2582990,
+          "updated_at": "2026-10-31T14:50:23Z"
+        },
+        {
+          "created_at": "2026-10-31T14:53:11Z",
+          "digest": "sha256:c52e82fcd7259d2924c72d66ab87440670f0d928259029aed40fe26f8bb35572",
+          "expired": false,
+          "expires_at": "2026-11-07T14:53:10Z",
+          "id": 13047045783,
+          "name": "native-validation-macos-x86_64",
+          "size_in_bytes": 25182,
+          "updated_at": "2026-10-31T14:53:11Z"
+        },
+        {
+          "created_at": "2026-10-31T14:51:08Z",
+          "digest": "sha256:4ae32476ff679a8497195d43b99fa0b5e20d51d7c51f770295c6d0c71944a9fa",
+          "expired": false,
+          "expires_at": "2026-11-07T14:51:07Z",
+          "id": 13047040071,
+          "name": "native-validation-linux-arm64",
+          "size_in_bytes": 19521,
+          "updated_at": "2026-10-31T14:51:08Z"
+        },
+        {
+          "created_at": "2026-10-31T14:50:19Z",
+          "digest": "sha256:a9d7e1575301a0fa00a94d52244d2971c9eb9143f2ab6848ac3966e9eb22bdc7",
+          "expired": false,
+          "expires_at": "2026-11-14T14:50:18Z",
+          "id": 13046955439,
+          "name": "verified-sdk-archives-wonderswan",
+          "size_in_bytes": 2590012,
+          "updated_at": "2026-10-31T14:50:19Z"
+        },
+        {
+          "created_at": "2026-10-31T14:51:02Z",
+          "digest": "sha256:bc99f347cd189126c94da07bbb243c33afa7083dd5cc0a39bc06190fef11d890",
+          "expired": false,
+          "expires_at": "2026-11-07T14:51:01Z",
+          "id": 13046731022,
+          "name": "native-validation-linux-x86_64",
+          "size_in_bytes": 19610,
+          "updated_at": "2026-10-31T14:51:02Z"
+        },
+        {
+          "created_at": "2026-10-31T14:50:45Z",
+          "digest": "sha256:2c6ed53502057c2ddacdd3e019b3d8454b0b0a70aa22cdbba8ed11e53b784efe",
+          "expired": false,
+          "expires_at": "2026-11-14T14:50:43Z",
+          "id": 13046626233,
+          "name": "verified-sdk-archives-ym2612",
+          "size_in_bytes": 2612389,
+          "updated_at": "2026-10-31T14:50:45Z"
+        },
+        {
+          "created_at": "2026-10-31T14:51:30Z",
+          "digest": "sha256:ea5205badaf1ec9886286945489107473a1ec709a543baf15c24ca3467317be5",
+          "expired": false,
+          "expires_at": "2026-11-07T14:51:29Z",
+          "id": 13046488113,
+          "name": "native-validation-macos-arm64",
+          "size_in_bytes": 25785,
+          "updated_at": "2026-10-31T14:51:30Z"
+        },
+        {
+          "created_at": "2026-10-31T14:50:29Z",
+          "digest": "sha256:bad9b3dabcf0dcfa3acf144f3fc932ab6c38e2f057b2156fa0a8d66ef97c99bd",
+          "expired": false,
+          "expires_at": "2026-11-14T14:50:28Z",
+          "id": 13046393515,
+          "name": "verified-sdk-archives-pokey",
+          "size_in_bytes": 2594229,
+          "updated_at": "2026-10-31T14:50:29Z"
+        },
+        {
+          "created_at": "2026-10-31T14:50:45Z",
+          "digest": "sha256:3ee00305b7d5a063a5b485986a5612c9b56149feebdd77ec5c165acb0346827f",
+          "expired": false,
+          "expires_at": "2026-11-14T14:50:44Z",
+          "id": 13046328842,
+          "name": "verified-sdk-archives-scsp",
+          "size_in_bytes": 2594348,
+          "updated_at": "2026-10-31T14:50:45Z"
+        },
+        {
+          "created_at": "2026-10-31T14:52:29Z",
+          "digest": "sha256:df0be93f68e9a18035a8b8fc3e284087594716012365e97491b49466f13b2bcc",
+          "expired": false,
+          "expires_at": "2026-11-07T14:52:28Z",
+          "id": 13046239567,
+          "name": "native-validation-windows-x86_64",
+          "size_in_bytes": 33012,
+          "updated_at": "2026-10-31T14:52:29Z"
+        },
+        {
+          "created_at": "2026-10-31T14:50:32Z",
+          "digest": "sha256:f06cf4d39888b54fcbb879b95c48c9f61d7b702aead9fd20c248499f39a2e34f",
+          "expired": false,
+          "expires_at": "2026-11-14T14:50:31Z",
+          "id": 13046209300,
+          "name": "verified-sdk-archives-cdda",
+          "size_in_bytes": 2582387,
+          "updated_at": "2026-10-31T14:50:32Z"
+        },
+        {
+          "created_at": "2026-10-31T14:50:42Z",
+          "digest": "sha256:f3fe79f659315115f924806edbf58da41d755eb7c809c6fa2f5a87dea46580df",
+          "expired": false,
+          "expires_at": "2026-11-14T14:50:41Z",
+          "id": 13046184438,
+          "name": "verified-sdk-archives-ps1_spu",
+          "size_in_bytes": 2608470,
+          "updated_at": "2026-10-31T14:50:42Z"
+        }
+      ],
+      "artifact_downloaded_or_executed": false,
+      "jobs": [
+        {
+          "id": 124568533008,
+          "name": "Native / macos-x86_64",
+          "status": "completed",
+          "conclusion": "success",
+          "started_at": "2026-10-31T14:49:40Z",
+          "completed_at": "2026-10-31T14:53:15Z",
+          "html_url": null
+        },
+        {
+          "id": 124568533101,
+          "name": "WASM / pokey",
+          "status": "completed",
+          "conclusion": "success",
+          "started_at": "2026-10-31T14:49:39Z",
+          "completed_at": "2026-10-31T14:50:33Z",
+          "html_url": null
+        },
+        {
+          "id": 124568533108,
+          "name": "Native / linux-arm64",
+          "status": "completed",
+          "conclusion": "success",
+          "started_at": "2026-10-31T14:49:42Z",
+          "completed_at": "2026-10-31T14:51:11Z",
+          "html_url": null
+        },
+        {
+          "id": 124568533119,
+          "name": "WASM / ps1_spu",
+          "status": "completed",
+          "conclusion": "success",
+          "started_at": "2026-10-31T14:49:39Z",
+          "completed_at": "2026-10-31T14:50:45Z",
+          "html_url": null
+        },
+        {
+          "id": 124568533138,
+          "name": "WASM / scsp",
+          "status": "completed",
+          "conclusion": "success",
+          "started_at": "2026-10-31T14:49:39Z",
+          "completed_at": "2026-10-31T14:50:50Z",
+          "html_url": null
+        },
+        {
+          "id": 124568533144,
+          "name": "Native / linux-x86_64",
+          "status": "completed",
+          "conclusion": "success",
+          "started_at": "2026-10-31T14:49:39Z",
+          "completed_at": "2026-10-31T14:51:06Z",
+          "html_url": null
+        },
+        {
+          "id": 124568533167,
+          "name": "WASM / msm5205",
+          "status": "completed",
+          "conclusion": "success",
+          "started_at": "2026-10-31T14:49:39Z",
+          "completed_at": "2026-10-31T14:50:26Z",
+          "html_url": null
+        },
+        {
+          "id": 124568533170,
+          "name": "WASM / cdda",
+          "status": "completed",
+          "conclusion": "success",
+          "started_at": "2026-10-31T14:49:39Z",
+          "completed_at": "2026-10-31T14:50:36Z",
+          "html_url": null
+        },
+        {
+          "id": 124568533198,
+          "name": "WASM / ym2612",
+          "status": "completed",
+          "conclusion": "success",
+          "started_at": "2026-10-31T14:49:40Z",
+          "completed_at": "2026-10-31T14:50:50Z",
+          "html_url": null
+        },
+        {
+          "id": 124568533204,
+          "name": "Native / macos-arm64",
+          "status": "completed",
+          "conclusion": "success",
+          "started_at": "2026-10-31T14:49:41Z",
+          "completed_at": "2026-10-31T14:51:34Z",
+          "html_url": null
+        },
+        {
+          "id": 124568533278,
+          "name": "Native / windows-x86_64",
+          "status": "completed",
+          "conclusion": "success",
+          "started_at": "2026-10-31T14:49:40Z",
+          "completed_at": "2026-10-31T14:52:33Z",
+          "html_url": null
+        },
+        {
+          "id": 124568533331,
+          "name": "WASM / wonderswan",
+          "status": "completed",
+          "conclusion": "success",
+          "started_at": "2026-10-31T14:49:39Z",
+          "completed_at": "2026-10-31T14:50:23Z",
+          "html_url": null
+        },
+        {
+          "id": 124569359744,
+          "name": "Publish GitHub Release",
+          "status": "completed",
+          "conclusion": "skipped",
+          "started_at": "2026-10-31T14:53:15Z",
+          "completed_at": "2026-10-31T14:53:15Z",
+          "html_url": null
+        }
+      ],
+      "log_evidence_scope": {
+        "available": [
+          "PS1 WASM checks",
+          "Native macOS ARM CTest"
+        ],
+        "detailed_excerpts_stored_in_raw_summary": true
+      },
+      "acquisition_notes": [
+        "Metadata/jobs/artifact API responses were captured successfully.",
+        "SDK PS1 WASM and native ARM excerpts were independently captured.",
+        "No tag, npm release or artifact installation performed."
+      ]
+    },
+    "sdk_initial": {
+      "run_id": 41211681785,
+      "head_sha": "f16986cc264a7cd9b489a45826b349906e21ec9a",
+      "conclusion": "cancelled",
+      "macos_arm64": "macOS14 runner brownout; cancelled before steps"
+    }
+  },
+  "unverified": [
+    "physical listening/clicks/latency",
+    "long real-time operation",
+    "real-DAW PMON custom UI gestures and automation recording",
+    "Windows plugin build",
+    "shipping/signing/notarization/release"
+  ]
+}

@@ -530,3 +530,14 @@
 - 最後のGarageBand状態は検証用project保存済み、録音・再生停止、SPU / Gain99%。
 - **次の作業:** `docs/vab_import_plan.md` の純粋なVABパーサーとTone準備関数。
   実聴・長時間動作の確認、AU preset-name warning、将来の安全なAU更新はTODOとして残す。
+
+
+## 2026-11-01 JST — PMON完了
+
+- 開始TODO `b0f89a3` を実装前にcommit / pushし、実装を `d4698d5` に保存した。
+- 12音の隣接voice pair、4変調波形、live Ratio / Depth / waveform、次NoteのDecayと24params / schema6を追加した。旧schema1〜5 / legacy、Noise優先と元音源保持を維持する。
+- Native SDKの確保なしhost PCM更新APIを公開し、CIをmacos-15へ移した公開 `d0c2750` へ依存を固定した。
+- Offline9/9、macOS9/9、ASan全9suite、実AU48k / VST3 44.1・48・96k、公式validator47/0、auvalと両repositoryのCIが成功。初期Sine WAV hashは従来と完全一致。
+- StandaloneのSource / PMON数値 / Hold / draft保持を確認し、AUをknown hash照合と退避付きで更新した。GarageBand旧schema5 P3/T0/Gain99を復元、原本11files不変。
+- 詳細・コマンド・hash・未確認範囲は[PMON記録](pmon_20261031.md)と[JSON](pmon_20261031.json)。現在のAU manifestも同JSON。
+- 次の候補はsoftware morph。実装前にTODOへ範囲を記録する。実聴・長時間・実DAW automation録音は人による確認として残る。
