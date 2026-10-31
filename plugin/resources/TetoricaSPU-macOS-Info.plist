@@ -1,0 +1,36 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE plist PUBLIC "-//Apple//DTD PLIST 1.0//EN" "http://www.apple.com/DTDs/PropertyList-1.0.dtd">
+<plist version="1.0">
+<dict>
+	<key>CFBundleDevelopmentRegion</key>
+	<string>English</string>
+	<key>CFBundleExecutable</key>
+	<string>TetoricaSPU</string>
+	<key>CFBundleGetInfoString</key>
+	<string>TetoricaSPU v0.1.0 Copyright 2026 Tetr Inc</string>
+	<key>CFBundleIdentifier</key>
+	<string>com.Tetorica.app.TetoricaSPU</string>
+	<key>CFBundleInfoDictionaryVersion</key>
+	<string>6.0</string>
+	<key>CFBundleName</key>
+	<string>TetoricaSPU</string>
+	<key>CFBundlePackageType</key>
+	<string>APPL</string>
+	<key>CFBundleShortVersionString</key>
+	<string>0.1.0</string>
+	<key>CFBundleSignature</key>
+	<string>Tspu</string>
+	<key>CFBundleVersion</key>
+	<string>0.1.0</string>
+	<key>CSResourcesFileMapped</key>
+	<true/>
+	<key>LSApplicationCategoryType</key>
+	<string>public.app-category.music</string>
+	<key>LSMinimumSystemVersion</key>
+	<string>13.0</string>
+	<key>NSMainNibFile</key>
+	<string>TetoricaSPU-macOS-MainMenu</string>
+	<key>NSPrincipalClass</key>
+	<string>SWELLApplication</string>
+</dict>
+</plist>

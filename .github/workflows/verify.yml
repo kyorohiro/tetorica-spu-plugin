@@ -1,0 +1,40 @@
+name: Verify SPU Plugin
+
+on:
+  push:
+  pull_request:
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  offline:
+    runs-on: ubuntu-24.04
+    steps:
+      - uses: actions/checkout@v4
+      - name: Initialize pinned native SDK
+        run: git submodule update --init vendor/tetorica-soundchip-native
+      - run: cmake --preset offline
+      - run: cmake --build --preset offline --parallel 4
+      - run: ctest --preset offline
+
+  macos:
+    runs-on: macos-14
+    steps:
+      - uses: actions/checkout@v4
+      - name: Initialize and verify pinned dependencies
+        run: python3 scripts/bootstrap.py
+      - run: python3 scripts/bootstrap.py --check
+      - run: cmake --preset macos
+      - run: cmake --build --preset macos --parallel 4
+      - run: ctest --preset macos
+      - name: Validate VST3
+        run: sh scripts/validate_vst3.sh build/macos/out/TetoricaSPU.vst3
+      - name: Render and restore the actual VST3
+        run: sh scripts/check_vst3_audio.sh build/macos/out/TetoricaSPU.vst3
+      - uses: actions/upload-artifact@v4
+        with:
+          name: macos-development-bundles
+          path: build/macos/out/
+          if-no-files-found: error

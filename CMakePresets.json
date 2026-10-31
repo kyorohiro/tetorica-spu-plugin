@@ -1,0 +1,34 @@
+{
+  "version": 6,
+  "configurePresets": [
+    {
+      "name": "offline",
+      "generator": "Unix Makefiles",
+      "binaryDir": "${sourceDir}/build/offline",
+      "cacheVariables": {
+        "CMAKE_BUILD_TYPE": "Release",
+        "TETORICA_BUILD_PLUGIN": "OFF"
+      }
+    },
+    {
+      "name": "macos",
+      "generator": "Unix Makefiles",
+      "binaryDir": "${sourceDir}/build/macos",
+      "condition": { "type": "equals", "lhs": "${hostSystemName}", "rhs": "Darwin" },
+      "cacheVariables": {
+        "CMAKE_BUILD_TYPE": "Release",
+        "CMAKE_OSX_DEPLOYMENT_TARGET": "13.0",
+        "TETORICA_BUILD_PLUGIN": "ON",
+        "IPLUG_DEPLOY_PLUGINS": "OFF"
+      }
+    }
+  ],
+  "buildPresets": [
+    { "name": "offline", "configurePreset": "offline", "targets": ["spu_instrument_test"] },
+    { "name": "macos", "configurePreset": "macos", "targets": ["TetoricaSPU-app", "TetoricaSPU-au", "TetoricaSPU-vst3", "spu_instrument_test"] }
+  ],
+  "testPresets": [
+    { "name": "offline", "configurePreset": "offline", "output": { "outputOnFailure": true } },
+    { "name": "macos", "configurePreset": "macos", "output": { "outputOnFailure": true } }
+  ]
+}

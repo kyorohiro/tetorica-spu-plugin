@@ -17,29 +17,38 @@ iPlug2OOSを土台に、tetorica-soundchip-nativeのPS1 SPUをDAWから演奏す
 ## Phase 0: 再開可能な土台
 
 - [x] 実装前にTODOと作業記録を作成する。
-- [ ] iPlug2OOSの構成・CI・依存取得方法を調査する。
-- [ ] iPlug2 / テンプレートのrevisionとlicenseを固定・記録する。
-- [ ] Native SDKの公開済みSPUソースと取り込み方を確認し、固定する。
-- [ ] プラグインID・名前・ビルド出力先・ignore設定を用意する。
-- [ ] macOSで未変更テンプレート相当のbuildを確認する。
+- [x] iPlug2OOSの構成・CI・依存取得方法を調査する。
+- [x] iPlug2 / テンプレートのrevisionとlicenseを固定・記録する。
+- [x] Native SDKのSPUソースを固定する。公開release後の修正が必要なため、公開commitを固定（dependencies.lock.json参照）。
+- [x] プラグインID・名前・ビルド出力先・ignore設定を用意する。
+- [x] macOS ARM64で未変更テンプレートのAPP / AU / VST3 buildを確認する。
 
 ## Phase 1: Native SPUの最小演奏
 
-- [ ] UIから独立したSPU演奏層を作る（発音割当・Note On/Off・panic）。
-- [ ] オリジナルの内蔵ADPCM波形を使って発音する。
-- [ ] DAWのsample offsetに沿ってMIDIを適用する。
-- [ ] 固定44.1kHz SPU出力をhost sample rateへ変換する。
-- [ ] audio callbackでのファイル読込・動的確保・待機lockを避ける。
-- [ ] 無音・音程・離鍵・和音・ブロック境界・複数instanceをオフラインで検査する。
-- [ ] Standalone / AUv2 / VST3をbuildする。
+- [x] UIから独立したSPU演奏層を作る（発音割当・Note On/Off・panic）。
+- [x] オリジナルの内蔵ADPCM波形を使って発音する。
+- [x] DAWのsample offsetに沿ってMIDIを適用する。実VST3でoffset64より前の無音を検査。
+- [x] 固定44.1kHz SPU出力をhost sample rateへ変換する（初期版は線形補間）。
+- [x] built-in専用callbackでファイル読込・動的確保・待機lockを避ける。キャッシュ事前準備後のC++ new/deleteはテストで0。全mallocやhard RTの保証とは別。
+- [x] 無音・音程・離鍵・和音・ブロック境界・複数instanceをオフラインで検査する。
+- [x] macOS ARM64でStandalone / AUv2 / VST3をbuildする。
 
 ## Phase 2: プラグインとしての検証
 
 - [ ] AUをauvalで検証する（登録に必要な操作はその時点で確認）。
-- [ ] VST3を専用validatorで検証する。
-- [ ] 保存・復元、sample rate / block size変更、offline renderを検査する。
+- [x] VST3をSteinberg公式validatorで検証する（47成功、0失敗）。
+- [x] 初期Gain状態の保存・復元と44.1 / 48 / 96kHzの実VST3 offline renderを検査する。block sizeは公式validatorとcore分割一致で検査。
+- [ ] wrapperのイベント境界・順序・queue overflow復帰を実VST3で追加検査する。
 - [ ] GarageBandで読込・演奏・保存・再読込・書出しを確認する。
 - [ ] CIにオフライン検査とbuildを追加する。未検証OSを明記する。
+
+## 初期版の既知の制約・後続改善
+
+- [ ] 内蔵112標本Sineは約1,575HzでSPU PITCH上限。MIDI92以降も演奏できる波形構成を用意する。
+- [ ] sample rate変換の品質・遅延報告を検討する。44.1kHz未満のanti-alias filterは未実装。
+- [ ] Pitch Bend / Sustainを追加する。
+- [ ] CC120をチャンネル別の即時停止にする（現状はglobal panic、CC123はchannel release）。
+- [ ] Gain変更を滑らかにし、sample単位のautomationの扱いを検討する。
 
 ## Phase 3: VAB楽器と音作り
 
@@ -53,3 +62,4 @@ iPlug2OOSを土台に、tetorica-soundchip-nativeのPS1 SPUをDAWから演奏す
 - [ ] 実聴で音色・クリック・演奏latencyを確認する。
 - [ ] 実DAW / 実機の長時間リアルタイム動作を確認する。オフライン試験と区別する。
 - [ ] 署名・公証・配布・Release公開は具体的な成果物を確認してから進める。
+- [ ] 公開配布時に実際にlinkした第三者コード・fontのnotice同梱を再確認する。初期版bundleには収集したTHIRD_PARTY_NOTICES.txtを含める。

@@ -3,6 +3,10 @@
 PS1 SPU instrument for DAWs, using iPlug2 and tetorica-soundchip-native.
 Initial development targets macOS Standalone, AUv2 and VST3. Not a published release.
 
+Current prototype: original built-in Sine, MIDI Note On/Off and velocity,
+24 voices, channel-aware note ownership, All sound off, Gain and mouse keyboard.
+VAB import and additional SPU controls are planned, not available yet.
+
 The audio engine runs directly as native C++ in the host callback. It does not
 send audio through a browser, WebView, Tauri IPC or a separate CPAL device.
 
@@ -40,6 +44,27 @@ ctest --preset macos
 macOS bundles are written to `build/macos/out/`. Automatic installation into
 `~/Applications` or `~/Library/Audio/Plug-Ins` is disabled. Host registration,
 DAW tests and physical listening are separate from a successful build or CTest.
+
+```sh
+sh scripts/validate_vst3.sh build/macos/out/TetoricaSPU.vst3
+sh scripts/check_vst3_audio.sh build/macos/out/TetoricaSPU.vst3
+build/offline/spu_instrument_test --wav build/spu-demo.wav
+```
+
+The VST3 checks load the actual bundle without registering it with a DAW or
+opening an audio device. The WAV demo contains an original C/E/G chord and release.
+
+## Prototype limits
+
+- The fixed 112-frame Sine reaches the SPU PITCH ceiling at about 1,575 Hz;
+  MIDI notes 92 and above clamp. Full-range multisampling is follow-up work.
+- Host rate conversion uses continuous linear interpolation. Anti-alias filtering
+  below 44.1 kHz and improved conversion quality remain follow-up work.
+- Gain parameter state is supplied by iPlug2; custom VAB/sample state is not implemented.
+- Pitch Bend, Sustain, smooth Gain changes and per-channel CC120 remain TODO.
+  Currently CC120 immediately stops all channels; CC123 releases its own channel.
+- Built-in sample caches are prepared during construction. The offline test
+  probes C++ new/delete during rendering, not every OS allocation or hard real-time deadline.
 
 ## Dependencies and licenses
 
