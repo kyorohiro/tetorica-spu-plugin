@@ -1,5 +1,19 @@
 # 作業記録
 
+## 2026-10-31 JST — Program操作後のP3/T0保存・project再表示を確認
+
+- Program 11→3の依頼に対する「Tone 0にならない」という回答は、ユーザーがチャット側の誤作動と訂正した。
+  SPU不具合として扱わず、codeは変更していない。
+- CUAの実画面ではEmbedded VAB/P3/T0/Gain99/Readyを確認した。P11中間画面は未観測。
+  source reviewと既存offline CLIでfixtureのP3/T0・P11/T0の期待値を確認したが、実機P11成功とは分ける。
+- 最初のQuit/Save操作は画面変化で保存終了を確認できなかったため、最新画面を読み直した。
+  hostのFile→保存を実行し、`build/garageband-program-ui-state.json`でP3/T0/Gain99とbank3744 bytes完全一致を確認。
+- 次にFile→閉じる→保存でcopy projectを閉じ、同じprojectを開き直した。
+  AXで録音・再生停止、AU editorでP3/T0/Gain99/Project sound restored.を確認した。
+  今回はprojectのclose/reopenであり、GarageBand main processの再起動確認ではない。
+- 未確認のP11中間画面、Tone-only dirty、popup中の取消・editor closeはTODOへ残す。
+  不具合修正なし。検証記録を更新してcommit / pushする。
+
 ## 2026-10-31 JST — Tone個別変更の保存・再起動後復元も確認
 
 - ユーザーがTone 1を選択。CUAでもEmbedded VAB/P3/T1/Gain99とReady表示を確認した。

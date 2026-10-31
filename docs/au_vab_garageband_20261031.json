@@ -147,7 +147,7 @@
     }
   },
   "not_verified": [
-    "Program selector changes in the remote GarageBand AU view",
+    "Live Program 11-to-3 selector round trip and Tone 0 at each intermediate selection in the remote GarageBand AU view",
     "Project dirty notification from a plugin Tone-only edit",
     "Closing the AU editor while its file dialog or popup is open",
     "Physical listening, loopback and long realtime endurance",
@@ -311,5 +311,81 @@
     },
     "recording_and_playback_stopped_after_reopen": true,
     "editor_open_at_checkpoint": true
+  },
+  "program_followup": {
+    "project": "build/spu-vab-check.band",
+    "requested_user_check": "Select Program 11, then return to Program 3, and confirm Tone 0 for each selection.",
+    "earlier_failure_report_withdrawn": true,
+    "user_correction": "さっきのは vscode の この chat の誤作動",
+    "code_fix_made": false,
+    "previous_saved_tone": 1,
+    "ui_observed_before_save": {
+      "kind": "Embedded VAB",
+      "program": 3,
+      "tone": 0,
+      "gain_percent": 99,
+      "status": "Ready. Waiting for an audio block."
+    },
+    "live_program_11_intermediate_screen_observed": false,
+    "program_11_to_3_user_confirmation_received": false,
+    "source_and_offline_fixture_expected_selection": [
+      {
+        "program": 3,
+        "tone": 0
+      },
+      {
+        "program": 11,
+        "tone": 0
+      }
+    ],
+    "offline_expectation_proves_live_program_11": false,
+    "saved_project_state": {
+      "report": "build/garageband-program-ui-state.json",
+      "file": "build/spu-vab-check.band/Alternatives/000/ProjectData",
+      "file_bytes": 240528,
+      "file_sha256": "bb05896ceed20af5e9325de2e1c53430c4d3b6d3d93baeda3783a362d8a30512",
+      "candidate_count": 1,
+      "conflicting_candidates": [],
+      "xml_offset": 118729,
+      "xml_end": 124394,
+      "xml_bytes": 5665,
+      "xml_sha256": "95e552a63efd0707334661610fc4e629c0d26ba09c7c95f7cae8648beccbf9fc",
+      "au_identity": {
+        "type": 1635085685,
+        "subtype": 1416851573,
+        "manufacturer": 1415935090
+      },
+      "au_version": 256,
+      "payload_bytes": 3784,
+      "payload_sha256": "f1fa0a3a18ec5e660d7266ee509b6c7f818c9e2c76a04d11fa6d70f1111bae10",
+      "schema": 1,
+      "kind": "VAB",
+      "program": 3,
+      "tone": 0,
+      "gain_percent": 99.0,
+      "bank_bytes": 3744,
+      "bank_sha256": "71a7de205c0ebe1b8743288d90cd3b0204da9bd81aed9159af31f404d7cf2be6",
+      "matches_expected": true,
+      "exact_original_vab_match": true,
+      "active_binding_proven_by_extractor": false
+    },
+    "file_save_performed": true,
+    "initial_quit_completion_verified": false,
+    "project_close_save_prompt_observed": true,
+    "save_selected_on_project_close": true,
+    "project_window_closed_confirmed": true,
+    "same_project_reopened": true,
+    "main_process_restart_verified": false,
+    "ui_observed_after_project_reopen": {
+      "kind": "Embedded VAB",
+      "program": 3,
+      "tone": 0,
+      "gain_percent": 99,
+      "status": "Project sound restored."
+    },
+    "recording_and_playback_stopped_after_reopen": true,
+    "editor_open_at_checkpoint": true,
+    "tone_only_project_dirty_proven": false,
+    "scope": "P3/T0 was observed, saved and restored after closing and reopening the same project. The live Program 11 intermediate selection and the requested Program 11-to-3 round trip remain unconfirmed. This check does not establish a GarageBand main-process restart or Tone-only project dirty behavior."
   }
 }

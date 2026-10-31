@@ -59,11 +59,11 @@ python3 scripts/install_au.py --rollback build/au-backups/au-update-htc4qhrw/man
   保存後はこのcopyを移動し、元pathなしでprojectが復元されることを確認する。
 - project内のAU plistとembedded bank bytesの比較、前後のWAVE出力も可能な範囲で検査する。
 
-Tone検証終了時の状態を照合する、読み取り専用の確認入口:
+今回の追試終了時の保存状態を照合する、読み取り専用の確認入口:
 
 ```sh
 python3 scripts/check_garageband_vab_state.py build/spu-vab-check.band \
-  --expected-vab tests/fixtures/vab/spu-synth-demo.vab --program 3 --tone 1 --gain 99
+  --expected-vab tests/fixtures/vab/spu-synth-demo.vab --program 3 --tone 0 --gain 99
 ```
 
 これは観測したAU XML断片を検査し、GarageBand全containerや候補のactive bindingを断定しない。
@@ -165,7 +165,25 @@ FFTでも同じ帯域を確認した。これはデジタル書き出しの解�
 - Tone変更直前のprojectがcleanだったことを独立に確認できていないため、
   Quit時の保存確認だけでTone-onlyのproject dirtyが証明されたとは扱わない。
 
-残る確認は、Program操作、Toneだけのproject dirty、dialog / popup中のeditor close/reopen。
+## Program操作依頼後の確認
+
+- Program 11を選んでからProgram 3へ戻し、両方でTone 0になるかをユーザーへ依頼した。
+  一度の「Tone 0にならない」という回答は、後にVS Codeのchatの誤作動だったと訂正された。
+  この不具合報告は取り消され、codeは変更していない。
+- その後、CUAで前のP3/T1からP3/T0/Gain99・`Ready. Waiting for an audio block.`への変化を確認した。
+  Program 11の中間画面と、依頼した往復操作の確定回答は観測していない。
+  sourceとoffline CLIではfixtureの期待値P3/T0・P11/T0を確認したが、実機のProgram 11成功とは扱わない。
+- File / Save後、`build/garageband-program-ui-state.json`でcandidate 1件・conflict 0件、
+  P3/T0/Gain99とembedded bank3744 bytesの完全一致を確認した。
+  payload SHA-256は`f1fa0a3a18ec5e660d7266ee509b6c7f818c9e2c76a04d11fa6d70f1111bae10`、
+  最新の`Alternatives/000/ProjectData`は`bb05896ceed20af5e9325de2e1c53430c4d3b6d3d93baeda3783a362d8a30512`。
+- 最初のQuit / Save操作では終了を確認できなかったため、File / Closeの保存確認でSaveを選び、
+  project windowがないことを確認した。同じcopyを開き直し、AXで録音・再生停止、CUAで
+  Embedded VAB / P3 / T0 / Gain99 / `Project sound restored.`を確認した。
+  この追試で確認したのはprojectのclose/reopenであり、GarageBand main processの再起動ではない。
+
+残る確認は、実機でのProgram 11→3の往復と各Tone 0、Toneだけのproject dirty、
+dialog / popup中のeditor close/reopen。
 独自file選択とTone選択について、保存・再起動後のUI復元まで確認済み。
 今回は不具合修正がなく、既存の自動検証は繰り返していない。
 
