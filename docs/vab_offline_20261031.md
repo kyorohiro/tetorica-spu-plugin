@@ -72,3 +72,14 @@ WAV hashと計測値は同directoryの`report.json`。再実行時の上書き�
 3. VABファイル選択とProgram / Tone UI。失敗時は現在の楽器を保持する。
 
 設計の詳細は[VAB import plan](vab_import_plan.md)、残項目は[TODO](issues/TODO.md)を参照。
+
+## GitHub保存・CI
+
+- 開始TODO: `68ab79c`、実装: `2f31cda1bca8a26e6591d61f3cd9a7267764252c`。origin/mainへpush済み。
+- [Verify SPU Plugin / 41185732525](https://github.com/kyorohiro/tetorica-spu-plugin/actions/runs/41185732525)
+  は全job成功。Linux offline `124492162533`、macOS `124492162353`。
+- 2026-10-31 17:43:05〜17:46:30 JST。新規runnerで依存取得・build・CTest・AU配置/auval・
+  公式VST3・実VST3のPCM/state/scheduler検査まで完了した。
+- artifact `macos-development-bundles`: ID `13036918081`、2,034,794 bytes、SHA-256
+  `76e0f154bbcda0b0fc25d67ded1db3a156e04d97024ef096ffac478a27658f80`。
+  upload成功の記録であり、download後の実機試験・Release公開とは区別する。

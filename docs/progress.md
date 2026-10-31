@@ -1,5 +1,14 @@
 # 作業記録
 
+## 2026-10-31 JST — VAB実装のCIも成功
+
+- 実装 `2f31cda1bca8a26e6591d61f3cd9a7267764252c` をorigin/mainへpushした。
+- [CI 41185732525](https://github.com/kyorohiro/tetorica-spu-plugin/actions/runs/41185732525) 全job成功。
+  Linux core / parser / imported Tone検査、macOSのAPP/AU/VST3 build・CTest・auval・公式VST3・実VST3検査を完了。
+- CI 17:43:05〜17:46:30 JST。artifactとsource SHAは[VAB offline記録](vab_offline_20261031.md)へ追記。
+- 次の実装はengineの安全な交換、embedded stateと復元直後render、ファイル選択・Program/Tone UI。
+  現在plugin UIへVABはまだ公開していない。offline CLIとテストで基礎を確認した段階。
+
 ## 2026-10-31 JST — VAB解析・offline音源準備の完了
 
 - 開始TODOを `68ab79c` にcommit / pushしてから実装した。
@@ -9,7 +18,7 @@
 - 既存SineのWAV hashは変更前後で一致。ユーザーComponentsのAUは更新していない。
 - SDKのrepeat bit制限を実PCMで確認。未対応loopを理由付きで拒否し、元データ・vendorは保持した。
 - 詳細と再現コマンドは[VAB offline記録](vab_offline_20261031.md)。次はengine handoff→custom state→file/selection UI。
-- この実装のCI結果はpush後に追記する。Release公開・署名・公証はしていない。
+- CIは上の最終チェックポイントの通り成功。Release公開・署名・公証はしていない。
 
 ## 2026-10-31 JST — VAB解析・音源準備の開始
 

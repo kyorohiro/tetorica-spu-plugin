@@ -23,7 +23,7 @@ AU / GarageBandでの録音・保存・復元・WAVE書出しを追試済み。
 - [x] 選択ToneのADPCM・tuning・ADSR・loop・volume/panを検証・準備する。
 - [x] オリジナルfixtureを独立repoへ取り込み、Web版との結果照合と不正入力の検査を追加する。
 - [x] 準備したToneをNative音源でoffline演奏し、長いsample・loop・事前cache準備を検査する。
-- [x] build / 既存pluginの回帰検査を行い、結果と次の入口を記録する。commit / push後のCIも確認する。
+- [x] build / 既存pluginの回帰検査を行い、結果と次の入口をcommit / pushする。[CI全job成功](https://github.com/kyorohiro/tetorica-spu-plugin/actions/runs/41185732525)。
 
 この区切りではファイル選択UI・再生中の音色交換・DAWへのVAB保存はまだ公開しない。
 それぞれ音源準備と別に検証してから接続する。
