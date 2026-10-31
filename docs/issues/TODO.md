@@ -17,6 +17,17 @@ AU / GarageBandでの録音・保存・復元・WAVE書出しを追試済み。
 [VAB解析・offline音源準備](../vab_offline_20261031.md)も完了。
 次は[VAB取り込み計画](../vab_import_plan.md)のengine handoff・DAW state・UI接続へ進む。
 
+### 音源交換の今回の区切り（2026-10-31）
+
+- [ ] 準備済みengineの所有権を、audio block境界で非待機に交換する層を作る。
+- [ ] 古いrequestの結果・失敗した準備が現在の音源を上書きしない世代管理を実装する。
+- [ ] 旧engineの破棄をaudio callback外へ戻し、退避queue満杯時は交換を延期する。
+- [ ] workerでVAB解析・Tone準備を行う入口と、pluginへの交換層の接続を用意する。
+- [ ] 再生中の交換・sample rate変更・終了時の所有権・競合・callbackのnew/deleteを検証する。
+- [ ] 結果と次のstate/UI作業を記録し、commit / pushとCI確認を行う。
+
+この区切りではVAB読み込みUIをまだ公開しない。DAW stateを復元した直後に正しい音が出る設計も別途検証する。
+
 ### VAB実装の今回の区切り（2026-10-31）
 
 - [x] UI非依存のC++ VAB v6/v7パーサー（complete / 明示VH+VB）を実装する。

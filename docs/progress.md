@@ -1,5 +1,12 @@
 # 作業記録
 
+## 2026-10-31 JST — 準備済み音源の交換を開始
+
+- cleanな `96ca5cc` から再開。実装前に今回のTODOを追加した。
+- worker上のVAB解析・準備、request世代管理、block境界でのengine交換、callback外への破棄を進める。
+- 音色変更ではheld notesと持ち越しMIDIをクリアする。古いrelease tailの保持・crossfadeは後続。
+- UIとcustom stateはまだ接続しない。現状のGain state / 内蔵Sineの挙動を回帰検査する。
+
 ## 2026-10-31 JST — VAB実装のCIも成功
 
 - 実装 `2f31cda1bca8a26e6591d61f3cd9a7267764252c` をorigin/mainへpushした。
