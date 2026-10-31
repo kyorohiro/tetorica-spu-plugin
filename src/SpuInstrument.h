@@ -6,6 +6,7 @@
 #include "SpuReverb.h"
 #include "SpuWaveform.h"
 #include "SpuNoise.h"
+#include "SpuPmon.h"
 #include <array>
 #include <cstdint>
 
@@ -76,6 +77,12 @@ public:
   // All24 noise voices share the native6-bit clock and ignore musical pitch.
   // Invalid clock values leave the entire instrument unchanged.
   bool setNoise(NoiseSettings settings) noexcept;
+  PmonSettings pmon() const noexcept { return mPmon; }
+  // Pairing changes panic; enabled PMON permits12 notes. Waveform/depth and
+  // ratio edits preserve held/tail phase and envelopes. Decay applies on the
+  // next NoteOn only. Enabling PMON disables Noise, and conversely.
+  // Invalid tuples leave all settings and voices unchanged.
+  bool setPmon(PmonSettings settings) noexcept;
   void render(float* left, float* right, int frames) noexcept;
 
   int activeVoiceCount() const noexcept; // Physically held keys; pedal-held/releasing excluded.
@@ -94,7 +101,12 @@ private:
   bool write(unsigned offset, unsigned value) noexcept;
   bool renderNative(float* left, float* right, unsigned count) noexcept;
   unsigned pitchFor(int note, int channel) const noexcept;
+  unsigned modulatorPitchFor(int note,int channel) const noexcept;
+  unsigned carrierFor(unsigned slot) const noexcept;
+  void keyOn(unsigned physicalVoice) noexcept;
   void releaseVoice(unsigned voice) noexcept;
+  void configureSourceMode(bool noise,bool pmon) noexcept;
+  void writeReverbSendMask() noexcept;
   void clearRateHistory() noexcept;
   void clearReverbTail() noexcept;
   void initialize();
@@ -119,6 +131,8 @@ private:
   bool mReverbMayHaveTail = false;
   ReverbSettings mReverb{};
   NoiseSettings mNoise{};
+  PmonSettings mPmon{};
+  bool mPmonWavePrepared = false;
   EnvelopeRegisters mSourceEnvelope{}, mEnvelope{};
   double mRatio = 1;
   double mPhase = 0;

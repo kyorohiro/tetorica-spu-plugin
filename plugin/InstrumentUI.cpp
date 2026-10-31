@@ -11,6 +11,7 @@
 #include "PcmDraftState.h"
 #include <algorithm>
 #include <array>
+#include <cstdio>
 #include <cstring>
 #include <functional>
 #include <optional>
@@ -28,6 +29,14 @@ using namespace iplug::igraphics;
 
 constexpr std::array<const char*, 8> kReverbNames{{"Off", "Room", "Studio Small",
   "Studio Medium", "Studio Large", "Hall", "Space Echo", "Half Echo"}};
+constexpr std::array<const char*, 4> kPmonWaveNames{{"Sine", "Triangle", "Saw", "Square"}};
+enum class SourceMode { Sample, Noise, Pmon };
+
+SourceMode effectiveSourceMode(TetoricaSPU& plugin)
+{
+  if (plugin.GetParam(kParamNoiseEnabled)->Bool()) return SourceMode::Noise;
+  return plugin.GetParam(kParamPmonEnabled)->Bool() ? SourceMode::Pmon : SourceMode::Sample;
+}
 
 void editParameter(TetoricaSPU& plugin, int parameter, double value)
 {
@@ -36,6 +45,26 @@ void editParameter(TetoricaSPU& plugin, int parameter, double value)
   plugin.SendParameterValueFromUI(parameter, normalized);
   plugin.SendParameterValueFromDelegate(parameter, normalized, true);
   plugin.EndInformHostOfParamChangeFromUI(parameter);
+}
+
+void editSourceParameters(TetoricaSPU& plugin, SourceMode mode)
+{
+  const auto edit = [&](int parameter, bool enabled) {
+    if (plugin.GetParam(parameter)->Bool() != enabled)
+      editParameter(plugin, parameter, enabled ? 1. : 0.);
+  };
+  // Noise has priority over the saved PMON flag. Set the winning flag before
+  // clearing the other so even an intervening audio block sees a valid mode.
+  if (mode == SourceMode::Noise)
+  {
+    edit(kParamNoiseEnabled, true);
+    edit(kParamPmonEnabled, false);
+  }
+  else
+  {
+    edit(kParamPmonEnabled, mode == SourceMode::Pmon);
+    edit(kParamNoiseEnabled, false);
+  }
 }
 
 class SpuKeyboardControl final : public IVKeyboardControl
@@ -126,7 +155,7 @@ struct TetoricaSPU::InstrumentUIState
   bool baselineInitialized = false;
   bool pickerOpen = false;
   InstrumentPage page = InstrumentPage::Reverb;
-  std::optional<bool> displayedNoise;
+  std::optional<SourceMode> displayedSource;
   tetorica::PcmDraftState pcmDraft;
   std::string status = "Play MIDI from your DAW or the keyboard.";
 };
@@ -211,9 +240,19 @@ void TetoricaSPU::initializeInstrumentUI()
 
     graphics->AttachControl(new ITextControl(IRECT(24, 202, 410, 232),
       "PCM cycle - Software", IText(22).WithAlign(EAlign::Near)), kCtrlPcmHeading);
-    auto* sourceMode = new IVToggleControl(IRECT(432, 202, 696, 232),
-      kParamNoiseEnabled, "", switchStyle, "Source: Sample", "Source: SPU Noise");
-    sourceMode->SetTooltip("Switch between the retained sample and SPU Noise. Changing source stops held notes and reverb tails.");
+    auto* sourceMode = new SpuMenuControl(IRECT(432, 202, 696, 232), "Source: Sample",
+      [this](IPopupMenu& menu, SpuMenuControl::Choice& choice) {
+        constexpr const char* names[] = {"Sample", "SPU Noise", "Sample + PMON"};
+        for (int mode = 0; mode < 3; ++mode)
+          menu.AddItem(new IPopupMenu::Item(names[mode],
+            static_cast<int>(effectiveSourceMode(*this)) == mode ? IPopupMenu::Item::kChecked : 0, mode));
+        choice = [this](int mode) {
+          if (mode < 0 || mode > 2) return;
+          editSourceParameters(*this, static_cast<SourceMode>(mode));
+          updateInstrumentControls();
+        };
+      });
+    sourceMode->SetTooltip("Choose Sample, SPU Noise or Sample + PMON. Source changes stop held notes and reverb tails; the sample is kept.");
     graphics->AttachControl(sourceMode, kCtrlSourceMode);
     auto* noiseClock = new IVKnobControl(IRECT(56, 254, 244, 398),
       kParamNoiseClock, "Shared Noise clock", smallStyle, true);
@@ -225,6 +264,42 @@ void TetoricaSPU::initializeInstrumentUI()
     graphics->AttachControl(new IMultiLineTextControl(IRECT(24, 418, 696, 469),
       "SPU Noise uses the retained core's approximate generator.\nYour sample and PCM draft are kept. Switch to Sample to return; switching stops notes and reverb tails.",
       IText(12).WithAlign(EAlign::Near).WithVAlign(EVAlign::Top)), kCtrlNoiseStatus);
+    auto* modulator = new SpuMenuControl(IRECT(24, 244, 360, 282), "Modulator: Sine",
+      [this](IPopupMenu& menu, SpuMenuControl::Choice& choice) {
+        for (int wave = 0; wave < static_cast<int>(kPmonWaveNames.size()); ++wave)
+          menu.AddItem(new IPopupMenu::Item(kPmonWaveNames[wave],
+            GetParam(kParamPmonWaveform)->Int() == wave ? IPopupMenu::Item::kChecked : 0, wave));
+        choice = [this](int wave) {
+          if (wave < 0 || wave >= static_cast<int>(kPmonWaveNames.size())) return;
+          editParameter(*this, kParamPmonWaveform, wave);
+          updateInstrumentControls();
+        };
+      });
+    modulator->SetTooltip("The silent modulator waveform changes the carrier's pitch. It is separate from the retained sample.");
+    graphics->AttachControl(modulator, kCtrlPmonWaveform);
+    graphics->AttachControl(new IVButtonControl(IRECT(376, 244, 696, 282),
+      [this](IControl*) {
+        editSourceParameters(*this, SourceMode::Sample);
+        updateInstrumentControls();
+      }, "Edit carrier (Sample)", smallStyle), kCtrlPmonEditCarrier);
+    auto* pmonRatio = new IVKnobControl(IRECT(24, 294, 224, 406),
+      kParamPmonRatio, "Ratio", smallStyle, true);
+    pmonRatio->SetTooltip("Modulator frequency divided by note frequency, 0.01-16. SPU pitch limits can constrain high ratios.");
+    graphics->AttachControl(pmonRatio, kCtrlPmonRatio);
+    auto* pmonDepth = new IVKnobControl(IRECT(248, 294, 448, 406),
+      kParamPmonDepth, "Depth", smallStyle, true);
+    pmonDepth->SetTooltip("Modulation depth. Changes affect sounding notes without retriggering the carrier.");
+    graphics->AttachControl(pmonDepth, kCtrlPmonDepth);
+    auto* pmonDecay = new IVKnobControl(IRECT(472, 294, 696, 406),
+      kParamPmonDecay, "Decay (0 = Hold)", smallStyle, true);
+    pmonDecay->SetTooltip("Approximate modulator decay in milliseconds, applied to new notes. Zero holds the modulation; carrier ADSR is independent.");
+    graphics->AttachControl(pmonDecay, kCtrlPmonDecay);
+    graphics->AttachControl(new IMultiLineTextControl(IRECT(24, 414, 696, 441),
+      "2 voices per note: 12 notes. Source changes stop notes and reverb tails.\nThe sample is the carrier. Edit it in Sample, then return to Sample + PMON.",
+      IText(12).WithAlign(EAlign::Near).WithVAlign(EVAlign::Top)), kCtrlPmonInfo);
+    graphics->AttachControl(new IMultiLineTextControl(IRECT(24, 444, 696, 469),
+      "Waveform, Ratio and Depth update sounding notes. Decay applies to new notes.",
+      IText(12).WithAlign(EAlign::Near).WithVAlign(EVAlign::Top)), kCtrlPmonStatus);
     const std::array<tetorica::WaveformShape, 4> shapes{{tetorica::WaveformShape::Sine,
       tetorica::WaveformShape::Triangle, tetorica::WaveformShape::Saw, tetorica::WaveformShape::Square}};
     const std::array<const char*, 4> shapeNames{{"Sine", "Triangle", "Saw", "Square"}};
@@ -539,8 +614,10 @@ void TetoricaSPU::updateInstrumentControls()
   auto* graphics = GetUI();
   if (!graphics || !mInstrumentUI) return;
   auto& ui = *mInstrumentUI;
-  const bool noise = GetParam(kParamNoiseEnabled)->Bool();
-  const bool sourceChanged = !ui.displayedNoise || *ui.displayedNoise != noise;
+  const auto mode = effectiveSourceMode(*this);
+  const bool noise = mode == SourceMode::Noise;
+  const bool pmon = mode == SourceMode::Pmon;
+  const bool sourceChanged = !ui.displayedSource || *ui.displayedSource != mode;
   if (sourceChanged)
   {
     // Automation and host restore can change source between pointer events.
@@ -549,7 +626,7 @@ void TetoricaSPU::updateInstrumentControls()
       static_cast<SpuWaveformControl*>(graph)->CancelPointerEdit();
     if (auto* graph = graphics->GetControlWithTag(kCtrlEnvelopeGraph))
       static_cast<SpuEnvelopeGraphControl*>(graph)->CancelPointerEdit();
-    ui.displayedNoise = noise;
+    ui.displayedSource = mode;
   }
   const bool vab = ui.definition && ui.bank &&
     ui.definition->kind() == tetorica::InstrumentDefinition::Kind::Vab;
@@ -557,10 +634,10 @@ void TetoricaSPU::updateInstrumentControls()
     if (control->IsDisabled() != ui.pickerOpen) control->SetDisabled(ui.pickerOpen);
   if (auto* control = graphics->GetControlWithTag(kCtrlBankLabel))
     static_cast<iplug::igraphics::ITextControl*>(control)->SetStr(vab ?
-      (noise ? "Embedded VAB / Noise" : "Embedded VAB") :
+      (noise ? "Embedded VAB / Noise" : pmon ? "Embedded VAB / PMON" : "Embedded VAB") :
       ui.definition && ui.definition->kind() == tetorica::InstrumentDefinition::Kind::PcmCycle ?
-        (noise ? "PCM cycle / Noise" : "Embedded PCM cycle") :
-        (noise ? "Builtin Sine / Noise" : "Builtin Sine"));
+        (noise ? "PCM cycle / Noise" : pmon ? "PCM cycle / PMON" : "Embedded PCM cycle") :
+        (noise ? "Builtin Sine / Noise" : pmon ? "Builtin Sine / PMON" : "Builtin Sine"));
   if (auto* control = graphics->GetControlWithTag(kCtrlInstrumentStatus))
   {
     auto* text = static_cast<iplug::igraphics::ITextControl*>(control);
@@ -610,22 +687,50 @@ void TetoricaSPU::updateInstrumentControls()
   for (int tag = kCtrlReverbHeading; tag <= kCtrlReverbStatus; ++tag)
     if (auto* control = graphics->GetControlWithTag(tag))
       if (control->IsHidden() == reverbPage) control->Hide(!reverbPage);
-  const bool pcmEditor = pcmPage && !noise;
+  const bool pcmEditor = pcmPage && mode == SourceMode::Sample;
   const bool noiseEditor = pcmPage && noise;
+  const bool pmonEditor = pcmPage && pmon;
   for (int tag = kCtrlPcmSine; tag <= kCtrlPcmStatus; ++tag)
     if (auto* control = graphics->GetControlWithTag(tag))
       if (control->IsHidden() == pcmEditor) control->Hide(!pcmEditor);
   for (int tag = kCtrlNoiseClock; tag <= kCtrlNoiseStatus; ++tag)
     if (auto* control = graphics->GetControlWithTag(tag))
       if (control->IsHidden() == noiseEditor) control->Hide(!noiseEditor);
+  for (int tag = kCtrlPmonWaveform; tag <= kCtrlPmonStatus; ++tag)
+    if (auto* control = graphics->GetControlWithTag(tag))
+      if (control->IsHidden() == pmonEditor) control->Hide(!pmonEditor);
   for (const auto tag : {kCtrlPcmHeading, kCtrlSourceMode})
     if (auto* control = graphics->GetControlWithTag(tag))
       if (control->IsHidden() == pcmPage) control->Hide(!pcmPage);
   if (auto* control = graphics->GetControlWithTag(kCtrlPcmHeading))
   {
-    const char* title = noise ? "SPU Noise" : "PCM cycle - Software";
+    const char* title = noise ? "SPU Noise" : pmon ? "Pitch Modulation" : "PCM cycle - Software";
     auto* text = static_cast<ITextControl*>(control);
     if (std::strcmp(text->GetStr(), title)) text->SetStr(title);
+  }
+  if (auto* control = graphics->GetControlWithTag(kCtrlSourceMode))
+  {
+    const char* label = noise ? "Source: SPU Noise" : pmon ? "Source: Sample + PMON" : "Source: Sample";
+    auto* menu = static_cast<SpuMenuControl*>(control);
+    if (std::strcmp(menu->GetLabelStr(), label)) menu->SetLabelStr(label);
+  }
+  if (auto* control = graphics->GetControlWithTag(kCtrlPmonWaveform))
+  {
+    const auto wave = std::clamp(GetParam(kParamPmonWaveform)->Int(), 0, 3);
+    const auto label = std::string("Modulator: ") + kPmonWaveNames[wave];
+    auto* menu = static_cast<SpuMenuControl*>(control);
+    if (std::strcmp(menu->GetLabelStr(), label.c_str())) menu->SetLabelStr(label.c_str());
+  }
+  if (auto* control = graphics->GetControlWithTag(kCtrlPmonStatus))
+  {
+    char message[192];
+    const double decay = GetParam(kParamPmonDecay)->Value();
+    if (decay == 0)
+      std::snprintf(message, sizeof(message), "Waveform / Ratio / Depth are live. Decay: Hold (0), applied to new notes.");
+    else
+      std::snprintf(message, sizeof(message), "Waveform / Ratio / Depth are live. Decay: approximately %.0f ms, applied to new notes.", decay);
+    auto* text = static_cast<ITextControl*>(control);
+    if (std::strcmp(text->GetStr(), message)) text->SetStr(message);
   }
   for (const auto tag : {kCtrlPagePcm, kCtrlPageEnvelope, kCtrlPageReverb})
     if (auto* control = graphics->GetControlWithTag(tag))
@@ -699,7 +804,7 @@ void TetoricaSPU::showInstrumentPage(InstrumentPage page)
 
 void TetoricaSPU::setPcmDraftFromUI(const tetorica::PcmCycle& cycle)
 {
-  if (!GetUI() || !mInstrumentUI || GetParam(kParamNoiseEnabled)->Bool() ||
+  if (!GetUI() || !mInstrumentUI || effectiveSourceMode(*this) != SourceMode::Sample ||
       cycle == mInstrumentUI->pcmDraft.cycle()) return;
   mInstrumentUI->pcmDraft.set(cycle);
   updateInstrumentControls();
@@ -707,7 +812,7 @@ void TetoricaSPU::setPcmDraftFromUI(const tetorica::PcmCycle& cycle)
 
 void TetoricaSPU::choosePcmShapeFromUI(tetorica::WaveformShape shape)
 {
-  if (!GetUI() || !mInstrumentUI || GetParam(kParamNoiseEnabled)->Bool()) return;
+  if (!GetUI() || !mInstrumentUI || effectiveSourceMode(*this) != SourceMode::Sample) return;
   if (auto* graph = GetUI()->GetControlWithTag(kCtrlPcmGraph))
     static_cast<SpuWaveformControl*>(graph)->CancelPointerEdit();
   setPcmDraftFromUI(tetorica::makePcmCycle(shape));
@@ -715,7 +820,7 @@ void TetoricaSPU::choosePcmShapeFromUI(tetorica::WaveformShape shape)
 
 void TetoricaSPU::revertPcmDraftFromUI()
 {
-  if (!GetUI() || !mInstrumentUI || GetParam(kParamNoiseEnabled)->Bool()) return;
+  if (!GetUI() || !mInstrumentUI || effectiveSourceMode(*this) != SourceMode::Sample) return;
   if (auto* graph = GetUI()->GetControlWithTag(kCtrlPcmGraph))
     static_cast<SpuWaveformControl*>(graph)->CancelPointerEdit();
   const auto& definition = mInstrumentUI->definition;
@@ -725,7 +830,7 @@ void TetoricaSPU::revertPcmDraftFromUI()
 
 void TetoricaSPU::applyPcmDraftFromUI()
 {
-  if (!GetUI() || !mInstrumentUI || GetParam(kParamNoiseEnabled)->Bool()) return;
+  if (!GetUI() || !mInstrumentUI || effectiveSourceMode(*this) != SourceMode::Sample) return;
   if (auto* graph = GetUI()->GetControlWithTag(kCtrlPcmGraph))
     static_cast<SpuWaveformControl*>(graph)->CancelPointerEdit();
   try

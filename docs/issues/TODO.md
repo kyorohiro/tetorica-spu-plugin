@@ -31,14 +31,14 @@ PCMの4波形・自由描画・Apply / Revertも実装し、実AU/VST3とStandal
 
 ### PMONの今回の区切り（2026-10-31、実装前）
 
-- [ ] 隣接even modulator → odd carrierの12組でSPU PMONを公開する。初期Offで従来Sine・元VAB・PCMを保つ。mode切替は保持音・残響を停止する。
-- [ ] Modulator Sine / Triangle / Saw / Square、Ratio 0.01〜16（初期1）、Depth 0〜1（初期0.5）、Decay 0〜5000ms（初期500、0はHold）を追加する。波形・Ratio・Depthは発音中も反映、Decayは次Note Onへ適用する。Decay時間はSPU rateの近似。
-- [ ] 最大12音、同音再発音・voice stealing・ch別Bend / Sustain・Release・panicをpair単位で処理する。modulatorはdry / reverbへ混ぜず、carrierだけに元Tone / Custom ADSRとReverb sendを適用する。
-- [ ] Noise Enabled17 / Clock18を含む既存19parameterを維持し、PMON Enabled19 / Waveform20 / Ratio21 / Depth22 / Decay23を追加する。両EnabledがOnのraw状態も保存可能とし、実効modeはNoise優先に固定する。UIの3択は両flagを適切に更新する。
-- [ ] state6（固定112bytes）へ保存し、schema1〜5 / Gain-onlyからPMON Off・初期値で復元する。不正tuple / stateを変更前に拒否し、音源・全parameter・正常pendingを保つ。
-- [ ] Native SDKへ同一長host PCMの確保なし更新APIを追加する。112framesのprivate cacheを非audioで常設し、波形 / Depth変更はcursor・Gaussian履歴・ADSRをresetせず更新する。元VABの最大RAM容量とrepeat復元を保つ。SDK公開commitとlockを固定する。
-- [ ] Source / ADSR / Reverbの3タブと720×620を維持する。SourceにSample / SPU Noise / Sample + PMON、Modulator / Ratio / Depth / Decay、carrier編集へ戻る操作を置く。元sample・PCM draftを保持し、Reverbの初期表示を維持する。
-- [ ] coreで12音・live変更・Decay latch・pair controller・全RAM / repeat回帰・分割一致・C++確保/破棄0・初期Sine byte一致を検証する。実AU/VST3で24params / state / automation / 旧互換 / atomic failureを検証する。
+- [x] 隣接even modulator → odd carrierの12組でSPU PMONを公開する。初期Offで従来Sine・元VAB・PCMを保つ。mode切替は保持音・残響を停止する。
+- [x] Modulator Sine / Triangle / Saw / Square、Ratio 0.01〜16（初期1）、Depth 0〜1（初期0.5）、Decay 0〜5000ms（初期500、0はHold）を追加する。波形・Ratio・Depthは発音中も反映、Decayは次Note Onへ適用する。Decay時間はSPU rateの近似。
+- [x] 最大12音、同音再発音・voice stealing・ch別Bend / Sustain・Release・panicをpair単位で処理する。modulatorはdry / reverbへ混ぜず、carrierだけに元Tone / Custom ADSRとReverb sendを適用する。
+- [x] Noise Enabled17 / Clock18を含む既存19parameterを維持し、PMON Enabled19 / Waveform20 / Ratio21 / Depth22 / Decay23を追加する。両EnabledがOnのraw状態も保存可能とし、実効modeはNoise優先に固定する。UIの3択は両flagを適切に更新する。
+- [x] state6（固定112bytes）へ保存し、schema1〜5 / Gain-onlyからPMON Off・初期値で復元する。不正tuple / stateを変更前に拒否し、音源・全parameter・正常pendingを保つ。
+- [x] Native SDKへ同一長host PCMの確保なし更新APIを追加する。112framesのprivate cacheを非audioで常設し、波形 / Depth変更はcursor・Gaussian履歴・ADSRをresetせず更新する。元VABの最大RAM容量とrepeat復元を保つ。SDK公開commitとlockを固定する。
+- [x] Source / ADSR / Reverbの3タブと720×620を維持する。SourceにSample / SPU Noise / Sample + PMON、Modulator / Ratio / Depth / Decay、carrier編集へ戻る操作を置く。元sample・PCM draftを保持し、Reverbの初期表示を維持する。
+- [x] coreで12音・live変更・Decay latch・pair controller・全RAM / repeat回帰・分割一致・C++確保/破棄0・初期Sine byte一致を検証する。実AU/VST3で24params / state / automation / 旧互換 / atomic failureを検証する。
 - [ ] StandaloneのSource / PMON操作、build / CTest / sanitizer / validator / CIを確認する。検証済み範囲・実聴等の未確認範囲を記録し、commit / pushする。
 - [ ] host保存・終了、既知manifest照合・退避後にinstalled AUを更新し、GarageBand検証用projectの旧state復元を確認する。
 

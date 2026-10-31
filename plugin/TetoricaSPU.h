@@ -38,6 +38,11 @@ enum EParams
   kParamReverbToneSend,
   kParamNoiseEnabled,
   kParamNoiseClock,
+  kParamPmonEnabled,
+  kParamPmonWaveform,
+  kParamPmonRatio,
+  kParamPmonDepth,
+  kParamPmonDecay,
   kNumParams
 };
 
@@ -81,7 +86,14 @@ enum ECtrlTags
   kCtrlSourceMode,
   kCtrlNoiseClock,
   kCtrlNoiseInfo,
-  kCtrlNoiseStatus
+  kCtrlNoiseStatus,
+  kCtrlPmonWaveform,
+  kCtrlPmonEditCarrier,
+  kCtrlPmonRatio,
+  kCtrlPmonDepth,
+  kCtrlPmonDecay,
+  kCtrlPmonInfo,
+  kCtrlPmonStatus
 };
 
 class TetoricaSPU final : public iplug::Plugin
@@ -155,7 +167,7 @@ private:
   void applyControllerCache() noexcept;
   void applyEnvelopeParameters() noexcept;
   void applyReverbParameters() noexcept;
-  void applyNoiseParameters() noexcept;
+  void applySourceParameters() noexcept;
   void discardCarriedMidi() noexcept;
   void discardCarriedNotes() noexcept;
   void renderRange(iplug::sample** outputs, int offset, int nFrames, double gain);

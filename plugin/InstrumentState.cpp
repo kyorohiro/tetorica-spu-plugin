@@ -10,7 +10,7 @@
 
 namespace {
 using Parameters=std::array<double,kNumParams>;
-static_assert(kNumParams==19,"Update the state parameter mapping when adding parameters");
+static_assert(kNumParams==24,"Update the state parameter mapping when adding parameters");
 unsigned field(const Parameters& values,int index,unsigned maximum)
 {
   const double value=values[index];
@@ -44,6 +44,11 @@ tetorica::NoiseSettings noise(const Parameters& p)
 {
   return {field(p,kParamNoiseEnabled,1)!=0,field(p,kParamNoiseClock,63)};
 }
+tetorica::PmonSettings pmon(const Parameters& p)
+{
+  return {field(p,kParamPmonEnabled,1)!=0,static_cast<tetorica::WaveformShape>(field(p,kParamPmonWaveform,3)),
+    p[kParamPmonRatio],p[kParamPmonDepth],p[kParamPmonDecay]};
+}
 Parameters stateParameters(const tetorica::SavedInstrumentState& state)
 {
   Parameters p{};const auto words=state.envelope.custom;
@@ -66,6 +71,11 @@ Parameters stateParameters(const tetorica::SavedInstrumentState& state)
   p[kParamReverbRight]=state.reverb.volumeRight*100.;
   p[kParamNoiseEnabled]=state.noise.enabled?1:0;
   p[kParamNoiseClock]=state.noise.clock;
+  p[kParamPmonEnabled]=state.pmon.enabled?1:0;
+  p[kParamPmonWaveform]=static_cast<std::uint32_t>(state.pmon.waveform);
+  p[kParamPmonRatio]=state.pmon.ratio;
+  p[kParamPmonDepth]=state.pmon.depth;
+  p[kParamPmonDecay]=state.pmon.decayMs;
   return p;
 }
 }
@@ -88,7 +98,7 @@ bool TetoricaSPU::SerializeState(iplug::IByteChunk& chunk) const
       position=next;
     }
     const auto definition = mEngines.snapshotDefinition();
-    const auto bytes = tetorica::encodeState(definition, values[kParamGain], envelope(values), reverb(values), noise(values));
+    const auto bytes = tetorica::encodeState(definition, values[kParamGain], envelope(values), reverb(values), noise(values), pmon(values));
     if (chunk.Size() < 0 || bytes.size() > static_cast<std::size_t>(
           std::numeric_limits<int>::max() - chunk.Size()))
       return false;
@@ -146,7 +156,7 @@ int TetoricaSPU::UnserializeState(const iplug::IByteChunk& chunk, int startPos)
     discardCarriedMidi();
     mMidiOverflow = false;
     // This trusted complete parameter chunk was fully validated and allocated
-    // above. The framework sets all 19 values and calls OnParamReset.
+    // above. The framework sets all 24 values and calls OnParamReset.
     UnserializeParams(params, 0);
     // A host restore can arrive off the UI thread. Only publish a revision
     // here; OnIdle will refresh its model without requesting another engine.

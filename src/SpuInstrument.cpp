@@ -56,6 +56,43 @@ constexpr std::array<std::array<std::uint16_t,32>,8> kReverbRegisters{{
     0x01a0,0x00e3,0x0058,0x0040,0x0028,0x0014,0x8000,0x8000}}
 }};
 bool validChannel(int channel) { return channel >= 0 && channel < 16; }
+bool validPmon(PmonSettings settings) {
+  return (settings.waveform==WaveformShape::Sine||settings.waveform==WaveformShape::Triangle||
+      settings.waveform==WaveformShape::Saw||settings.waveform==WaveformShape::Square)&&
+      std::isfinite(settings.ratio)&&settings.ratio>=.01&&settings.ratio<=16&&
+      std::isfinite(settings.depth)&&settings.depth>=0&&settings.depth<=1&&
+      std::isfinite(settings.decayMs)&&settings.decayMs>=0&&settings.decayMs<=5000;
+}
+std::uint16_t modulatorAdsr2(double decayMs,std::uint16_t carrierAdsr2) {
+  // Web pmonAdsr: approximate retained linear-sustain decay durations, not
+  // exact hardware timers. The immutable table is from the BSD SPU rates.
+  constexpr std::array<unsigned,35> durations{{13,15,19,23,27,31,37,46,53,62,74,93,
+      110,120,150,190,210,250,300,370,420,500,590,740,850,990,1200,1500,1700,
+      2000,2400,3000,3400,4000,4800}};
+  unsigned rate=127;
+  if(decayMs>0){
+    unsigned nearest=0;
+    for(unsigned i=1;i<durations.size();++i)
+      if(std::abs(double(durations[i])-decayMs)<std::abs(double(durations[nearest])-decayMs))nearest=i;
+    rate=32+nearest;
+  }
+  return static_cast<std::uint16_t>(0x4000|(rate<<6)|(carrierAdsr2&63));
+}
+std::array<std::int16_t,112> modulatorPcm(PmonSettings settings) {
+  constexpr double pi=3.14159265358979323846264338327950288;
+  std::array<std::int16_t,112> pcm{};
+  for(unsigned i=0;i<pcm.size();++i){
+    const double phase=double(i)/pcm.size();double value=0;
+    switch(settings.waveform){
+      case WaveformShape::Sine:value=std::sin(2*pi*phase);break;
+      case WaveformShape::Triangle:value=2/pi*std::asin(std::sin(2*pi*phase));break;
+      case WaveformShape::Saw:value=2*phase-1;break;
+      case WaveformShape::Square:value=phase<.5?1:-1;break;
+    }
+    pcm[i]=static_cast<std::int16_t>(std::clamp(std::floor(.95*settings.depth*value*32768+.5),-32768.,32767.));
+  }
+  return pcm;
+}
 vab::PreparedTone cycleTone(const PcmCycle& pcm) {
   const auto adpcm=encodePcmCycle(pcm);
   vab::PreparedTone tone;
@@ -201,7 +238,7 @@ void SpuInstrument::initializeNoiseCache() {
   // but its decoder still needs a valid looping cursor. This private silent
   // host cache avoids both one-shot END and stealing physical RAM from a full
   // VAB payload. The original ADPCM cache and registers remain intact.
-  constexpr std::array<std::int16_t,28> silence{};
+  constexpr std::array<std::int16_t,112> silence{};
   for(unsigned i=0;i<kVoiceCount;++i)
     mSampleRepeatAddresses[i]=ps1_spu_read(mChip,i*16+14);
   if(!ps1_spu_set_host_pcm(mChip,silence.data(),silence.size(),1)||
@@ -239,39 +276,54 @@ void SpuInstrument::noteOn(int note, int velocity, int channel) noexcept {
   if (note < 0 || note > 127 || velocity < 0 || velocity > 127 || !validChannel(channel)) return;
   if (velocity == 0) { noteOff(note, channel); return; }
   int slot = -1;
+  const unsigned limit=mPmon.enabled?kVoiceCount/2:kVoiceCount;
   // A repeated MIDI note retriggers its existing slot. Other channels retain
   // independent identities; late Off for a stolen note cannot stop its successor.
-  for (int i=0; i<kVoiceCount; ++i)
+  for (unsigned i=0; i<limit; ++i)
     if ((mVoices[i].held||mVoices[i].deferred) && mVoices[i].note == note && mVoices[i].channel == channel) { slot=i; break; }
-  if (slot < 0) for (unsigned offset=0; offset<kVoiceCount; ++offset) {
-    const unsigned candidate = (mCursor+offset)%kVoiceCount;
+  if (slot < 0) for (unsigned offset=0; offset<limit; ++offset) {
+    const unsigned candidate = (mCursor+offset)%limit;
     if (!mVoices[candidate].held&&!mVoices[candidate].deferred) { slot=static_cast<int>(candidate); break; }
   }
   if (slot < 0) {
     slot = 0;
-    for (int i=1; i<kVoiceCount; ++i) if (mVoices[i].order < mVoices[slot].order) slot=i;
+    for (unsigned i=1; i<limit; ++i) if (mVoices[i].order < mVoices[slot].order) slot=i;
   }
   const auto pitch = pitchFor(note,channel);
   const unsigned volumeLeft = mVolumeLeft * static_cast<unsigned>(velocity) / 127;
   const unsigned volumeRight = mVolumeRight * static_cast<unsigned>(velocity) / 127;
-  const unsigned base = static_cast<unsigned>(slot)*16;
+  const unsigned carrier=carrierFor(static_cast<unsigned>(slot));
+  const unsigned base = carrier*16;
+  if(mPmon.enabled){
+    const unsigned mod=carrier-1,modBase=mod*16;
+    write(modBase,0);write(modBase+2,0);write(modBase+4,modulatorPitchFor(note,channel));
+    write(modBase+8,0x000f);write(modBase+10,modulatorAdsr2(mPmon.decayMs,mEnvelope.adsr2));
+    keyOn(mod);
+  }
   write(base, volumeLeft); write(base+2, volumeRight); write(base+4, pitch);
   write(base+8,mEnvelope.adsr1); write(base+10,mEnvelope.adsr2);
   if (mReverbSend) {
-    const unsigned reg=0x198+(slot>=16?2:0);
-    write(reg,ps1_spu_read(mChip,reg)|(1u<<(slot%16)));
+    const unsigned reg=0x198+(carrier>=16?2:0);
+    write(reg,ps1_spu_read(mChip,reg)|(1u<<(carrier%16)));
   }
-  if(mFreshSource[slot]){
+  keyOn(carrier);
+  mVoices[slot] = {note, channel, true, false, ++mOrder};
+  mCursor = (static_cast<unsigned>(slot)+1)%limit;
+}
+unsigned SpuInstrument::carrierFor(unsigned slot) const noexcept {
+  return mPmon.enabled?slot*2+1:slot;
+}
+void SpuInstrument::keyOn(unsigned physicalVoice) noexcept {
+  if(mFreshSource[physicalVoice]){
     // Mode changes already muted the old voice. Latch the new source before
     // an audition fade can reach an old one-shot END and clear its send bit.
     // A zero-level KON followed by audition On retains the128-frame fade-in.
-    if(!mNoise.enabled)write(base+14,mSampleRepeatAddresses[slot]);
-    write(0x188+(slot>=16?2:0),1u<<(slot%16));
-    mFreshSource[slot]=false;
+    if(!mNoise.enabled&&(!mPmon.enabled||physicalVoice%2))
+      write(physicalVoice*16+14,mSampleRepeatAddresses[physicalVoice]);
+    write(0x188+(physicalVoice>=16?2:0),1u<<(physicalVoice%16));
+    mFreshSource[physicalVoice]=false;
   }
-  mHealthy = (ps1_spu_audition_key(mChip, static_cast<unsigned>(slot), 1) != 0) && mHealthy;
-  mVoices[slot] = {note, channel, true, false, ++mOrder};
-  mCursor = (static_cast<unsigned>(slot)+1)%kVoiceCount;
+  mHealthy = (ps1_spu_audition_key(mChip,physicalVoice,1)!=0)&&mHealthy;
 }
 void SpuInstrument::noteOff(int note, int channel) noexcept {
   if (note < 0 || note > 127 || !validChannel(channel)) return;
@@ -291,9 +343,17 @@ unsigned SpuInstrument::pitchFor(int note,int channel) const noexcept {
   const double frequency=440*std::exp2((note-69+semitones)/12.0);
   return static_cast<unsigned>(std::lround(std::clamp(4096*frequency/mRootFrequencyHz,1.0,16383.0)));
 }
+unsigned SpuInstrument::modulatorPitchFor(int note,int channel) const noexcept {
+  const int delta=mPitchBend[channel]-8192;
+  const double semitones=2.0*delta/(delta<0?8192.0:8191.0);
+  const double frequency=440*std::exp2((note-69+semitones)/12.0)*mPmon.ratio;
+  return static_cast<unsigned>(std::lround(std::clamp(4096*frequency/(44100./112),1.,16383.)));
+}
 void SpuInstrument::releaseVoice(unsigned voice) noexcept {
   mVoices[voice].deferred=false;
-  mHealthy=(ps1_spu_audition_key(mChip,voice,0)!=0)&&mHealthy;
+  const unsigned carrier=carrierFor(voice);
+  mHealthy=(ps1_spu_audition_key(mChip,carrier,0)!=0)&&mHealthy;
+  if(mPmon.enabled)mHealthy=(ps1_spu_audition_key(mChip,carrier-1,0)!=0)&&mHealthy;
 }
 void SpuInstrument::setPitchBend(int value14,int channel) noexcept {
   if(!validChannel(channel)||value14<0||value14>16383||mPitchBend[channel]==value14)return;
@@ -301,8 +361,11 @@ void SpuInstrument::setPitchBend(int value14,int channel) noexcept {
   // Released tails retain their note identity until the slot is reused. Change
   // only PITCH, preserving the sample cursor, ADSR stage and key-on history.
   for(unsigned i=0;i<kVoiceCount;++i)
-    if(mVoices[i].note>=0&&mVoices[i].channel==channel)
-      write(i*16+4,pitchFor(mVoices[i].note,channel));
+    if(mVoices[i].note>=0&&mVoices[i].channel==channel){
+      const unsigned carrier=carrierFor(i);
+      write(carrier*16+4,pitchFor(mVoices[i].note,channel));
+      if(mPmon.enabled)write((carrier-1)*16+4,modulatorPitchFor(mVoices[i].note,channel));
+    }
 }
 void SpuInstrument::setSustain(bool down,int channel) noexcept {
   if(!validChannel(channel)||mSustain[channel]==down)return;
@@ -347,11 +410,12 @@ void SpuInstrument::clearReverbTail() noexcept {
 void SpuInstrument::setEnvelope(EnvelopeRegisters values,bool live) noexcept {
   mEnvelope=values;
   for(unsigned i=0;i<kVoiceCount;++i){
+    if(mPmon.enabled&&i%2==0)continue;
     write(i*16+8,values.adsr1); write(i*16+10,values.adsr2);
   }
   if(live)for(unsigned i=0;i<kVoiceCount;++i)
     if(mVoices[i].note>=0)
-      mHealthy=(ps1_spu_refresh_envelope(mChip,i)!=0)&&mHealthy;
+      mHealthy=(ps1_spu_refresh_envelope(mChip,carrierFor(i))!=0)&&mHealthy;
 }
 bool SpuInstrument::setReverb(ReverbSettings settings) noexcept {
   const auto preset=static_cast<std::uint32_t>(settings.preset);
@@ -369,7 +433,7 @@ bool SpuInstrument::setReverb(ReverbSettings settings) noexcept {
   write(0x184,enabled?static_cast<unsigned>(std::lround(settings.volumeLeft*0x7fff)):0);
   write(0x186,enabled?static_cast<unsigned>(std::lround(settings.volumeRight*0x7fff)):0);
   mReverbSend=enabled&&(!settings.useToneSend||mSourceReverbSend);
-  write(0x198,mReverbSend?0xffff:0);write(0x19a,mReverbSend?0x00ff:0);
+  writeReverbSendMask();
   write(0x1aa,(ps1_spu_read(mChip,0x1aa)&~0x80u)|(enabled?0x80u:0));
   mReverb=settings;
   return mHealthy;
@@ -378,16 +442,48 @@ bool SpuInstrument::setNoise(NoiseSettings settings) noexcept {
   if(settings.clock>63)return false;
   if(settings.enabled==mNoise.enabled&&settings.clock==mNoise.clock)return mHealthy;
   if(settings.enabled!=mNoise.enabled){
-    panic();
-    mHealthy=(ps1_spu_set_host_mask(mChip,settings.enabled?0xffffff:0)!=0)&&mHealthy;
-    write(0x194,settings.enabled?0xffff:0);write(0x196,settings.enabled?0x00ff:0);
-    if(!settings.enabled)for(unsigned i=0;i<kVoiceCount;++i)
-      write(i*16+14,mSampleRepeatAddresses[i]);
-    mFreshSource.fill(true);
+    mNoise.clock=settings.clock;
+    configureSourceMode(settings.enabled,settings.enabled?false:mPmon.enabled);
   }
   const unsigned clock=settings.enabled?settings.clock:0;
   write(0x1aa,(ps1_spu_read(mChip,0x1aa)&~0x3f00u)|(clock<<8));
   mNoise=settings;
+  return mHealthy;
+}
+void SpuInstrument::writeReverbSendMask() noexcept {
+  const unsigned mask=mReverbSend?(mPmon.enabled?0xaaaaaa:0xffffff):0;
+  write(0x198,mask&0xffff);write(0x19a,mask>>16);
+}
+void SpuInstrument::configureSourceMode(bool noise,bool pmon) noexcept {
+  panic();mNoise.enabled=noise;mPmon.enabled=pmon;
+  const unsigned hostMask=noise?0xffffff:pmon?0x555555:0;
+  mHealthy=(ps1_spu_set_host_mask(mChip,hostMask)!=0)&&mHealthy;
+  write(0x194,noise?0xffff:0);write(0x196,noise?0xff:0);
+  write(0x190,pmon?0xaaaa:0);write(0x192,pmon?0xaa:0);
+  for(unsigned i=0;i<kVoiceCount;++i){
+    write(i*16+8,mEnvelope.adsr1);write(i*16+10,mEnvelope.adsr2);write(i*16+4,4096);
+    if(!(hostMask&(1u<<i)))write(i*16+14,mSampleRepeatAddresses[i]);
+  }
+  write(0x1aa,(ps1_spu_read(mChip,0x1aa)&~0x3f00u)|((noise?mNoise.clock:0)<<8));
+  writeReverbSendMask();mFreshSource.fill(true);
+}
+bool SpuInstrument::setPmon(PmonSettings settings) noexcept {
+  if(!validPmon(settings))return false;
+  if(settings.enabled==mPmon.enabled&&settings.waveform==mPmon.waveform&&
+      settings.ratio==mPmon.ratio&&settings.depth==mPmon.depth&&settings.decayMs==mPmon.decayMs)
+    return mHealthy;
+  const bool waveChanged=settings.waveform!=mPmon.waveform||settings.depth!=mPmon.depth;
+  const bool ratioChanged=settings.ratio!=mPmon.ratio;
+  if(settings.enabled&&(!mPmonWavePrepared||waveChanged)){
+    const auto pcm=modulatorPcm(settings);
+    if(!ps1_spu_update_host_pcm(mChip,pcm.data(),pcm.size()))return false;
+    mPmonWavePrepared=true;
+  }else if(waveChanged)mPmonWavePrepared=false;
+  const bool topology=settings.enabled!=mPmon.enabled;
+  if(topology)configureSourceMode(settings.enabled?false:mNoise.enabled,settings.enabled);
+  mPmon=settings;
+  if(settings.enabled&&ratioChanged&&!topology)for(unsigned i=0;i<kVoiceCount;++i)
+    if(mVoices[i].note>=0)write((carrierFor(i)-1)*16+4,modulatorPitchFor(mVoices[i].note,mVoices[i].channel));
   return mHealthy;
 }
 int SpuInstrument::activeVoiceCount() const noexcept {

@@ -84,7 +84,7 @@ template<class Factory> void checkNoise(Factory make,double rate,const char* hos
   for(auto flags:{2u,4u,0xffffffffu}) {auto bad=wire;envelope_detail::word(bad,72+448,flags);invalid.push_back(bad);}
   for(auto clock:{64u,0xffffffffu}) {auto bad=wire;envelope_detail::word(bad,76+448,clock);invalid.push_back(bad);}
   auto bad=wire;bad.pop_back();invalid.push_back(bad);
-  bad=wire;envelope_detail::word(bad,8,6);invalid.push_back(bad);
+  bad=wire;envelope_detail::word(bad,8,7);invalid.push_back(bad);
   for(const auto& bytes:invalid)
     requireNoise(!state->tryStateRestoreForTest(bytes)&&state->stateBodyForTest()==wire,"Malformed Noise state cancelled a pending restore");
   reverb_detail::exact(*state,*reference,events,"Rejected Noise state altered the first restored NoteOn");

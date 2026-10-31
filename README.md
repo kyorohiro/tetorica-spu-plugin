@@ -5,9 +5,9 @@ Initial development targets macOS Standalone, AUv2 and VST3. Not a published rel
 
 Current prototype: original built-in Sine, MIDI Note On/Off and velocity,
 24 voices, channel-aware note ownership, Pitch Bend, Sustain, All sound off,
-Gain, a PCM waveform editor, SPU Noise, custom ADSR editing, shared SPU Reverb and mouse keyboard.
+Gain, a PCM waveform editor, SPU Noise, paired PMON, custom ADSR editing, shared SPU Reverb and mouse keyboard.
 Load a complete VAB from the editor and select a Program and Tone to audition.
-The bank or PCM cycle, selection, Gain, ADSR, Reverb and Noise settings are embedded in the DAW project state.
+The bank or PCM cycle, selection, Gain, ADSR, Reverb, Noise and PMON settings are embedded in the DAW project state.
 Additional SPU controls remain planned. The same VAB parser and selected-Tone
 engine can also be exercised with the offline tool below.
 
@@ -141,6 +141,38 @@ Noise mode and Clock are saved host parameters, IDs 17 and 18. Automation is
 applied at block boundaries. Old projects restore with Noise Off and Clock 48.
 This does not automatically reconstruct VAB sample-255 Noise Tones.
 
+## SPU Pitch Modulation (PMON)
+
+On the **Source** page, select **Sample + PMON**, then play a new note.
+Each note uses an even modulator voice and its adjacent odd sample carrier,
+giving **12 notes** instead of 24. This uses SPU pitch modulation; the generated
+modulator PCM and its live updates are software authoring, outside physical
+sample RAM. Existing VAB and drawn PCM remain the carrier. Modulators are
+silent in the dry mix and Reverb; only carriers reach the output/effect.
+
+- **Modulator** selects Sine, Triangle, Saw or Square.
+- **Ratio** sets the modulator frequency relative to the played note (0.01–16).
+- **Depth** sets modulation strength (0–1).
+- **Decay** approximates the modulator's SPU envelope duration (0–5000 ms).
+  **0 means Hold**. It changes the next note; sounding notes keep their latched
+  modulator envelope. SPU rate steps make the displayed milliseconds approximate.
+
+Waveform, Ratio and Depth affect sounding notes, including release tails,
+without retriggering them. Pitch Bend tunes both voices. Sustain defers release
+of both; custom/Tone ADSR edits apply to the carrier. The modulator uses the
+carrier's Release setting when its note begins.
+
+Use **Edit carrier (Sample)** to return to PCM editing, then select
+**Sample + PMON** again. Mode changes stop notes and Reverb tails and retain
+the original sample, PCM draft and PMON settings. Reverb stays on its own page.
+
+The five PMON host parameters append IDs 19–23; previous IDs remain stable.
+They apply at block boundaries. Noise and PMON flags are independently saved
+for host automation compatibility: if both are On, **Noise takes priority**.
+The Source menu sets both flags to choose one mode. Old projects use PMON Off,
+Sine, Ratio 1, Depth 0.5 and Decay 500 ms. Arbitrary voice-to-voice routing is
+outside this paired instrument's scope.
+
 ## ADSR editing
 
 The default **Tone ADSR** mode uses the built-in instrument's or selected VAB
@@ -268,6 +300,9 @@ Schema 1/2/3 Builtin and VAB states remain readable with their saved settings.
 Schema 5 adds the shared Noise settings after the unchanged 72-byte layout.
 Schema 1/2/3/4 and Gain-only states use Noise Off / Clock 48 without changing
 their source or the envelope/effect settings supported by that schema.
+Schema 6 appends PMON settings, retaining all earlier layouts and reading
+schema 1–5 with PMON Off. Both raw source flags are retained; simultaneous
+Noise and PMON use Noise during playback.
 
 The actual AU and VST3 have been tested for embedded-bank round-trip, separate
 instances, immediate first-render MIDI/PCM and malformed-state rejection. VST3
@@ -330,7 +365,7 @@ still need a direct user check; the verified host-preset route is separate.
   MIDI notes 92 and above clamp. Full-range multisampling is follow-up work.
 - Host rate conversion uses continuous linear interpolation. Anti-alias filtering
   below 44.1 kHz and improved conversion quality remain follow-up work.
-- State schema 5 stores a built-in instrument, one selected VAB Tone or one
+- State schema 6 stores a built-in instrument, one selected VAB Tone or one
   authored 112-sample PCM cycle, with a 1 MiB bank limit. Key zones, layers and game-driver performance state are
   not reconstructed. Held notes, release tails, decoder caches and host rate
   are not saved.

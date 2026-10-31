@@ -30,6 +30,16 @@ void reverb(const ReverbSettings& value) {
 void noise(const NoiseSettings& value) {
   if(value.clock>63)fail("SPU state: Noise clock must be 0-63");
 }
+void pmon(const PmonSettings& value) {
+  if(static_cast<unsigned>(value.waveform)>static_cast<unsigned>(WaveformShape::Square))
+    fail("SPU state: unsupported PMON waveform");
+  if(!std::isfinite(value.ratio)||value.ratio<.01||value.ratio>16||
+     !std::isfinite(value.depth)||value.depth<0||value.depth>1||
+     !std::isfinite(value.decayMs)||value.decayMs<0||value.decayMs>5000)
+    fail("SPU state: invalid PMON ratio, depth or decay");
+  // Raw Noise+PMON enabled is valid authoring/automation state. The consumer
+  // resolves its effective topology with Noise priority without changing it.
+}
 std::size_t selected(const vab::Bank& bank,std::uint32_t program,std::uint32_t tone) {
   if(program>127||tone>15)fail("SPU state: Program/Tone is out of range");
   for(std::size_t i=0;i<bank.tones.size();++i)
@@ -102,11 +112,12 @@ std::shared_ptr<const InstrumentDefinition> InstrumentDefinition::fromPcmCycle(c
 }
 
 std::vector<std::uint8_t> encodeState(const InstrumentDefinition& definition,double gainPercent,
-                                    EnvelopeSettings settings,ReverbSettings effects,NoiseSettings generator) {
+                                    EnvelopeSettings settings,ReverbSettings effects,NoiseSettings generator,PmonSettings modulation) {
   gain(gainPercent);
   envelope(settings);
   reverb(effects);
   noise(generator);
+  pmon(modulation);
   const auto& bank=definition.bankBytes();
   if(bank.size()>vab::kMaxFileBytes)fail("SPU state: VAB exceeds 1 MiB");
   const bool pcm=definition.kind()==InstrumentDefinition::Kind::PcmCycle;
@@ -131,14 +142,19 @@ std::vector<std::uint8_t> encodeState(const InstrumentDefinition& definition,dou
   putGain(bytes.data()+64+size,effects.volumeRight);
   putWord(bytes.data()+72+size,generator.enabled?1u:0u);
   putWord(bytes.data()+76+size,generator.clock);
+  putWord(bytes.data()+80+size,modulation.enabled?1u:0u);
+  putWord(bytes.data()+84+size,static_cast<std::uint32_t>(modulation.waveform));
+  putGain(bytes.data()+88+size,modulation.ratio);
+  putGain(bytes.data()+96+size,modulation.depth);
+  putGain(bytes.data()+104+size,modulation.decayMs);
   return bytes;
 }
 
 std::vector<std::uint8_t> encodeState(
     const std::shared_ptr<const InstrumentDefinition>& definition,double gainPercent,
-    EnvelopeSettings settings,ReverbSettings effects,NoiseSettings generator) {
+    EnvelopeSettings settings,ReverbSettings effects,NoiseSettings generator,PmonSettings modulation) {
   if(!definition)throw std::invalid_argument("SPU state: missing instrument definition");
-  return encodeState(*definition,gainPercent,settings,effects,generator);
+  return encodeState(*definition,gainPercent,settings,effects,generator,modulation);
 }
 
 SavedInstrumentState decodeState(vab::BytesView bytes) {
@@ -149,7 +165,7 @@ SavedInstrumentState decodeState(vab::BytesView bytes) {
   if(version<1||version>kStateSchemaVersion)fail("SPU state: unsupported schema");
   if(word(bytes.data+12)!=bytes.size)fail("SPU state: declared length differs");
   const auto kind=word(bytes.data+16),program=word(bytes.data+20),tone=word(bytes.data+24),n=word(bytes.data+28);
-  const auto fixed=version==1?40:version==2?48:version<=4?72:kStateFixedBytes;
+  const auto fixed=version==1?40:version==2?48:version<=4?72:version==5?80:kStateFixedBytes;
   if(n>vab::kMaxFileBytes||std::uint64_t(n)+fixed!=bytes.size)fail("SPU state: invalid bank length");
   if(kind>(version>=4?2u:1u))fail("SPU state: unsupported instrument kind");
   if(kind==0&&(n||program||tone))fail("SPU state: builtin must not contain a bank or selection");
@@ -180,14 +196,22 @@ SavedInstrumentState decodeState(vab::BytesView bytes) {
     generator.enabled=(flags&1)!=0;generator.clock=word(bytes.data+76+n);
     noise(generator);
   }
-  if(kind==0)return {InstrumentDefinition::builtin(),gainPercent,settings,effects,generator};
+  PmonSettings modulation;
+  if(version>=6) {
+    const auto flags=word(bytes.data+80+n);
+    if(flags&~1u)fail("SPU state: unknown PMON flags");
+    modulation.enabled=(flags&1)!=0;modulation.waveform=static_cast<WaveformShape>(word(bytes.data+84+n));
+    modulation.ratio=readGain(bytes.data+88+n);modulation.depth=readGain(bytes.data+96+n);
+    modulation.decayMs=readGain(bytes.data+104+n);pmon(modulation);
+  }
+  if(kind==0)return {InstrumentDefinition::builtin(),gainPercent,settings,effects,generator,modulation};
   if(kind==2) {
     PcmCycle cycle{};
     for(std::size_t i=0;i<cycle.size();++i)cycle[i]=readSample(bytes.data+kStateHeaderBytes+i*4);
-    return {InstrumentDefinition::fromPcmCycle(cycle),gainPercent,settings,effects,generator};
+    return {InstrumentDefinition::fromPcmCycle(cycle),gainPercent,settings,effects,generator,modulation};
   }
   std::vector<std::uint8_t> bank(bytes.data+kStateHeaderBytes,bytes.data+kStateHeaderBytes+n);
-  return {InstrumentDefinition::fromVab(std::move(bank),program,tone),gainPercent,settings,effects,generator};
+  return {InstrumentDefinition::fromVab(std::move(bank),program,tone),gainPercent,settings,effects,generator,modulation};
 }
 
 } // namespace tetorica

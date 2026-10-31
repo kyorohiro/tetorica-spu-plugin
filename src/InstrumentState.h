@@ -7,6 +7,7 @@
 #include "SpuReverb.h"
 #include "SpuWaveform.h"
 #include "SpuNoise.h"
+#include "SpuPmon.h"
 #include <array>
 #include <cstddef>
 #include <cstdint>
@@ -17,8 +18,8 @@ namespace tetorica {
 
 inline constexpr std::size_t kStateHeaderBytes=32;
 inline constexpr std::array<std::uint8_t,8> kStateMagic{{'T','S','P','U','S','T','0','1'}};
-inline constexpr std::uint32_t kStateSchemaVersion=5;
-inline constexpr std::size_t kStateFixedBytes=80;
+inline constexpr std::uint32_t kStateSchemaVersion=6;
+inline constexpr std::size_t kStateFixedBytes=112;
 inline constexpr std::size_t kMaxStateBytes=vab::kMaxFileBytes+kStateFixedBytes;
 
 // Factory-created immutable authoring data, independent of mutable audio state.
@@ -60,15 +61,16 @@ struct SavedInstrumentState {
   EnvelopeSettings envelope{};
   ReverbSettings reverb{};
   NoiseSettings noise{};
+  PmonSettings pmon{};
 };
 
 // Pure bounded codec: no native SDK, filesystem, audio callbacks or handles.
 // Throws on malformed/oversized/unsupported state; requires an exact total size.
 std::vector<std::uint8_t> encodeState(const InstrumentDefinition& definition,double gainPercent,
-                                    EnvelopeSettings envelope={},ReverbSettings reverb={},NoiseSettings noise={});
+                                    EnvelopeSettings envelope={},ReverbSettings reverb={},NoiseSettings noise={},PmonSettings pmon={});
 std::vector<std::uint8_t> encodeState(
     const std::shared_ptr<const InstrumentDefinition>& definition,double gainPercent,
-    EnvelopeSettings envelope={},ReverbSettings reverb={},NoiseSettings noise={});
+    EnvelopeSettings envelope={},ReverbSettings reverb={},NoiseSettings noise={},PmonSettings pmon={});
 SavedInstrumentState decodeState(vab::BytesView bytes);
 
 class SpuInstrument;

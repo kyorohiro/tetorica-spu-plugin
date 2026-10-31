@@ -29,6 +29,12 @@ TetoricaSPU::TetoricaSPU(const iplug::InstanceInfo& info)
   GetParam(kParamReverbToneSend)->InitBool("Use Tone reverb send", false);
   GetParam(kParamNoiseEnabled)->InitBool("SPU Noise", false);
   GetParam(kParamNoiseClock)->InitInt("Shared Noise clock", 48, 0, 63);
+  GetParam(kParamPmonEnabled)->InitBool("SPU PMON (Noise takes priority)", false);
+  GetParam(kParamPmonWaveform)->InitEnum("PMON modulator", 0,
+    {"Sine", "Triangle", "Saw", "Square"});
+  GetParam(kParamPmonRatio)->InitDouble("PMON ratio", 1., 0.01, 16., 0.01);
+  GetParam(kParamPmonDepth)->InitDouble("PMON depth", 0.5, 0., 1., 0.001);
+  GetParam(kParamPmonDecay)->InitDouble("PMON decay (0 = Hold)", 500., 0., 5000., 1., "ms");
 
 #if IPLUG_EDITOR
   mMakeGraphicsFunc = [this]() {
@@ -214,17 +220,35 @@ void TetoricaSPU::discardCarriedNotes() noexcept
   mMidiCount = kept;
 }
 
-void TetoricaSPU::applyNoiseParameters() noexcept
+void TetoricaSPU::applySourceParameters() noexcept
 {
   const double enabled = GetParam(kParamNoiseEnabled)->Value();
   const double clock = GetParam(kParamNoiseClock)->Value();
+  const double pmonEnabled = GetParam(kParamPmonEnabled)->Value();
+  const double waveform = GetParam(kParamPmonWaveform)->Value();
+  const double ratio = GetParam(kParamPmonRatio)->Value();
+  const double depth = GetParam(kParamPmonDepth)->Value();
+  const double decay = GetParam(kParamPmonDecay)->Value();
   if (!std::isfinite(enabled) || enabled < 0 || enabled > 1 || std::floor(enabled) != enabled ||
-      !std::isfinite(clock) || clock < 0 || clock > 63 || std::floor(clock) != clock)
+      !std::isfinite(clock) || clock < 0 || clock > 63 || std::floor(clock) != clock ||
+      !std::isfinite(pmonEnabled) || pmonEnabled < 0 || pmonEnabled > 1 || std::floor(pmonEnabled) != pmonEnabled ||
+      !std::isfinite(waveform) || waveform < 0 || waveform > 3 || std::floor(waveform) != waveform ||
+      !std::isfinite(ratio) || ratio < 0.01 || ratio > 16 ||
+      !std::isfinite(depth) || depth < 0 || depth > 1 ||
+      !std::isfinite(decay) || decay < 0 || decay > 5000)
     return;
   auto& instrument = mEngines.instrument();
-  const bool previous = instrument.noise().enabled;
+  const bool previousNoise = instrument.noise().enabled;
+  const bool previousPmon = instrument.pmon().enabled;
   const tetorica::NoiseSettings settings{enabled != 0, static_cast<std::uint32_t>(clock)};
-  if (instrument.setNoise(settings) && previous != settings.enabled)
+  const tetorica::PmonSettings pmon{pmonEnabled != 0 && !settings.enabled,
+    static_cast<tetorica::WaveformShape>(static_cast<unsigned>(waveform)), ratio, depth, decay};
+  // Raw host flags are independently automatable and saved verbatim. Resolve
+  // one mode before applying: a simultaneous Noise+PMON tuple uses Noise.
+  // This avoids toggling/panicking between both modes on every audio block.
+  instrument.setNoise(settings);
+  instrument.setPmon(pmon);
+  if (previousNoise != instrument.noise().enabled || previousPmon != instrument.pmon().enabled)
     // The old source's future NoteOns must not restart after the mode panic.
     // Current-block host events and carried wheel/pedal still belong to input.
     discardCarriedNotes();
@@ -302,7 +326,7 @@ void TetoricaSPU::ProcessBlock(iplug::sample**, iplug::sample** outputs, int nFr
 
   applyEnvelopeParameters();
   applyReverbParameters();
-  applyNoiseParameters();
+  applySourceParameters();
 
   const double requestedGain = GetParam(kParamGain)->Value() / 100.;
   const double gain = std::isfinite(requestedGain) ? std::clamp(requestedGain, 0., 1.) : 0.;
