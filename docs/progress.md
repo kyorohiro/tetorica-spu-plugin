@@ -1,5 +1,14 @@
 # 作業記録
 
+## 2026-10-31 JST — ADSR編集の開始チェックポイント
+
+- `ed9bb31`、main/origin同期・clean treeから開始。実装前に今回の範囲をTODOへ保存した。
+- Tone由来ADSRを保つCustom override、9つのrate/mode、Apply edits、概形graphを追加する。
+  Gainのparameter index 0を保ち、旧stateはCustom Offで復元する。
+- Native SDKにはlive envelope refresh APIがある。レジスタ更新と明示refreshを使い分け、KONやsample reloadを行わない。
+- 次: core・host parameter/state・UIを実装し、実AU/VST3と旧projectの互換性を検証する。
+  この時点ではADSRコード・build・検証・installed AU更新は未実施。
+
 ## 2026-10-31 JST — MIDI表現のCI成功、installed AU更新も完了
 
 - 実装`69186420360e1b25888b5f17e9572ee957b882ca`をpushし、[CI 41199344245](https://github.com/kyorohiro/tetorica-spu-plugin/actions/runs/41199344245)全job成功。
