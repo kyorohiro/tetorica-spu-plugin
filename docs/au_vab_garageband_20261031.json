@@ -146,7 +146,7 @@
     }
   },
   "not_verified": [
-    "Plugin Load VAB / Program / Tone clicks in the remote GarageBand AU view; CUA hover works but both Load and Builtin actions did not respond, cause not established",
+    "End-to-end custom VAB file selection, Program/Tone changes in the remote GarageBand AU view; the user confirmed that Load VAB opens its dialog. CUA file-selection input moved to the background document.",
     "Project dirty notification from a plugin Tone-only edit",
     "Closing the AU editor while its file dialog or popup is open",
     "Physical listening, loopback and long realtime endurance",
@@ -167,5 +167,19 @@
       "manufacturer": "Tetr",
       "version": 256
     }
+  },
+  "custom_ui_followup": {
+    "file_dialog_opened_by_user": true,
+    "user_response": "ファイル選択が開く",
+    "code_fix_made": false,
+    "prepared_vab_copy": "build/ui-check/garageband-ui-source.vab",
+    "expected_after_custom_file_load": {
+      "program": 3,
+      "tone": 0,
+      "gain_percent": 99,
+      "status": "Loaded"
+    },
+    "cuas_file_selection_completed": false,
+    "observation": "After CUA setValue/Return in the file dialog, focus returned to the main GarageBand region-name editor; unchanged edit was cancelled with Escape. No custom load success is inferred. User was asked to select the prepared file manually."
   }
 }

@@ -1,5 +1,14 @@
 # 作業記録
 
+## 2026-10-31 JST — Load VAB dialogを観測、file選択だけ人の操作待ち
+
+- 開始記録`610f5b2`をpush後、ユーザーが開いたAUのopen-panelをCUAで観測した。
+- file選択の場所指定後、Return入力が背面documentへ移った。region名は変えずEscapeで解除した。
+  人のclickでdialogが開く結果を、アプリ初期化不具合とは扱わず、code修正はしていない。
+- 独自loader確認用に`build/ui-check/garageband-ui-source.vab`を用意し、原本とのhash一致を確認した。
+- ユーザーへfile選択後のP3/T0/Loaded表示を質問した。選択完了の回答後にproject保存とstate照合へ進む。
+- 保存済みcopyは引き続きP3/T1。元project・installed AUは変更していない。
+
 ## 2026-10-31 JST — 人のLoad VAB操作が成功、独自UIの追試を再開
 
 - ユーザーが「ファイル選択が開く」と回答した。人のLoad VAB clickは動作すると確認できた。

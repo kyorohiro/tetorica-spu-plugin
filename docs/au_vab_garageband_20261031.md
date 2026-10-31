@@ -120,7 +120,19 @@ FFTでも同じ帯域を確認した。これはデジタル書き出しの解�
 - 現installed AUの全5 file manifestを今回のJSONの`au.file_sha256`へ記録した。
   次のupdateで`--expected docs/au_vab_garageband_20261031.json`として使用できる。
 
-残る確認は、実際の人のクリックでのAU独自Load VAB / Program / Tone、Toneだけの変更時のproject dirty、
-dialog / popup中のeditor close/reopen。現時点でこれらを成功扱いにはしていない。
+## 人のLoad VAB確認後の追試
+
+- ユーザーから「ファイル選択が開く」と回答があり、Load VABの実clickでdialogが開くことは確認できた。
+  初期化不具合とする根拠はなく、plugin codeは変更していない。
+- CUAから開いたpanelを観測できたが、場所指定後のReturnが背面のGarageBandへ届き、
+  region-name editorへfocusが移った。名前は変更せずEscapeで解除した。
+  これをVAB読み込み成功や、dialogの製品側不具合とは扱わない。
+- 新しい検証用copy `build/ui-check/garageband-ui-source.vab`を用意した。
+  SHAは原本と同じ`71a7de205c0ebe1b8743288d90cd3b0204da9bd81aed9159af31f404d7cf2be6`。
+- ユーザーへこのfileの選択を依頼した。初回読込成功時の期待値はP3/T0/Gain99とLoaded表示。
+  それまでの保存済みprojectはP3/T1なので、成功後のT0 state照合で独自loader経由を識別できる。
+
+残る確認は、AU独自file選択の完了・Program/Tone変更、Toneだけのproject dirty、
+dialog / popup中のeditor close/reopen。Load VABでdialogが開くことと分けて記録する。
 
 物理的な実聴・長時間realtime試験、署名・公証・Release公開とは区別する。
