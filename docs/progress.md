@@ -1,5 +1,16 @@
 # 作業記録
 
+## 2026-10-31 JST — VAB解析・offline音源準備の完了
+
+- 開始TODOを `68ab79c` にcommit / pushしてから実装した。
+- C++ VAB parser・選択Tone準備・fresh Native engine・offline CLIを追加。
+- 原本fixtureとJS oracleを独立repoへ保存。最終parser検査は8,516 assertions / 7,572拒否 / 7 oracle一致。
+- offline / macOS各3 CTest suite、parser ASan/UBSan、公式VST3 47検査、実VST3の3rate PCM/state/schedulerが成功。
+- 既存SineのWAV hashは変更前後で一致。ユーザーComponentsのAUは更新していない。
+- SDKのrepeat bit制限を実PCMで確認。未対応loopを理由付きで拒否し、元データ・vendorは保持した。
+- 詳細と再現コマンドは[VAB offline記録](vab_offline_20261031.md)。次はengine handoff→custom state→file/selection UI。
+- この実装のCI結果はpush後に追記する。Release公開・署名・公証はしていない。
+
 ## 2026-10-31 JST — VAB解析・音源準備の開始
 
 - cleanな `694c892` から再開。実装前に今回の区切りをTODOへ追加した。

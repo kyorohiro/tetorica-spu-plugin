@@ -1,6 +1,7 @@
 // SPDX-License-Identifier: BSD-3-Clause
 // Copyright (c) 2026 kyorohiro
 #include "SpuInstrument.h"
+#include "VabBank.h"
 #include <tetorica/ps1_spu.h>
 #include <algorithm>
 #include <cmath>
@@ -9,7 +10,6 @@
 namespace tetorica {
 namespace {
 constexpr unsigned kSampleAddress = 0x2000;
-constexpr unsigned kCycleFrames = 112;
 constexpr unsigned kVoiceVolume = 0x0c00;
 
 // Original 0.8 * sin(2*pi*n/112), Float32 PCM, encoded with our BSD-3-Clause
@@ -23,12 +23,51 @@ constexpr std::array<std::uint8_t, 64> kSineAdpcm{{
   38,3,172,187,204,204,237,221,255,14,240,2,33,34,51,67
 }};
 bool validChannel(int channel) { return channel >= 0 && channel < 16; }
+
+void validateTone(const vab::PreparedTone& tone) {
+  const auto& bytes=tone.adpcm;
+  if (bytes.empty() || bytes.size()%16 || bytes.size()>vab::kMaxSampleBytes ||
+      tone.decodedFrames!=bytes.size()/16*28)
+    throw std::invalid_argument("VAB Tone: invalid ADPCM length or decoded frame count");
+  if (!std::isfinite(tone.rootFrequencyHz) || tone.rootFrequencyHz<=0 ||
+      !std::isfinite(tone.volumeLeft) || tone.volumeLeft<0 || tone.volumeLeft>1 ||
+      !std::isfinite(tone.volumeRight) || tone.volumeRight<0 || tone.volumeRight>1)
+    throw std::invalid_argument("VAB Tone: invalid tuning or volume");
+  if (tone.loopStartSamples && (*tone.loopStartSamples>=tone.decodedFrames || *tone.loopStartSamples%28))
+    throw std::invalid_argument("VAB Tone: invalid repeat position");
+  std::optional<std::uint32_t> marker;
+  for (std::size_t at=0; at<bytes.size(); at+=16) {
+    const auto flags=bytes[at+1];
+    if ((bytes[at]>>4)>4 || (bytes[at]&15)>12 || (flags&~7) ||
+        bool(flags&1)!=(at+16==bytes.size()))
+      throw std::invalid_argument("VAB Tone: invalid ADPCM packet");
+    if (flags&4) {
+      if (marker) throw std::invalid_argument("VAB Tone: multiple repeat markers");
+      marker=static_cast<std::uint32_t>(at/16*28);
+    }
+  }
+  const bool loop=(bytes[bytes.size()-15]&2)!=0;
+  if (loop!=tone.loopStartSamples.has_value() || (marker && marker!=tone.loopStartSamples))
+    throw std::invalid_argument("VAB Tone: incoherent repeat metadata");
+  // The pinned SDK's repeat-address fallback requires flag2 on that packet.
+  // A flag4-only loop start is structurally valid in the JS importer, but its
+  // native playback stops at END. Reject that subset, never rewrite its bytes.
+  if (loop && !(bytes[(*tone.loopStartSamples/28)*16+1]&2))
+    throw std::invalid_argument("VAB Tone: pinned SPU SDK requires repeat flag 2 at the loop start (flag 4 alone is unsupported)");
+}
 }
 
 SpuInstrument::SpuInstrument() : mChip(ps1_spu_create()) {
   if (!mChip) throw std::runtime_error("Could not create Native SPU");
   try { initialize(); }
   catch (...) { ps1_spu_destroy(mChip); mChip = nullptr; throw; }
+}
+SpuInstrument::SpuInstrument(const vab::PreparedTone& tone) {
+  validateTone(tone);
+  mChip=ps1_spu_create();
+  if (!mChip) throw std::runtime_error("Could not create Native SPU");
+  try { initializeTone(tone); }
+  catch (...) { ps1_spu_destroy(mChip); mChip=nullptr; throw; }
 }
 SpuInstrument::~SpuInstrument() { ps1_spu_destroy(mChip); }
 
@@ -68,6 +107,45 @@ void SpuInstrument::initialize() {
   mNativeFrames = 0;
   if (!mHealthy) throw std::runtime_error("Could not prime Native SPU caches");
 }
+void SpuInstrument::initializeTone(const vab::PreparedTone& tone) {
+  constexpr unsigned address=0x1000;
+  const unsigned repeat=address+tone.loopStartSamples.value_or(0)/28*16;
+  mRootFrequencyHz=tone.rootFrequencyHz;
+  mVolumeLeft=static_cast<unsigned>(std::lround(kVoiceVolume*tone.volumeLeft));
+  mVolumeRight=static_cast<unsigned>(std::lround(kVoiceVolume*tone.volumeRight));
+  mReverbSend=tone.reverb;
+  if (ps1_spu_sample_rate()!=kNativeSampleRate || !ps1_spu_set_mix_headroom(mChip,4) ||
+      !ps1_spu_load_ram(mChip,address,tone.adpcm.data(),static_cast<std::uint32_t>(tone.adpcm.size())))
+    throw std::runtime_error("Could not load Native SPU VAB Tone");
+  write(0x180,0x3fff); write(0x182,0x3fff); write(0x1aa,0xc000);
+  for (unsigned voice=0; voice<kVoiceCount; ++voice) {
+    const unsigned base=voice*16;
+    write(base,0); write(base+2,0); write(base+4,0x3fff);
+    write(base+6,address/8); write(base+8,0x000f);
+    write(base+10,0x1fc0); write(base+14,repeat/8);
+  }
+  write(0x188,0xffff); write(0x18a,0x00ff);
+  // Force the first END off-thread, including loops at the far end of a long
+  // sample. Temporary held ADSR prevents authored decay from stopping early.
+  // No wall-clock sleep: bounded synchronous offline rendering, all voices mute.
+  unsigned warmFrames=static_cast<unsigned>((std::uint64_t(tone.decodedFrames)*4096+0x3ffe)/0x3fff)+256;
+  while (warmFrames) {
+    const unsigned count=std::min(warmFrames,1024u);
+    renderNative(mNativeLeft.data(),mNativeRight.data(),count);
+    warmFrames-=count;
+  }
+  // Fast temporary release must finish before restoring an infinite/slow
+  // authored release. Otherwise the first real note could fade a priming voice.
+  write(0x18c,0xffff); write(0x18e,0x00ff);
+  renderNative(mNativeLeft.data(),mNativeRight.data(),1024);
+  for (unsigned voice=0; voice<kVoiceCount; ++voice) {
+    const unsigned base=voice*16;
+    write(base+4,0x1000); write(base+8,tone.adsr1); write(base+10,tone.adsr2);
+  }
+  panic();
+  mNativeFrames=0;
+  if (!mHealthy) throw std::runtime_error("Could not prime Native SPU VAB caches");
+}
 void SpuInstrument::clearRateHistory() noexcept {
   mPhase = 0; mRateInitialized = false;
   mPreviousLeft = mPreviousRight = mCurrentLeft = mCurrentRight = 0;
@@ -96,10 +174,15 @@ void SpuInstrument::noteOn(int note, int velocity, int channel) noexcept {
     for (int i=1; i<kVoiceCount; ++i) if (mVoices[i].order < mVoices[slot].order) slot=i;
   }
   const double frequency = 440 * std::exp2((note-69)/12.0);
-  const auto pitch = static_cast<unsigned>(std::clamp(std::lround(4096*frequency/(44100.0/kCycleFrames)), 1l, 0x3fffl));
-  const unsigned volume = kVoiceVolume * static_cast<unsigned>(velocity) / 127;
+  const auto pitch = static_cast<unsigned>(std::lround(std::clamp(4096*frequency/mRootFrequencyHz, 1.0, 16383.0)));
+  const unsigned volumeLeft = mVolumeLeft * static_cast<unsigned>(velocity) / 127;
+  const unsigned volumeRight = mVolumeRight * static_cast<unsigned>(velocity) / 127;
   const unsigned base = static_cast<unsigned>(slot)*16;
-  write(base, volume); write(base+2, volume); write(base+4, pitch);
+  write(base, volumeLeft); write(base+2, volumeRight); write(base+4, pitch);
+  if (mReverbSend) {
+    const unsigned reg=0x198+(slot>=16?2:0);
+    write(reg,ps1_spu_read(mChip,reg)|(1u<<(slot%16)));
+  }
   mHealthy = (ps1_spu_audition_key(mChip, static_cast<unsigned>(slot), 1) != 0) && mHealthy;
   mVoices[slot] = {note, channel, true, ++mOrder};
   mCursor = (static_cast<unsigned>(slot)+1)%kVoiceCount;

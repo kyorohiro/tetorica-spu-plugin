@@ -1,13 +1,14 @@
 # VAB import plan — 2026-10-31
 
-This is a proposed Phase 3 design, not an implemented loader or a claim of VAB
-support in the current plugin. The present plugin plays its original built-in
-sine bank. Keep the bounded parser, instrument preparation, DSP handoff and UI
-as separately verifiable steps.
+This records the Phase 3 design. The bounded C++ parser, selected-Tone preparation
+and fresh offline instrument are implemented in `src/VabBank.*` and
+`src/SpuInstrument.*`; `spu_vab_render` exercises them without a DAW. The plugin
+UI still plays its original built-in sine bank. DSP handoff, state and file UI
+remain subsequent steps, not a claim of VAB support in the current plugin UI.
 
-## Resume with a bounded parser
+## Bounded parser milestone
 
-The first implementation should add a UI-independent C++ parser and a selected
+The first implementation adds a UI-independent C++ parser and a selected
 Tone preparation function, with no live SPU upload or file dialog yet. Match the
 existing JavaScript implementation against the original synthetic fixture:
 
@@ -167,19 +168,21 @@ Proposed preparation on a worker/state-loading thread:
 Do not infer hard real-time certification from a C++ new/delete probe; it is a
 specific regression check for the exercised immutable-bank path.
 
-### Unverified loop-flag concern
+### Confirmed pinned-SDK loop limitation
 
-Source inspection suggests an edge case to test: the existing JavaScript
+The Native PCM probe confirmed an edge case: the existing JavaScript
 validator accepts a loop-start marker with flag `4`, while the pinned SDK's
 sample-cache discovery checks start+repeat bits (`6`) and a repeat-address
 fallback checks the repeat bit. The existing nonzero-loop JavaScript test checks
 metadata and does not establish actual playback for every such flag pattern.
 
-This is an **unverified compatibility concern**, not an established audible bug
-or a reason to change the SDK now. Add an independent PCM/loop-continuity test
-for flag `4` and nonzero loop starts before making support claims. If it fails,
-document the supported subset or address the SDK separately; preserve user
-payload bytes rather than silently changing them.
+For otherwise identical packets with a nonzero loop start, flag `4` stopped
+producing audio after END; flag `6` continued. The importer still parses both
+patterns, preserving parity and original bytes. Native instrument preparation
+rejects looping samples whose repeat-address packet lacks repeat bit `2`,
+including markerless fallback loops that point to a flag-0 first packet.
+The SDK is pinned and unchanged. A later SDK fix should be independently tested
+before widening this supported subset.
 
 ## Prepared-engine handoff
 

@@ -6,9 +6,10 @@
 #include <cstdint>
 
 namespace tetorica {
+namespace vab { struct PreparedTone; }
 
 // One exclusive-owner SPU instance. Construct/destruct away from the audio
-// callback: construction loads the original sine and primes its ADPCM caches.
+// callback: construction loads an immutable sample and primes its ADPCM caches.
 // The caller serializes MIDI and render calls on its audio thread and splits
 // render blocks at MIDI event offsets. No SDK reset or RAM upload runs there.
 //
@@ -21,6 +22,10 @@ public:
   static constexpr int kNativeSampleRate = 44100;
 
   SpuInstrument();
+  // Prepare a validated immutable VAB Tone away from the audio thread. Throws
+  // on invalid metadata or SDK-unsupported repeat flags; retains original bytes.
+  // Imported reverb send is retained, with shared reverb still Off initially.
+  explicit SpuInstrument(const vab::PreparedTone& tone);
   ~SpuInstrument();
   SpuInstrument(const SpuInstrument&) = delete;
   SpuInstrument& operator=(const SpuInstrument&) = delete;
@@ -29,8 +34,9 @@ public:
   // change the existing instrument. A valid prepare silences all voices and
   // clears only adapter phase/history, retaining the warmed SDK caches.
   bool prepare(double hostSampleRate) noexcept;
-  // MIDI0--127 accepted; this112-sample sine saturates the hardware14-bit
-  // PITCH register above~1.575kHz (notes91+). Velocity0 is NoteOff.
+  // MIDI0--127 accepted; tuning saturates the hardware14-bit PITCH register.
+  // Built-in112-sample sine reaches its limit above~1.575kHz (notes92+).
+  // Imported range depends on rootFrequencyHz. Velocity0 is NoteOff.
   void noteOn(int note, int velocity, int channel = 0) noexcept;
   void noteOff(int note, int channel = 0) noexcept;
   void allNotesOff(int channel = -1) noexcept; // Authored release, optional MIDI channel.
@@ -53,6 +59,7 @@ private:
   bool renderNative(float* left, float* right, unsigned count) noexcept;
   void clearRateHistory() noexcept;
   void initialize();
+  void initializeTone(const vab::PreparedTone& tone);
 
   void* mChip = nullptr;
   bool mHealthy = true;
@@ -61,6 +68,9 @@ private:
   std::uint64_t mOrder = 0;
   std::uint64_t mNativeFrames = 0;
   double mHostRate = kNativeSampleRate;
+  double mRootFrequencyHz = kNativeSampleRate / 112.0;
+  unsigned mVolumeLeft = 0x0c00, mVolumeRight = 0x0c00;
+  bool mReverbSend = false;
   double mRatio = 1;
   double mPhase = 0;
   bool mRateInitialized = false;

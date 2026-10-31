@@ -1,0 +1,114 @@
+// SPDX-License-Identifier: BSD-3-Clause
+// Regenerate/check a bounded C++ oracle using the existing JavaScript importer.
+// Fixture bytes are original synthetic data, never extracted game material.
+import assert from 'node:assert/strict';
+import {execFileSync} from 'node:child_process';
+import {createHash} from 'node:crypto';
+import {readFile, writeFile, mkdir} from 'node:fs/promises';
+import path from 'node:path';
+import {fileURLToPath, pathToFileURL} from 'node:url';
+
+const testDir = path.dirname(fileURLToPath(import.meta.url));
+const fixtureDir = path.join(testDir, 'fixtures/vab');
+const args = process.argv.slice(2);
+const parentAt = args.indexOf('--parent');
+if (parentAt < 0 || !args[parentAt + 1] || args.some((arg, index) =>
+  arg !== '--write' && index !== parentAt && index !== parentAt + 1)) {
+  throw new Error('Usage: node tests/check_vab_fixture_parity.mjs --parent /path/to/hello_ymfm [--write]');
+}
+const parent = path.resolve(args[parentAt + 1]);
+const write = args.includes('--write');
+const sourceDir = path.join(parent, 'docs/playground/samples/spu-import');
+const names = ['spu-synth-demo.vab', 'demo.vh', 'demo.vb', 'LICENSE'];
+const sourceFiles = new Map(await Promise.all(names.map(async name =>
+  [name, await readFile(path.join(sourceDir, name))])));
+const sha = bytes => createHash('sha256').update(bytes).digest('hex');
+const modulePath = path.join(parent, 'docs/playground/playground_ps1_vab.js');
+const {readVab, prepareVabTone} = await import(pathToFileURL(modulePath).href);
+const {preparePs1ADPCM} = await import(pathToFileURL(path.join(parent, 'docs/js/ps1synth.js')).href);
+const complete = readVab(sourceFiles.get(names[0]));
+assert.deepEqual(readVab(sourceFiles.get(names[1]), sourceFiles.get(names[2])), complete);
+const toneFields = ['program', 'index', 'sample', 'mode', 'volume', 'pan', 'center', 'shift',
+  'keyLow', 'keyHigh', 'adsr1', 'adsr2', 'vibratoWidth', 'vibratoTime',
+  'portamentoWidth', 'portamentoTime', 'bendMin', 'bendMax'];
+const toneObject = tone => Object.fromEntries(toneFields.map(key => [key, tone[key]]));
+const cases = [];
+function add(name, flatIndex, mutate = () => {}) {
+  const bank = readVab(sourceFiles.get(names[0]));
+  mutate(bank);
+  const prepared = prepareVabTone(bank, flatIndex);
+  const checked = preparePs1ADPCM(prepared.adpcm, prepared.options);
+  cases.push({name, flatIndex, adpcm: [...prepared.adpcm],
+    rootFrequencyHz: checked.rootFrequencyHz, decodedFrames: checked.decodedFrames,
+    loopStartSamples: checked.loopStartSamples, adsr1: prepared.preset.adsr1,
+    adsr2: prepared.preset.adsr2, volumeLeft: prepared.preset.volumeLeft,
+    volumeRight: prepared.preset.volumeRight, reverb: prepared.preset.reverb,
+    trimmedBytes: prepared.trimmedBytes, tone: toneObject(prepared.tone)});
+}
+add('original0', 0); add('original1', 1); add('original2', 2);
+add('volumePanTuning', 0, bank => {
+  bank.masterVolume = 91; bank.masterPan = 17;
+  bank.programs[0].volume = 83; bank.programs[0].pan = 22;
+  Object.assign(bank.tones[0], {volume: 76, pan: 108, center: 64, shift: 37,
+    mode: 4, adsr1: 0x9f12, adsr2: 0xa4c2, vibratoWidth: 5, vibratoTime: 6,
+    portamentoWidth: 7, portamentoTime: 8, bendMin: 9, bendMax: 10});
+});
+add('nonzeroLoop', 0, bank => {
+  bank.samples[0].bytes[1] &= ~4;
+  bank.samples[0].bytes[17] |= 4;
+});
+add('loopFallback', 0, bank => { bank.samples[0].bytes[1] &= ~4; });
+add('earlyEnd', 0, bank => { bank.samples[0].bytes[1] = 1; });
+const expected = {schema: 1,
+  provenance: {
+    repository: 'https://github.com/kyorohiro/tetorica-fm2612',
+    sourceCommit: execFileSync('git', ['rev-parse', 'HEAD'], {cwd: parent, encoding: 'utf8'}).trim(),
+    description: 'Original synthetic Sony-format fixture; no game data or external recordings.',
+    regenerate: 'node tests/check_vab_fixture_parity.mjs --parent /path/to/hello_ymfm --write',
+    files: Object.fromEntries(names.map(name => [name, {bytes: sourceFiles.get(name).length,
+      sha256: sha(sourceFiles.get(name))}])),
+    oracleSources: Object.fromEntries(await Promise.all([
+      'docs/playground/playground_ps1_vab.js', 'docs/js/ps1synth.js',
+      'test/helpers/spu_vab_fixture.mjs',
+    ].map(async name => [name, sha(await readFile(path.join(parent, name)))]))),
+  },
+  bank: {version: complete.version, id: complete.id, masterVolume: complete.masterVolume,
+    masterPan: complete.masterPan,
+    programs: complete.programs.map(program => ({index: program.index,
+      volume: program.volume, pan: program.pan,
+      toneIndices: program.tones.map(tone => complete.tones.indexOf(tone))})),
+    tones: complete.tones.map(toneObject),
+    samples: complete.samples.map(sample => ({index: sample.index, bytes: [...sample.bytes]}))},
+  cases};
+const csv = values => values.join(', ');
+const toneCpp = tone => `{${csv(toneFields.map(key => tone[key]))}}`;
+const header = [
+  '// SPDX-License-Identifier: BSD-3-Clause',
+  '// Generated by tests/check_vab_fixture_parity.mjs from the parent JavaScript importer.',
+  '// See expected.json and README.md for hashes, provenance and reproduction.',
+  '#pragma once', '#include <cstddef>', '#include <cstdint>',
+  'namespace vab_fixture {',
+  'struct Tone { unsigned program,index,sample,mode,volume,pan,center,shift,keyLow,keyHigh,adsr1,adsr2,vibratoWidth,vibratoTime,portamentoWidth,portamentoTime,bendMin,bendMax; };',
+  'struct Program { unsigned index,volume,pan,firstTone,toneCount; };',
+  'struct Sample { unsigned index; const std::uint8_t* bytes; std::size_t size; };',
+  'struct Prepared { const char* name; std::size_t flatIndex; const std::uint8_t* adpcm; std::size_t size; double rootFrequencyHz; unsigned decodedFrames; int loopStartSamples; unsigned adsr1,adsr2; double volumeLeft,volumeRight; bool reverb; std::size_t trimmedBytes; Tone tone; };',
+  `inline constexpr unsigned kVersion=${complete.version}, kId=${complete.id}, kMasterVolume=${complete.masterVolume}, kMasterPan=${complete.masterPan};`,
+  ...complete.samples.map((sample, index) => `inline constexpr std::uint8_t kSample${index}[]{${csv(sample.bytes)}};`),
+  `inline constexpr Sample kSamples[]{${complete.samples.map((sample, index) => `{${sample.index},kSample${index},sizeof(kSample${index})}`).join(',')}};`,
+  `inline constexpr Tone kTones[]{${complete.tones.map(toneCpp).join(',')}};`,
+  `inline constexpr Program kPrograms[]{${expected.bank.programs.map(program => `{${csv([program.index, program.volume, program.pan, program.toneIndices[0], program.toneIndices.length])}}`).join(',')}};`,
+  ...cases.map((item, index) => `inline constexpr std::uint8_t kPrepared${index}[]{${csv(item.adpcm)}};`),
+  'inline constexpr Prepared kPrepared[]{',
+  ...cases.map((item, index) => `  {"${item.name}",${item.flatIndex},kPrepared${index},sizeof(kPrepared${index}),${item.rootFrequencyHz},${item.decodedFrames},${item.loopStartSamples ?? -1},${item.adsr1},${item.adsr2},${item.volumeLeft},${item.volumeRight},${item.reverb},${item.trimmedBytes},${toneCpp(item.tone)}},`),
+  '};', '} // namespace vab_fixture', '',
+].join('\n');
+const outputs = new Map([...sourceFiles, ['expected.json', JSON.stringify(expected, null, 2) + '\n'],
+  ['expected.h', header]]);
+if (write) {
+  await mkdir(fixtureDir, {recursive: true});
+  for (const [name, bytes] of outputs) await writeFile(path.join(fixtureDir, name), bytes);
+} else {
+  for (const [name, bytes] of outputs)
+    assert.deepEqual(await readFile(path.join(fixtureDir, name)), Buffer.from(bytes), `${name} differs`);
+}
+console.log(`PASS JavaScript VAB oracle: complete/split metadata, ${cases.length} selected-Tone cases and fixture/source hashes${write ? ' (written)' : ''}`);

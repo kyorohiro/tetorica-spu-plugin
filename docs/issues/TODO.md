@@ -14,15 +14,16 @@ Native Sineの最小プラグインはローカルでbuild・自動検証済み�
 [最初のCI](https://github.com/kyorohiro/tetorica-spu-plugin/actions/runs/41180834350)も成功。
 AU / GarageBandでの録音・保存・復元・WAVE書出しを追試済み。
 [AU検証を含む修正版CI](https://github.com/kyorohiro/tetorica-spu-plugin/actions/runs/41183069247)も全job成功。
-次は[VAB取り込み計画](../vab_import_plan.md)の純粋パーサー・Tone準備関数から進む。
+[VAB解析・offline音源準備](../vab_offline_20261031.md)も完了。
+次は[VAB取り込み計画](../vab_import_plan.md)のengine handoff・DAW state・UI接続へ進む。
 
 ### VAB実装の今回の区切り（2026-10-31）
 
-- [ ] UI非依存のC++ VAB v6/v7パーサー（complete / 明示VH+VB）を実装する。
-- [ ] 選択ToneのADPCM・tuning・ADSR・loop・volume/panを検証・準備する。
-- [ ] オリジナルfixtureを独立repoへ取り込み、Web版との結果照合と不正入力の検査を追加する。
-- [ ] 準備したToneをNative音源でoffline演奏し、長いsample・loop・事前cache準備を検査する。
-- [ ] build / 既存pluginの回帰検査を行い、結果と次の入口をcommit / pushする。
+- [x] UI非依存のC++ VAB v6/v7パーサー（complete / 明示VH+VB）を実装する。
+- [x] 選択ToneのADPCM・tuning・ADSR・loop・volume/panを検証・準備する。
+- [x] オリジナルfixtureを独立repoへ取り込み、Web版との結果照合と不正入力の検査を追加する。
+- [x] 準備したToneをNative音源でoffline演奏し、長いsample・loop・事前cache準備を検査する。
+- [x] build / 既存pluginの回帰検査を行い、結果と次の入口を記録する。commit / push後のCIも確認する。
 
 この区切りではファイル選択UI・再生中の音色交換・DAWへのVAB保存はまだ公開しない。
 それぞれ音源準備と別に検証してから接続する。
@@ -82,8 +83,13 @@ AU / GarageBandでの録音・保存・復元・WAVE書出しを追試済み。
 
 ## Phase 3: VAB楽器と音作り
 
+- [x] C++ parser・選択Tone準備・新規Native instanceのoffline再生を実装・検証する。
+- [x] オリジナルVABのTone一覧・WAV書出しCLIを用意する（`spu_vab_render`）。
+- [ ] workerで準備したengineを安全に交換する。世代管理・audio thread外の破棄・queue満杯時を検査する。
+- [ ] version付きembedded bank stateを実装する。復元直後の最初のrenderと不正stateのatomic failureを検査する。
 - [ ] VAB読み込み、Program / Tone選択を追加する。
 - [ ] サンプルを含む音色と設定のproject保存・復元を実装する。
+- [ ] Native SDKのrepeat先packetにflag 2がないloopを別途修正・検証する。現在のengineは明示的に拒否、parserは元bytesを保持する。
 - [ ] ADSR / Reverb / Noise / PMONを順に公開する。
 - [ ] 必要に応じてsoftware morph等のWeb版機能を移す（SPU実機機能とは表示を分ける）。
 
