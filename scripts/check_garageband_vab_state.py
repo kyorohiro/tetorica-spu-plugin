@@ -14,7 +14,7 @@ import plistlib
 import struct
 
 MAX_BANK = 1024 * 1024
-MAX_STATE = MAX_BANK + 72
+MAX_STATE = MAX_BANK + 80
 MAX_PROJECT_DATA = 64 * 1024 * 1024
 MAX_XML = 2 * 1024 * 1024
 MAX_ALTERNATIVES = 128
@@ -90,11 +90,12 @@ def decode_payload(payload):
                     envelope={'enabled': False, 'live': True, 'adsr1': 0x000f, 'adsr2': 0x1fc0},
                     reverb={'preset': 0, 'enabled': False, 'use_tone_send': False,
                             'volume_left': .25, 'volume_right': .25},
+                    noise={'enabled': False, 'clock': 48},
                     bank_bytes=0, bank_sha256=None), b''
     if len(payload) < 40 or payload[:8] != b'TSPUST01':
         raise ValueError('Expected complete TSPUST01 custom state or legacy Gain')
     schema, total, kind, program, tone, size = struct.unpack_from('<6I', payload, 8)
-    if schema not in (1, 2, 3, 4) or total != len(payload) or size > MAX_BANK or total != {1: 40, 2: 48, 3: 72, 4: 72}[schema] + size:
+    if schema not in (1, 2, 3, 4, 5) or total != len(payload) or size > MAX_BANK or total != {1: 40, 2: 48, 3: 72, 4: 72, 5: 80}[schema] + size:
         raise ValueError('Invalid state schema, total or bank length')
     if kind not in ((0, 1, 2) if schema >= 4 else (0, 1)) or program > 127 or tone > 15:
         raise ValueError('Invalid state kind or sparse selection')
@@ -113,6 +114,9 @@ def decode_payload(payload):
     preset, effects, left, right = struct.unpack_from('<2I2d', payload, 48 + size) if schema >= 3 else (0, 0, .25, .25)
     if preset > 7 or effects & ~3 or any(not math.isfinite(value) or not 0 <= value <= 1 for value in (left, right)):
         raise ValueError('Invalid reverb preset, flags or return volumes')
+    generator, clock = struct.unpack_from('<2I', payload, 72 + size) if schema >= 5 else (0, 48)
+    if generator & ~1 or clock > 63:
+        raise ValueError('Invalid Noise flags or clock')
     bank = payload[32:32 + size]
     if kind == 2 and any(not math.isfinite(value) or not -1 <= value <= 1 for value in struct.unpack('<112f', bank)):
         raise ValueError('PCM cycle samples must be finite in [-1, 1]')
@@ -122,6 +126,7 @@ def decode_payload(payload):
                           'adsr1': packed & 65535, 'adsr2': packed >> 16},
                 reverb={'preset': preset, 'enabled': bool(effects & 1), 'use_tone_send': bool(effects & 2),
                         'volume_left': left, 'volume_right': right},
+                noise={'enabled': bool(generator & 1), 'clock': clock},
                 bank_bytes=size if kind == 1 else 0, bank_sha256=sha(bank) if kind == 1 else None,
                 pcm_samples=112 if kind == 2 else None, pcm_sha256=sha(bank) if kind == 2 else None), bank if kind == 1 else b''
 

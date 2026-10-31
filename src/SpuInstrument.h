@@ -5,6 +5,7 @@
 #include "SpuEnvelope.h"
 #include "SpuReverb.h"
 #include "SpuWaveform.h"
+#include "SpuNoise.h"
 #include <array>
 #include <cstdint>
 
@@ -69,6 +70,12 @@ public:
   // All validation precedes mutation. Invalid tuples are ignored and return
   // false. Panic/prepare clear wet tails while preserving authored settings.
   bool setReverb(ReverbSettings settings) noexcept;
+  NoiseSettings noise() const noexcept { return mNoise; }
+  // Changing mode panics, retaining the authored sample and controllers.
+  // Clock-only edits preserve held notes, release, ADSR and the noise sequence.
+  // All24 noise voices share the native6-bit clock and ignore musical pitch.
+  // Invalid clock values leave the entire instrument unchanged.
+  bool setNoise(NoiseSettings settings) noexcept;
   void render(float* left, float* right, int frames) noexcept;
 
   int activeVoiceCount() const noexcept; // Physically held keys; pedal-held/releasing excluded.
@@ -92,10 +99,13 @@ private:
   void clearReverbTail() noexcept;
   void initialize();
   void initializeTone(const vab::PreparedTone& tone);
+  void initializeNoiseCache();
 
   void* mChip = nullptr;
   bool mHealthy = true;
   std::array<Voice, kVoiceCount> mVoices{};
+  std::array<bool,kVoiceCount> mFreshSource{};
+  std::array<std::uint16_t,kVoiceCount> mSampleRepeatAddresses{};
   std::array<int,16> mPitchBend{};
   std::array<bool,16> mSustain{};
   unsigned mCursor = 0;
@@ -108,6 +118,7 @@ private:
   bool mSourceReverbSend = false;
   bool mReverbMayHaveTail = false;
   ReverbSettings mReverb{};
+  NoiseSettings mNoise{};
   EnvelopeRegisters mSourceEnvelope{}, mEnvelope{};
   double mRatio = 1;
   double mPhase = 0;

@@ -101,7 +101,7 @@ void validateTone(const vab::PreparedTone& tone) {
 SpuInstrument::SpuInstrument() : mChip(ps1_spu_create()) {
   mPitchBend.fill(8192);
   if (!mChip) throw std::runtime_error("Could not create Native SPU");
-  try { initialize(); }
+  try { initialize();initializeNoiseCache(); }
   catch (...) { ps1_spu_destroy(mChip); mChip = nullptr; throw; }
 }
 SpuInstrument::SpuInstrument(const vab::PreparedTone& tone) {
@@ -109,7 +109,7 @@ SpuInstrument::SpuInstrument(const vab::PreparedTone& tone) {
   validateTone(tone);
   mChip=ps1_spu_create();
   if (!mChip) throw std::runtime_error("Could not create Native SPU");
-  try { initializeTone(tone); }
+  try { initializeTone(tone);initializeNoiseCache(); }
   catch (...) { ps1_spu_destroy(mChip); mChip=nullptr; throw; }
 }
 SpuInstrument::SpuInstrument(const PcmCycle& pcm) : SpuInstrument(cycleTone(pcm)) {}
@@ -196,6 +196,37 @@ void SpuInstrument::clearRateHistory() noexcept {
   mPhase = 0; mRateInitialized = false;
   mPreviousLeft = mPreviousRight = mCurrentLeft = mCurrentRight = 0;
 }
+void SpuInstrument::initializeNoiseCache() {
+  // Noise replaces interpolated source values in the native voice renderer,
+  // but its decoder still needs a valid looping cursor. This private silent
+  // host cache avoids both one-shot END and stealing physical RAM from a full
+  // VAB payload. The original ADPCM cache and registers remain intact.
+  constexpr std::array<std::int16_t,28> silence{};
+  for(unsigned i=0;i<kVoiceCount;++i)
+    mSampleRepeatAddresses[i]=ps1_spu_read(mChip,i*16+14);
+  if(!ps1_spu_set_host_pcm(mChip,silence.data(),silence.size(),1)||
+      !ps1_spu_set_host_mask(mChip,0xffffff))
+    throw std::runtime_error("Could not prepare Native SPU noise loop");
+  for(unsigned i=0;i<kVoiceCount;++i){
+    write(i*16,0);write(i*16+2,0);write(i*16+4,4096);
+    write(i*16+8,0x000f);write(i*16+10,0x1fc0);
+  }
+  // Keep NOISE bits off while priming: its shared sequence must retain the
+  // same initial state as the ordinary sample-only instrument.
+  write(0x188,0xffff);write(0x18a,0x00ff);
+  renderNative(mNativeLeft.data(),mNativeRight.data(),1024);
+  write(0x18c,0xffff);write(0x18e,0x00ff);
+  renderNative(mNativeLeft.data(),mNativeRight.data(),1024);
+  mHealthy=(ps1_spu_set_host_mask(mChip,0)!=0)&&mHealthy;
+  for(unsigned i=0;i<kVoiceCount;++i){
+    write(i*16+8,mEnvelope.adsr1);write(i*16+10,mEnvelope.adsr2);
+    // The SDK also writes a host cache's virtual loop address to this register.
+    // Markerless RAM loops rely on the original physical repeat address.
+    write(i*16+14,mSampleRepeatAddresses[i]);
+  }
+  panic();mNativeFrames=0;
+  if(!mHealthy)throw std::runtime_error("Could not prime Native SPU noise loop");
+}
 bool SpuInstrument::prepare(double hostSampleRate) noexcept {
   if (!std::isfinite(hostSampleRate) || hostSampleRate < 8000 || hostSampleRate > 384000) return false;
   panic();
@@ -230,6 +261,14 @@ void SpuInstrument::noteOn(int note, int velocity, int channel) noexcept {
     const unsigned reg=0x198+(slot>=16?2:0);
     write(reg,ps1_spu_read(mChip,reg)|(1u<<(slot%16)));
   }
+  if(mFreshSource[slot]){
+    // Mode changes already muted the old voice. Latch the new source before
+    // an audition fade can reach an old one-shot END and clear its send bit.
+    // A zero-level KON followed by audition On retains the128-frame fade-in.
+    if(!mNoise.enabled)write(base+14,mSampleRepeatAddresses[slot]);
+    write(0x188+(slot>=16?2:0),1u<<(slot%16));
+    mFreshSource[slot]=false;
+  }
   mHealthy = (ps1_spu_audition_key(mChip, static_cast<unsigned>(slot), 1) != 0) && mHealthy;
   mVoices[slot] = {note, channel, true, false, ++mOrder};
   mCursor = (static_cast<unsigned>(slot)+1)%kVoiceCount;
@@ -246,6 +285,7 @@ void SpuInstrument::noteOff(int note, int channel) noexcept {
   }
 }
 unsigned SpuInstrument::pitchFor(int note,int channel) const noexcept {
+  if(mNoise.enabled)return 4096;
   const int delta=mPitchBend[channel]-8192;
   const double semitones=2.0*delta/(delta<0?8192.0:8191.0);
   const double frequency=440*std::exp2((note-69+semitones)/12.0);
@@ -332,6 +372,22 @@ bool SpuInstrument::setReverb(ReverbSettings settings) noexcept {
   write(0x198,mReverbSend?0xffff:0);write(0x19a,mReverbSend?0x00ff:0);
   write(0x1aa,(ps1_spu_read(mChip,0x1aa)&~0x80u)|(enabled?0x80u:0));
   mReverb=settings;
+  return mHealthy;
+}
+bool SpuInstrument::setNoise(NoiseSettings settings) noexcept {
+  if(settings.clock>63)return false;
+  if(settings.enabled==mNoise.enabled&&settings.clock==mNoise.clock)return mHealthy;
+  if(settings.enabled!=mNoise.enabled){
+    panic();
+    mHealthy=(ps1_spu_set_host_mask(mChip,settings.enabled?0xffffff:0)!=0)&&mHealthy;
+    write(0x194,settings.enabled?0xffff:0);write(0x196,settings.enabled?0x00ff:0);
+    if(!settings.enabled)for(unsigned i=0;i<kVoiceCount;++i)
+      write(i*16+14,mSampleRepeatAddresses[i]);
+    mFreshSource.fill(true);
+  }
+  const unsigned clock=settings.enabled?settings.clock:0;
+  write(0x1aa,(ps1_spu_read(mChip,0x1aa)&~0x3f00u)|(clock<<8));
+  mNoise=settings;
   return mHealthy;
 }
 int SpuInstrument::activeVoiceCount() const noexcept {

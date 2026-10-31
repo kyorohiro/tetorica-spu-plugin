@@ -1,0 +1,271 @@
+{
+  "started_on": "2026-10-31",
+  "timezone": "Asia/Tokyo",
+  "start_todo_commit": "cd0c82d",
+  "features": {
+    "parameter_count": 19,
+    "existing_parameter_ids_preserved": [
+      0,
+      16
+    ],
+    "noise_parameter_ids": {
+      "enabled": 17,
+      "clock": 18
+    },
+    "default": {
+      "enabled": false,
+      "clock": 48
+    },
+    "clock_range": [
+      0,
+      63
+    ],
+    "shared_voice_count": 24,
+    "clock_live_without_retrigger": true,
+    "note_bend_tunes_noise": false,
+    "mode_switch_stops_notes_and_reverb": true,
+    "source_and_pcm_draft_retained": true,
+    "private_zero_host_carrier_frames": 28,
+    "private_carrier_is_audible_pcm": false,
+    "physical_sample_ram_capacity_unchanged": true,
+    "source_repeat_registers_restored": true,
+    "state_schema_written": 5,
+    "state_schema_read": [
+      1,
+      2,
+      3,
+      4,
+      5,
+      "legacy-gain-only"
+    ],
+    "fixed_state_bytes": 80,
+    "noise_flags_offset_after_payload": 72,
+    "noise_clock_offset_after_payload": 76
+  },
+  "production_source_sha256": {
+    "CMakeLists.txt": "5b7d9a38156cacbfec745fcecbc895b4aaa97fd6f403516bb97fc99698ab2cc1",
+    "CMakePresets.json": "a81e06a2bb9c5a3c58b1eca3cb307fd595067a40bab4d9487d9a2da1a26a1645",
+    "plugin/EnvelopeControl.h": "702aafe98fae705d47ebbe9423d36343a209c776b101f9fbcda0fd9936af3ab3",
+    "plugin/InstrumentState.cpp": "3e0da06445d906156227c674c157c324c0ad7ceb716070787ae724981193db55",
+    "plugin/InstrumentUI.cpp": "4f7506e43362f9574a9deb02e39bebce51fff9635625ce12422fd5a30118f199",
+    "plugin/MidiAdapters.cpp": "b969b14e4b5634e081124a5094bea5faae06ba7fd1904ab18aab64f0b3b91143",
+    "plugin/PcmDraftState.h": "17722e9d0e7dd877ae739cbffcccf5580b6d80bf2fe6e6482ba87502b7d8d4e9",
+    "plugin/StateAdapters.cpp": "13d7365dc00751f75b97344d13ca3361d6ff6fa865a0260244c9b3283d35d7ee",
+    "plugin/TetoricaSPU.cpp": "09072fd1cca4abef17065410618d6eed380c3773babf2d9a1e499e4bdd080510",
+    "plugin/TetoricaSPU.h": "dd00dd09e33ca2b78626614c4ab73833ce63f11a7b60b7d88f3962b4c5bf6313",
+    "plugin/WaveformControl.h": "7850732093948c5d3191c1057c49ee5c5db34e47fe069254a2cbce2584a102d0",
+    "plugin/config.h": "27a97ca414061d34864e0338a5d6d51ced5ba3aa762bf3aac347de05eea2141b",
+    "plugin/resources/resource.h": "31b027713d116a90cae8c21db3e00abfc6a4089af934d645591027e8112834d6",
+    "scripts/check_garageband_vab_state.py": "b84c5c66d805c21d9c6b0b70cebc4af577e801f3cfe2a173c39ab1c8257ddcb0",
+    "src/InstrumentState.cpp": "c1b16f171824b3fb5d1657676fa06c5b199e6ddc9fc244e83d3234c1b93126be",
+    "src/InstrumentState.h": "8d4356050ac8fb9faacb41585793853ff0175c6120f19183a7ef22bd020da61b",
+    "src/SpuEngineExchange.cpp": "9abab9001c5c4ddf202d47baf4cf59ae0613e72fc84243a262274cc2e8736fa6",
+    "src/SpuEngineExchange.h": "96a531960a3de391b2d9a7f4306c4d0bd9bda24d9d8c6cb82b52055f8f3980b5",
+    "src/SpuEnvelope.h": "57f9dc4343c1a0b412f44b57003ea09cd4a6ca59b14ed2caf4a1039fdc7a0b52",
+    "src/SpuInstrument.cpp": "21996c890a4f54dc85db2c691884b899137bbd827b424c7ef367af9df04b59b0",
+    "src/SpuInstrument.h": "664c4a6ffadd8ae0b57cada55f33f4f362020c35be0346d934c147e3db474c5b",
+    "src/SpuNoise.h": "5f70eac1bb9de2339c5e96714333e50e868c4db6c622c855c2cb381ee0912b63",
+    "src/SpuReverb.h": "561640d5623d071d0321d75fee957f4d8745be4d3fda991a2e9316b5e2a1b2ea",
+    "src/SpuWaveform.cpp": "33e37104fde0ebd6a149a83df60b2c82f14e62278e49ff33b053134d54d84cc1",
+    "src/SpuWaveform.h": "c7b84c450f94162dd01f84315b7d4ba5c253ee42b62eefcd13d9f070e72d9f5f",
+    "src/VabBank.cpp": "1aa8978b5ed3c128cdb2a5eb79af5cf4c1e86a7581d796dc80c6a2b8c52e3b15",
+    "src/VabBank.h": "64b4ceeec082eb95670128465f7297d3335e7dcae2acaa6741558f3dde1d5d03",
+    "src/VabLoader.cpp": "8ad79d6b3cd1d1fb2e8b61d0503d1d44e939b4f44e7db3b5485b24900d4e21e4",
+    "src/VabLoader.h": "7f1a0ecc01c9b84f512539ab2c8c4fd976e5d169a91d72c8e8423fe3d89f52ee",
+    "tools/au-state-check.cpp": "484d966c4146ad5aaa7f9fa2a86eef3d79b9165d8897bb5882560bea9def4ac3",
+    "tools/spu-vab-render.cpp": "deac3213a0e8900049524dfa9226e2c7cc0b0f44ecaddf1644b32283df3aa409",
+    "tools/vst3-host/CMakeLists.txt": "66b3443f534a01667ff036bb8682ae4fba46e22d6e06f48d65d776754663494e",
+    "tools/vst3-host/envelope-checks.h": "00c2996a7c10bc6d3d2363a4edada8e5e0ca5715edfb86ed37b592a0ff5c35ae",
+    "tools/vst3-host/main.cpp": "4852bd8a9f5c7c954f528745534db104bad4b5715f32611c3b715c84d76ad5c0",
+    "tools/vst3-host/midi-controller-checks.h": "fefc63b4ed3d74fb31a9d0aed7f9e264b5fb19b4604ae1e9f44c34577d33a9c6",
+    "tools/vst3-host/noise-checks.h": "9755fd03733b621ff903741c0a555b0660a7bebdead63de910d07154b6790238",
+    "tools/vst3-host/pcm-cycle-checks.h": "97bc188cad0ad3adf63e4d6db6e813f652620ba9da3366f77fc403a9680b7d15",
+    "tools/vst3-host/reverb-checks.h": "6bdedf7ce30bc3ba72c5bd8586abacc81f4a274a6c6411145804237524f71c96"
+  },
+  "dependency_lock_sha256": "08af77a81a9599599f38ba9fe92b85833f9548fdcf35255bbba1666ce036943c",
+  "native_sdk_commit": "da089d684b1fcd0209f06bccce937a99148ee607",
+  "checks": {
+    "offline_ctest": {
+      "passed": 8,
+      "failed": 0,
+      "seconds": 3.46
+    },
+    "macos_ctest": {
+      "passed": 8,
+      "failed": 0,
+      "seconds": 4.54
+    },
+    "asan": {
+      "passed": 8,
+      "failed": 0,
+      "seconds": 28.85,
+      "diagnostics": 0
+    },
+    "core_callback_cpp_new_delete": [
+      0,
+      0
+    ],
+    "neutral_demo_sha256": "7a61b56d356ac198c35808b503cf0b61b55a9547b21770eb2a67c97d0cc4aef3",
+    "neutral_demo_matches_previous": true,
+    "actual_vst3_noise_rates": [
+      44100,
+      48000,
+      96000
+    ],
+    "actual_au_noise_rates": [
+      48000
+    ],
+    "vst3_official_validator": {
+      "passed": 47,
+      "failed": 0
+    },
+    "standalone_gui": [
+      "Source/ADSR/Reverb pages and Sample/Noise toggle",
+      "Triangle draft before Noise switch",
+      "Clock default48, typed23 and page roundtrip retains23",
+      "Sample returns original Builtin and unapplied Triangle draft",
+      "Repeated Sample/Noise toggles work after Escape closes numeric entry"
+    ]
+  },
+  "resolved_validation_findings": [
+    "Private host-loop overwrote physical repeat registers; restore after warm, Noise off and before first physical KON. Original markerless/R31/all24/idle regression now exact without threshold changes.",
+    "Actual-host comparison had unequal silent timelines at nonnative rates; advance dry reference by the same768 frames, retaining exact comparison."
+  ],
+  "logs": {
+    "build/noise-final-offline-ctest.log": {
+      "sha256": "9d3f399937870f21b7f84606738078d48ca7410b37ffbc92b6daafece0615eba",
+      "pass_lines": [
+        "100% tests passed, 0 tests failed out of 8"
+      ]
+    },
+    "build/noise-macos-ctest.log": {
+      "sha256": "2e3cbafed159d3b0beed55cf492b3532f5f1befced2eb87df4bd949270dce0ce",
+      "pass_lines": [
+        "100% tests passed, 0 tests failed out of 8"
+      ]
+    },
+    "build/noise-au-state.log": {
+      "sha256": "da9117b8355c0ea9fc94fe4ab504f0baccd35af8ae4097d5709eda2cf3ae8875",
+      "pass_lines": [
+        "PASS AU MIDIEvent controllers sampleRate=48000 bend14Endpoints=true multiPointOffsets=true splitBlocks=true noRetrigger=true sustain64_63=true channel15Isolation=true CC123Pedal=true CC121HeldDeferred=true panicPreservesControllers=true resetRestoreOverflowClear=true liveStateExcluded=true deferredController=true reactivateReset=true releaseTailRetunedNoKON=true restoreDiscardsFutureControllers=true",
+        "PASS AU parameters ADSR sampleRate=48000 nineFieldsState=true schema1Migration=true legacyDefaults=true malformedAtomic=true firstRestoreBlock=true sourcePreserved=true disabledOriginalPCM=true blockAutomation=true nextNoteDeferred=true heldNoRetrigger=true applyOffOnRefresh=true",
+        "PASS AU parameters Reverb sampleRate=48000 full17Params=true firstWetRestore=true sourceSend=true presetAutomationIndependent=true presetsDiffer=true disabledDry=true zeroReturnDry=true stereoReturns=true releasedTail=true panicClears=true offClears=true restoreClearsHistory=true malformedAtomic=true schema1Schema2Schema3Legacy=true",
+        "PASS AU state/MIDIEvent PCM cycles sampleRate=48000 shapes4Distinct=true pitchAndLoop=true samples112Exact=true customDrawnState=true firstRestoreBlock=true pendingActiveAtomic=true separateInstances=true heldCarriedRestore=true settingsIndependent=true",
+        "PASS AU parameters/MIDIEvent Noise sampleRate=48000 full19Params=true firstRestoreBlock=true noNoteBendTracking=true clockLive=true sameClockNoop=true topologyPanic=true oldCarriedNotesCleared=true freshNotePreserved=true sourceRetained=true malformedAtomic=true schema1To4Legacy=true schema4PCMFX=true",
+        "PASS: local AU embedded VAB/Gain round-trip, first-render MIDI/PCM, separate instance, malformed CF/state rejection with pending/active preservation, legacy AU migration; no audio device/editor/install"
+      ]
+    },
+    "build/noise-vst3-audio.log": {
+      "sha256": "a692c247dd61325b6daa7d2fe7c0f227a44346f966bca5d7feb907c7db5097a0",
+      "pass_lines": [
+        "PASS: fixed dependency revisions and VST3 SDK links",
+        "PASS sampleRate=44100 offset=64 peak=0.0373283 c4Hz=261.667 releasePeak=0 restoredGainRatio=0.37 stateBytes=84 independentInstances=true",
+        "PASS scheduler sampleRate=44100 blockEndDeferred=true shortBlocks=true sameOffsetOrder=true unsortedOffsets=true velocityZeroOff=true overflow2049Recovered=true processingRestartSilent=true reactivateSilent=true reconfigureSilent=true",
+        "PASS embedded state sampleRate=44100 sparseTones=3 stereoPan=true firstBlock=true activeRestore=true heldDeferredCleared=true freshNotePreserved=true repeatedRestores=12 embeddedBytes=3744",
+        "PASS VST3 parameter changes ADSR sampleRate=44100 nineFieldsState=true schema1Migration=true legacyDefaults=true malformedAtomic=true firstRestoreBlock=true sourcePreserved=true disabledOriginalPCM=true blockAutomation=true nextNoteDeferred=true heldNoRetrigger=true applyOffOnRefresh=true",
+        "PASS VST3 parameter changes Reverb sampleRate=44100 full17Params=true firstWetRestore=true sourceSend=true presetAutomationIndependent=true presetsDiffer=true disabledDry=true zeroReturnDry=true stereoReturns=true releasedTail=true panicClears=true offClears=true restoreClearsHistory=true malformedAtomic=true schema1Schema2Schema3Legacy=true",
+        "PASS VST3 state/events PCM cycles sampleRate=44100 shapes4Distinct=true pitchAndLoop=true samples112Exact=true customDrawnState=true firstRestoreBlock=true pendingActiveAtomic=true separateInstances=true heldCarriedRestore=true settingsIndependent=true",
+        "PASS VST3 parameters/events Noise sampleRate=44100 full19Params=true firstRestoreBlock=true noNoteBendTracking=true clockLive=true sameClockNoop=true topologyPanic=true oldCarriedNotesCleared=true freshNotePreserved=true sourceRetained=true malformedAtomic=true schema1To4Legacy=true schema4PCMFX=true",
+        "PASS VST3 IMidiMapping controllers sampleRate=44100 bend14Endpoints=true multiPointOffsets=true splitBlocks=true noRetrigger=true sustain64_63=true channel15Isolation=true CC123Pedal=true CC121HeldDeferred=true panicPreservesControllers=true resetRestoreOverflowClear=true liveStateExcluded=true deferredController=true reactivateReset=true releaseTailRetunedNoKON=true restoreDiscardsFutureControllers=true",
+        "PASS sampleRate=48000 offset=64 peak=0.0373283 c4Hz=261.667 releasePeak=0 restoredGainRatio=0.37 stateBytes=84 independentInstances=true",
+        "PASS scheduler sampleRate=48000 blockEndDeferred=true shortBlocks=true sameOffsetOrder=true unsortedOffsets=true velocityZeroOff=true overflow2049Recovered=true processingRestartSilent=true reactivateSilent=true reconfigureSilent=true",
+        "PASS embedded state sampleRate=48000 sparseTones=3 stereoPan=true firstBlock=true activeRestore=true heldDeferredCleared=true freshNotePreserved=true repeatedRestores=12 embeddedBytes=3744",
+        "PASS VST3 parameter changes ADSR sampleRate=48000 nineFieldsState=true schema1Migration=true legacyDefaults=true malformedAtomic=true firstRestoreBlock=true sourcePreserved=true disabledOriginalPCM=true blockAutomation=true nextNoteDeferred=true heldNoRetrigger=true applyOffOnRefresh=true",
+        "PASS VST3 parameter changes Reverb sampleRate=48000 full17Params=true firstWetRestore=true sourceSend=true presetAutomationIndependent=true presetsDiffer=true disabledDry=true zeroReturnDry=true stereoReturns=true releasedTail=true panicClears=true offClears=true restoreClearsHistory=true malformedAtomic=true schema1Schema2Schema3Legacy=true",
+        "PASS VST3 state/events PCM cycles sampleRate=48000 shapes4Distinct=true pitchAndLoop=true samples112Exact=true customDrawnState=true firstRestoreBlock=true pendingActiveAtomic=true separateInstances=true heldCarriedRestore=true settingsIndependent=true",
+        "PASS VST3 parameters/events Noise sampleRate=48000 full19Params=true firstRestoreBlock=true noNoteBendTracking=true clockLive=true sameClockNoop=true topologyPanic=true oldCarriedNotesCleared=true freshNotePreserved=true sourceRetained=true malformedAtomic=true schema1To4Legacy=true schema4PCMFX=true",
+        "PASS VST3 IMidiMapping controllers sampleRate=48000 bend14Endpoints=true multiPointOffsets=true splitBlocks=true noRetrigger=true sustain64_63=true channel15Isolation=true CC123Pedal=true CC121HeldDeferred=true panicPreservesControllers=true resetRestoreOverflowClear=true liveStateExcluded=true deferredController=true reactivateReset=true releaseTailRetunedNoKON=true restoreDiscardsFutureControllers=true",
+        "PASS sampleRate=96000 offset=64 peak=0.0373283 c4Hz=261.667 releasePeak=0 restoredGainRatio=0.37 stateBytes=84 independentInstances=true",
+        "PASS scheduler sampleRate=96000 blockEndDeferred=true shortBlocks=true sameOffsetOrder=true unsortedOffsets=true velocityZeroOff=true overflow2049Recovered=true processingRestartSilent=true reactivateSilent=true reconfigureSilent=true",
+        "PASS embedded state sampleRate=96000 sparseTones=3 stereoPan=true firstBlock=true activeRestore=true heldDeferredCleared=true freshNotePreserved=true repeatedRestores=12 embeddedBytes=3744",
+        "PASS VST3 parameter changes ADSR sampleRate=96000 nineFieldsState=true schema1Migration=true legacyDefaults=true malformedAtomic=true firstRestoreBlock=true sourcePreserved=true disabledOriginalPCM=true blockAutomation=true nextNoteDeferred=true heldNoRetrigger=true applyOffOnRefresh=true",
+        "PASS VST3 parameter changes Reverb sampleRate=96000 full17Params=true firstWetRestore=true sourceSend=true presetAutomationIndependent=true presetsDiffer=true disabledDry=true zeroReturnDry=true stereoReturns=true releasedTail=true panicClears=true offClears=true restoreClearsHistory=true malformedAtomic=true schema1Schema2Schema3Legacy=true",
+        "PASS VST3 state/events PCM cycles sampleRate=96000 shapes4Distinct=true pitchAndLoop=true samples112Exact=true customDrawnState=true firstRestoreBlock=true pendingActiveAtomic=true separateInstances=true heldCarriedRestore=true settingsIndependent=true",
+        "PASS VST3 parameters/events Noise sampleRate=96000 full19Params=true firstRestoreBlock=true noNoteBendTracking=true clockLive=true sameClockNoop=true topologyPanic=true oldCarriedNotesCleared=true freshNotePreserved=true sourceRetained=true malformedAtomic=true schema1To4Legacy=true schema4PCMFX=true",
+        "PASS VST3 IMidiMapping controllers sampleRate=96000 bend14Endpoints=true multiPointOffsets=true splitBlocks=true noRetrigger=true sustain64_63=true channel15Isolation=true CC123Pedal=true CC121HeldDeferred=true panicPreservesControllers=true resetRestoreOverflowClear=true liveStateExcluded=true deferredController=true reactivateReset=true releaseTailRetunedNoKON=true restoreDiscardsFutureControllers=true",
+        "PASS malformed embedded state cases=25 atomicGainStatePCM=true readyRestorePreserved=true legacyGain12=true",
+        "PASS VST3 mapped ingress invalidNormalizedIgnored=true invalidChannelIgnored=true unsupportedCCIgnored=true negativeOffsetIgnored=true points1025Panic=true gainPreserved=true bypassMuteQueueReset=true bypassCrossBlockPedal=true freshUnbypassNote=true bypassClearsReverb=true",
+        "PASS VST3 offline PCM, scheduler, lifecycle, state and instance isolation"
+      ]
+    },
+    "build/noise-vst3-validator.log": {
+      "sha256": "82dc8f341837ff2a89ed20d06a57d918d76b9024eb2269edae3392bd345ea0e9",
+      "pass_lines": [
+        "Result: 47 tests passed, 0 tests failed"
+      ]
+    },
+    "build/noise-asan/Testing/Temporary/LastTest.log": {
+      "sha256": "e1125ffe91cb4a30d6a663de7e77ced0fc6ebf2f572a61316ef0a3f19fda3806",
+      "pass_lines": [
+        "PASS actual nativeNoise/liveclock/Note-bend independence; capture-prefix guard/private hostloop; held/release/pedal/source latch/one-shot-send/fullRAM; partition; zero callback C++ new/delete",
+        "PASS PCM draft twoApplyIntermediate=true failedRequestDraft=true newerUnapplied=true hostRestore=true sourceChange=true invalidAtomic=true",
+        "PASS112-point waveform shapes/custom validation; 8 Web cyclic-ADPCM vectors byte-exact; default sine PCM exact; pitch/loops/release/partition; zero callback C++ new/delete",
+        "PASS: Native SPU pitch/release/polyphony/channels/panic/partition/isolation/rates/MIDI offsets; per-channel bend/sustain/reset/retrigger/deferred-steal; live/deferred ADSR; all reverb presets/stereo/bypass/Tone-send/one-shot/clear; zero callback C++ new/delete after cache priming",
+        "PASS VAB parser/preparation: 8516 assertions, 7572 rejected inputs, 7 JavaScript oracle cases; v6/v7, split/complete, ownership, ADPCM, sentinels, RAM and count limits",
+        "PASS: VAB Tone/native PCM, tuning, ADSR, pan, one-shot/long-loop, isolation, bounds, full RAM; zero callback C++ new/delete after long cache prime; pinned SDK repeat-flag limit explicitly rejected",
+        "PASS unchanged builtin PCM",
+        "PASS block-boundary swap/current host rate",
+        "PASS stale/superseded/duplicate publication",
+        "PASS cancelled pending/invalid rate keeps active PCM",
+        "PASS full retirement defers then resumes",
+        "PASS worker success/failure/latest/builtin",
+        "PASS deterministic in-flight supersession",
+        "PASS worker bounded files/first-playable/embedded selection",
+        "PASS changed file/host restore supersession",
+        "PASS PCM worker shapes/owned input/invalid pending/selection",
+        "PASS PCM latest request/host restore supersession",
+        "PASS concurrent producer/audio publication",
+        "PASS pending/retired/in-flight shutdown ownership",
+        "PASS engine exchange: 1938405 checks, 166 RT C++ new/delete probes; 124 instrument-size allocations/124 frees, zero RT frees",
+        "PASS immutable VAB/PCM state, schema5 Noise/PCM/Reverb/ADSR, schema1/2/3/4 migration/source preservation, strict codec, immediate PCM restore, snapshots, failure atomicity, RT lifetime and concurrent collection"
+      ]
+    },
+    "build/noise-core/verification/strict_compile.log": {
+      "sha256": "8f628f31a32eadf9d699104cf4be66c1633471b686e23d01b95dd35c24576951",
+      "pass_lines": [
+        "PASS exit0"
+      ]
+    },
+    "build/noise-core/verification/noise_compatibility.log": {
+      "sha256": "f51f775068ed0dc193605e7c7305e7c966d269acd65687eaeef0ed97fc95f8f3",
+      "pass_lines": [
+        "Release focused CTest 4/4 PASS 2.66 s; details ../Testing/Temporary/LastTest.log",
+        "ASan full CTest 8/8 PASS 28.85 s; details ../../noise-asan/Testing/Temporary/LastTest.log"
+      ]
+    }
+  },
+  "au": {
+    "source": "build/macos/out/TetoricaSPU.component",
+    "file_sha256": {
+      "Contents/Info.plist": "94a46fcfc638d76a05aca50d5deedaff2a7a934aee55a816d007b6dff9c9bbc4",
+      "Contents/MacOS/TetoricaSPU": "c0bc04981a80e2610a7026749c4fb44aa69b6c1bbc07cb5124314100bc8ef327",
+      "Contents/PkgInfo": "d06a80ba92de0833d0ed03de1b02b7c8913f126d9e8c8931b190765dd5d83b11",
+      "Contents/Resources/Roboto-Regular.ttf": "b2efabca5ea4bc56eea829713706b5cd0788b82aca153bd4adde9b1573933b4f",
+      "Contents/Resources/THIRD_PARTY_NOTICES.txt": "d0686ed57334f5bc617481e976e6d220822dba8fc93b8dd51246455bb818db6e"
+    },
+    "installed": false,
+    "previous_expected_record": "docs/pcm_waveform_20261031.json"
+  },
+  "garageband": {
+    "project": "build/spu-vab-check.band",
+    "before_report": "build/noise-au-project-before.json",
+    "backup_report": "build/noise-update-project-agljfn15/manifest.json",
+    "backup_files_verified": 7,
+    "schema_before": 4,
+    "payload_bytes_before": 3816,
+    "payload_sha256_before": "e0971a317d2774d23d4a68d502984bea432031865cfabcac0d8fb2f788c60e9f",
+    "program": 3,
+    "tone": 0,
+    "gain_percent": 99
+  },
+  "ci": {
+    "status": "pending-push"
+  },
+  "not_verified": [
+    "Physical listening",
+    "Long realtime operation",
+    "AU custom Noise/Clock gestures and DAW automation recording",
+    "Numeric entry after Return: remote clicks needed Escape; cause not isolated",
+    "Uploaded CI archive runtime"
+  ]
+}

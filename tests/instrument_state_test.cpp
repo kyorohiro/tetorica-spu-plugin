@@ -76,8 +76,8 @@ void codec(){
   const auto builtin=Def::builtin();
   CHECK(builtin->kind()==Def::Kind::Builtin&&builtin->bankBytes().empty()&&builtin->program()==0&&builtin->tone()==0);
   const auto encoded=encodeState(builtin,37.5);
-  CHECK(encoded.size()==72&&std::equal(kStateMagic.begin(),kStateMagic.end(),encoded.begin()));
-  CHECK(encoded[8]==4&&encoded[12]==72&&encoded[16]==0);
+  CHECK(encoded.size()==80&&std::equal(kStateMagic.begin(),kStateMagic.end(),encoded.begin()));
+  CHECK(encoded[8]==5&&encoded[12]==80&&encoded[16]==0);
   CHECK(encoded[37]==0xc0&&encoded[38]==0x42&&encoded[39]==0x40); //LE binary64 37.5.
   auto restored=decode(encoded);CHECK(restored.gainPercent==37.5&&restored.definition==builtin);
   CHECK(sameEnvelope(restored.envelope,{})&&sameReverb(restored.reverb,{}));
@@ -98,7 +98,7 @@ void codec(){
   for(unsigned flags=0;flags<4;++flags){
     EnvelopeSettings settings{{0xa937,0xd7bb},bool(flags&1),bool(flags&2)};
     const auto wire=encodeState(selected,37,settings);const auto read=decode(wire);
-    CHECK(wire.size()==original.size()+72&&sameEnvelope(settings,read.envelope));
+    CHECK(wire.size()==original.size()+80&&sameEnvelope(settings,read.envelope));
     CHECK(encodeState(read.definition,read.gainPercent,read.envelope)==wire);
     CHECK(read.definition->bankBytes()==original);
     // v1 has no authored override; migration must never infer custom values
@@ -142,7 +142,7 @@ void codec(){
 }
 void malformed(){
   const auto good=encodeState(Def::fromVab(fixture(),3,0),25.);
-  for(std::size_t n=0;n<72;++n)rejects([&]{decodeState({good.data(),n});});
+  for(std::size_t n=0;n<80;++n)rejects([&]{decodeState({good.data(),n});});
   rejects([&]{decodeState({nullptr,40});});rejects([&]{decodeState({nullptr,0});});
   rejects([&]{decodeState({good.data(),kMaxStateBytes+1});});
   for(const auto at:{0u,7u,8u,12u,16u,20u,24u,28u}){
@@ -185,13 +185,13 @@ void pcmCycles(){
     CHECK(definition->kind()==Def::Kind::PcmCycle&&definition->bankBytes().empty());
     CHECK(definition->program()==0&&definition->tone()==0&&definition->pcmCycle()==original);
     const auto wire=encodeState(definition,37,envelope,effects);const auto read=decode(wire);
-    CHECK(wire.size()==520&&wire[8]==4&&wire[16]==2&&bankLength(wire)==448);
+    CHECK(wire.size()==528&&wire[8]==5&&wire[16]==2&&bankLength(wire)==448);
     CHECK(read.definition->pcmCycle()==original&&sameEnvelope(read.envelope,envelope)&&sameReverb(read.reverb,effects));
     CHECK(encodeState(read.definition,read.gainPercent,read.envelope,read.reverb)==wire);
     auto bad=wire;word(bad,8,3);rejects([&]{decode(bad);}); //Older versions do not know kind2.
     for(auto at:{20u,24u}){bad=wire;word(bad,at,1);rejects([&]{decode(bad);});}
     for(auto size:{0u,447u,449u}) {
-      bad=wire;bad.resize(size+72);word(bad,28,size);word(bad,12,static_cast<std::uint32_t>(bad.size()));
+      bad=wire;bad.resize(size+80);word(bad,28,size);word(bad,12,static_cast<std::uint32_t>(bad.size()));
       rejects([&]{decode(bad);});
     }
     for(auto bits:{0x7f800000u,0x7fc00000u,0xbf800001u,0x3f800001u}) {
@@ -218,6 +218,30 @@ void pcmCycles(){
   exchange.commitPrepared(prepareDefinition(*def),def);CHECK(exchange.snapshotDefinition()==def&&exchange.beginBlock(48000));
   Stereo a(8192),b(8192);exchange.instrument().noteOn(60,127);independent->noteOn(60,127);
   render(exchange.instrument(),a);render(*independent,b);CHECK(a.left==b.left&&a.right==b.right&&peak(a)>.01f);
+}
+void noiseSettings(){
+  const auto builtin=Def::builtin(),vab=Def::fromVab(fixture(),3,1);
+  const auto pcm=Def::fromPcmCycle(makePcmCycle(WaveformShape::Saw));
+  const EnvelopeSettings envelope{{0xa937,0xd7bb},true,false};
+  const ReverbSettings effects{ReverbPreset::Hall,true,false,.375,.8125};
+  for(const auto& definition:{builtin,vab,pcm})for(bool enabled:{false,true})for(unsigned clock:{0u,48u,63u}) {
+    const NoiseSettings generator{enabled,clock};
+    const auto bytes=encodeState(definition,37,envelope,effects,generator);const auto read=decode(bytes);
+    CHECK(read.noise.enabled==enabled&&read.noise.clock==clock&&read.gainPercent==37);
+    CHECK(sameEnvelope(read.envelope,envelope)&&sameReverb(read.reverb,effects));
+    CHECK(read.definition->kind()==definition->kind()&&read.definition->bankBytes()==definition->bankBytes()&&
+      read.definition->pcmCycle()==definition->pcmCycle());
+    CHECK(encodeState(read.definition,37,read.envelope,read.reverb,read.noise)==bytes);
+    const auto old4=decode(oldSchema(bytes,4));
+    CHECK(!old4.noise.enabled&&old4.noise.clock==48&&sameEnvelope(old4.envelope,envelope)&&sameReverb(old4.reverb,effects));
+    CHECK(old4.definition->pcmCycle()==definition->pcmCycle()&&old4.definition->bankBytes()==definition->bankBytes());
+    for(auto flags:{2u,4u,0xffffffffu}) {auto bad=bytes;word(bad,72+bankLength(bad),flags);rejects([&]{decode(bad);});}
+    for(auto invalid:{64u,0xffffffffu}) {auto bad=bytes;word(bad,76+bankLength(bad),invalid);rejects([&]{decode(bad);});}
+    if(definition->kind()!=Def::Kind::PcmCycle)for(unsigned version:{1u,2u,3u}) {
+      const auto old=decode(oldSchema(bytes,version));CHECK(!old.noise.enabled&&old.noise.clock==48);
+    }
+  }
+  for(unsigned clock:{64u,0xffffffffu})rejects([&]{encodeState(pcm,37,{}, {},{true,clock});});
 }
 void immediateRestore(){
   const auto state=decode(encodeState(Def::fromVab(fixture(),3,1),37.));
@@ -330,7 +354,7 @@ void concurrentSnapshots(){
 }
 }
 int main(){
-  codec();malformed();pcmCycles();immediateRestore();snapshotsAndAtomicFailure();
+  codec();malformed();pcmCycles();noiseSettings();immediateRestore();snapshotsAndAtomicFailure();
   callbackAndDefinitionLifetime();loaderMetadata();concurrentSnapshots();
-  std::puts("PASS immutable VAB/PCM state, schema4 PCM cycles/Reverb/ADSR, schema1/2/3 migration/source preservation, strict codec, immediate PCM restore, snapshots, failure atomicity, RT lifetime and concurrent collection");
+  std::puts("PASS immutable VAB/PCM state, schema5 Noise/PCM/Reverb/ADSR, schema1/2/3/4 migration/source preservation, strict codec, immediate PCM restore, snapshots, failure atomicity, RT lifetime and concurrent collection");
 }

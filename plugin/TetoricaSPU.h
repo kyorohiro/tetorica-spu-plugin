@@ -36,6 +36,8 @@ enum EParams
   kParamReverbLeft,
   kParamReverbRight,
   kParamReverbToneSend,
+  kParamNoiseEnabled,
+  kParamNoiseClock,
   kNumParams
 };
 
@@ -75,7 +77,11 @@ enum ECtrlTags
   kCtrlPcmRevert,
   kCtrlPcmApply,
   kCtrlPcmInfo,
-  kCtrlPcmStatus
+  kCtrlPcmStatus,
+  kCtrlSourceMode,
+  kCtrlNoiseClock,
+  kCtrlNoiseInfo,
+  kCtrlNoiseStatus
 };
 
 class TetoricaSPU final : public iplug::Plugin
@@ -149,7 +155,9 @@ private:
   void applyControllerCache() noexcept;
   void applyEnvelopeParameters() noexcept;
   void applyReverbParameters() noexcept;
+  void applyNoiseParameters() noexcept;
   void discardCarriedMidi() noexcept;
+  void discardCarriedNotes() noexcept;
   void renderRange(iplug::sample** outputs, int offset, int nFrames, double gain);
 
   // All MIDI and render storage is allocated with the instance, never while

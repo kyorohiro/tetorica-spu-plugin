@@ -126,6 +126,7 @@ struct TetoricaSPU::InstrumentUIState
   bool baselineInitialized = false;
   bool pickerOpen = false;
   InstrumentPage page = InstrumentPage::Reverb;
+  std::optional<bool> displayedNoise;
   tetorica::PcmDraftState pcmDraft;
   std::string status = "Play MIDI from your DAW or the keyboard.";
 };
@@ -202,14 +203,28 @@ void TetoricaSPU::initializeInstrumentUI()
       .WithValueText(IText(14)).WithDrawShadows(false);
     const auto switchStyle = smallStyle.WithShowLabel(false);
     graphics->AttachControl(new IVButtonControl(IRECT(488, 162, 552, 196),
-      [this](IControl*) { showInstrumentPage(InstrumentPage::Pcm); }, "PCM", smallStyle), kCtrlPagePcm);
+      [this](IControl*) { showInstrumentPage(InstrumentPage::Pcm); }, "Source", smallStyle), kCtrlPagePcm);
     graphics->AttachControl(new IVButtonControl(IRECT(560, 162, 624, 196),
       [this](IControl*) { showInstrumentPage(InstrumentPage::Envelope); }, "ADSR", smallStyle), kCtrlPageEnvelope);
     graphics->AttachControl(new IVButtonControl(IRECT(632, 162, 696, 196),
       [this](IControl*) { showInstrumentPage(InstrumentPage::Reverb); }, "Reverb", smallStyle), kCtrlPageReverb);
 
-    graphics->AttachControl(new ITextControl(IRECT(24, 202, 696, 232),
+    graphics->AttachControl(new ITextControl(IRECT(24, 202, 410, 232),
       "PCM cycle - Software", IText(22).WithAlign(EAlign::Near)), kCtrlPcmHeading);
+    auto* sourceMode = new IVToggleControl(IRECT(432, 202, 696, 232),
+      kParamNoiseEnabled, "", switchStyle, "Source: Sample", "Source: SPU Noise");
+    sourceMode->SetTooltip("Switch between the retained sample and SPU Noise. Changing source stops held notes and reverb tails.");
+    graphics->AttachControl(sourceMode, kCtrlSourceMode);
+    auto* noiseClock = new IVKnobControl(IRECT(56, 254, 244, 398),
+      kParamNoiseClock, "Shared Noise clock", smallStyle, true);
+    noiseClock->SetTooltip("Raw SPU Noise clock 0-63, shared by all 24 voices. Changes apply to sounding notes without retriggering.");
+    graphics->AttachControl(noiseClock, kCtrlNoiseClock);
+    graphics->AttachControl(new IMultiLineTextControl(IRECT(288, 254, 696, 398),
+      "One Noise clock is shared by all 24 voices.\n\nKeys play the ADSR envelope. Note and Pitch Bend do not tune Noise.\n\nClock changes apply while notes sound.",
+      IText(14).WithAlign(EAlign::Near).WithVAlign(EVAlign::Top)), kCtrlNoiseInfo);
+    graphics->AttachControl(new IMultiLineTextControl(IRECT(24, 418, 696, 469),
+      "SPU Noise uses the retained core's approximate generator.\nYour sample and PCM draft are kept. Switch to Sample to return; switching stops notes and reverb tails.",
+      IText(12).WithAlign(EAlign::Near).WithVAlign(EVAlign::Top)), kCtrlNoiseStatus);
     const std::array<tetorica::WaveformShape, 4> shapes{{tetorica::WaveformShape::Sine,
       tetorica::WaveformShape::Triangle, tetorica::WaveformShape::Saw, tetorica::WaveformShape::Square}};
     const std::array<const char*, 4> shapeNames{{"Sine", "Triangle", "Saw", "Square"}};
@@ -523,15 +538,29 @@ void TetoricaSPU::updateInstrumentControls()
 {
   auto* graphics = GetUI();
   if (!graphics || !mInstrumentUI) return;
-  const auto& ui = *mInstrumentUI;
+  auto& ui = *mInstrumentUI;
+  const bool noise = GetParam(kParamNoiseEnabled)->Bool();
+  const bool sourceChanged = !ui.displayedNoise || *ui.displayedNoise != noise;
+  if (sourceChanged)
+  {
+    // Automation and host restore can change source between pointer events.
+    // Cancel local editing before hiding its controls; never apply its draft.
+    if (auto* graph = graphics->GetControlWithTag(kCtrlPcmGraph))
+      static_cast<SpuWaveformControl*>(graph)->CancelPointerEdit();
+    if (auto* graph = graphics->GetControlWithTag(kCtrlEnvelopeGraph))
+      static_cast<SpuEnvelopeGraphControl*>(graph)->CancelPointerEdit();
+    ui.displayedNoise = noise;
+  }
   const bool vab = ui.definition && ui.bank &&
     ui.definition->kind() == tetorica::InstrumentDefinition::Kind::Vab;
   if (auto* control = graphics->GetControlWithTag(kCtrlLoadVab))
     if (control->IsDisabled() != ui.pickerOpen) control->SetDisabled(ui.pickerOpen);
   if (auto* control = graphics->GetControlWithTag(kCtrlBankLabel))
-    static_cast<iplug::igraphics::ITextControl*>(control)->SetStr(vab ? "Embedded VAB" :
+    static_cast<iplug::igraphics::ITextControl*>(control)->SetStr(vab ?
+      (noise ? "Embedded VAB / Noise" : "Embedded VAB") :
       ui.definition && ui.definition->kind() == tetorica::InstrumentDefinition::Kind::PcmCycle ?
-        "Embedded PCM cycle" : "Builtin Sine");
+        (noise ? "PCM cycle / Noise" : "Embedded PCM cycle") :
+        (noise ? "Builtin Sine / Noise" : "Builtin Sine"));
   if (auto* control = graphics->GetControlWithTag(kCtrlInstrumentStatus))
   {
     auto* text = static_cast<iplug::igraphics::ITextControl*>(control);
@@ -581,13 +610,27 @@ void TetoricaSPU::updateInstrumentControls()
   for (int tag = kCtrlReverbHeading; tag <= kCtrlReverbStatus; ++tag)
     if (auto* control = graphics->GetControlWithTag(tag))
       if (control->IsHidden() == reverbPage) control->Hide(!reverbPage);
-  for (int tag = kCtrlPcmHeading; tag <= kCtrlPcmStatus; ++tag)
+  const bool pcmEditor = pcmPage && !noise;
+  const bool noiseEditor = pcmPage && noise;
+  for (int tag = kCtrlPcmSine; tag <= kCtrlPcmStatus; ++tag)
+    if (auto* control = graphics->GetControlWithTag(tag))
+      if (control->IsHidden() == pcmEditor) control->Hide(!pcmEditor);
+  for (int tag = kCtrlNoiseClock; tag <= kCtrlNoiseStatus; ++tag)
+    if (auto* control = graphics->GetControlWithTag(tag))
+      if (control->IsHidden() == noiseEditor) control->Hide(!noiseEditor);
+  for (const auto tag : {kCtrlPcmHeading, kCtrlSourceMode})
     if (auto* control = graphics->GetControlWithTag(tag))
       if (control->IsHidden() == pcmPage) control->Hide(!pcmPage);
+  if (auto* control = graphics->GetControlWithTag(kCtrlPcmHeading))
+  {
+    const char* title = noise ? "SPU Noise" : "PCM cycle - Software";
+    auto* text = static_cast<ITextControl*>(control);
+    if (std::strcmp(text->GetStr(), title)) text->SetStr(title);
+  }
   for (const auto tag : {kCtrlPagePcm, kCtrlPageEnvelope, kCtrlPageReverb})
     if (auto* control = graphics->GetControlWithTag(tag))
     {
-      const char* label = tag == kCtrlPagePcm ? (pcmPage ? "> PCM" : "PCM") :
+      const char* label = tag == kCtrlPagePcm ? (pcmPage ? "> Source" : "Source") :
         tag == kCtrlPageReverb ? (reverbPage ? "> Reverb" : "Reverb") :
         (envelopePage ? "> ADSR" : "ADSR");
       auto* button = static_cast<IVButtonControl*>(control);
@@ -634,11 +677,15 @@ void TetoricaSPU::updateInstrumentControls()
     auto* text = static_cast<ITextControl*>(control);
     if (std::strcmp(text->GetStr(), message)) text->SetStr(message);
   }
+  // Like page changes, a source-mode switch overlaps many child rectangles.
+  // Invalidate the background once, after all visibility updates are complete.
+  if (sourceChanged) graphics->SetAllControlsDirty();
 }
 
 void TetoricaSPU::showInstrumentPage(InstrumentPage page)
 {
   if (!GetUI() || !mInstrumentUI) return;
+  const bool changed = mInstrumentUI->page != page;
   if (auto* graph = GetUI()->GetControlWithTag(kCtrlEnvelopeGraph))
     static_cast<SpuEnvelopeGraphControl*>(graph)->CancelPointerEdit();
   if (auto* graph = GetUI()->GetControlWithTag(kCtrlPcmGraph))
@@ -647,19 +694,20 @@ void TetoricaSPU::showInstrumentPage(InstrumentPage page)
   updateInstrumentControls();
   // Page controls overlap. Hide() invalidates individual child rectangles;
   // repaint the background and new page together after the complete switch.
-  GetUI()->SetAllControlsDirty();
+  if (changed) GetUI()->SetAllControlsDirty();
 }
 
 void TetoricaSPU::setPcmDraftFromUI(const tetorica::PcmCycle& cycle)
 {
-  if (!GetUI() || !mInstrumentUI || cycle == mInstrumentUI->pcmDraft.cycle()) return;
+  if (!GetUI() || !mInstrumentUI || GetParam(kParamNoiseEnabled)->Bool() ||
+      cycle == mInstrumentUI->pcmDraft.cycle()) return;
   mInstrumentUI->pcmDraft.set(cycle);
   updateInstrumentControls();
 }
 
 void TetoricaSPU::choosePcmShapeFromUI(tetorica::WaveformShape shape)
 {
-  if (!GetUI() || !mInstrumentUI) return;
+  if (!GetUI() || !mInstrumentUI || GetParam(kParamNoiseEnabled)->Bool()) return;
   if (auto* graph = GetUI()->GetControlWithTag(kCtrlPcmGraph))
     static_cast<SpuWaveformControl*>(graph)->CancelPointerEdit();
   setPcmDraftFromUI(tetorica::makePcmCycle(shape));
@@ -667,7 +715,7 @@ void TetoricaSPU::choosePcmShapeFromUI(tetorica::WaveformShape shape)
 
 void TetoricaSPU::revertPcmDraftFromUI()
 {
-  if (!GetUI() || !mInstrumentUI) return;
+  if (!GetUI() || !mInstrumentUI || GetParam(kParamNoiseEnabled)->Bool()) return;
   if (auto* graph = GetUI()->GetControlWithTag(kCtrlPcmGraph))
     static_cast<SpuWaveformControl*>(graph)->CancelPointerEdit();
   const auto& definition = mInstrumentUI->definition;
@@ -677,7 +725,7 @@ void TetoricaSPU::revertPcmDraftFromUI()
 
 void TetoricaSPU::applyPcmDraftFromUI()
 {
-  if (!GetUI() || !mInstrumentUI) return;
+  if (!GetUI() || !mInstrumentUI || GetParam(kParamNoiseEnabled)->Bool()) return;
   if (auto* graph = GetUI()->GetControlWithTag(kCtrlPcmGraph))
     static_cast<SpuWaveformControl*>(graph)->CancelPointerEdit();
   try

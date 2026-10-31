@@ -71,7 +71,7 @@ template<class Factory> void checkEnvelopes(Factory make,double rate,const char*
   std::vector<Bytes> invalid;
   auto bad=serialized;word(bad,44+bank.size(),4);invalid.push_back(bad);
   bad=serialized;bad[43+bank.size()]|=0x20;invalid.push_back(bad);
-  bad=serialized;word(bad,8,5);invalid.push_back(bad);
+  bad=serialized;word(bad,8,6);invalid.push_back(bad);
   bad=serialized;bad.pop_back();invalid.push_back(bad);
   for(const auto& bytes:invalid) {
     requireEnvelope(!edited->tryStateRestoreForTest(bytes),"Malformed ADSR state accepted");

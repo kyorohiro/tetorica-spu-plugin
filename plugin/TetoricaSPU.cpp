@@ -27,6 +27,8 @@ TetoricaSPU::TetoricaSPU(const iplug::InstanceInfo& info)
   GetParam(kParamReverbLeft)->InitDouble("Reverb return left", 25., 0., 100., 0.1, "%");
   GetParam(kParamReverbRight)->InitDouble("Reverb return right", 25., 0., 100., 0.1, "%");
   GetParam(kParamReverbToneSend)->InitBool("Use Tone reverb send", false);
+  GetParam(kParamNoiseEnabled)->InitBool("SPU Noise", false);
+  GetParam(kParamNoiseClock)->InitInt("Shared Noise clock", 48, 0, 63);
 
 #if IPLUG_EDITOR
   mMakeGraphicsFunc = [this]() {
@@ -201,6 +203,33 @@ void TetoricaSPU::discardCarriedMidi() noexcept
   mMidiCount = kept;
 }
 
+void TetoricaSPU::discardCarriedNotes() noexcept
+{
+  std::size_t kept = 0;
+  for (std::size_t event = 0; event < mMidiCount; ++event)
+    if (!mMidi[event].carried ||
+        mMidi[event].message.StatusMsg() == iplug::IMidiMsg::kControlChange ||
+        mMidi[event].message.StatusMsg() == iplug::IMidiMsg::kPitchWheel)
+      mMidi[kept++] = mMidi[event];
+  mMidiCount = kept;
+}
+
+void TetoricaSPU::applyNoiseParameters() noexcept
+{
+  const double enabled = GetParam(kParamNoiseEnabled)->Value();
+  const double clock = GetParam(kParamNoiseClock)->Value();
+  if (!std::isfinite(enabled) || enabled < 0 || enabled > 1 || std::floor(enabled) != enabled ||
+      !std::isfinite(clock) || clock < 0 || clock > 63 || std::floor(clock) != clock)
+    return;
+  auto& instrument = mEngines.instrument();
+  const bool previous = instrument.noise().enabled;
+  const tetorica::NoiseSettings settings{enabled != 0, static_cast<std::uint32_t>(clock)};
+  if (instrument.setNoise(settings) && previous != settings.enabled)
+    // The old source's future NoteOns must not restart after the mode panic.
+    // Current-block host events and carried wheel/pedal still belong to input.
+    discardCarriedNotes();
+}
+
 void TetoricaSPU::applyReverbParameters() noexcept
 {
   // These are independent saved parameters. Only a manual preset selection
@@ -260,13 +289,7 @@ void TetoricaSPU::ProcessBlock(iplug::sample**, iplug::sample** outputs, int nFr
     // especially a pedal-up at the block boundary, and discard old note events.
     // Successful host restore has already discarded all carried MIDI. Fresh
     // events for this block (including first post-restore NoteOn) stay ordered.
-    std::size_t kept = 0;
-    for (std::size_t event = 0; event < mMidiCount; ++event)
-      if (!mMidi[event].carried ||
-          mMidi[event].message.StatusMsg() == iplug::IMidiMsg::kControlChange ||
-          mMidi[event].message.StatusMsg() == iplug::IMidiMsg::kPitchWheel)
-        mMidi[kept++] = mMidi[event];
-    mMidiCount = kept;
+    discardCarriedNotes();
     mReady = true;
   }
   if (!mReady)
@@ -279,6 +302,7 @@ void TetoricaSPU::ProcessBlock(iplug::sample**, iplug::sample** outputs, int nFr
 
   applyEnvelopeParameters();
   applyReverbParameters();
+  applyNoiseParameters();
 
   const double requestedGain = GetParam(kParamGain)->Value() / 100.;
   const double gain = std::isfinite(requestedGain) ? std::clamp(requestedGain, 0., 1.) : 0.;

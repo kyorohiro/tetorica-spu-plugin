@@ -1,5 +1,18 @@
 # 作業記録
 
+## 2026-10-31 JST — Noise実装・実AU/VST3・Source UI検証完了
+
+- TODO `cd0c82d`の後、共有Noise / Clock0〜63を実装。Sample sourceとPCM draft保持、Clockは保持音・Releaseへlive反映。
+  Source / ADSR / Reverb3ページ、19params・schema5、旧1〜4/legacy互換。
+- private loopはzero host cacheを非audioで準備し、音はNative NOISE branchから出す。物理RAM容量を減らさない。
+  初回VAB markerless loop回帰を検出し、物理repeat register復元を追加、RR31・24音・無音後の復帰も完全一致。
+- Offline/macOS各8/8、ASan8/8（28.85s）、実AU48kHz / 実VST3 44.1/48/96kHzのNoise / 旧suite成功、validator47/0。
+  音声比較側の768frame時間差を修正して厳密比較を維持した。初期Sine WAV hash不変、callback C++ new/delete0。
+- StandaloneでNoise切替・Clock48→23入力・page往復・Sampleへ元音源/未Apply Triangle草稿の復帰を確認し終了。
+  数値入力後のremote clickはEscapeで復帰、原因未切分け。Noise固有不具合として扱わず記録する。
+- [詳細](noise_20261031.md) / [hash・ログ](noise_20261031.json)。次: pushしてCI、AU更新と旧schema4のGarageBand復元。
+  現installed AUは旧PCM版、検証copy7filesを退避済み。実聴・長時間・DAW独自Noise操作は未確認。
+
 ## 2026-10-31 JST — Noiseモードの開始チェックポイント
 
 - `35d0a0d`、main / origin同期・clean treeから開始。実装前に今回の範囲をTODOへ保存した。

@@ -27,6 +27,9 @@ void reverb(const ReverbSettings& value) {
     if(!std::isfinite(volume)||volume<0||volume>1)
       fail("SPU state: reverb return must be finite 0-1");
 }
+void noise(const NoiseSettings& value) {
+  if(value.clock>63)fail("SPU state: Noise clock must be 0-63");
+}
 std::size_t selected(const vab::Bank& bank,std::uint32_t program,std::uint32_t tone) {
   if(program>127||tone>15)fail("SPU state: Program/Tone is out of range");
   for(std::size_t i=0;i<bank.tones.size();++i)
@@ -99,10 +102,11 @@ std::shared_ptr<const InstrumentDefinition> InstrumentDefinition::fromPcmCycle(c
 }
 
 std::vector<std::uint8_t> encodeState(const InstrumentDefinition& definition,double gainPercent,
-                                    EnvelopeSettings settings,ReverbSettings effects) {
+                                    EnvelopeSettings settings,ReverbSettings effects,NoiseSettings generator) {
   gain(gainPercent);
   envelope(settings);
   reverb(effects);
+  noise(generator);
   const auto& bank=definition.bankBytes();
   if(bank.size()>vab::kMaxFileBytes)fail("SPU state: VAB exceeds 1 MiB");
   const bool pcm=definition.kind()==InstrumentDefinition::Kind::PcmCycle;
@@ -125,14 +129,16 @@ std::vector<std::uint8_t> encodeState(const InstrumentDefinition& definition,dou
   putWord(bytes.data()+52+size,(effects.enabled?1u:0u)|(effects.useToneSend?2u:0u));
   putGain(bytes.data()+56+size,effects.volumeLeft);
   putGain(bytes.data()+64+size,effects.volumeRight);
+  putWord(bytes.data()+72+size,generator.enabled?1u:0u);
+  putWord(bytes.data()+76+size,generator.clock);
   return bytes;
 }
 
 std::vector<std::uint8_t> encodeState(
     const std::shared_ptr<const InstrumentDefinition>& definition,double gainPercent,
-    EnvelopeSettings settings,ReverbSettings effects) {
+    EnvelopeSettings settings,ReverbSettings effects,NoiseSettings generator) {
   if(!definition)throw std::invalid_argument("SPU state: missing instrument definition");
-  return encodeState(*definition,gainPercent,settings,effects);
+  return encodeState(*definition,gainPercent,settings,effects,generator);
 }
 
 SavedInstrumentState decodeState(vab::BytesView bytes) {
@@ -143,7 +149,7 @@ SavedInstrumentState decodeState(vab::BytesView bytes) {
   if(version<1||version>kStateSchemaVersion)fail("SPU state: unsupported schema");
   if(word(bytes.data+12)!=bytes.size)fail("SPU state: declared length differs");
   const auto kind=word(bytes.data+16),program=word(bytes.data+20),tone=word(bytes.data+24),n=word(bytes.data+28);
-  const auto fixed=version==1?40:version==2?48:kStateFixedBytes;
+  const auto fixed=version==1?40:version==2?48:version<=4?72:kStateFixedBytes;
   if(n>vab::kMaxFileBytes||std::uint64_t(n)+fixed!=bytes.size)fail("SPU state: invalid bank length");
   if(kind>(version>=4?2u:1u))fail("SPU state: unsupported instrument kind");
   if(kind==0&&(n||program||tone))fail("SPU state: builtin must not contain a bank or selection");
@@ -167,14 +173,21 @@ SavedInstrumentState decodeState(vab::BytesView bytes) {
     effects.volumeLeft=readGain(bytes.data+56+n);effects.volumeRight=readGain(bytes.data+64+n);
     reverb(effects);
   }
-  if(kind==0)return {InstrumentDefinition::builtin(),gainPercent,settings,effects};
+  NoiseSettings generator;
+  if(version>=5) {
+    const auto flags=word(bytes.data+72+n);
+    if(flags&~1u)fail("SPU state: unknown Noise flags");
+    generator.enabled=(flags&1)!=0;generator.clock=word(bytes.data+76+n);
+    noise(generator);
+  }
+  if(kind==0)return {InstrumentDefinition::builtin(),gainPercent,settings,effects,generator};
   if(kind==2) {
     PcmCycle cycle{};
     for(std::size_t i=0;i<cycle.size();++i)cycle[i]=readSample(bytes.data+kStateHeaderBytes+i*4);
-    return {InstrumentDefinition::fromPcmCycle(cycle),gainPercent,settings,effects};
+    return {InstrumentDefinition::fromPcmCycle(cycle),gainPercent,settings,effects,generator};
   }
   std::vector<std::uint8_t> bank(bytes.data+kStateHeaderBytes,bytes.data+kStateHeaderBytes+n);
-  return {InstrumentDefinition::fromVab(std::move(bank),program,tone),gainPercent,settings,effects};
+  return {InstrumentDefinition::fromVab(std::move(bank),program,tone),gainPercent,settings,effects,generator};
 }
 
 } // namespace tetorica

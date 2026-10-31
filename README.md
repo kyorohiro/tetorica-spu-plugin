@@ -5,9 +5,9 @@ Initial development targets macOS Standalone, AUv2 and VST3. Not a published rel
 
 Current prototype: original built-in Sine, MIDI Note On/Off and velocity,
 24 voices, channel-aware note ownership, Pitch Bend, Sustain, All sound off,
-Gain, a PCM waveform editor, custom ADSR editing, shared SPU Reverb and mouse keyboard.
+Gain, a PCM waveform editor, SPU Noise, custom ADSR editing, shared SPU Reverb and mouse keyboard.
 Load a complete VAB from the editor and select a Program and Tone to audition.
-The bank or PCM cycle, selection, Gain, ADSR and Reverb settings are embedded in the DAW project state.
+The bank or PCM cycle, selection, Gain, ADSR, Reverb and Noise settings are embedded in the DAW project state.
 Additional SPU controls remain planned. The same VAB parser and selected-Tone
 engine can also be exercised with the offline tool below.
 
@@ -93,7 +93,7 @@ bypassed blocks is not replayed when processing resumes.
 
 ## PCM waveform editing
 
-Open the **PCM** page to choose Sine, Triangle, Saw or Square, or draw one cycle
+Open the **Source** page with **Source: Sample** to choose Sine, Triangle, Saw or Square, or draw one cycle
 on the single canvas. The editor uses 112 signed PCM samples in `[-1, 1]`.
 The four shapes have amplitude 0.8, matching the original built-in Sine.
 Edits are a draft until **Apply PCM**; **Revert** discards the draft.
@@ -114,9 +114,32 @@ Tone reverb-send flag; use **Send: all notes** to send them to Reverb.
 Applied cycles are stored as 112 Float32 samples in the project and encoded
 again when restored. No external file is needed. Shape selection and drawing
 are instrument edits rather than host automation parameters; the existing
-17 parameter IDs remain unchanged. **Builtin Sine** still restores the original
+17 pre-existing parameter IDs remain unchanged. **Builtin Sine** still restores the original
 fixed sample. Editing a VAB does not rewrite its sample bank: Apply replaces
 the current source with the authored PCM cycle.
+
+## SPU Noise
+
+On the **Source** page, switch **Source: Sample** to **Source: SPU Noise**.
+Keys trigger the SPU Noise generator through the selected instrument's velocity,
+volume/pan and ADSR. Sustain and Reverb remain available. Noise is a shared SPU
+function; the PCM drawing editor remains a software authoring feature.
+
+**Shared Noise clock** is a raw code from 0 to 63, initially 48, shared by all
+24 voices in this instance. It changes Noise rate/texture while notes or release
+tails sound, without restarting envelopes. Note and Pitch Bend do not tune Noise
+to a musical scale. Live bend values are still retained for returning to Sample.
+The pinned core uses an approximate generator rather than a hardware-exact model.
+
+Changing Sample/Noise mode stops held notes and old Reverb tails. Play a new
+note after the switch. The original Builtin/PCM/VAB and any local PCM draft are
+kept, so **Source: Sample** returns to that sample. One-shot sample END does not
+end a Noise note; its ADSR still controls its duration. Reverb's **Tone setting**
+send uses the retained original source flag in both modes.
+
+Noise mode and Clock are saved host parameters, IDs 17 and 18. Automation is
+applied at block boundaries. Old projects restore with Noise Off and Clock 48.
+This does not automatically reconstruct VAB sample-255 Noise Tones.
 
 ## ADSR editing
 
@@ -150,7 +173,7 @@ uploads, engine replacement or application-level audio-thread allocations.
 
 ## SPU Reverb
 
-The **PCM / ADSR / Reverb** page buttons share the same bank, Gain and keyboard.
+The **Source / ADSR / Reverb** page buttons share the same bank, Gain and keyboard.
 Choose a **Shared preset** to enable Reverb automatically: Room, Studio Small,
 Studio Medium, Studio Large, Hall, Space Echo or Half Echo. These are the pinned
 core's named approximations of PS1 Reverb, not a complete hardware algorithm.
@@ -242,6 +265,9 @@ with Reverb Off, preserving the original sound. Live delay history is not saved;
 restoring a project starts the effect with empty buffers.
 Schema 4 adds a PCM-cycle source kind with an exact 448-byte Float32 payload.
 Schema 1/2/3 Builtin and VAB states remain readable with their saved settings.
+Schema 5 adds the shared Noise settings after the unchanged 72-byte layout.
+Schema 1/2/3/4 and Gain-only states use Noise Off / Clock 48 without changing
+their source or the envelope/effect settings supported by that schema.
 
 The actual AU and VST3 have been tested for embedded-bank round-trip, separate
 instances, immediate first-render MIDI/PCM and malformed-state rejection. VST3
@@ -304,7 +330,7 @@ still need a direct user check; the verified host-preset route is separate.
   MIDI notes 92 and above clamp. Full-range multisampling is follow-up work.
 - Host rate conversion uses continuous linear interpolation. Anti-alias filtering
   below 44.1 kHz and improved conversion quality remain follow-up work.
-- State schema 4 stores a built-in instrument, one selected VAB Tone or one
+- State schema 5 stores a built-in instrument, one selected VAB Tone or one
   authored 112-sample PCM cycle, with a 1 MiB bank limit. Key zones, layers and game-driver performance state are
   not reconstructed. Held notes, release tails, decoder caches and host rate
   are not saved.

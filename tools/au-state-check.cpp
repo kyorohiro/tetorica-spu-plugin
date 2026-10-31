@@ -7,6 +7,7 @@
 #include "vst3-host/envelope-checks.h"
 #include "vst3-host/reverb-checks.h"
 #include "vst3-host/pcm-cycle-checks.h"
+#include "vst3-host/noise-checks.h"
 #include <AudioToolbox/AudioToolbox.h>
 #include <CoreFoundation/CoreFoundation.h>
 #include <algorithm>
@@ -130,7 +131,7 @@ public:
     const auto state=save();return body(state.get());
   }
   void plainParameterForTest(int index,double plainValue) {
-    require(index>=1&&index<=16,"Invalid AU sound parameter ID");
+    require(index>=1&&index<=18,"Invalid AU sound parameter ID");
     ok(AudioUnitSetParameter(mUnit,static_cast<AudioUnitParameterID>(index),
       kAudioUnitScope_Global,0,static_cast<AudioUnitParameterValue>(plainValue),0),"AU ADSR parameter rejected");
   }
@@ -304,6 +305,7 @@ int main(int argc, char** argv)
     tetorica::test::checkEnvelopes([&] { return std::make_unique<Instance>(component); },48000,"AU parameters",bank);
     tetorica::test::checkReverbs([&] { return std::make_unique<Instance>(component); },48000,"AU parameters",bank);
     tetorica::test::checkPcmCycles([&] { return std::make_unique<Instance>(component); },48000,"AU state/MIDIEvent");
+    tetorica::test::checkNoise([&] { return std::make_unique<Instance>(component); },48000,"AU parameters/MIDIEvent",bank);
     std::cout << "PASS: local AU embedded VAB/Gain round-trip, first-render MIDI/PCM, separate instance, "
       "malformed CF/state rejection with pending/active preservation, legacy AU migration; no audio device/editor/install\n";
   }
