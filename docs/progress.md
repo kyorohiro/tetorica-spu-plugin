@@ -1,5 +1,18 @@
 # 作業記録
 
+## 2026-10-31 JST — Tone選択は人の入力待ち、dirtyの基準を分離
+
+- 開始TODOを`3057dd6`へ保存してpushした。AU画面はP3/T0/Gain99の復元状態。
+- CUAでTone controlへclickするとhoverのみで、menuは開かなかった。
+  製品のmenu不具合とは判定せず、ユーザーへTone 1だけの選択を依頼した。
+- Tone未変更・Gain未変更・region未編集でも、editorを閉じてQuitすると保存確認が出た。
+  CancelしてhostのFile→保存を明示後、再度Quitしても保存確認が出たため、再びCancelした。
+  この基準では保存promptをTone-only dirty成功の証拠にできない。
+- 保存済みbank/P3/T0/Gain99は一致し、payload SHAも前回と同じだった。
+  AU通知のsource reviewではTone差分も検出しPresentPreset通知を送るが、DAWのdirty判定は未確認のまま。
+- 次: 人のTone選択結果を確認し、保存・embedded state・再起動UIを追試する。
+  コード・既存AUは変更していない。
+
 ## 2026-10-31 JST — Program/Tone・Toneのみ保存通知の確認を開始
 
 - ユーザーから継続の指示。cleanな`bee1019`から開始し、今回の確認順をTODOへ記録した。

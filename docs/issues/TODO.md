@@ -25,11 +25,16 @@ AUを既知manifest照合付きで更新し、GarageBand標準AUプリセット�
 ### Program/Tone・保存通知の今回の区切り（2026-10-31、開始時記録）
 
 - [ ] 保存済みP3/T0/Gain99のcopyを基準に、Tone 1だけへ変更する。停止中は必要に応じて再生し採用する。
-- [ ] GainやMIDI regionを編集せず、GarageBandの終了・close時の保存確認でTone-only変更通知を追試する。
+- [ ] Tone-only変更通知を、変更前の基準と区別して確認する。未変更でもGarageBand終了時の保存確認が出たため、保存promptだけでは判定できない（下記）。
 - [ ] 保存後のembedded P3/T1/Gain99と、再起動後の選択UIを照合する。
 - [ ] Program 11→3の個別切替を確認し、各Programの最初の再生可能Toneが選ばれることを確認する。
 - [ ] popup取消・通常のeditor close/reopenを確認する。CUAで操作できない所は人の操作を一度依頼する。
 - [ ] 結果と未確認範囲を記録しcommit / pushする。再現した不具合があれば修正前に記録する。
+
+基準確認では、P3/T0/Gain99を再起動後、音色やregionを編集せずeditorを閉じてQuitしても保存確認が出た。
+Cancel後にFile→保存を明示してQuitした場合も同じだった。終了はCancelしprojectを保持している。
+保存promptをTone-only通知成功の証拠にしない。AUの通知コードはToneも比較してPresentPreset通知を送るが、DAWのdirty判定とは区別する。
+CUAのTone clickはhoverだけでmenuが開かないため、ユーザーへTone 1だけの選択を依頼中。
 
 ### AU独自UIの追試（2026-10-31、開始時記録）
 
