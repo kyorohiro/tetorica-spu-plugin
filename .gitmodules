@@ -1,0 +1,9 @@
+[submodule "vendor/iPlug2OOS"]
+	path = vendor/iPlug2OOS
+	url = https://github.com/iPlug2/iPlug2OOS.git
+[submodule "vendor/tetorica-soundchip-native"]
+	path = vendor/tetorica-soundchip-native
+	url = https://github.com/kyorohiro/tetorica-soundchip-native.git
+[submodule "vendor/vst3sdk"]
+	path = vendor/vst3sdk
+	url = https://github.com/steinbergmedia/vst3sdk.git
