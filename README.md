@@ -324,8 +324,9 @@ the engine exchange.
 
 ## Embedded DAW state
 
-Custom state now embeds the complete original VAB or authored PCM cycle, sparse Program/Tone selection
-and Gain, custom ADSR, Apply and Reverb settings. Restoring a project prepares a fresh SPU synchronously before reporting
+Custom state embeds the complete original VAB or authored PCM cycle, sparse Program/Tone selection,
+Gain, custom ADSR/Apply, Reverb, Noise, PMON and Morph settings, including both authored A/B endpoints.
+Restoring a project prepares a fresh SPU synchronously before reporting
 success; it does not need an external sample path. Malformed or unsupported state
 keeps the current sound, parameters and an already prepared pending replacement.
 Previous Gain-only AU/VST3 state remains readable and migrates to Built-in Sine.
@@ -379,12 +380,12 @@ The ordinary `--install` still refuses a different existing bundle.
 ```sh
 python3 -m unittest discover -s tests -p 'test_install_au.py' -v
 python3 scripts/install_au.py --update \
-  --expected docs/pmon_20261031.json --backup-root build/au-backups
+  --expected docs/morph_20261101.json --backup-root build/au-backups
 # Use the printed manifest path to roll back; refuses an altered installation:
 python3 scripts/install_au.py --rollback build/au-backups/au-update-REPLACE/manifest.json
 ```
 
-The [PMON verification record](docs/pmon_20261031.md) contains the
+The [Software Morph verification record](docs/morph_20261101.md) contains the
 current installed manifest, backup report and GarageBand restoration result.
 
 The destination is `~/Library/Audio/Plug-Ins/Components/TetoricaSPU.component`.

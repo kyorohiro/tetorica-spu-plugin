@@ -16,12 +16,15 @@ VAB由来のADSR・tuning・loop・volume/panを使用する。ADSRはCustom ove
 共有Reverbのpreset / Enable / Return / sendも実装した。初期Offで元の音を保つ。
 [Reverbの検証記録](reverb_20261031.md)を参照。
 112-sample PCMの4形状・単一canvasでのdraft描画・Applyも実装・検証済み。
-Applyはworkerで準備した音源への交換であり、保持音・残響は停止する。live PCM書換えは後続。
+Applyはworkerで準備した音源への交換であり、保持音・残響は停止する。通常PCM draftのlive適用は対象外。
 [PCMの検証記録](pcm_waveform_20261031.md)を参照。
 共有Noiseとlive Clockも実装し、元音源を保持してSampleへ戻せる。
 [Noiseの検証記録](noise_20261031.md)を参照。
 PMONの12音pair、4変調波形、live Ratio / Depth、Decayも実装・検証した。
 [PMONの検証記録](pmon_20261031.md)を参照。
+Software MorphもA/B/Resultの単一canvas、endpointのdraft / Apply、live Amountを実装した。
+core・実AU/VST3・Standalone操作・installed AU更新・GarageBand旧state復元・両repo CIを確認した。
+[Morphの検証記録](morph_20261101.md)と[保存・更新記録](morph_20261101.json)を参照。
 Gainは現在0〜100%。WebのMaster 200%とは異なる。
 
 実DAWでの確認済み範囲と残るProgram操作・dirty判定は、
@@ -37,9 +40,9 @@ Gainは現在0〜100%。WebのMaster 200%とは異なる。
 | 実装済み：PCM | 112-sample周期の4形状・自由描画 | 単一canvasのdraft / Apply / Revertとschema4の元PCM保存を追加。workerで循環ADPCMを準備し、交換時に保持音・残響を停止する。実AU/VST3・Standalone操作を検証、実DAW独自PCM操作は残る。 |
 | 実装済み：Noise | Noise clock、Sample切替 | 共有Clock0〜63のlive変更、元音源・draft保持、19params/state5と旧形式互換。実AU/VST3とStandaloneを検証。実DAW独自操作等は残る。 |
 | 実装済み：PMON | 変調波形・Ratio・Depth・Decay | 隣接voiceの12組、4変調波形、live Ratio / Depth、次NoteのDecay、24params / state6を追加した。元音源保持・Noise優先・旧state互換をcore / 実AU・VST3で検証。Standalone操作・installed AU更新・CIも完了。実聴・実DAW automation録音等は残る。 |
-| Software morph | A/B/Resultを同じcanvasへ表示し、編集対象を切替。保持音を再発音せずblend変更 | PCM編集を土台にA/B定義・amount・更新経路を追加し、software機能と表示する。Webの初期設定はOn、A=Sine、B=Saw、amount=0%。 |
+| 実装済み：Software Morph | A/B/Resultを同じcanvasへ表示し、編集対象を切替。保持音を再発音せずblend変更 | 元sourceとA/B原本を保つ26params / state7を実装。endpointはdraft / Apply、Amountだけlive。初期Off、A=Sine / B=Saw（振幅0.8）、Amount0。Offは元sourceへ戻す。PMON併用・Noise優先・実AU/VST3・Standalone・旧state復元・CIを検証。実聴・実DAW独自UIとautomation録音は残る。 |
 | 音色・素材の入力 | `.spu.json`、audio、PSF1/MiniPSFからの静的VAB抽出、VH+VB | 分割VH/VBとpreset互換から始め、sample stateを設計してAudio・PSF抽出へ広げる。C++の明示VH/VB parserは既にあるが、file pickerはcomplete VABのみ。既知のNative loop flag制限も別途修正・検証する。 |
-| monitor・演奏UI | Envelope/Waveform/Spectrum、Guitar/Bass/Ukulele、Octave、Pitch/Morph wheel、Master 200% | 必要なmonitorと操作を追加する。DAWで代替できる操作は優先度を分け、Standaloneの利便性も考慮する。 |
+| monitor・演奏UI | Envelope/Waveform/Spectrum、Guitar/Bass/Ukulele、Octave、Pitch/Morph wheel、Master 200% | Morph AmountはSourceとkeyboard横へ実装済み。残るmonitor・Pitch wheel・Octave等はDAWの代替機能とStandaloneの利便性を考慮して追加する。 |
 
 各段階で、音の変化だけでなく、演奏中の編集・保存直後の復元・不正入力時の現音源保持を確認する。
 coreのoffline検証と実AU/VST3の検証を行い、実DAWのUI確認や実聴とは区別して記録する。
@@ -71,15 +74,18 @@ Noise clockは全voice共通の質感変更で、NoteやBendによる音階追�
 PMONは1音に2 voicesを使うため、通常の24音から12音になる。
 再現度・近似の有無は、移植時の実装と検証結果に従って記録する。
 
-波形描画や手動morphは、softwareがPCMを作りSPU sampleとして再生する機能。
+通常PCMの波形描画は、softwareが循環ADPCMを作りSPU sampleとして再生する機能。
+Software Morphは物理RAM外のprivate bank1へ112-sampleの16bit PCMを用意し、
+SPUのGaussian / ADSR / PMON / Reverbを通す。元4bit ADPCMとのbit一致は約束せず、Offで元音源へ戻す。
 長いAudioのhost PCMも、PS1の物理512 KiB RAM外を使うsoftware拡張である。
 この区別はpluginの画面と説明にも引き継ぐ。
 
 WebのAudio入力は短い録音をSPU ADPCMへ変換し、長い録音をSoftware audioへ切り替える。
-pluginのschema6はBuiltin/VAB/PCM cycleの3種類で、bank上限1 MiB、payload上限1 MiB+112 bytes。
-Noise / PMONは元音源と独立した共有parameterとして保存する。旧schema1〜5も読み込む。
-両EnabledがOnのhost tupleは保持し、実効modeはNoise優先にする。
+pluginのschema7はBuiltin/VAB/PCM cycleの3種類を保ち、bank上限1 MiB、state上限1 MiB+1024 bytes。
+Noise / PMON / Morphは元音源と独立した共有parameterとして保存する。旧schema1〜6も読み込む。
+各Enabledが同時Onのhost tupleは保持し、実効modeはNoise優先にする。SampleではMorphとPMONを併用できる。
 PCM cycleは112 Float32、448bytesの元波形を保持し、prepared ADPCMは保存しない。
+MorphはA/B各112 Float32の原本とEnabled / Amountを保存する。旧stateはMorph Off / Amount0 / default A/Bへ移行する。
 長いPCMを入れる際は、音源kind、version互換、容量上限、所有権、workerでの準備、
 DAW project内のsample保持を改めて設計する。現在のVAB上限だけを増やして対応済みとはしない。
 

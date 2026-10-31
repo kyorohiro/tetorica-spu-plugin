@@ -539,5 +539,16 @@
 - Native SDKの確保なしhost PCM更新APIを公開し、CIをmacos-15へ移した公開 `d0c2750` へ依存を固定した。
 - Offline9/9、macOS9/9、ASan全9suite、実AU48k / VST3 44.1・48・96k、公式validator47/0、auvalと両repositoryのCIが成功。初期Sine WAV hashは従来と完全一致。
 - StandaloneのSource / PMON数値 / Hold / draft保持を確認し、AUをknown hash照合と退避付きで更新した。GarageBand旧schema5 P3/T0/Gain99を復元、原本11files不変。
-- 詳細・コマンド・hash・未確認範囲は[PMON記録](pmon_20261031.md)と[JSON](pmon_20261031.json)。現在のAU manifestも同JSON。
+- 詳細・コマンド・hash・未確認範囲は[PMON記録](pmon_20261031.md)と[JSON](pmon_20261031.json)。この時点のAU manifestも同JSON。
 - 次の候補はsoftware morph。実装前にTODOへ範囲を記録する。実聴・長時間・実DAW automation録音は人による確認として残る。
+
+## 2026-11-01 JST — Software Morph完了
+
+- 開始TODO `589b263` を実装前にcommit / pushし、実装を `65b6daf` に保存した。Native SDKは2つのprivate host PCM bankを提供する公開 `d0e0324` へ固定した。
+- A/B/Resultを1canvasへ表示し、A/B切替・形状選択・自由描画・Apply/Revertを追加。SourceとkeyboardのAmountは同一parameterで、採用済みA/Bを保持音・Release中も再発音せずblendする。これはsoftwareの機能。
+- 元Builtin/VAB/PCMと通常PCM draftを保持し、Morph Offで元音源に戻る。Noise優先、PMONとの併用は12音。既存24parameterのIDを維持し26params、schema7と旧1〜6 / legacy互換を追加した。
+- Offline / macOS全11tests、ASan全11testsと最終state / exchange / draft再検証、strict、実AU48k / VST3 44.1・48・96k、公式validator47/0、auval26paramsが成功。初期Sine WAV hashは従来と一致。
+- SDK CI `41249290598` の全12検証job、plugin CI `41250360041` の両job成功。artifactはmetadataのみ照合し、download・別環境実行は未確認。
+- Standaloneで単一canvas・A/B描画・Apply/Revert・Amount2か所の相互同期・draft保持を確認した。AUをmanifest照合・退避付きで更新し、GarageBand旧schema6のP3/T0/Gain99とMorph Offを復元。saved payload / VABは不変、原本11files不変。
+- 操作・rollback・source hash・installed AU manifestは[Morph記録](morph_20261101.md)と[JSON](morph_20261101.json)。現在のAU manifestはこちらを使う。
+- 人による実聴・長時間使用・実DAW独自Morph UIとautomation録音はTODOへ残す。Web/Tauriとversion/tag/releaseは今回変更していない。

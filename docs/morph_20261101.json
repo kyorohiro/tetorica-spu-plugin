@@ -1,0 +1,698 @@
+{
+  "started_on": "2026-11-01",
+  "completed_on": "2026-11-01",
+  "timezone": "Asia/Tokyo",
+  "start_todo_commit": "589b263",
+  "production_commit": "65b6dafabb6c9a5351f68dd93de78ecdbbfac1cf",
+  "native_sdk_commit": "d0e0324a56d0b2fe92c4367e69ddee11971a7892",
+  "features": {
+    "software_feature": true,
+    "parameter_count": 26,
+    "existing_parameter_ids_preserved": [
+      0,
+      23
+    ],
+    "morph_parameter_ids": {
+      "enabled": 24,
+      "amount": 25
+    },
+    "default": {
+      "enabled": false,
+      "amount": 0,
+      "A": "Sine",
+      "B": "Saw",
+      "amplitude": 0.8
+    },
+    "one_canvas": [
+      "Wave A",
+      "Wave B",
+      "Result"
+    ],
+    "edit_target": [
+      "A",
+      "B"
+    ],
+    "endpoint_frames_each": 112,
+    "endpoint_storage": "exact Float32, including negative zero",
+    "endpoint_apply": "off-audio worker and engine exchange; stops held notes and reverb",
+    "amount": "live shared host parameter on Source and keyboard; held/sustain/release without KON or cursor/envelope reset",
+    "morph_off": "retained original Builtin/VAB/PCM source",
+    "ordinary_pcm_draft_retained": true,
+    "noise_priority_retains_raw_morph": true,
+    "pmon_combined_note_limit": 12,
+    "private_host_pcm_banks": {
+      "bank0": "Noise/PMON",
+      "bank1": "signed16 PCM Morph carrier"
+    },
+    "physical_sample_ram_usable_bytes": 520192,
+    "morph_off_previous_adpcm_exact": true,
+    "morph_on_adpcm_bit_exact_claimed": false,
+    "state_schema_written": 7,
+    "state_schema_read": [
+      1,
+      2,
+      3,
+      4,
+      5,
+      6,
+      7,
+      "legacy-gain-only"
+    ],
+    "fixed_state_bytes": 1024,
+    "morph_offsets_after_payload": {
+      "flags": 112,
+      "reserved_zero": 116,
+      "amount_f64": 120,
+      "A_f32": 128,
+      "B_f32": 576
+    },
+    "legacy_defaults": "Morph Off, Amount 0, Sine/Saw pair",
+    "malformed_state_preserves_active_pending_and_all_params": true,
+    "web_differences": "Plugin starts Off with amplitude0.8 and explicit endpoint Apply; Off restores base. Web starts On/amplitude0.65, completed strokes update endpoints, Off retains blend.",
+    "excluded": [
+      "Morph LFO",
+      "long-audio Morph",
+      "external-input Reverb"
+    ]
+  },
+  "production_source_sha256": {
+    "CMakeLists.txt": "dc96f7158782f009d307ab0f9a627e649a7436b2288b734985554aaa8c096b52",
+    "CMakePresets.json": "d203cf8cea5211789d707147f2c8d4c9c1b9ecef0cf889acf8aafe2f9ffe69ad",
+    "dependencies.lock.json": "3a326880d35bdf3108628b43bef254c22c910e4658c305c484314ad6f02d5569",
+    "plugin/InstrumentState.cpp": "e384d6dcb82ef8e1cf48964eea8b589620fca7bd44613eb9dd3b2f35fe51589f",
+    "plugin/InstrumentUI.cpp": "d2d82d2e69d9bc8a30afe6040a3c623b3f31b20c70f7fe488a63a3f01fdbb7a5",
+    "plugin/MorphDraftState.h": "76c6214c21fda966a1f8486c060edde169f22a2b2808102da097e91855d78d5c",
+    "plugin/TetoricaSPU.cpp": "c1a88460e59c2570b6d3a0cbc6aa2e580b862094816d360ad1dcc2523c887f85",
+    "plugin/TetoricaSPU.h": "ddc52d92bb549a9be20fc42746a3c46fc466688349e944823e9b58dea0d489b7",
+    "plugin/WaveformControl.h": "ba5af66f74d4652439c0f87da078d6ac4e38d17c541d469a6686f58ccbb35018",
+    "scripts/check_garageband_vab_state.py": "f2256222cf259082ab3727c08987f632710bd5621c41774d22f52feffc95b4b6",
+    "src/InstrumentState.cpp": "a14144e4337d4dfb7ca7d154222811e0333bf30a12a4141ca25a897dd58df111",
+    "src/InstrumentState.h": "9e8ce886b5e637e3444b32ea416b259b3324fa1954d52052a18a7549bec17725",
+    "src/SpuEngineExchange.cpp": "ff6af734bbfcf0d0a567230eda21df63bbb8ea60f8d9a5b2f436c0b008e7d6ba",
+    "src/SpuInstrument.cpp": "eac2442daf026a3d539dae0d95723d09543cc4f5380bccc96549a4befc92af7d",
+    "src/SpuInstrument.h": "96531c3cd2eeb400c6a95dc0898ac99211251bccc2e02f79ea5ca28705e04e87",
+    "src/SpuMorph.cpp": "2ce454ddab3131a4d7d0937886e3d17368d7ca87a595a0a412f9dbb9f7f5e8d4",
+    "src/SpuMorph.h": "b0d365bb65b8db4e585cf25c65a64ac2cbb10bfe10b97efda8d6094296a23ab7",
+    "src/VabLoader.cpp": "800202ed240d0161f90308ac244c4ac9b6297cd01bc57c22f34a70c20c2c0431",
+    "src/VabLoader.h": "8fca6ad6266c06b9839161a557028cebe759500a55ab27f1237d6122eba3d1d2",
+    "tests/instrument_state_test.cpp": "8cb6596dbe5ec5b8315cf9f946c105953ebbf43c5e6edc8981318db7388af686",
+    "tests/morph_draft_test.cpp": "bfcbf8215a4cec5d1d8fdb3b232bf7175688cac12ff441826f7f77e59f0e2c22",
+    "tests/spu_engine_exchange_test.cpp": "96a07172a3849431069bba382d645b13270c65b885b88abefec47cfd12f9fc95",
+    "tests/spu_morph_test.cpp": "d8a85fc94a9e9a62b73b1f3eb58b949352e47131a5fa3090def87e505dddbe5a",
+    "tools/au-state-check.cpp": "7f989b00b78dadd7533321f80c493834b3628c513da59ee247dc05ae27c64818",
+    "tools/vst3-host/CMakeLists.txt": "3a05458859a40016888033a613fe22ca0ca178dbcfc2ee4b8641810c726d3774",
+    "tools/vst3-host/envelope-checks.h": "e923b0cf85f4779ce8fad9afedc749ed5cc4320d9633e3237492e9ea28cd677c",
+    "tools/vst3-host/main.cpp": "f2022505abe4ebc249eb7117c6d81baf305dd9c67bdacb1290cf04ec4b917a09",
+    "tools/vst3-host/morph-checks.h": "e671010a778bb32d4a4ce4a2ea9c42a276a01f334610ce6e3377c8fe1a9696d3",
+    "tools/vst3-host/noise-checks.h": "34383c35fd8b7897fe020cb179d56c4324b2578fe48cbf81bed7abb89c8b4a5c",
+    "tools/vst3-host/pmon-checks.h": "d2990a22056826b79b599403a90646e452326dff35c0fa792ae2507813bef5cd"
+  },
+  "dependency_lock_sha256": "3a326880d35bdf3108628b43bef254c22c910e4658c305c484314ad6f02d5569",
+  "local_verification": {
+    "installer_tests": {
+      "passed": 11,
+      "failed": 0
+    },
+    "offline": {
+      "passed": 11,
+      "failed": 0,
+      "seconds": 5.19,
+      "log": {
+        "path": "build/offline/Testing/Temporary/LastTest.log",
+        "bytes": 9657,
+        "sha256": "acc2c4e83485c3570596b12586d1b7a58428519aae2ecd08331092ad4205371f"
+      }
+    },
+    "macos": {
+      "passed": 11,
+      "failed": 0,
+      "seconds": 5.73,
+      "log": {
+        "path": "build/macos/Testing/Temporary/LastTest.log",
+        "bytes": 9641,
+        "sha256": "cad571a3f2b70f14da64915fa64094bd89a255af2f3db4a51d539008914f2a4d"
+      }
+    },
+    "asan": {
+      "observed_full_suite_passed": 11,
+      "full_suite_seconds": 54.94,
+      "final_state_exchange_draft_rerun_passed": 3,
+      "final_rerun_seconds": 5.64,
+      "last_log_contains_final_three_only": true,
+      "log": {
+        "path": "build/morph-asan/Testing/Temporary/LastTest.log",
+        "bytes": 3248,
+        "sha256": "9c6bcb8ab12f1b993e970fd9becc4dcd1caf4ffcd7c0769f05ca2c9c5d984e0c"
+      }
+    },
+    "strict_cpp_syntax": {
+      "passed": true,
+      "flags": [
+        "-std=c++17",
+        "-Wall",
+        "-Wextra",
+        "-Wpedantic",
+        "-Werror"
+      ],
+      "log": {
+        "path": "build/morph-core/verification/strict_compile.log",
+        "bytes": 206,
+        "sha256": "0ab246a3c88ff0395a7b8a8dc30670655c610bbbbe99c3df81c295d34c8063a5"
+      }
+    },
+    "core_compatibility": {
+      "path": "build/morph-core/verification/morph_compatibility.log",
+      "bytes": 985,
+      "sha256": "40c9e5ffe4135da74a64bc07b6096bd61272c4fec6f874095de08eebb2d227d5"
+    },
+    "actual_vst3": {
+      "passed": true,
+      "sample_rates": [
+        44100,
+        48000,
+        96000
+      ],
+      "log": {
+        "path": "build/morph-vst3-audio.log",
+        "bytes": 11246,
+        "sha256": "0be33a32bc7010135ae07f504f27a5f8c5a4b8b5edcaa4e818493c81f48b9491"
+      }
+    },
+    "actual_au": {
+      "passed": true,
+      "sample_rates": [
+        48000
+      ],
+      "log": {
+        "path": "build/morph-au-state.log",
+        "bytes": 2859,
+        "sha256": "f07d0f1c61d5aa50d78f1e0e121017fd330e34afcda049a7e7e0563901718a9f"
+      }
+    },
+    "actual_host_morph_scope": [
+      "immutable A/B",
+      "26 parameters",
+      "first restore block",
+      "live Amount",
+      "held/release no KON",
+      "negative-zero endpoint round trip",
+      "PMON combined",
+      "Noise priority",
+      "topology panic",
+      "fresh and carried controllers",
+      "malformed pending/active atomicity",
+      "schema1..6 and legacy",
+      "original source restored",
+      "prior MIDI/ADSR/Reverb/PCM/Noise/PMON"
+    ],
+    "vst3_validator": {
+      "passed": 47,
+      "failed": 0,
+      "log": {
+        "path": "build/morph-vst3-validator.log",
+        "bytes": 252137,
+        "sha256": "5f7187d4ce2fb3ddc28bfd406e0fa8a4bede5a26c597d9b4d704e212452759b2"
+      }
+    },
+    "auval": {
+      "passed": true,
+      "parameter_count": 26,
+      "known_warning": "preset name",
+      "log": {
+        "path": "build/morph-auval.log",
+        "bytes": 9427,
+        "sha256": "c96d98c872028963ef7d8631fb74977a9030ab0014bc18da3e4dc458c9bb68da"
+      }
+    },
+    "default_sine_wav": {
+      "path": "/private/tmp/tetorica-spu-morph-demo.wav",
+      "bytes": 576044,
+      "sha256": "7a61b56d356ac198c35808b503cf0b61b55a9547b21770eb2a67c97d0cc4aef3"
+    },
+    "sdk": {
+      "release_fixture_seconds": 0.78,
+      "asan_fixture_seconds": 2.89,
+      "wasm_rendered_frames": 322844,
+      "native_wasm_parity_samples": 99342,
+      "max_error": 0,
+      "source_inventory_passed": true
+    }
+  },
+  "bundles": {
+    "standalone": {
+      "path": "build/macos/out/TetoricaSPU.app",
+      "file_sha256": {
+        "Contents/Info.plist": "1fec046b5560e89705ce207b4372e154e72e7e97951f2e0c4a23789827cf58c6",
+        "Contents/MacOS/TetoricaSPU": "2e7d0a50c7c7a2b9f489d3019295d41e28088ed0e19580f8d69fe49613a7dbf3",
+        "Contents/PkgInfo": "82502191c9484b04d685374f9879a0066069c49b8acae7a04b01d38d07e8eca0",
+        "Contents/Resources/Roboto-Regular.ttf": "b2efabca5ea4bc56eea829713706b5cd0788b82aca153bd4adde9b1573933b4f",
+        "Contents/Resources/THIRD_PARTY_NOTICES.txt": "d0686ed57334f5bc617481e976e6d220822dba8fc93b8dd51246455bb818db6e",
+        "Contents/Resources/TetoricaSPU-macOS-MainMenu.nib": "7ba57e13c5fdbc1f77eaf801fd49f7762dfbef93a2ce6526e547901f66d4719e"
+      }
+    },
+    "au": {
+      "path": "build/macos/out/TetoricaSPU.component",
+      "file_sha256": {
+        "Contents/Info.plist": "94a46fcfc638d76a05aca50d5deedaff2a7a934aee55a816d007b6dff9c9bbc4",
+        "Contents/MacOS/TetoricaSPU": "2ceab9a60a3db3fd45efc9a502979764c3197a353cc96a96e0ec324e709f8ebb",
+        "Contents/PkgInfo": "d06a80ba92de0833d0ed03de1b02b7c8913f126d9e8c8931b190765dd5d83b11",
+        "Contents/Resources/Roboto-Regular.ttf": "b2efabca5ea4bc56eea829713706b5cd0788b82aca153bd4adde9b1573933b4f",
+        "Contents/Resources/THIRD_PARTY_NOTICES.txt": "d0686ed57334f5bc617481e976e6d220822dba8fc93b8dd51246455bb818db6e"
+      }
+    },
+    "vst3": {
+      "path": "build/macos/out/TetoricaSPU.vst3",
+      "file_sha256": {
+        "Contents/Info.plist": "0fe9965eadefafb0be705d9e3bba5a6df3c6e2561b608bdbf267d7f831e5d644",
+        "Contents/MacOS/TetoricaSPU": "cb7d7ab491d5d142eb1d49702770acfe0f8fffde4a3fe8509d5e9e07d3a830b1",
+        "Contents/PkgInfo": "d06a80ba92de0833d0ed03de1b02b7c8913f126d9e8c8931b190765dd5d83b11",
+        "Contents/Resources/Roboto-Regular.ttf": "b2efabca5ea4bc56eea829713706b5cd0788b82aca153bd4adde9b1573933b4f",
+        "Contents/Resources/THIRD_PARTY_NOTICES.txt": "d0686ed57334f5bc617481e976e6d220822dba8fc93b8dd51246455bb818db6e"
+      }
+    }
+  },
+  "au": {
+    "installed_path": "/Users/kyorohiro/Library/Audio/Plug-Ins/Components/TetoricaSPU.component",
+    "file_sha256": {
+      "Contents/Info.plist": "94a46fcfc638d76a05aca50d5deedaff2a7a934aee55a816d007b6dff9c9bbc4",
+      "Contents/MacOS/TetoricaSPU": "2ceab9a60a3db3fd45efc9a502979764c3197a353cc96a96e0ec324e709f8ebb",
+      "Contents/PkgInfo": "d06a80ba92de0833d0ed03de1b02b7c8913f126d9e8c8931b190765dd5d83b11",
+      "Contents/Resources/Roboto-Regular.ttf": "b2efabca5ea4bc56eea829713706b5cd0788b82aca153bd4adde9b1573933b4f",
+      "Contents/Resources/THIRD_PARTY_NOTICES.txt": "d0686ed57334f5bc617481e976e6d220822dba8fc93b8dd51246455bb818db6e"
+    },
+    "update_journal": "build/au-backups/au-update-fw61nooa/manifest.json",
+    "update": {
+      "schema": 1,
+      "operation": "au-update",
+      "state": "installed",
+      "created_utc": "2026-10-31T23:07:37.136356+00:00",
+      "source": "/Users/kyorohiro/development8/wfm/hello_ymfm/w/tetorica-spu-plugin/build/macos/out/TetoricaSPU.component",
+      "destination": "/Users/kyorohiro/Library/Audio/Plug-Ins/Components/TetoricaSPU.component",
+      "backup_directory": "/Users/kyorohiro/development8/wfm/hello_ymfm/w/tetorica-spu-plugin/build/au-backups/au-update-fw61nooa",
+      "backup_component": "/Users/kyorohiro/development8/wfm/hello_ymfm/w/tetorica-spu-plugin/build/au-backups/au-update-fw61nooa/previous.component",
+      "staged_component": "/Users/kyorohiro/development8/wfm/hello_ymfm/w/tetorica-spu-plugin/build/au-backups/au-update-fw61nooa/staged.component",
+      "old_archive": "/Users/kyorohiro/development8/wfm/hello_ymfm/w/tetorica-spu-plugin/build/au-backups/au-update-fw61nooa/original.component",
+      "component": {
+        "type": "aumu",
+        "subtype": "Tspu",
+        "manufacturer": "Tetr",
+        "version": 256
+      },
+      "old_sha256": {
+        "Contents/Info.plist": "94a46fcfc638d76a05aca50d5deedaff2a7a934aee55a816d007b6dff9c9bbc4",
+        "Contents/MacOS/TetoricaSPU": "91b7b11e7ce3920c05c0beeabc2f560779731e8e3e1793324012ed387134b1d8",
+        "Contents/PkgInfo": "d06a80ba92de0833d0ed03de1b02b7c8913f126d9e8c8931b190765dd5d83b11",
+        "Contents/Resources/Roboto-Regular.ttf": "b2efabca5ea4bc56eea829713706b5cd0788b82aca153bd4adde9b1573933b4f",
+        "Contents/Resources/THIRD_PARTY_NOTICES.txt": "d0686ed57334f5bc617481e976e6d220822dba8fc93b8dd51246455bb818db6e"
+      },
+      "new_sha256": {
+        "Contents/Info.plist": "94a46fcfc638d76a05aca50d5deedaff2a7a934aee55a816d007b6dff9c9bbc4",
+        "Contents/MacOS/TetoricaSPU": "2ceab9a60a3db3fd45efc9a502979764c3197a353cc96a96e0ec324e709f8ebb",
+        "Contents/PkgInfo": "d06a80ba92de0833d0ed03de1b02b7c8913f126d9e8c8931b190765dd5d83b11",
+        "Contents/Resources/Roboto-Regular.ttf": "b2efabca5ea4bc56eea829713706b5cd0788b82aca153bd4adde9b1573933b4f",
+        "Contents/Resources/THIRD_PARTY_NOTICES.txt": "d0686ed57334f5bc617481e976e6d220822dba8fc93b8dd51246455bb818db6e"
+      }
+    },
+    "source_installed_all_five_match": true,
+    "both_old_backups_all_five_match": true,
+    "rollback_executed": false,
+    "local_registrar_force_terminated": false
+  },
+  "standalone_ui": {
+    "verified": [
+      "initial Reverb page and disabled Morph Off keyboard slider",
+      "one A blue/B pink/Result gold canvas",
+      "B freehand then Apply and Loaded status",
+      "A freehand then Revert preserves applied Custom B",
+      "Source Amount50% then keyboard26% updates both controls",
+      "ordinary unApplied Triangle PCM draft survives Morph On/Off",
+      "applied Custom B and Amount26% survive Off/On",
+      "Reverb page retains enabled keyboard Morph26%"
+    ],
+    "final_app_state": "quit",
+    "physical_hearing_verified": false
+  },
+  "garageband": {
+    "verification_project": "build/spu-vab-check.band",
+    "project_backup": "build/morph-update-project-99jrcbzm/spu-vab-check.band",
+    "project_backup_sha256": {
+      "Alternatives/000/DisplayState.plist": "493a7df24567663dd8b8aed81ddd39af64ca3e853c8720b8c822d1a9456fb36f",
+      "Alternatives/000/DisplayStateArchive": "8be847537acac7cf9fa6b496efe043be81fb13d81114ac587d83492cfc0c8747",
+      "Alternatives/000/MetaData.plist": "e828be6d50e93a28908aba862e511f1e3c736fe8ed01b1923e3250282c6ad4fb",
+      "Alternatives/000/ProjectData": "20a4ee5d6595084f8fdddfd5662572f0494952980cb21e82460fd4eeb861e7e3",
+      "Alternatives/000/WindowImage.jpg": "7e54a5a0340a564640c5f79f8d382614506774d347c45656568cfdf1078737ba",
+      "Resources/ProjectInformation.plist": "078f82c873d78abb6a1c7acb7fadf0b877ba605a40a84c52929db0fedc430b15",
+      "projectData": "b8abb99c1c6e208293ced2a8246573331794a31a4ee0dbdbd8e313ba8f3eae66"
+    },
+    "backup_all_seven_verified": true,
+    "before": {
+      "path": "build/morph-au-project-before.json",
+      "bytes": 2840,
+      "sha256": "d79248562f9bbe2118752e2fa2dbb48d88a60e5ca16f2ba950717e87e4fb1c52"
+    },
+    "after": {
+      "path": "build/morph-au-project-after.json",
+      "bytes": 2687,
+      "sha256": "df606d74fb4214354de8a31232309a6197b1fd06bb0af18f65951b3085e840b3"
+    },
+    "saved_schema": 6,
+    "payload_bytes": 3856,
+    "payload_sha256": "7feadeb5c820b68494a894a0c0ff5a49a298468c65132bc155dda5737a60d545",
+    "bank_bytes": 3744,
+    "bank_sha256": "71a7de205c0ebe1b8743288d90cd3b0204da9bd81aed9159af31f404d7cf2be6",
+    "saved_payload_and_bank_unchanged": true,
+    "gui_reopen": {
+      "embedded_vab": true,
+      "program": 3,
+      "tone": 0,
+      "gain_percent": 99,
+      "status": "Project sound restored.",
+      "reverb_enabled": false,
+      "returns_percent": [
+        25,
+        25
+      ],
+      "keyboard_morph": "Off"
+    },
+    "playback": false,
+    "recording": false,
+    "saved_after_update": false,
+    "left_editor_open": true,
+    "original_project": "build/spu-au-check.band",
+    "original_file_sha256": {
+      "Alternatives/000/Autosave/.dummy": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+      "Alternatives/000/Autosave/2026-10-31 10:12:23Z.displayData": "c2b29c82b187b6da04daaf17dbef530296859a95f39bac812a3261fe6c70d7ed",
+      "Alternatives/000/Autosave/2026-10-31 10:12:23Z.eventData": "0c7d3cd92b56d8c216b0b9663c58ef3692eee4ea739e19d1d9d20f0cfb98f63d",
+      "Alternatives/000/Autosave/2026-10-31 10:12:23Z.songData": "fc19d5172a5a19db59c790fb8bc06e922a5b157b44f99798d77dc7f9cc6e4515",
+      "Alternatives/000/DisplayState.plist": "fe2af1ddf457b06a4d47e4f34e17773d62963bdc54926a3f8dbd4777a5a56ed1",
+      "Alternatives/000/DisplayStateArchive": "cc3008d309493456ddac4c78d0597ce13d554f0a35d815edaa14d255db6144f3",
+      "Alternatives/000/MetaData.plist": "e828be6d50e93a28908aba862e511f1e3c736fe8ed01b1923e3250282c6ad4fb",
+      "Alternatives/000/ProjectData": "95061279acf172082d2f37e03f5ad9d64067f940c5c2c9abc99adda613e76931",
+      "Alternatives/000/WindowImage.jpg": "6176a5b9e9790b722392e0d80622fa9e4c4fa9087bf99c255cbc6a46159b3bcd",
+      "Resources/ProjectInformation.plist": "2dd01b478b456764e72ddeaaf05479c1f41bf9ab370f2b85bbe0c575430515ab",
+      "projectData": "b8abb99c1c6e208293ced2a8246573331794a31a4ee0dbdbd8e313ba8f3eae66"
+    },
+    "original_all_eleven_unchanged": true,
+    "scope": "Saved AU XML bytes and separate GUI active-instrument reopen; no custom Morph UI operation, automation recording or physical hearing in GarageBand."
+  },
+  "ci": {
+    "plugin": {
+      "metadata": {
+        "path": "build/morph-ci-summary.json",
+        "bytes": 8291,
+        "sha256": "713732be848f4bb0266207ded7a82217386b30f33a2f48e9888b0b17d5468687"
+      },
+      "run": {
+        "conclusion": "success",
+        "created_at": "2026-10-31T22:56:12Z",
+        "head_sha": "65b6dafabb6c9a5351f68dd93de78ecdbbfac1cf",
+        "html_url": "https://github.com/kyorohiro/tetorica-spu-plugin/actions/runs/41250360041",
+        "id": 41250360041,
+        "run_attempt": 1,
+        "run_started_at": "2026-10-31T22:56:12Z",
+        "status": "completed",
+        "updated_at": "2026-10-31T23:00:53Z"
+      },
+      "jobs": [
+        {
+          "id": 124682411024,
+          "name": "macos",
+          "conclusion": "success",
+          "started_at": "2026-10-31T22:56:16Z",
+          "completed_at": "2026-10-31T23:00:52Z"
+        },
+        {
+          "id": 124682411210,
+          "name": "offline",
+          "conclusion": "success",
+          "started_at": "2026-10-31T22:56:16Z",
+          "completed_at": "2026-10-31T22:56:40Z"
+        }
+      ],
+      "artifacts": [
+        {
+          "created_at": "2026-10-31T23:00:48Z",
+          "digest": "sha256:87bf031bd40c3fdff9436c8cc07c650e51681529ee93ed4a849a05028a22b3c3",
+          "expired": false,
+          "expires_at": "2027-01-29T22:56:13Z",
+          "id": 13061570027,
+          "name": "macos-development-bundles",
+          "size_in_bytes": 2291963,
+          "updated_at": "2026-10-31T23:00:48Z"
+        }
+      ],
+      "failed_steps": 0,
+      "scope": "Actions run/job/step/artifact metadata only; job logs and artifact archives were not downloaded or executed."
+    },
+    "sdk": {
+      "metadata": {
+        "path": "build/morph-sdk-ci-summary.json",
+        "bytes": 49426,
+        "sha256": "e567b9572274e1c8506dcf0e91f61164d972c07602a9b33e153c040b7a65e9eb"
+      },
+      "run": {
+        "conclusion": "success",
+        "created_at": "2026-10-31T22:41:12Z",
+        "head_sha": "d0e0324a56d0b2fe92c4367e69ddee11971a7892",
+        "html_url": "https://github.com/kyorohiro/tetorica-soundchip-native/actions/runs/41249290598",
+        "id": 41249290598,
+        "run_attempt": 1,
+        "run_started_at": "2026-10-31T22:41:12Z",
+        "status": "completed",
+        "updated_at": "2026-10-31T22:47:28Z"
+      },
+      "jobs": [
+        {
+          "id": 124679226380,
+          "name": "Native / linux-arm64",
+          "conclusion": "success",
+          "started_at": "2026-10-31T22:41:17Z",
+          "completed_at": "2026-10-31T22:42:35Z"
+        },
+        {
+          "id": 124679226521,
+          "name": "WASM / ps1_spu",
+          "conclusion": "success",
+          "started_at": "2026-10-31T22:41:16Z",
+          "completed_at": "2026-10-31T22:42:26Z"
+        },
+        {
+          "id": 124679226529,
+          "name": "WASM / cdda",
+          "conclusion": "success",
+          "started_at": "2026-10-31T22:41:16Z",
+          "completed_at": "2026-10-31T22:42:29Z"
+        },
+        {
+          "id": 124679226561,
+          "name": "Native / macos-x86_64",
+          "conclusion": "success",
+          "started_at": "2026-10-31T22:41:17Z",
+          "completed_at": "2026-10-31T22:47:28Z"
+        },
+        {
+          "id": 124679226564,
+          "name": "Native / linux-x86_64",
+          "conclusion": "success",
+          "started_at": "2026-10-31T22:41:16Z",
+          "completed_at": "2026-10-31T22:42:36Z"
+        },
+        {
+          "id": 124679226565,
+          "name": "Native / windows-x86_64",
+          "conclusion": "success",
+          "started_at": "2026-10-31T22:41:17Z",
+          "completed_at": "2026-10-31T22:44:40Z"
+        },
+        {
+          "id": 124679226580,
+          "name": "WASM / scsp",
+          "conclusion": "success",
+          "started_at": "2026-10-31T22:41:15Z",
+          "completed_at": "2026-10-31T22:42:18Z"
+        },
+        {
+          "id": 124679226582,
+          "name": "WASM / pokey",
+          "conclusion": "success",
+          "started_at": "2026-10-31T22:41:15Z",
+          "completed_at": "2026-10-31T22:42:24Z"
+        },
+        {
+          "id": 124679226583,
+          "name": "WASM / ym2612",
+          "conclusion": "success",
+          "started_at": "2026-10-31T22:41:16Z",
+          "completed_at": "2026-10-31T22:42:21Z"
+        },
+        {
+          "id": 124679226592,
+          "name": "WASM / wonderswan",
+          "conclusion": "success",
+          "started_at": "2026-10-31T22:41:15Z",
+          "completed_at": "2026-10-31T22:42:01Z"
+        },
+        {
+          "id": 124679226593,
+          "name": "WASM / msm5205",
+          "conclusion": "success",
+          "started_at": "2026-10-31T22:41:15Z",
+          "completed_at": "2026-10-31T22:42:07Z"
+        },
+        {
+          "id": 124679226702,
+          "name": "Native / macos-arm64",
+          "conclusion": "success",
+          "started_at": "2026-10-31T22:41:16Z",
+          "completed_at": "2026-10-31T22:42:29Z"
+        },
+        {
+          "id": 124680558246,
+          "name": "Publish GitHub Release",
+          "conclusion": "skipped",
+          "started_at": "2026-10-31T22:47:28Z",
+          "completed_at": "2026-10-31T22:47:28Z"
+        }
+      ],
+      "artifacts": [
+        {
+          "created_at": "2026-10-31T22:42:17Z",
+          "digest": "sha256:33bc9553c64d0287c10aa8e6822dfc1dc4ff9a53631b61017676fab22069297d",
+          "expired": false,
+          "expires_at": "2026-11-14T22:42:16Z",
+          "id": 13060900404,
+          "name": "verified-sdk-archives-ym2612",
+          "size_in_bytes": 2615059,
+          "updated_at": "2026-10-31T22:42:17Z"
+        },
+        {
+          "created_at": "2026-10-31T22:42:04Z",
+          "digest": "sha256:48a227c290936ffe952932916ec2380fa11f4e0e0442f9d07d8bd7e8ec1a474d",
+          "expired": false,
+          "expires_at": "2026-11-14T22:42:03Z",
+          "id": 13060855922,
+          "name": "verified-sdk-archives-msm5205",
+          "size_in_bytes": 2585615,
+          "updated_at": "2026-10-31T22:42:04Z"
+        },
+        {
+          "created_at": "2026-10-31T22:42:33Z",
+          "digest": "sha256:74802b2d8dbf6d6008a0864096bbb1fea73a61c27e00b259b09cc13aaed6d9a8",
+          "expired": false,
+          "expires_at": "2026-11-07T22:42:32Z",
+          "id": 13060762711,
+          "name": "native-validation-linux-arm64",
+          "size_in_bytes": 19529,
+          "updated_at": "2026-10-31T22:42:33Z"
+        },
+        {
+          "created_at": "2026-10-31T22:47:21Z",
+          "digest": "sha256:707620ef1d8468e9b78bb90182006a43e48df2b2b3a172f90d1918023bdc8cb9",
+          "expired": false,
+          "expires_at": "2026-11-07T22:46:53Z",
+          "id": 13060718604,
+          "name": "native-validation-macos-x86_64",
+          "size_in_bytes": 25200,
+          "updated_at": "2026-10-31T22:47:21Z"
+        },
+        {
+          "created_at": "2026-10-31T22:42:25Z",
+          "digest": "sha256:a88729cd82e961c9347cdbe2eaa92d591650c7d3a25bc9ec1a89be112b146431",
+          "expired": false,
+          "expires_at": "2026-11-07T22:42:25Z",
+          "id": 13060697997,
+          "name": "native-validation-macos-arm64",
+          "size_in_bytes": 25785,
+          "updated_at": "2026-10-31T22:42:25Z"
+        },
+        {
+          "created_at": "2026-10-31T22:42:33Z",
+          "digest": "sha256:50dc86efd4d4520927fc2cfd931ca8f9b6320e1d6d03d3955693469f77cc91de",
+          "expired": false,
+          "expires_at": "2026-11-07T22:42:32Z",
+          "id": 13060362369,
+          "name": "native-validation-linux-x86_64",
+          "size_in_bytes": 19625,
+          "updated_at": "2026-10-31T22:42:33Z"
+        },
+        {
+          "created_at": "2026-10-31T22:42:21Z",
+          "digest": "sha256:6ac361702bfd51fc090015528146f61f6edb6e0e40308f7b2d42b68b397f9191",
+          "expired": false,
+          "expires_at": "2026-11-14T22:42:20Z",
+          "id": 13060147600,
+          "name": "verified-sdk-archives-pokey",
+          "size_in_bytes": 2596880,
+          "updated_at": "2026-10-31T22:42:21Z"
+        },
+        {
+          "created_at": "2026-10-31T22:42:22Z",
+          "digest": "sha256:051acb37cc69e8ee7929926bd166e45aad078e66c524ed6c07f238425843a1b8",
+          "expired": false,
+          "expires_at": "2026-11-14T22:42:21Z",
+          "id": 13060119201,
+          "name": "verified-sdk-archives-ps1_spu",
+          "size_in_bytes": 2611302,
+          "updated_at": "2026-10-31T22:42:22Z"
+        },
+        {
+          "created_at": "2026-10-31T22:42:15Z",
+          "digest": "sha256:ca112b8dcda6a2d7079a0a8bb83cf884adeead98d3e458dd93bc24350e2f9306",
+          "expired": false,
+          "expires_at": "2026-11-14T22:42:14Z",
+          "id": 13060037971,
+          "name": "verified-sdk-archives-scsp",
+          "size_in_bytes": 2597001,
+          "updated_at": "2026-10-31T22:42:15Z"
+        },
+        {
+          "created_at": "2026-10-31T22:42:24Z",
+          "digest": "sha256:db634be770100f96914979aed82b2ddffafabac2e2712344b263e43f94f12168",
+          "expired": false,
+          "expires_at": "2026-11-14T22:42:21Z",
+          "id": 13060024441,
+          "name": "verified-sdk-archives-cdda",
+          "size_in_bytes": 2585016,
+          "updated_at": "2026-10-31T22:42:24Z"
+        },
+        {
+          "created_at": "2026-10-31T22:44:35Z",
+          "digest": "sha256:e289f59a0f4e5e6dc4fa3b694d2318fe5ff58c540bc2c91ef8df192c2bb64191",
+          "expired": false,
+          "expires_at": "2026-11-07T22:44:35Z",
+          "id": 13060013066,
+          "name": "native-validation-windows-x86_64",
+          "size_in_bytes": 33007,
+          "updated_at": "2026-10-31T22:44:35Z"
+        },
+        {
+          "created_at": "2026-10-31T22:41:58Z",
+          "digest": "sha256:8e4ef326f170156a6de8b20bb84af6f7ec943ff1859b1b10b44f14ce92f89f44",
+          "expired": false,
+          "expires_at": "2026-11-14T22:41:57Z",
+          "id": 13059962905,
+          "name": "verified-sdk-archives-wonderswan",
+          "size_in_bytes": 2592635,
+          "updated_at": "2026-10-31T22:41:58Z"
+        }
+      ],
+      "failed_steps": 0,
+      "scope": "Actions run/job/step/artifact metadata only; job logs and artifact archives were not downloaded or executed."
+    }
+  },
+  "not_verified": [
+    "physical hearing",
+    "long real-time use",
+    "real DAW custom Morph gestures",
+    "DAW Morph automation recording",
+    "Windows plugin",
+    "CI artifact execution elsewhere"
+  ],
+  "publication": {
+    "production_commits_pushed": true,
+    "version_changed": false,
+    "tag_created": false,
+    "release_published": false,
+    "web_tauri_changed": false
+  }
+}

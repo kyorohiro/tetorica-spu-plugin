@@ -28,9 +28,10 @@ ADSR編集とSPU Reverbも実装・ローカル検証・installed AU更新済み
 PCMの4波形・自由描画・Apply / Revertも実装し、実AU/VST3とStandaloneで検証した。
 [PCMの記録](../pcm_waveform_20261031.md)を参照。Noiseも実装・ローカル検証済み。
 [Noiseの記録](../noise_20261031.md)を参照。PMONも実装・検証・AU更新・CI成功済み。
-[PMONの記録](../pmon_20261031.md)を参照。次の機能候補はsoftware morph。
+[PMONの記録](../pmon_20261031.md)を参照。Software Morphも実装・検証・AU更新・旧state復元・両repo CI成功済み。
+[Morphの記録](../morph_20261101.md)と[保存・更新記録](../morph_20261101.json)を参照。
 
-### Software Morphの今回の区切り（2026-11-01、実装前）
+### Software Morphの今回の区切り（2026-11-01、完了）
 
 - [x] 元Builtin / VAB / PCMを保持したまま、112-sample Wave A / Wave Bを線形blendするSoftware Morphを追加する。初期 / 旧stateはOff、Amount0、A=Sine / B=Saw（既存PCM形状の振幅0.8）。Offは保持した元sampleへ戻る。
 - [x] A / B / Resultを1つのcanvasへ重ね、編集対象A / Bを切り替えて4形状・自由描画を行う。Resultは編集不可のblend表示。A/B編集はdraft→Apply、Revertはdraftだけを戻す。通常PCM draftも独立して保持する。
@@ -41,9 +42,12 @@ PCMの4波形・自由描画・Apply / Revertも実装し、実AU/VST3とStandal
 - [x] 既存ID0〜23を維持し、Morph Enabled24 / Amount25を追加する。A/Bはimmutable音源定義へ保存し、元source選択・PCM Applyで保持する。schema7固定1024bytesでflags / reserved0 / amount / A112f32 / B112f32を追加、旧1〜6 / legacyを読み込む。
 - [x] 不正amount / flags / reserved / A/B非finite・範囲・長さをcommit前に拒否し、active / pending / 全parameterを保持する。遅延Apply観測・新しいdraft・host restore後の旧worker完了で古い内容へ戻さない。
 - [x] coreでAmount両端 / 中間、held / Release更新、PMON併用、Noise優先、元sample復帰 / 全RAM / repeat、分割一致・C++確保破棄0、初期Sine byte一致を検証する。実AU/VST3で26params / state7 / 旧互換 / automation / MIDI / atomic failureを検証する。
-- [ ] Standaloneで1canvasのA/B切替・描画・Apply / Revert・2か所Amount同期と保存復元を確認する。build / CTest / sanitizer / validator / 両repo CI、既知AU退避更新とGarageBand旧state復元を確認し、結果をcommit / pushする。
+- [x] Standaloneで1canvasのA/B切替・描画・Apply / Revert・2か所Amountの50% / 26%同期を確認する。build / CTest / sanitizer / validator / 両repo CI、既知AU退避更新とGarageBand旧schema6復元を確認し、結果をcommit / pushする。
 
 開始は`091fd42`、main / origin同期・clean tree。更新前installed AU manifestは[PMON記録](../pmon_20261031.json)。
+実装は`65b6daf`、Native SDKは`d0e0324`へ固定した。[plugin CI](https://github.com/kyorohiro/tetorica-spu-plugin/actions/runs/41250360041)・[SDK CI](https://github.com/kyorohiro/tetorica-soundchip-native/actions/runs/41249290598)は成功。
+installed AUを退避更新し、`auval`成功、GarageBandのP3/T0/Gain99/Morph Offと旧schema6 payload（SHA256 `7feadeb5…`）一致を確認した。
+現在のinstalled AU manifestは[Morph記録](../morph_20261101.json)。実聴・長時間リアルタイム・実DAW独自Morph UIとautomation録音は未確認。
 Morph LFO、外部入力Reverb、長いAudioへのMorph、Web / Tauri配布変更は追加しない。
 
 ### PMONの今回の区切り（2026-10-31、実装前）
@@ -312,7 +316,8 @@ complete `.vab`を最初の対象とする。分割VH/VBの複数file dialogは�
 - [x] PCMの波形選択・描画、Noise、PMONを順に公開する。
 - [ ] 実DAWでReverb automation録音・AU独自UIのpreset / Enable / Return操作を追試する。headless PCMとStandalone操作の検証とは分ける。
 - [ ] 実DAWでADSR automation録音・graph drag中のeditor close / host restoreを追試する。headless PCMとStandalone操作の検証とは分ける。
-- [ ] 必要に応じてsoftware morph等のWeb版機能を移す（SPU実機機能とは表示を分ける）。
+- [x] Software MorphをSPU実機機能と区別して公開する（[検証記録](../morph_20261101.md)）。
+- [ ] 実DAWでSoftware Morphの独自UI操作とautomation録音を追試する。Standalone操作・headless PCM・旧project復元の検証とは分ける。
 
 ## 人による最終確認
 
