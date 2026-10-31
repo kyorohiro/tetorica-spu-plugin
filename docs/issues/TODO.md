@@ -23,6 +23,20 @@ AUを既知manifest照合付きで更新し、GarageBand標準AUプリセット�
 Toneの個別切替・保存・再起動後のP3/T1復元も確認済み。
 Program操作後のP3/T0と保存・project再表示も確認した。P11中間画面とToneのみのdirty判定は未確認。
 
+### Pitch Bend・Sustainの今回の区切り（2026-10-31、実装前）
+
+- [ ] Web spu-synthとの機能差を整理し、音作り機能の段階移植計画を保存する。
+- [ ] チャンネル別14-bit Pitch Bendを追加する。中心8192、初期範囲±2半音、発音中とRelease中の音を再発音せず変更し、新規音にも適用する。
+- [ ] チャンネル別Sustain（CC64、64以上でOn）を追加する。離鍵を保留し、解除時は離鍵済みの音だけReleaseする。
+- [ ] 同音再発音・voice stealing・CC123・CC121・panic/overflow・reset/activate・host restore時の保持音とcontroller状態を整理し、stuck noteを防ぐ。
+- [ ] sample offsetを含むMIDI接続を行う。UI音源切替ではwheel/pedalの状態を引き継ぎ、host restoreとlifecycle resetでは初期化する。
+- [ ] coreの音程・チャンネル分離・pedal・RT中new/deleteと、実AU/VST3のMIDI・offset・state回帰を検証する。
+- [ ] README・結果・未確認範囲を記録してcommit / pushし、CIを確認する。
+
+今回の範囲はDAW MIDIからの演奏機能。Bend/Sustainのlive値はpresetへ保存しない。
+Webの±2半音と離鍵保留を参考にし、MIDIのチャンネルごとに独立させる。
+既存のWeb版・installed AU・開いているGarageBandをbuildだけで書き換えない。
+
 ### Program/Tone・保存通知の今回の区切り（2026-10-31、開始時記録）
 
 - [x] 保存済みP3/T0/Gain99のcopyを基準に、Tone 1だけへ変更する。停止中は必要に応じて再生し採用する（人の選択→Ready→再生→Loadedを確認）。

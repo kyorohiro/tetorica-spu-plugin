@@ -1,5 +1,15 @@
 # 作業記録
 
+## 2026-10-31 JST — Web機能移植の整理、Pitch Bend・Sustain実装を開始
+
+- ユーザーがPitch Bend→Sustainを承認。Web spu-synthと同じ音作り機能を段階的に移す方向も確認した。
+- cleanな`d11edc1`から開始し、先にTODOへ今回の実装・検証範囲を記録した。
+- WebのPitchは±2半音、保持音とRelease tailへ再発音せず反映。Sustainは離鍵だけを保留し、解除時に離鍵済みの音をReleaseする。
+  Webは画面・PC鍵盤用で、pluginではMIDIチャンネル別Bend/CC64へ拡張する。
+- 今回はMIDI offset・controller状態の音源切替/lifecycle・RT安全性も検証する。
+  coreと実AU/VST3検証を並行し、rootがwrapper接続・移植計画・全体検証を担当する。
+- 既存Web版とinstalled AUは変更しない。live controller値はDAW preset形式へ追加しない。
+
 ## 2026-10-31 JST — Program操作後のP3/T0保存・project再表示を確認
 
 - Program 11→3の依頼に対する「Tone 0にならない」という回答は、ユーザーがチャット側の誤作動と訂正した。
