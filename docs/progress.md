@@ -67,3 +67,26 @@
 - ユーザー専用 `~/Library/Audio/Plug-Ins/Components` にTetoricaSPU.componentは存在しないことを確認。
 - 次: 既存bundleを置換しないAU配置スクリプトを準備して登録・auval、GarageBand検証。
 - 別作業としてVST3イベント境界・overflow復帰テストを拡充する。まだ結果未確認。
+
+## 2026-10-31 JST — AU / GarageBand実操作の完了
+
+- AUをユーザーComponentsへ新規配置。sourceと同一SHAを確認、既存bundleの置換なし。
+- auval成功（sandbox内の初回は登録AU取得不可、承認後のsandbox外実行で成功）。
+- 既存GarageBand projectはユーザー自身に保存・終了してもらい、その後新規の検証projectを作成。
+- `build/spu-au-check.band`でAU選択・UI描画・A/S/DのMIDI録音・保存・閉じて再読込を実施。
+  AUとGain99%が復元された。選択regionを前後でWAVE出力し、差は最大1 PCM16単位。
+- 追加VST3 scheduler / lifecycle検査も44.1 / 48 / 96kHzで成功。DSP本体を直す必要はなかった。
+- 再現コマンド・制限・auval warningは[今回の記録](au_garageband_20261031.md)へ保存。
+- VABの設計メモも保存。音色データの解析と、audio callback外のcache準備・状態復元が次の範囲。
+- 実装・検証補助を`b47ec2220c2880254ba3cd977438cab61d4f7ff2`に保存し、mainへpush。
+  [今回のCI](https://github.com/kyorohiro/tetorica-spu-plugin/actions/runs/41182380646)ではAU登録・auvalも追加した。
+
+## 2026-10-31 JST — CIのAU発見手順を修正
+
+- `41182380646` はLinux成功、macOSの新設AU検証stepで失敗。配置直後にAUが見つからず、render検証には入っていない。
+- iPlug2自身のCIにもregistrar更新があることを確認。`1e869e52d247111ae4f598a4afd996147a95b9bc`で
+  CIの実行ユーザーのregistrarに限ったSIGTERM更新と、最大30秒のdiscovery待ちを追加した。
+- localでは `--refresh-ci-registry` を拒否することを確認し、通常のdiscovery + auvalはsandbox外で成功。
+  ローカルのregistrarは終了させていない。検証本体の失敗を繰り返して隠す処理はない。
+- [修正版CI](https://github.com/kyorohiro/tetorica-spu-plugin/actions/runs/41183069247) を確認するのが次の再開手順。
+- GarageBand自体の確認は上記の通り完了しており、CIの登録問題とは分けて記録する。

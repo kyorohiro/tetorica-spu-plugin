@@ -1,0 +1,108 @@
+{
+  "date_jst": "2026-10-31",
+  "verification_tools_commit": "1e869e52d247111ae4f598a4afd996147a95b9bc",
+  "plugin_engine_commit": "1e1c2e7befb95edbbfccb703fb31720058b7d532",
+  "source_sha256": {
+    "tools/vst3-host/main.cpp": "274618ea3f890c993c721288da98f1c399b9adc00de91fd320de1553e36b15ca",
+    "scripts/install_au.py": "4c461aafe8817de0b26c21b44bad8ea8187edfc8615f0afdb922995fd0ead5d6",
+    "scripts/check_garageband_exports.py": "f7cc36f406da41768b974a2594a531cc634568c6ef07b3eec0bd2692ace8bc27",
+    ".github/workflows/verify.yml": "9ddf92d8e1ab03f7d8ba58bafcfb011f61d180d6f5d2e0e8900b2834ca6d5b0f",
+    "scripts/validate_au.py": "42104fd9097a193aaab38e5c586c2ec1847ea2a7c175acd4a9356c67adc0f753"
+  },
+  "au": {
+    "installed_to": "~/Library/Audio/Plug-Ins/Components/TetoricaSPU.component",
+    "replaced_existing_bundle": false,
+    "file_sha256": {
+      "Contents/Info.plist": "94a46fcfc638d76a05aca50d5deedaff2a7a934aee55a816d007b6dff9c9bbc4",
+      "Contents/MacOS/TetoricaSPU": "63f5db3316aebaa08d66937fa4342c4bdf2f7440f20420f02ef1c1ef681da625",
+      "Contents/PkgInfo": "d06a80ba92de0833d0ed03de1b02b7c8913f126d9e8c8931b190765dd5d83b11",
+      "Contents/Resources/Roboto-Regular.ttf": "b2efabca5ea4bc56eea829713706b5cd0788b82aca153bd4adde9b1573933b4f",
+      "Contents/Resources/THIRD_PARTY_NOTICES.txt": "d0686ed57334f5bc617481e976e6d220822dba8fc93b8dd51246455bb818db6e"
+    },
+    "auval_command": "/usr/bin/auval -v aumu Tspu Tetr",
+    "auval_success": true,
+    "auval_required_outside_sandbox": true,
+    "log_sha256": "22db2672cb63167cce65fbbfa5972787aa589bcd1c37e280ead9893ee84793e6",
+    "warnings": [
+      "WARNING: Preset name is not retained in retrieved class data"
+    ],
+    "stored_log_trailing_whitespace_trimmed": true,
+    "discovery_wait_validation_succeeded_locally": true,
+    "ci_refresh_option_refused_locally": true
+  },
+  "garageband": {
+    "version": "10.4.12",
+    "project": "build/spu-au-check.band",
+    "project_data_sha256": "95061279acf172082d2f37e03f5ad9d64067f940c5c2c9abc99adda613e76931",
+    "ui_method": "CUA",
+    "existing_project_saved_and_closed_by_user": true,
+    "au_selection": true,
+    "native_ui_rendered": true,
+    "midi_recorded": true,
+    "saved_closed_and_reopened": true,
+    "restored_gain_percent_observed": 99,
+    "recording_and_playback_stopped": true,
+    "export_comparison": {
+      "exports": [
+        {
+          "sample_rate": 44100,
+          "channels": 2,
+          "sample_bytes": 2,
+          "frames": 176400,
+          "file": "spu-au-garageband-before.wav",
+          "sha256": "f5d6b52ede376abc6a58c281d2f6b7d1973f547703bd6b27825a9153ec0c18c6",
+          "peak": 0.988525390625,
+          "rms": 0.4860063248857569
+        },
+        {
+          "sample_rate": 44100,
+          "channels": 2,
+          "sample_bytes": 2,
+          "frames": 176400,
+          "file": "spu-au-garageband-after.wav",
+          "sha256": "c2fc925c9a2958eb7a9b6cff543b0f21c88cf4aa886b49e5a970c88cc6b8a894",
+          "peak": 0.988525390625,
+          "rms": 0.4860063244914699
+        }
+      ],
+      "max_difference_pcm16": 1,
+      "rms_difference": 2.6198260174444215e-07,
+      "passed": true,
+      "scope": "GarageBand exports include host effects and output processing; not a physical loopback or an absolute Gain calibration."
+    }
+  },
+  "vst3_scheduler": {
+    "sample_rates": [
+      44100,
+      48000,
+      96000
+    ],
+    "results": [
+      "PASS scheduler sampleRate=44100 blockEndDeferred=true shortBlocks=true sameOffsetOrder=true unsortedOffsets=true velocityZeroOff=true overflow2049Recovered=true processingRestartSilent=true reactivateSilent=true reconfigureSilent=true",
+      "PASS scheduler sampleRate=48000 blockEndDeferred=true shortBlocks=true sameOffsetOrder=true unsortedOffsets=true velocityZeroOff=true overflow2049Recovered=true processingRestartSilent=true reactivateSilent=true reconfigureSilent=true",
+      "PASS scheduler sampleRate=96000 blockEndDeferred=true shortBlocks=true sameOffsetOrder=true unsortedOffsets=true velocityZeroOff=true overflow2049Recovered=true processingRestartSilent=true reactivateSilent=true reconfigureSilent=true"
+    ],
+    "log_sha256": "890a01c606c2542c06db16d1a7906e377fad962a88695d7fc4146de6625d8d55"
+  },
+  "not_verified": [
+    "Physical listening and speaker loopback",
+    "Long realtime endurance and subjective latency",
+    "VAB import and embedded sample state"
+  ],
+  "initial_local_verification_tools_commit": "b47ec2220c2880254ba3cd977438cab61d4f7ff2",
+  "ci_attempts": [
+    {
+      "id": 41182380646,
+      "url": "https://github.com/kyorohiro/tetorica-spu-plugin/actions/runs/41182380646",
+      "status": "completed",
+      "conclusion": "failure",
+      "failed_step": "Install and validate the user AU"
+    }
+  ],
+  "ci": {
+    "id": 41183069247,
+    "url": "https://github.com/kyorohiro/tetorica-spu-plugin/actions/runs/41183069247",
+    "source_commit": "1e869e52d247111ae4f598a4afd996147a95b9bc",
+    "status": "in_progress"
+  }
+}
