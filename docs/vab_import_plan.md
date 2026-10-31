@@ -5,8 +5,9 @@ and fresh offline instrument are implemented in `src/VabBank.*` and
 `src/SpuInstrument.*`; `spu_vab_render` exercises them without a DAW.
 `SpuEngineExchange` now handles prepared-engine ownership at audio block
 boundaries, and `VabLoader` supplies the worker preparation API. The plugin UI
-still plays its original built-in sine bank. State and file UI remain
-subsequent steps, not a claim of VAB support in the current plugin UI.
+starts with its original built-in sine bank. Embedded state is implemented in
+`InstrumentState` and plugin-local AU/VST3 adapters; file/selection UI remains
+the next step, not a claim of VAB loading controls in the current plugin UI.
 
 ## Bounded parser milestone
 
@@ -214,6 +215,10 @@ already allocation-free `prepare(currentHostRate)` before adoption; it must not
 repeat the SDK upload/reset/warm-up there.
 
 ## DAW state persistence
+
+This milestone is implemented and tested; see
+[the embedded-state record](embedded_state_20261031.md). The following design
+constraints remain relevant to future UI integration.
 
 Use a versioned, bounded custom state chunk and set `PLUG_DOES_STATE_CHUNKS=1`.
 Reference the pinned iPlug2 example

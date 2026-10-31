@@ -16,15 +16,16 @@ AU / GarageBandでの録音・保存・復元・WAVE書出しを追試済み。
 [AU検証を含む修正版CI](https://github.com/kyorohiro/tetorica-spu-plugin/actions/runs/41183069247)も全job成功。
 [VAB解析・offline音源準備](../vab_offline_20261031.md)も完了。
 [音源交換・worker準備](../engine_handoff_20261031.md)も実装・検証済み。
-次は[VAB取り込み計画](../vab_import_plan.md)のDAW state・UI接続へ進む。
+[embedded DAW state](../embedded_state_20261031.md)も実装・ローカル検証済み。
+次は[VAB取り込み計画](../vab_import_plan.md)のファイル読込・Program/Tone UIへ進む。
 
 ### DAW stateの今回の区切り（2026-10-31）
 
-- [ ] version / size上限付きの、bank bytes・Program/Tone選択・Gainの保存形式を実装する。
-- [ ] immutableな音色定義をengineと一緒に管理し、保存時に再生中のhandleへ触れない。
-- [ ] state復元を成功と返す前に解析・cache準備を完了する。失敗時は音源とGainを保持する。
-- [ ] pluginのcustom stateへ接続し、従来のGain-only状態も復元できるようにする。
-- [ ] 実VST3で埋め込みVABの別instance復元・直後の先頭block・不正state・持ち越しMIDIを検査する。
+- [x] version / size上限付きの、bank bytes・Program/Tone選択・Gainの保存形式を実装する。
+- [x] immutableな音色定義をengineと一緒に管理し、保存時に再生中のhandleへ触れない。
+- [x] state復元を成功と返す前に解析・cache準備を完了する。失敗時は音源とGainを保持する。
+- [x] pluginのcustom stateへ接続し、従来のGain-only状態も復元できるようにする。
+- [x] 実VST3で埋め込みVABの別instance復元・直後の先頭block・不正state・持ち越しMIDIを検査する。
 - [ ] build / sanitizer / AU・VST3回帰とCIを確認し、結果・次のUI作業をcommit / pushする。
 
 この区切りではファイル選択UIはまだ公開しない。VABを含むstateを実際のpluginへ復元する入口で検証する。
@@ -110,9 +111,10 @@ AU / GarageBandでの録音・保存・復元・WAVE書出しを追試済み。
 - [x] C++ parser・選択Tone準備・新規Native instanceのoffline再生を実装・検証する。
 - [x] オリジナルVABのTone一覧・WAV書出しCLIを用意する（`spu_vab_render`）。
 - [x] workerで準備したengineを安全に交換する。世代管理・audio thread外の破棄・queue満杯時を検査する。
-- [ ] version付きembedded bank stateを実装する。復元直後の最初のrenderと不正stateのatomic failureを検査する。
+- [x] version付きembedded bank stateを実装する。復元直後の最初のrenderと不正stateのatomic failureを検査する。
 - [ ] VAB読み込み、Program / Tone選択を追加する。
-- [ ] サンプルを含む音色と設定のproject保存・復元を実装する。
+- [x] サンプルを含む音色と設定のproject保存・復元を実装する。
+- [ ] 実DAWの画面からVABを読み、project保存・再起動・復元とUI表示を確認する（UI接続後）。
 - [ ] Native SDKのrepeat先packetにflag 2がないloopを別途修正・検証する。現在のengineは明示的に拒否、parserは元bytesを保持する。
 - [ ] ADSR / Reverb / Noise / PMONを順に公開する。
 - [ ] 必要に応じてsoftware morph等のWeb版機能を移す（SPU実機機能とは表示を分ける）。

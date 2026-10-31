@@ -3,6 +3,7 @@
 #pragma once
 
 #include "SpuInstrument.h"
+#include "InstrumentState.h"
 #include <array>
 #include <atomic>
 #include <cstddef>
@@ -30,7 +31,16 @@ public:
   // Adopted generations are strictly increasing. Re-publication after adoption
   // is rejected; duplicate pending work before adoption may replace that slot.
   Generation beginRequest();
-  bool publish(Generation generation, std::unique_ptr<SpuInstrument> prepared);
+  bool publish(Generation generation, std::unique_ptr<SpuInstrument> prepared,
+               std::shared_ptr<const InstrumentDefinition> definition=nullptr);
+  // Non-RT, transactional state restore: validate/prepare first, then commit.
+  // All throwing allocation happens before any generation/pending mutation.
+  // Definition/engine pairing is a trusted internal prepareDefinition contract.
+  Generation commitPrepared(std::unique_ptr<SpuInstrument> prepared,
+                            std::shared_ptr<const InstrumentDefinition> definition);
+  // Non-RT snapshot, preferring a current pending definition to the active one.
+  // A null result represents an explicitly unsaveable raw-tone publication.
+  std::shared_ptr<const InstrumentDefinition> snapshotDefinition() const;
   void collectRetired();
 
   // Single audio thread only. No allocation, destruction, mutex or notification.
@@ -51,11 +61,16 @@ private:
   void retire(Node* node) noexcept;
   void collectRetiredLocked();
 
-  std::mutex mProducerMutex;
+  mutable std::mutex mProducerMutex;
   std::atomic<Generation> mLatest{0};
   std::atomic<Generation> mAdopted{0};
+  std::atomic<Generation> mRejected{0};
   std::atomic<Node*> mPending{nullptr};
   Node* mActive = nullptr; // Single audio owner; immutable ownership until swap.
+  std::atomic<Node*> mObservableActive{nullptr}; // Lifetime pinned by producer mutex.
+  // Non-RT-only logical publication survives the pending->active pointer gap.
+  Generation mAcceptedGeneration=0;
+  std::shared_ptr<const InstrumentDefinition> mAcceptedDefinition;
   std::array<Node*, kRingSize> mRetired{};
   std::atomic<std::size_t> mRetiredRead{0};  // Producer/collector-owned index.
   std::atomic<std::size_t> mRetiredWrite{0}; // Audio-owned index.

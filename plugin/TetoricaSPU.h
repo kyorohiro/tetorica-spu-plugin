@@ -8,6 +8,7 @@
 #include "SpuEngineExchange.h"
 #include <array>
 #include <cstddef>
+#include <mutex>
 #endif
 
 enum EParams
@@ -25,6 +26,17 @@ class TetoricaSPU final : public iplug::Plugin
 {
 public:
   explicit TetoricaSPU(const iplug::InstanceInfo& info);
+  bool SerializeState(iplug::IByteChunk& chunk) const override;
+  int UnserializeState(const iplug::IByteChunk& chunk, int startPos) override;
+
+#if defined(VST3_API)
+  Steinberg::tresult PLUGIN_API setState(Steinberg::IBStream* state) override;
+  Steinberg::tresult PLUGIN_API getState(Steinberg::IBStream* state) override;
+#endif
+#if defined(AU_API)
+  OSStatus SetState(CFPropertyListRef state) override;
+  OSStatus GetState(CFPropertyListRef* state) override;
+#endif
 
 #if IPLUG_DSP
   void ProcessBlock(iplug::sample** inputs, iplug::sample** outputs, int nFrames) override;
@@ -41,6 +53,9 @@ private:
   static constexpr std::size_t kMidiCapacity = 1024;
   static constexpr int kScratchFrames = 256;
   tetorica::SpuEngineExchange mEngines;
+  // Host state operations are non-RT. Audio never takes this mutex or reads
+  // the immutable authoring snapshot used by serialization.
+  mutable std::mutex mStateMutex;
   struct QueuedMidi
   {
     iplug::IMidiMsg message;

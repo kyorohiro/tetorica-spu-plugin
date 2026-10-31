@@ -15,9 +15,13 @@ add_subdirectory("${VST3_SDK}" sdk EXCLUDE_FROM_ALL)
 
 add_executable(tetorica_vst3_audio_check
   main.cpp
+  "${TETORICA_ROOT}/src/InstrumentState.cpp"
+  "${TETORICA_ROOT}/src/VabBank.cpp"
   "${VST3_SDK}/public.sdk/source/common/memorystream.cpp"
   "${VST3_SDK}/public.sdk/source/vst/hosting/plugprovider.cpp")
 target_compile_features(tetorica_vst3_audio_check PRIVATE cxx_std_17)
+target_include_directories(tetorica_vst3_audio_check PRIVATE "${TETORICA_ROOT}/src")
+target_compile_definitions(tetorica_vst3_audio_check PRIVATE VAB_FIXTURE_DIR="${TETORICA_ROOT}/tests/fixtures/vab")
 target_link_libraries(tetorica_vst3_audio_check PRIVATE sdk_hosting)
 if(APPLE)
   target_sources(tetorica_vst3_audio_check PRIVATE

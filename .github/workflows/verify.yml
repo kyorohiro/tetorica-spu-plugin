@@ -37,6 +37,8 @@ jobs:
         run: sh scripts/validate_vst3.sh build/macos/out/TetoricaSPU.vst3
       - name: Render and restore the actual VST3
         run: sh scripts/check_vst3_audio.sh build/macos/out/TetoricaSPU.vst3
+      - name: Restore embedded state in the actual AU
+        run: sh scripts/check_au_state.sh build/macos/out/TetoricaSPU.component
       - uses: actions/upload-artifact@v4
         with:
           name: macos-development-bundles

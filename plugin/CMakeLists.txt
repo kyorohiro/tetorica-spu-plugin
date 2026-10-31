@@ -2,6 +2,8 @@
 iplug_add_plugin(TetoricaSPU
   SOURCES
     TetoricaSPU.cpp
+    InstrumentState.cpp
+    StateAdapters.cpp
     TetoricaSPU.h
     config.h
     resources/resource.h

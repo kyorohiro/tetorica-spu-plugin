@@ -63,13 +63,12 @@ bool VabLoader::current(Generation generation) const {
   return !mStopping&&mStatus.generation==generation;
 }
 
-void VabLoader::finish(Generation generation,std::unique_ptr<SpuInstrument> engine,std::string error) {
+void VabLoader::finish(Generation generation,std::unique_ptr<SpuInstrument>,std::string error) {
   std::lock_guard<std::mutex> lock(mMutex);
   if(mStopping || mStatus.generation!=generation)return;
-  if(error.empty()) {
-    if(mExchange.publish(generation,std::move(engine)))mStatus={generation,State::Ready,{}};
-    else mStatus={generation,State::Failed,"SPU preparation was superseded before publication"};
-  } else mStatus={generation,State::Failed,std::move(error)};
+  // Success publishes engine+definition together in run(); this helper handles
+  // preparation exceptions without changing active/pending authoring state.
+  mStatus={generation,State::Failed,error.empty()?"Unknown VAB preparation failure":std::move(error)};
 }
 
 void VabLoader::run() {
@@ -87,16 +86,17 @@ void VabLoader::run() {
     mExchange.collectRetired();
     if(!job || !current(job->generation))continue;
     try {
-      std::unique_ptr<SpuInstrument> prepared;
-      if(job->builtin)prepared=std::make_unique<SpuInstrument>();
-      else {
-        auto bank=vab::parse({job->bytes.data(),job->bytes.size()});
-        if(!current(job->generation))continue;
-        auto tone=vab::prepareTone(bank,job->flatTone);
-        if(!current(job->generation))continue;
-        prepared=std::make_unique<SpuInstrument>(tone);
-      }
-      finish(job->generation,std::move(prepared),{});
+      auto definition=job->builtin?InstrumentDefinition::builtin():
+          InstrumentDefinition::fromVabFlatIndex(std::move(job->bytes),job->flatTone);
+      if(!current(job->generation))continue;
+      auto prepared=prepareDefinition(*definition);
+      // Pair the immutable authoring definition with its prepared engine in the
+      // same publication. No definition shared_ptr is copied by the audio path.
+      std::lock_guard<std::mutex> lock(mMutex);
+      if(mStopping||mStatus.generation!=job->generation)continue;
+      if(mExchange.publish(job->generation,std::move(prepared),std::move(definition)))
+        mStatus={job->generation,State::Ready,{}};
+      else mStatus={job->generation,State::Failed,"SPU preparation was superseded before publication"};
     } catch(const std::exception& error) {
       finish(job->generation,nullptr,error.what());
     } catch(...) {

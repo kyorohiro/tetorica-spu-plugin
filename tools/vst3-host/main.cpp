@@ -11,11 +11,15 @@
 #include "public.sdk/source/vst/hosting/module.h"
 #include "public.sdk/source/vst/hosting/parameterchanges.h"
 #include "public.sdk/source/vst/hosting/plugprovider.h"
+#include "InstrumentState.h"
 
 #include <algorithm>
 #include <array>
 #include <cmath>
 #include <filesystem>
+#include <fstream>
+#include <iterator>
+#include <cstring>
 #include <iostream>
 #include <limits>
 #include <stdexcept>
@@ -130,6 +134,20 @@ public:
     ok(queue->addPoint(0, value, pointIndex), "Cannot enqueue Gain value");
   }
   double gain() const { return controller->getParamNormalized(gainId); }
+  void allowAsymmetric() { symmetricExpected=false; }
+  const std::vector<float>& right() const { return lastRight; }
+  std::vector<std::uint8_t> savedBytes() {
+    MemoryStream state;save(state);
+    const auto* begin=reinterpret_cast<const std::uint8_t*>(state.getData());
+    return {begin,begin+state.getSize()};
+  }
+  bool tryRestore(const std::vector<std::uint8_t>& bytes) {
+    MemoryStream state(const_cast<std::uint8_t*>(bytes.data()),bytes.size());
+    if(component->setState(&state)!=kResultOk)return false;
+    ok(state.seek(0,IBStream::kIBSeekSet,nullptr),"Cannot rewind restored state");
+    ok(controller->setComponentState(&state),"Controller restored-state synchronization failed");
+    return true;
+  }
   void save(MemoryStream& state) {
     ok(component->getState(&state), "Processor getState failed");
     require(state.getSize() > 0, "Empty processor state");
@@ -177,8 +195,9 @@ public:
     for (int n = 0; n < frames; ++n) {
       require(std::isfinite(left[n]) && std::isfinite(right[n]), "Nonfinite/unwritten PCM output");
       require(std::abs(left[n]) <= 1.f && std::abs(right[n]) <= 1.f, "Unbounded PCM output");
-      require(std::abs(left[n] - right[n]) < 1e-7f, "Sine output is unexpectedly asymmetric");
+      if(symmetricExpected)require(std::abs(left[n] - right[n]) < 1e-7f, "Sine output is unexpectedly asymmetric");
     }
+    lastRight.assign(right.begin(),right.begin()+frames);
     return {left.begin(), left.begin() + frames};
   }
 private:
@@ -191,6 +210,8 @@ private:
   double rate;
   int64 position = 0;
   bool active = false;
+  bool symmetricExpected = true;
+  std::vector<float> lastRight;
 };
 
 void append(std::vector<float>& destination, const std::vector<float>& block) {
@@ -418,6 +439,149 @@ void checkRate(const PluginFactory& factory, const ClassInfo& info, double rate)
     << " restoredGainRatio=" << ratio << " stateBytes=" << state.getSize()
     << " independentInstances=true\n";
 }
+using StateBytes=std::vector<std::uint8_t>;
+StateBytes originalBank() {
+  std::ifstream file(std::string(VAB_FIXTURE_DIR)+"/spu-synth-demo.vab",std::ios::binary);
+  require(file.good(),"Cannot read original VAB state fixture");
+  return {std::istreambuf_iterator<char>(file),std::istreambuf_iterator<char>()};
+}
+void put32(StateBytes& bytes,std::size_t offset,std::uint32_t value) {
+  for(unsigned n=0;n<4;++n)bytes.at(offset+n)=static_cast<std::uint8_t>(value>>(n*8));
+}
+void putDouble(StateBytes& bytes,std::size_t offset,double value) {
+  std::uint64_t bits=0;std::memcpy(&bits,&value,sizeof(bits));
+  for(unsigned n=0;n<8;++n)bytes.at(offset+n)=static_cast<std::uint8_t>(bits>>(n*8));
+}
+StateBytes vstState(const StateBytes& bank,unsigned program,unsigned tone,double gain=37) {
+  auto bytes=tetorica::encodeState(tetorica::InstrumentDefinition::fromVab(bank,program,tone),gain);
+  bytes.insert(bytes.end(),4,0); // Official VST3 wrapper's trailing bypass int32.
+  return bytes;
+}
+tetorica::SavedInstrumentState inspectState(const StateBytes& bytes) {
+  require(bytes.size()>=44,"Saved VST3 custom state is truncated");
+  return tetorica::decodeState({bytes.data(),bytes.size()-4});
+}
+void restoreRequired(Instance& instance,const StateBytes& state) {
+  require(instance.tryRestore(state),"Valid embedded state rejected");
+}
+void sameStereo(Instance& actual,Instance& reference,const std::vector<Event>& events={}) {
+  const auto a=actual.renderEvents(events),b=reference.renderEvents(events);
+  require(a==b&&actual.right()==reference.right(),"Embedded-state PCM differs from independent restored instance");
+}
+
+void checkEmbeddedState(const PluginFactory& factory,const ClassInfo& info,double rate) {
+  const auto bank=originalBank();
+  std::vector<float> plain,fine;
+  for(unsigned selected=0;selected<4;++selected) {
+    auto authored=bank;if(selected==3)authored[0x820+3]=127;
+    const unsigned program=selected==2?11:3,toneIndex=selected==1?1:0;
+    const auto state=vstState(authored,program,toneIndex);
+    Instance first(factory,info,rate),second(factory,info,rate),isolated(factory,info,rate);
+    first.allowAsymmetric();second.allowAsymmetric();
+    restoreRequired(first,state); // Inactive restoration must prepare before first render.
+    require(std::abs(first.gain()-.37)<1e-6,"Embedded Gain was not restored");
+    const auto saved=first.savedBytes();
+    require(saved==state,"Saved embedded bank/selection/Gain bytes changed before audio adoption");
+    const auto decoded=inspectState(saved);
+    require(decoded.definition->bankBytes()==authored&&decoded.definition->program()==program&&
+      decoded.definition->tone()==toneIndex&&decoded.gainPercent==37,"Saved sparse Tone identity changed");
+    restoreRequired(second,saved);
+    first.start();second.start();isolated.start();
+    const auto on=note(true,0);
+    sameStereo(first,second,{on}); // First block immediately following restore.
+    std::vector<float> sound=first.right();
+    require(peak(sound)>1e-5,"Embedded NoteOn did not sound in the first block");
+    if(selected==3)require(peak(first.renderEvents({}))==0,"Imported full-right pan leaked to left");
+    if(selected==3)second.render();
+    for(int n=0;n<32;++n){sameStereo(first,second);append(sound,first.right());}
+    require(peak(isolated.render())==0&&std::abs(isolated.gain()-1)<1e-6,
+      "Embedded state affected a separate instance");
+    require(first.savedBytes()==state,"Playing changed serialized instrument definition");
+    if(selected==0)plain=sound;
+    if(selected==1)fine=sound;
+    if(selected==2)require(peak(sound,sound.size()-kBlock)==0,"P11 one-shot did not finish");
+    if(selected==3)require(peak(first.right())>1e-5,"Imported full-right pan lost right audio");
+  }
+  require(plain.size()==fine.size()&&difference(plain,fine)>1e-3,
+    "Sparse P3 Tone1 fine tuning did not change PCM");
+
+  // Restore between process calls, with held and end-of-block deferred old notes.
+  Instance playing(factory,info,rate),fresh(factory,info,rate);
+  playing.allowAsymmetric();fresh.allowAsymmetric();playing.start();
+  const auto old=note(true,0);playing.render(&old);playing.render();
+  auto deferred=note(true,kBlock);deferred.noteOn.pitch=67;playing.render(&deferred);
+  auto rightBank=bank;rightBank[0x820+3]=127;const auto rightState=vstState(rightBank,3,0);
+  restoreRequired(playing,rightState);restoreRequired(fresh,rightState);fresh.start();
+  const auto newNote=note(true,64);
+  sameStereo(playing,fresh,{newNote});
+  const auto firstAfterRestore=playing.right();
+  for(int n=0;n<64;++n)require(firstAfterRestore[n]==0,"Old held/deferred note survived restore");
+  require(peak(firstAfterRestore)>1e-5,"Fresh current-block NoteOn was discarded by restore");
+  for(int n=0;n<8;++n)sameStereo(playing,fresh);
+
+  // Repeated synchronous restores must not depend on a background collector.
+  for(unsigned n=0;n<12;++n) {
+    const auto state=n%2?rightState:vstState(bank,3,1);
+    Instance reference(factory,info,rate);reference.allowAsymmetric();
+    restoreRequired(playing,state);restoreRequired(reference,state);reference.start();
+    sameStereo(playing,reference,{old});
+    for(int block=0;block<4;++block)sameStereo(playing,reference);
+  }
+  std::cout<<"PASS embedded state sampleRate="<<rate
+    <<" sparseTones=3 stereoPan=true firstBlock=true activeRestore=true heldDeferredCleared=true"
+    <<" freshNotePreserved=true repeatedRestores=12 embeddedBytes="<<bank.size()<<'\n';
+}
+
+void checkStateFailures(const PluginFactory& factory,const ClassInfo& info) {
+  constexpr double rate=48000;
+  const auto bank=originalBank(),valid=vstState(bank,3,0);
+  Instance target(factory,info,rate),reference(factory,info,rate);
+  target.allowAsymmetric();reference.allowAsymmetric();
+  restoreRequired(target,valid);restoreRequired(reference,valid);target.start();reference.start();
+  const auto on=note(true,0);sameStereo(target,reference,{on});
+  std::vector<StateBytes> invalid;
+  auto mutate=[&](std::size_t offset,std::uint32_t value){auto state=valid;put32(state,offset,value);invalid.push_back(std::move(state));};
+  mutate(0,0);mutate(8,2);mutate(12,1);mutate(16,9);mutate(20,127);mutate(24,99);mutate(28,0xffffffff);
+  for(const auto length:{std::size_t(0),std::size_t(1),std::size_t(7),std::size_t(8),std::size_t(12),
+      std::size_t(31),std::size_t(39),valid.size()-5,valid.size()-1})
+    invalid.emplace_back(valid.begin(),valid.begin()+length);
+  for(const double gain:{-1.,101.,std::numeric_limits<double>::infinity(),std::numeric_limits<double>::quiet_NaN()}) {
+    auto state=valid;putDouble(state,state.size()-12,gain);invalid.push_back(std::move(state));
+  }
+  auto oversized=valid;oversized.resize(tetorica::kMaxStateBytes+5);invalid.push_back(std::move(oversized));
+  auto trailing=valid;trailing.push_back(0);invalid.push_back(std::move(trailing));
+  auto badSample=valid;badSample[32+3616+16]=0x50;invalid.push_back(std::move(badSample));
+  auto unsupported=valid;unsupported[32+3616+16+1]&=static_cast<std::uint8_t>(~4);
+  unsupported[32+3616+16+17]|=4;invalid.push_back(std::move(unsupported));
+  StateBytes badLegacy(12);putDouble(badLegacy,0,std::numeric_limits<double>::quiet_NaN());invalid.push_back(std::move(badLegacy));
+  for(std::size_t n=0;n<invalid.size();++n) {
+    const auto before=target.savedBytes();const auto gain=target.gain();
+    if(target.tryRestore(invalid[n]))throw std::runtime_error("Malformed VST3 state accepted at case "+std::to_string(n));
+    require(target.gain()==gain&&target.savedBytes()==before,"Rejected state changed authoring state or Gain");
+    sameStereo(target,reference); // Uninterrupted audio, not a fresh retrigger oracle.
+  }
+  // A failed restore must not invalidate an already prepared pending restore.
+  auto rightBank=bank;rightBank[0x820+3]=127;const auto pending=vstState(rightBank,3,0,61);
+  restoreRequired(target,pending);
+  require(!target.tryRestore(invalid.front()),"Invalid state accepted over a ready restore");
+  require(target.savedBytes()==pending&&std::abs(target.gain()-.61)<1e-6,"Failed state cancelled ready state");
+  Instance pendingReference(factory,info,rate);pendingReference.allowAsymmetric();
+  restoreRequired(pendingReference,pending);pendingReference.start();sameStereo(target,pendingReference,{on});
+
+  StateBytes legacy(12);putDouble(legacy,0,27.5);
+  Instance freshLegacy(factory,info,rate),builtin(factory,info,rate);freshLegacy.allowAsymmetric();
+  restoreRequired(freshLegacy,legacy);freshLegacy.start();builtin.start();builtin.setGain(.275);
+  sameStereo(freshLegacy,builtin,{on});
+  require(std::abs(freshLegacy.gain()-.275)<1e-6,"Legacy Gain-only state was not restored");
+  // Existing Gain-only projects select Builtin even when replacing an import.
+  restoreRequired(target,legacy);
+  Instance legacyReference(factory,info,rate);restoreRequired(legacyReference,legacy);legacyReference.start();
+  sameStereo(target,legacyReference,{on});
+  require(inspectState(target.savedBytes()).definition->kind()==tetorica::InstrumentDefinition::Kind::Builtin,
+    "Legacy state retained an imported bank");
+  std::cout<<"PASS malformed embedded state cases="<<invalid.size()
+    <<" atomicGainStatePCM=true readyRestorePreserved=true legacyGain12=true\n";
+}
 }
 
 int main(int argc, char** argv) {
@@ -439,7 +603,9 @@ int main(int argc, char** argv) {
         for (const double rate : {44100., 48000., 96000.}) {
           checkRate(factory, info, rate);
           checkScheduler(factory, info, rate);
+          checkEmbeddedState(factory,info,rate);
         }
+        checkStateFailures(factory,info);
         PluginContextFactory::instance().setPluginContext(nullptr);
         std::cout << "PASS VST3 offline PCM, scheduler, lifecycle, state and instance isolation\n";
         return 0;

@@ -1,5 +1,18 @@
 # 作業記録
 
+## 2026-10-31 JST — embedded DAW stateのローカル検証完了
+
+- 開始TODO `ba2b656` をcommit / pushしてから実装した。
+- 不変のfull VAB/selection定義、schema 1 codec、準備済みengineのtransaction commit、custom stateを接続。
+- vendorを変えずAU/VST3外側の型・長さ・失敗戻り値を検証するadapterを追加した。
+- 原本VABを含むstateで実VST3の44.1/48/96kHz先頭block PCM、25不正ケースの保持、12回連続復元が成功。
+- 実AUをworkspaceからprocess内登録し、48kHz ClassInfo/先頭MIDI/PCM/不正入力/legacy移行を確認。
+  CoreAudioのsandbox制限で初回失敗、承認後のsandbox外で最終binaryも成功。既存AUの配置は変更なし。
+- offline / macOS各5 suite、state+exchange ASan/TSan各2 suite、公式VST3 47検査が成功。
+- pending→activeの保存時の隙間はproducer所有のaccepted definitionで補完し、audio側の共有データ破棄はない。
+- 詳細・再現・契約は[embedded state記録](embedded_state_20261031.md)。次はfile/Program/Tone UIと実DAW保存復元。
+- UIからのVAB読み込み、Release公開、署名・公証はまだ行っていない。
+
 ## 2026-10-31 JST — embedded DAW stateの開始
 
 - cleanな `56c1c0e` から再開。実装前にstate用TODOを追加した。

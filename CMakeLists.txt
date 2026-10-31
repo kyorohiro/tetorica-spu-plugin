@@ -19,7 +19,7 @@ target_include_directories(tetorica_vab PUBLIC src)
 
 find_package(Threads REQUIRED)
 add_library(tetorica_spu_instrument STATIC
-  src/SpuInstrument.cpp src/SpuEngineExchange.cpp src/VabLoader.cpp)
+  src/SpuInstrument.cpp src/SpuEngineExchange.cpp src/VabLoader.cpp src/InstrumentState.cpp)
 target_include_directories(tetorica_spu_instrument PUBLIC src)
 target_link_libraries(tetorica_spu_instrument PUBLIC tetorica::ps1_spu tetorica_vab Threads::Threads)
 
@@ -43,6 +43,18 @@ if(BUILD_TESTING)
   target_compile_definitions(spu_engine_exchange_test PRIVATE VAB_FIXTURE_DIR="${CMAKE_CURRENT_SOURCE_DIR}/tests/fixtures/vab")
   add_test(NAME spu.engine.exchange COMMAND spu_engine_exchange_test)
   set_tests_properties(spu.engine.exchange PROPERTIES TIMEOUT 45)
+  add_executable(instrument_state_test tests/instrument_state_test.cpp)
+  target_link_libraries(instrument_state_test PRIVATE tetorica_spu_instrument)
+  target_compile_definitions(instrument_state_test PRIVATE VAB_FIXTURE_DIR="${CMAKE_CURRENT_SOURCE_DIR}/tests/fixtures/vab")
+  add_test(NAME spu.instrument.state COMMAND instrument_state_test)
+  set_tests_properties(spu.instrument.state PROPERTIES TIMEOUT 45)
+endif()
+
+if(APPLE)
+  add_executable(tetorica_au_state_check tools/au-state-check.cpp)
+  target_link_libraries(tetorica_au_state_check PRIVATE tetorica_spu_instrument
+    "-framework AudioToolbox" "-framework CoreFoundation" "-framework AudioUnit")
+  target_compile_definitions(tetorica_au_state_check PRIVATE VAB_FIXTURE_DIR="${CMAKE_CURRENT_SOURCE_DIR}/tests/fixtures/vab")
 endif()
 
 if(APPLE OR WIN32)

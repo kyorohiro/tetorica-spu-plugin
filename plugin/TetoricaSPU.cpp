@@ -43,7 +43,7 @@ TetoricaSPU::TetoricaSPU(const iplug::InstanceInfo& info)
     graphics->AttachControl(new ITextControl(IRECT(24, 18, 550, 60),
       "Tetorica SPU", IText(30, IColor(255, 27, 62, 73))));
     graphics->AttachControl(new ITextControl(IRECT(24, 62, 550, 96),
-      "Native PS1 SPU · Built-in Sine", IText(17)));
+      "Native PS1 SPU instrument", IText(17)));
     graphics->AttachControl(new ITextControl(IRECT(24, 104, 550, 134),
       "Play MIDI from your DAW or click the keyboard below.", IText(14)));
     graphics->AttachControl(new IVKnobControl(IRECT(576, 28, 696, 152),

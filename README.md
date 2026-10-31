@@ -82,8 +82,8 @@ reconstruction. Sample 0 (unassigned), sample 255 (Noise), malformed ADPCM and
 selected payloads beyond usable SPU RAM are rejected. The pinned Native SDK
 also requires the repeat-address packet to carry flag 2; structurally valid
 loops without it, including flag 4 alone, are rejected for playback. No sample
-flags are silently rewritten. File UI and embedded VAB state in DAW projects
-remain subsequent integration steps; see [TODO](docs/issues/TODO.md).
+flags are silently rewritten. File UI is the next integration step; see
+[TODO](docs/issues/TODO.md).
 
 The prepared-engine exchange is now connected at plugin block boundaries.
 `src/VabLoader.h` supplies a non-audio-thread API to prepare a complete VAB Tone
@@ -92,8 +92,30 @@ keeps the current instrument. The audio side adopts prepared engines without
 allocating, destroying engines, taking an application mutex or notifying a
 worker. Old engines return through a bounded retirement queue; a full queue
 defers the switch. This layer does not make the entire host/framework callback
-lock-free. Plugin UI loading and embedded DAW state remain subsequent steps,
-and no loader thread is started by the current plugin UI.
+lock-free. No loader thread is started by the current plugin UI.
+
+## Embedded DAW state
+
+Custom state now embeds the complete original VAB, sparse Program/Tone selection
+and Gain. Restoring a project prepares a fresh SPU synchronously before reporting
+success; it does not need an external sample path. Malformed or unsupported state
+keeps the current sound, parameters and an already prepared pending replacement.
+Previous Gain-only AU/VST3 state remains readable and migrates to Built-in Sine.
+
+The actual AU and VST3 have been tested for embedded-bank round-trip, separate
+instances, immediate first-render MIDI/PCM and malformed-state rejection. VST3
+also covers held/deferred MIDI cleanup and repeated restores at 44.1/48/96 kHz.
+See [the state verification record](docs/embedded_state_20261031.md).
+
+```sh
+sh scripts/check_au_state.sh build/macos/out/TetoricaSPU.component
+sh scripts/check_vst3_audio.sh build/macos/out/TetoricaSPU.vst3
+```
+
+These hosts load the workspace bundles without opening a device or editor.
+State restore is a non-audio-thread host lifecycle operation, with processing
+quiescent during the call. The next UI step will expose VAB loading and Program/
+Tone selection; the current UI still starts with the built-in instrument.
 
 ## macOS AU / GarageBand verification
 
@@ -116,7 +138,10 @@ See [the AU / GarageBand record](docs/au_garageband_20261031.md).
   MIDI notes 92 and above clamp. Full-range multisampling is follow-up work.
 - Host rate conversion uses continuous linear interpolation. Anti-alias filtering
   below 44.1 kHz and improved conversion quality remain follow-up work.
-- Gain parameter state is supplied by iPlug2; custom VAB/sample state is not implemented.
+- State schema 1 stores a built-in instrument or one selected VAB Tone, with
+  a 1 MiB bank limit. Key zones, layers and game-driver performance state are
+  not reconstructed. Held notes, release tails, decoder caches and host rate
+  are not saved.
 - Pitch Bend, Sustain, smooth Gain changes and per-channel CC120 remain TODO.
   Currently CC120 immediately stops all channels; CC123 releases its own channel.
 - Prepared-engine changes start with no held notes and cut the previous tail.
