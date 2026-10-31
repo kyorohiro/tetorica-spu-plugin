@@ -1,5 +1,14 @@
 # 作業記録
 
+## 2026-10-31 JST — SPU Reverbの開始チェックポイント
+
+- `34e3a92`、main/origin同期・clean treeから開始。実装前に今回の範囲をTODOへ保存した。
+- 既存coreは32wordのexact-matchで7種の近似Reverbを選ぶ。preset / return / send変更は確保不要。
+- 現panicはvoiceのみをmuteする。残響だけを消すNative APIを上流へ追加し、検証後のcommitに固定する。
+  通常resetは確保・sample cache無効化を伴うためaudio callbackから呼ばない。
+- 次: Native / core、後方互換state、ADSR/Reverb page、実AU/VST3検証を進める。
+  この時点ではReverb実装・build・installed AU更新は未実施。
+
 ## 2026-10-31 JST — ADSRのCIも成功
 
 - 実装`550fbab804305378f6e647d468ff5d5784cbe919`をpushし、

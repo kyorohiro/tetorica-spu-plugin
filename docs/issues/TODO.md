@@ -25,6 +25,21 @@ Program操作後のP3/T0と保存・project再表示も確認した。P11中間�
 Pitch Bend / Sustainもcore・実AU/VST3・CIで検証し、installed AU更新とproject復元を完了。
 ADSR編集も実装・ローカル検証・installed AU更新済み。[検証記録](../adsr_editing_20261031.md)。次はSPU Reverb。
 
+### SPU Reverbの今回の区切り（2026-10-31、実装前）
+
+- [ ] Native SDKへ確保・RAM/cache破棄を伴わない残響clear APIを追加・検証し、公開commitへ固定依存を更新する。通常resetをaudio callbackで呼ばない。
+- [ ] Off＋7種の共有近似preset、Enable、Return L/R（初期25%）、All notes / Tone sendを公開する。元VABのsend flagは保持する。
+- [ ] 手動の非Off preset選択で自動Enableする。automation / host restoreは各parameterの保存値をそのまま使う。
+- [ ] 発音・ADSR・sample位置を保ってpreset / return / sendを変更する。Enable Offは即dryへ戻し残響を裏で減衰、preset OffとAll sound offは残響履歴も消す。
+- [ ] 720×620のADSR / Reverb page切替で画面を整理し、bank・Gain・keyboardを共通に保つ。実機完全再現ではなくcoreの近似presetと表示する。
+- [ ] 既存parameter ID0〜11を保ち、新設定をschema3へ保存する。schema1/2・Gain-onlyはReverb Offで互換復元し、不正stateは全設定と現在音を保つ。
+- [ ] coreで全presetの残響、左右Return、held / release / pedal / send復元、panic再発音、分割一致・RT確保・ASanを検証する。初期dry音の一致も確認する。
+- [ ] 実AU/VST3のparameter・保存復元・旧形式・PCMを検証し、Standalone / GarageBandの画面を確認する。
+- [ ] 検証後に既知manifest付きでinstalled AUを安全に更新する。TODO・結果をcommit / pushし、CIを確認する。
+
+外部入力Reverbは追加しない。Web・Tauri配布物とproject原本は変更しない。
+Enable Offでwetを即muteし、preset Offで履歴も消す点は、sendのみを止めるWeb UIからの意図した改善とする。
+
 ### ADSR編集の今回の区切り（2026-10-31、実装前）
 
 - [x] Tone本来のADSRを保持し、Custom ADSRの有効化・元Toneからのコピーを追加する。初期状態は元Toneを使用する。
