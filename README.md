@@ -5,9 +5,9 @@ Initial development targets macOS Standalone, AUv2 and VST3. Not a published rel
 
 Current prototype: original built-in Sine, MIDI Note On/Off and velocity,
 24 voices, channel-aware note ownership, Pitch Bend, Sustain, All sound off,
-Gain, a PCM waveform editor, SPU Noise, paired PMON, custom ADSR editing, shared SPU Reverb and mouse keyboard.
+Gain, a PCM waveform editor, Software Morph, SPU Noise, paired PMON, custom ADSR editing, shared SPU Reverb and mouse keyboard.
 Load a complete VAB from the editor and select a Program and Tone to audition.
-The bank or PCM cycle, selection, Gain, ADSR, Reverb, Noise and PMON settings are embedded in the DAW project state.
+The bank or PCM cycle, Morph A/B endpoints, selection, Gain, ADSR, Reverb, Noise and PMON settings are embedded in the DAW project state.
 Additional SPU controls remain planned. The same VAB parser and selected-Tone
 engine can also be exercised with the offline tool below.
 
@@ -117,6 +117,45 @@ are instrument edits rather than host automation parameters; the existing
 17 pre-existing parameter IDs remain unchanged. **Builtin Sine** still restores the original
 fixed sample. Editing a VAB does not rewrite its sample bank: Apply replaces
 the current source with the authored PCM cycle.
+
+## Software Morph
+
+On the **Source** page with **Sample** selected, enable **Software Morph**.
+The original Builtin/VAB/PCM source is retained. Two 112-sample cycles, **Wave A**
+and **Wave B**, blend through **Morph Amount** (0–1). A starts as Sine and B as
+Saw, using the editor's amplitude 0.8. Amount 0 selects A; 1 selects B.
+Morph starts Off. Turning it Off returns to the retained original sample.
+Changing enabled mode stops held notes and old Reverb tails; play a new note.
+
+**A, B and Result share one canvas.** Select A or B to draw that endpoint or
+choose a shape. Result is the blend preview and cannot be drawn directly.
+Endpoint edits remain a draft until **Apply**; **Revert** discards the draft.
+Apply prepares a replacement on the worker and stops old notes/tails at adoption.
+Unapplied endpoint changes are not saved. The ordinary PCM draft is separate.
+
+Amount changes the applied A/B blend while notes, sustain or release tails sound,
+without restarting sample positions or envelopes. The Source control and the
+control beside the keyboard use the same host parameter, so both follow edits,
+automation and restore. When a draft is unapplied, the canvas previews that
+draft while sounding notes still use the applied endpoints.
+
+Morph works with **Sample + PMON**, retaining the paired 12-note limit.
+**SPU Noise** takes priority and keeps Morph settings for returning to Sample.
+Source changes retain the applied endpoints and Morph parameters; turn Morph
+Off to hear the selected base sample. Carrier ADSR, volume/pan and Tone-send
+remain from that base; Morph uses tuning for a 112-sample cycle.
+
+This is a **software feature**, using a second private PCM bank outside physical
+SPU sample RAM. The SPU still supplies Gaussian interpolation, ADSR, PMON and
+Reverb. Morph's carrier uses signed 16-bit PCM; the ordinary sample uses SPU
+ADPCM. Enabling Morph is therefore not a promise of bit-identical ADPCM sound.
+Morph Off keeps the previous source playback unchanged.
+
+Applied A/B originals are embedded in project state. Enabled and Amount append
+host parameter IDs 24 and 25; previous IDs stay stable. This plugin uses explicit
+Apply for endpoint edits and returns to its base source on Morph Off. The Web
+editor instead applies completed endpoint edits live and keeps the last blend
+when Morph is turned Off. Morph LFO and external-input effects are not included.
 
 ## SPU Noise
 
@@ -303,6 +342,9 @@ their source or the envelope/effect settings supported by that schema.
 Schema 6 appends PMON settings, retaining all earlier layouts and reading
 schema 1–5 with PMON Off. Both raw source flags are retained; simultaneous
 Noise and PMON use Noise during playback.
+Schema 7 appends Morph Enabled/Amount and two exact 112-sample Float32 endpoints,
+while retaining the original source kind and bytes. Schema 1–6 and legacy state
+restore with Morph Off, Amount 0 and the default A/B pair.
 
 The actual AU and VST3 have been tested for embedded-bank round-trip, separate
 instances, immediate first-render MIDI/PCM and malformed-state rejection. VST3
@@ -365,7 +407,7 @@ still need a direct user check; the verified host-preset route is separate.
   MIDI notes 92 and above clamp. Full-range multisampling is follow-up work.
 - Host rate conversion uses continuous linear interpolation. Anti-alias filtering
   below 44.1 kHz and improved conversion quality remain follow-up work.
-- State schema 6 stores a built-in instrument, one selected VAB Tone or one
+- State schema 7 stores a built-in instrument, one selected VAB Tone or one
   authored 112-sample PCM cycle, with a 1 MiB bank limit. Key zones, layers and game-driver performance state are
   not reconstructed. Held notes, release tails, decoder caches and host rate
   are not saved.

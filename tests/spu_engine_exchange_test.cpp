@@ -610,6 +610,66 @@ void pcmCycleSupersession(const std::vector<std::uint8_t>&) {
   }
 }
 
+void workerMorphEndpoints(const std::vector<std::uint8_t>& bytes) {
+  using Definition=tetorica::InstrumentDefinition;
+  using Shape=tetorica::WaveformShape;
+  const auto equal=[](const tetorica::MorphEndpoints& a,const tetorica::MorphEndpoints& b){return a.a==b.a&&a.b==b.b;};
+  tetorica::MorphEndpoints endpoints{tetorica::makePcmCycle(Shape::Square),tetorica::makePcmCycle(Shape::Triangle)};
+  endpoints.a[17]=-.1234567f;endpoints.b[111]=.3456789f;
+  const auto original=endpoints;
+  Exchange exchange;Loader loader(exchange);FileFixtures files;
+  auto source=Definition::fromVab(bytes,3,1);
+  exchange.commitPrepared(tetorica::prepareDefinition(*source),source);CHECK(begin(exchange));
+  const auto applied=loader.requestMorphEndpoints(source,endpoints);endpoints.a.fill(0);endpoints.b.fill(0);
+  waitStatus(loader,applied,Loader::State::Ready);
+  const auto ready=exchange.snapshotDefinition();
+  CHECK(ready->kind()==Definition::Kind::Vab&&ready->bankBytes()==bytes&&ready->program()==3&&ready->tone()==1);
+  CHECK(equal(ready->morphEndpoints(),original));
+  const auto saved=tetorica::encodeState(ready,37,{}, {},{}, {},{true,.375});
+  CHECK(equal(tetorica::decodeState({saved.data(),saved.size()}).definition->morphEndpoints(),original));
+  const auto generation=exchange.latestGeneration();
+  for(float invalid:{-1.01f,1.01f,std::numeric_limits<float>::infinity(),std::numeric_limits<float>::quiet_NaN()}) {
+    auto bad=original;bad.b[111]=invalid;bool rejected=false;
+    try{loader.requestMorphEndpoints(ready,bad);}catch(const std::exception&){rejected=true;}
+    CHECK(rejected&&exchange.latestGeneration()==generation&&exchange.snapshotDefinition()==ready);
+  }
+  bool rejected=false;try{loader.requestMorphEndpoints(nullptr,original);}catch(const std::exception&){rejected=true;}
+  CHECK(rejected&&exchange.latestGeneration()==generation&&exchange.snapshotDefinition()==ready);
+  // A second request must capture the current pending definition BEFORE its
+  // generation invalidates it; falling back to the active source loses A/B.
+  auto gen=loader.requestBuiltin();waitStatus(loader,gen,Loader::State::Ready);
+  CHECK(exchange.snapshotDefinition()->kind()==Definition::Kind::Builtin&&equal(exchange.snapshotDefinition()->morphEndpoints(),original));
+  CHECK(begin(exchange)&&equal(exchange.instrument().morphEndpoints(),original));
+  const auto inspect=[&](Exchange::Generation value,Definition::Kind kind) {
+    waitStatus(loader,value,Loader::State::Ready);const auto snapshot=exchange.snapshotDefinition();
+    CHECK(snapshot->kind()==kind&&equal(snapshot->morphEndpoints(),original));
+    CHECK(begin(exchange)&&equal(exchange.instrument().morphEndpoints(),original));exchange.collectRetired();
+  };
+  inspect(loader.request(bytes,0),Definition::Kind::Vab);
+  inspect(loader.requestSelection(exchange.snapshotDefinition(),3,1),Definition::Kind::Vab);
+  inspect(loader.requestProgram(exchange.snapshotDefinition(),11),Definition::Kind::Vab);
+  inspect(loader.requestPcmCycle(tetorica::makePcmCycle(Shape::Triangle)),Definition::Kind::PcmCycle);
+  inspect(loader.requestFile(files.write("morph preserved.vab",bytes)),Definition::Kind::Vab);
+  inspect(loader.requestFile(files.write("morph exact.vab",bytes),1),Definition::Kind::Vab);
+  inspect(loader.requestBuiltin(),Definition::Kind::Builtin);
+  {
+    Gate gate;const auto old=loader.requestMorphEndpoints(exchange.snapshotDefinition(),original);gate.wait();
+    auto newer=original;newer.b[9]=-.456789f;
+    const auto latest=loader.requestMorphEndpoints(exchange.snapshotDefinition(),newer);CHECK(latest>old);
+    gate.open();waitStatus(loader,latest,Loader::State::Ready);
+    CHECK(begin(exchange)&&equal(exchange.snapshotDefinition()->morphEndpoints(),newer));
+  }
+  {
+    auto restoredEndpoints=original;restoredEndpoints.a[7]=-.7654321f;
+    auto restored=Definition::withMorphEndpoints(source,restoredEndpoints);
+    auto prepared=tetorica::prepareDefinition(*restored);
+    Gate gate;const auto old=loader.requestMorphEndpoints(exchange.snapshotDefinition(),original);gate.wait();
+    const auto latest=exchange.commitPrepared(std::move(prepared),restored);CHECK(latest>old&&begin(exchange));
+    gate.open();waitStatus(loader,old,Loader::State::Failed);
+    CHECK(exchange.snapshotDefinition()==restored&&equal(exchange.instrument().morphEndpoints(),restoredEndpoints));
+  }
+}
+
 void concurrentPublication(const std::vector<std::uint8_t>& bytes) {
   Exchange exchange;const auto left=sideTone(bytes,false),right=sideTone(bytes,true);
   std::mutex mutex;std::condition_variable wake;int requested=0,completed=0;
@@ -691,6 +751,7 @@ int main() {
   run("changed file/host restore supersession",changedFileAndRestoreSupersession,bytes);
   run("PCM worker shapes/owned input/invalid pending/selection",workerPcmCycles,bytes);
   run("PCM latest request/host restore supersession",pcmCycleSupersession,bytes);
+  run("Morph immutable endpoints/retained sources/latest/restore",workerMorphEndpoints,bytes);
   run("concurrent producer/audio publication",concurrentPublication,bytes);
   run("pending/retired/in-flight shutdown ownership",shutdownOwnership,bytes);
   CHECK(liveCount()==0&&engineAllocations==engineFrees&&engineRtFrees==0);

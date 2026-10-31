@@ -41,6 +41,10 @@ std::vector<std::uint8_t> readBoundedFile(const std::string& utf8Path) {
   return bytes;
 }
 constexpr const char* kSuperseded="VAB preparation was superseded by a newer instrument state";
+MorphEndpoints retainedEndpoints(SpuEngineExchange& exchange) {
+  const auto source=exchange.snapshotDefinition();
+  return source?source->morphEndpoints():MorphEndpoints{};
+}
 }
 
 VabLoader::VabLoader(SpuEngineExchange& exchange)
@@ -63,6 +67,7 @@ VabLoader::Generation VabLoader::request(std::vector<std::uint8_t> complete,std:
     // Serialize generation issuance and job replacement together. Separate
     // locks would allow concurrent request calls to queue the older job last.
     std::lock_guard<std::mutex> lock(mMutex);
+    const auto endpoints=retainedEndpoints(mExchange);
     generation=mExchange.beginRequest();
     mJob.reset();
     if(complete.size()>vab::kMaxFileBytes) {
@@ -70,6 +75,7 @@ VabLoader::Generation VabLoader::request(std::vector<std::uint8_t> complete,std:
     } else {
       mStatus={generation,State::Loading,{}};
       Job job;job.generation=generation;job.bytes=std::move(complete);job.flatTone=flatTone;
+      job.endpoints=endpoints;
       mJob.emplace(std::move(job));
     }
   }
@@ -87,9 +93,11 @@ VabLoader::Generation VabLoader::requestFileImpl(std::string path,std::size_t fl
   Generation generation;
   {
     std::lock_guard<std::mutex> lock(mMutex);
+    const auto endpoints=retainedEndpoints(mExchange);
     generation=mExchange.beginRequest();
     Job job;job.generation=generation;job.kind=Job::Kind::File;
     job.path=std::move(path);job.flatTone=flatTone;job.firstPlayable=firstPlayable;
+    job.endpoints=endpoints;
     mJob.emplace(std::move(job));
     mStatus={generation,State::Loading,{}};
   }
@@ -103,6 +111,7 @@ VabLoader::Generation VabLoader::requestSelection(std::shared_ptr<const Instrume
     std::lock_guard<std::mutex> lock(mMutex);
     generation=mExchange.beginRequest();
     Job job;job.generation=generation;job.kind=Job::Kind::Selection;
+    if(source)job.endpoints=source->morphEndpoints();
     job.source=std::move(source);job.program=program;job.tone=tone;
     mJob.emplace(std::move(job));mStatus={generation,State::Loading,{}};
   }
@@ -116,6 +125,7 @@ VabLoader::Generation VabLoader::requestProgram(std::shared_ptr<const Instrument
     std::lock_guard<std::mutex> lock(mMutex);
     generation=mExchange.beginRequest();
     Job job;job.generation=generation;job.kind=Job::Kind::Program;
+    if(source)job.endpoints=source->morphEndpoints();
     job.source=std::move(source);job.program=program;job.firstPlayable=true;
     mJob.emplace(std::move(job));mStatus={generation,State::Loading,{}};
   }
@@ -126,9 +136,11 @@ VabLoader::Generation VabLoader::requestBuiltin() {
   Generation generation;
   {
     std::lock_guard<std::mutex> lock(mMutex);
+    const auto endpoints=retainedEndpoints(mExchange);
     generation=mExchange.beginRequest();
     mStatus={generation,State::Loading,{}};
     Job job;job.generation=generation;job.kind=Job::Kind::Builtin;
+    job.endpoints=endpoints;
     mJob.emplace(std::move(job));
   }
   mWake.notify_one();
@@ -140,8 +152,24 @@ VabLoader::Generation VabLoader::requestPcmCycle(const PcmCycle& cycle) {
   Generation generation;
   {
     std::lock_guard<std::mutex> lock(mMutex);
+    const auto endpoints=retainedEndpoints(mExchange);
     generation=mExchange.beginRequest();
     Job job;job.generation=generation;job.kind=Job::Kind::PcmCycle;job.cycle=cycle;
+    job.endpoints=endpoints;
+    mJob.emplace(std::move(job));mStatus={generation,State::Loading,{}};
+  }
+  mWake.notify_one();return generation;
+}
+
+VabLoader::Generation VabLoader::requestMorphEndpoints(
+    std::shared_ptr<const InstrumentDefinition> source,const MorphEndpoints& endpoints) {
+  if(!source)throw std::invalid_argument("Choose a source before applying Morph endpoints");
+  validateMorphEndpoints(endpoints);
+  Job job;job.kind=Job::Kind::MorphEndpoints;job.source=std::move(source);job.endpoints=endpoints;
+  Generation generation;
+  {
+    std::lock_guard<std::mutex> lock(mMutex);
+    generation=mExchange.beginRequest();job.generation=generation;
     mJob.emplace(std::move(job));mStatus={generation,State::Loading,{}};
   }
   mWake.notify_one();return generation;
@@ -194,6 +222,8 @@ void VabLoader::run() {
       if(!current(job->generation)){finish(job->generation,nullptr,kSuperseded);continue;}
       if(job->kind==Job::Kind::Builtin)definition=InstrumentDefinition::builtin();
       else if(job->kind==Job::Kind::PcmCycle)definition=InstrumentDefinition::fromPcmCycle(job->cycle);
+      else if(job->kind==Job::Kind::MorphEndpoints)
+        definition=InstrumentDefinition::withMorphEndpoints(job->source,job->endpoints);
       else if(job->kind==Job::Kind::Selection) {
         if(!job->source||job->source->kind()!=InstrumentDefinition::Kind::Vab)
           throw std::runtime_error("Choose a loaded VAB bank before selecting a Tone");
@@ -216,7 +246,10 @@ void VabLoader::run() {
             "No playable Tone found in VAB Program: "+lastError:"No playable Tone found in VAB bank: "+lastError);
       } else definition=InstrumentDefinition::fromVabFlatIndex(std::move(job->bytes),job->flatTone);
       if(!current(job->generation)){finish(job->generation,nullptr,kSuperseded);continue;}
+      definition=InstrumentDefinition::withMorphEndpoints(definition,job->endpoints);
       if(!prepared)prepared=prepareDefinition(*definition);
+      else if(!prepared->setMorphEndpoints(definition->morphEndpoints()))
+        throw std::runtime_error("Could not prepare Morph endpoints");
       // Pair the immutable authoring definition with its prepared engine in the
       // same publication. No definition shared_ptr is copied by the audio path.
       std::lock_guard<std::mutex> lock(mMutex);

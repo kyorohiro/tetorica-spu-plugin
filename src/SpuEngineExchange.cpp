@@ -145,14 +145,21 @@ void SpuEngineExchange::collectRetired() {
 }
 
 std::unique_ptr<SpuInstrument> prepareDefinition(const InstrumentDefinition& definition) {
-  if(definition.kind()==InstrumentDefinition::Kind::Builtin)return std::make_unique<SpuInstrument>();
-  if(definition.kind()==InstrumentDefinition::Kind::PcmCycle)return std::make_unique<SpuInstrument>(definition.pcmCycle());
-  const auto& bytes=definition.bankBytes();
-  const auto bank=vab::parse({bytes.data(),bytes.size()});
-  for(std::size_t i=0;i<bank.tones.size();++i)
-    if(bank.tones[i].program==definition.program()&&bank.tones[i].index==definition.tone())
-      return std::make_unique<SpuInstrument>(vab::prepareTone(bank,i));
-  throw std::invalid_argument("SPU state: selected Program/Tone is absent");
+  std::unique_ptr<SpuInstrument> prepared;
+  if(definition.kind()==InstrumentDefinition::Kind::Builtin)prepared=std::make_unique<SpuInstrument>();
+  else if(definition.kind()==InstrumentDefinition::Kind::PcmCycle)prepared=std::make_unique<SpuInstrument>(definition.pcmCycle());
+  else {
+    const auto& bytes=definition.bankBytes();
+    const auto bank=vab::parse({bytes.data(),bytes.size()});
+    for(std::size_t i=0;i<bank.tones.size();++i)
+      if(bank.tones[i].program==definition.program()&&bank.tones[i].index==definition.tone()) {
+        prepared=std::make_unique<SpuInstrument>(vab::prepareTone(bank,i));break;
+      }
+  }
+  if(!prepared)throw std::invalid_argument("SPU state: selected Program/Tone is absent");
+  if(!prepared->setMorphEndpoints(definition.morphEndpoints()))
+    throw std::runtime_error("SPU state: could not prepare Morph endpoints");
+  return prepared;
 }
 
 } // namespace tetorica

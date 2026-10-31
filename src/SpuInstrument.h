@@ -7,6 +7,7 @@
 #include "SpuWaveform.h"
 #include "SpuNoise.h"
 #include "SpuPmon.h"
+#include "SpuMorph.h"
 #include <array>
 #include <cstdint>
 
@@ -83,6 +84,16 @@ public:
   // next NoteOn only. Enabling PMON disables Noise, and conversely.
   // Invalid tuples leave all settings and voices unchanged.
   bool setPmon(PmonSettings settings) noexcept;
+  MorphSettings morph() const noexcept { return mMorph; }
+  const MorphEndpoints& morphEndpoints() const noexcept { return mMorphEndpoints; }
+  // The wrapper adopts endpoint edits on a worker-prepared engine. This fixed
+  // copy also preserves voice state if called with serialized audio ownership.
+  // Invalid endpoints leave all state unchanged.
+  bool setMorphEndpoints(const MorphEndpoints& endpoints) noexcept;
+  // Amount updates the private112-frame carrier without key events or ADSR/
+  // Gaussian/cursor resets. Effective On/Off changes panic and restore the
+  // original source when Off. Noise takes priority and retains raw settings.
+  bool setMorph(MorphSettings settings) noexcept;
   void render(float* left, float* right, int frames) noexcept;
 
   int activeVoiceCount() const noexcept; // Physically held keys; pedal-held/releasing excluded.
@@ -133,6 +144,9 @@ private:
   NoiseSettings mNoise{};
   PmonSettings mPmon{};
   bool mPmonWavePrepared = false;
+  MorphEndpoints mMorphEndpoints{};
+  MorphSettings mMorph{};
+  bool mMorphWavePrepared = false;
   EnvelopeRegisters mSourceEnvelope{}, mEnvelope{};
   double mRatio = 1;
   double mPhase = 0;

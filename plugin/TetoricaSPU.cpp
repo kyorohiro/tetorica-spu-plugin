@@ -35,6 +35,8 @@ TetoricaSPU::TetoricaSPU(const iplug::InstanceInfo& info)
   GetParam(kParamPmonRatio)->InitDouble("PMON ratio", 1., 0.01, 16., 0.01);
   GetParam(kParamPmonDepth)->InitDouble("PMON depth", 0.5, 0., 1., 0.001);
   GetParam(kParamPmonDecay)->InitDouble("PMON decay (0 = Hold)", 500., 0., 5000., 1., "ms");
+  GetParam(kParamMorphEnabled)->InitBool("Enable software morph", false);
+  GetParam(kParamMorphAmount)->InitDouble("Software morph A to B", 0., 0., 1., 0.001);
 
 #if IPLUG_EDITOR
   mMakeGraphicsFunc = [this]() {
@@ -229,17 +231,22 @@ void TetoricaSPU::applySourceParameters() noexcept
   const double ratio = GetParam(kParamPmonRatio)->Value();
   const double depth = GetParam(kParamPmonDepth)->Value();
   const double decay = GetParam(kParamPmonDecay)->Value();
+  const double morphEnabled = GetParam(kParamMorphEnabled)->Value();
+  const double morphAmount = GetParam(kParamMorphAmount)->Value();
   if (!std::isfinite(enabled) || enabled < 0 || enabled > 1 || std::floor(enabled) != enabled ||
       !std::isfinite(clock) || clock < 0 || clock > 63 || std::floor(clock) != clock ||
       !std::isfinite(pmonEnabled) || pmonEnabled < 0 || pmonEnabled > 1 || std::floor(pmonEnabled) != pmonEnabled ||
       !std::isfinite(waveform) || waveform < 0 || waveform > 3 || std::floor(waveform) != waveform ||
       !std::isfinite(ratio) || ratio < 0.01 || ratio > 16 ||
       !std::isfinite(depth) || depth < 0 || depth > 1 ||
-      !std::isfinite(decay) || decay < 0 || decay > 5000)
+      !std::isfinite(decay) || decay < 0 || decay > 5000 ||
+      !std::isfinite(morphEnabled) || morphEnabled < 0 || morphEnabled > 1 || std::floor(morphEnabled) != morphEnabled ||
+      !std::isfinite(morphAmount) || morphAmount < 0 || morphAmount > 1)
     return;
   auto& instrument = mEngines.instrument();
   const bool previousNoise = instrument.noise().enabled;
   const bool previousPmon = instrument.pmon().enabled;
+  const bool previousMorph = instrument.morph().enabled && !previousNoise;
   const tetorica::NoiseSettings settings{enabled != 0, static_cast<std::uint32_t>(clock)};
   const tetorica::PmonSettings pmon{pmonEnabled != 0 && !settings.enabled,
     static_cast<tetorica::WaveformShape>(static_cast<unsigned>(waveform)), ratio, depth, decay};
@@ -248,7 +255,12 @@ void TetoricaSPU::applySourceParameters() noexcept
   // This avoids toggling/panicking between both modes on every audio block.
   instrument.setNoise(settings);
   instrument.setPmon(pmon);
-  if (previousNoise != instrument.noise().enabled || previousPmon != instrument.pmon().enabled)
+  // A/B are immutable source authoring data, prepared on the worker. Only the
+  // blend amount changes their private carrier cache on this audio thread.
+  // Keep raw Morph enabled while Noise hides it, so returning restores it.
+  instrument.setMorph({morphEnabled != 0, morphAmount});
+  if (previousNoise != instrument.noise().enabled || previousPmon != instrument.pmon().enabled ||
+      previousMorph != (instrument.morph().enabled && !instrument.noise().enabled))
     // The old source's future NoteOns must not restart after the mode panic.
     // Current-block host events and carried wheel/pedal still belong to input.
     discardCarriedNotes();

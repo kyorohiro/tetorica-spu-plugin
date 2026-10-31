@@ -43,6 +43,8 @@ enum EParams
   kParamPmonRatio,
   kParamPmonDepth,
   kParamPmonDecay,
+  kParamMorphEnabled,
+  kParamMorphAmount,
   kNumParams
 };
 
@@ -74,15 +76,17 @@ enum ECtrlTags
   kCtrlReverbStatus,
   kCtrlPagePcm,
   kCtrlPcmHeading,
-  kCtrlPcmSine,
-  kCtrlPcmTriangle,
-  kCtrlPcmSaw,
-  kCtrlPcmSquare,
+  kCtrlMorphEnabled,
+  kCtrlMorphEditA,
+  kCtrlMorphEditB,
+  kCtrlPcmShape,
   kCtrlPcmGraph,
   kCtrlPcmRevert,
   kCtrlPcmApply,
   kCtrlPcmInfo,
   kCtrlPcmStatus,
+  kCtrlMorphAmount,
+  kCtrlMorphAmountText,
   kCtrlSourceMode,
   kCtrlNoiseClock,
   kCtrlNoiseInfo,
@@ -93,7 +97,9 @@ enum ECtrlTags
   kCtrlPmonDepth,
   kCtrlPmonDecay,
   kCtrlPmonInfo,
-  kCtrlPmonStatus
+  kCtrlPmonStatus,
+  kCtrlKeyboardMorph,
+  kCtrlKeyboardMorphStatus
 };
 
 class TetoricaSPU final : public iplug::Plugin
@@ -155,6 +161,7 @@ private:
   void showInstrumentPage(InstrumentPage page);
   void setPcmDraftFromUI(const tetorica::PcmCycle& cycle);
   void choosePcmShapeFromUI(tetorica::WaveformShape shape);
+  void selectMorphEndpointFromUI(bool editB);
   void applyPcmDraftFromUI();
   void revertPcmDraftFromUI();
   void chooseReverbPresetFromUI(int preset);

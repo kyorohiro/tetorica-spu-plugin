@@ -8,6 +8,7 @@
 #include "SpuWaveform.h"
 #include "SpuNoise.h"
 #include "SpuPmon.h"
+#include "SpuMorph.h"
 #include <array>
 #include <cstddef>
 #include <cstdint>
@@ -18,8 +19,8 @@ namespace tetorica {
 
 inline constexpr std::size_t kStateHeaderBytes=32;
 inline constexpr std::array<std::uint8_t,8> kStateMagic{{'T','S','P','U','S','T','0','1'}};
-inline constexpr std::uint32_t kStateSchemaVersion=6;
-inline constexpr std::size_t kStateFixedBytes=112;
+inline constexpr std::uint32_t kStateSchemaVersion=7;
+inline constexpr std::size_t kStateFixedBytes=1024;
 inline constexpr std::size_t kMaxStateBytes=vab::kMaxFileBytes+kStateFixedBytes;
 
 // Factory-created immutable authoring data, independent of mutable audio state.
@@ -33,6 +34,8 @@ public:
   static std::shared_ptr<const InstrumentDefinition> fromVabFlatIndex(
       std::vector<std::uint8_t> bytes,std::size_t flatIndex);
   static std::shared_ptr<const InstrumentDefinition> fromPcmCycle(const PcmCycle& cycle);
+  static std::shared_ptr<const InstrumentDefinition> withMorphEndpoints(
+      const std::shared_ptr<const InstrumentDefinition>& source,const MorphEndpoints& endpoints);
 
   InstrumentDefinition(const InstrumentDefinition&)=delete;
   InstrumentDefinition& operator=(const InstrumentDefinition&)=delete;
@@ -45,14 +48,16 @@ public:
   std::uint32_t tone() const noexcept { return mTone; }
   // Valid authoring data for Kind::PcmCycle; zero-initialized for other kinds.
   const PcmCycle& pcmCycle() const noexcept { return mPcmCycle; }
+  const MorphEndpoints& morphEndpoints() const noexcept { return mMorphEndpoints; }
 
 private:
   InstrumentDefinition(Kind kind,std::vector<std::uint8_t> bank,
-                       std::uint32_t program,std::uint32_t tone,PcmCycle cycle={});
+                       std::uint32_t program,std::uint32_t tone,PcmCycle cycle={},MorphEndpoints endpoints={});
   const Kind mKind;
   const std::vector<std::uint8_t> mBank;
   const std::uint32_t mProgram,mTone;
   const PcmCycle mPcmCycle;
+  const MorphEndpoints mMorphEndpoints;
 };
 
 struct SavedInstrumentState {
@@ -62,15 +67,16 @@ struct SavedInstrumentState {
   ReverbSettings reverb{};
   NoiseSettings noise{};
   PmonSettings pmon{};
+  MorphSettings morph{};
 };
 
 // Pure bounded codec: no native SDK, filesystem, audio callbacks or handles.
 // Throws on malformed/oversized/unsupported state; requires an exact total size.
 std::vector<std::uint8_t> encodeState(const InstrumentDefinition& definition,double gainPercent,
-                                    EnvelopeSettings envelope={},ReverbSettings reverb={},NoiseSettings noise={},PmonSettings pmon={});
+                                    EnvelopeSettings envelope={},ReverbSettings reverb={},NoiseSettings noise={},PmonSettings pmon={},MorphSettings morph={});
 std::vector<std::uint8_t> encodeState(
     const std::shared_ptr<const InstrumentDefinition>& definition,double gainPercent,
-    EnvelopeSettings envelope={},ReverbSettings reverb={},NoiseSettings noise={},PmonSettings pmon={});
+    EnvelopeSettings envelope={},ReverbSettings reverb={},NoiseSettings noise={},PmonSettings pmon={},MorphSettings morph={});
 SavedInstrumentState decodeState(vab::BytesView bytes);
 
 class SpuInstrument;

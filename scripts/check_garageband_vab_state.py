@@ -14,7 +14,7 @@ import plistlib
 import struct
 
 MAX_BANK = 1024 * 1024
-MAX_STATE = MAX_BANK + 112
+MAX_STATE = MAX_BANK + 1024
 MAX_PROJECT_DATA = 64 * 1024 * 1024
 MAX_XML = 2 * 1024 * 1024
 MAX_ALTERNATIVES = 128
@@ -92,11 +92,12 @@ def decode_payload(payload):
                             'volume_left': .25, 'volume_right': .25},
                     noise={'enabled': False, 'clock': 48},
                     pmon={'enabled': False, 'waveform': 0, 'ratio': 1., 'depth': .5, 'decay_ms': 500.},
+                    morph={'enabled': False, 'amount': 0., 'endpoints': 'default-sine-saw'},
                     bank_bytes=0, bank_sha256=None), b''
     if len(payload) < 40 or payload[:8] != b'TSPUST01':
         raise ValueError('Expected complete TSPUST01 custom state or legacy Gain')
     schema, total, kind, program, tone, size = struct.unpack_from('<6I', payload, 8)
-    if schema not in (1, 2, 3, 4, 5, 6) or total != len(payload) or size > MAX_BANK or total != {1: 40, 2: 48, 3: 72, 4: 72, 5: 80, 6: 112}[schema] + size:
+    if schema not in (1, 2, 3, 4, 5, 6, 7) or total != len(payload) or size > MAX_BANK or total != {1: 40, 2: 48, 3: 72, 4: 72, 5: 80, 6: 112, 7: 1024}[schema] + size:
         raise ValueError('Invalid state schema, total or bank length')
     if kind not in ((0, 1, 2) if schema >= 4 else (0, 1)) or program > 127 or tone > 15:
         raise ValueError('Invalid state kind or sparse selection')
@@ -121,6 +122,16 @@ def decode_payload(payload):
     pflags, waveform, ratio, depth, decay = struct.unpack_from('<2I3d', payload, 80 + size) if schema >= 6 else (0, 0, 1., .5, 500.)
     if pflags & ~1 or waveform > 3 or not math.isfinite(ratio) or not .01 <= ratio <= 16 or not math.isfinite(depth) or not 0 <= depth <= 1 or not math.isfinite(decay) or not 0 <= decay <= 5000:
         raise ValueError('Invalid PMON flags, waveform, ratio, depth or decay')
+    morph = {'enabled': False, 'amount': 0., 'endpoints': 'default-sine-saw'}
+    if schema >= 7:
+        mflags, reserved, amount = struct.unpack_from('<2Id', payload, 112 + size)
+        a, b = payload[128 + size:576 + size], payload[576 + size:1024 + size]
+        if mflags & ~1 or reserved or not math.isfinite(amount) or not 0 <= amount <= 1:
+            raise ValueError('Invalid Morph flags, reserved word or amount')
+        if any(not math.isfinite(value) or not -1 <= value <= 1 for value in struct.unpack('<224f', a + b)):
+            raise ValueError('Morph endpoints must contain finite PCM in [-1, 1]')
+        morph = {'enabled': bool(mflags & 1), 'amount': amount, 'samples_per_endpoint': 112,
+                 'a_sha256': sha(a), 'b_sha256': sha(b)}
     bank = payload[32:32 + size]
     if kind == 2 and any(not math.isfinite(value) or not -1 <= value <= 1 for value in struct.unpack('<112f', bank)):
         raise ValueError('PCM cycle samples must be finite in [-1, 1]')
@@ -132,6 +143,7 @@ def decode_payload(payload):
                         'volume_left': left, 'volume_right': right},
                 noise={'enabled': bool(generator & 1), 'clock': clock},
                 pmon={'enabled': bool(pflags & 1), 'waveform': waveform, 'ratio': ratio, 'depth': depth, 'decay_ms': decay},
+                morph=morph,
                 bank_bytes=size if kind == 1 else 0, bank_sha256=sha(bank) if kind == 1 else None,
                 pcm_samples=112 if kind == 2 else None, pcm_sha256=sha(bank) if kind == 2 else None), bank if kind == 1 else b''
 

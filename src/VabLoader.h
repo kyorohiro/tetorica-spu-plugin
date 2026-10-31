@@ -51,12 +51,16 @@ public:
   // request, then encode and prime the complete engine on the worker. Invalid
   // PCM throws without cancelling valid pending work or changing current PCM.
   Generation requestPcmCycle(const PcmCycle& cycle);
+  // Validate and copy before generation changes. Only the endpoints change;
+  // the immutable original source and current host parameters are preserved.
+  Generation requestMorphEndpoints(std::shared_ptr<const InstrumentDefinition> source,
+                                   const MorphEndpoints& endpoints);
   // Ready means prepared and published, not yet necessarily adopted by audio.
   Status status() const;
 
 private:
   struct Job {
-    enum class Kind { Bytes,Builtin,File,Selection,Program,PcmCycle };
+    enum class Kind { Bytes,Builtin,File,Selection,Program,PcmCycle,MorphEndpoints };
     Generation generation=0;
     std::vector<std::uint8_t> bytes;
     std::size_t flatTone=0;
@@ -66,6 +70,7 @@ private:
     std::uint32_t program=0,tone=0;
     bool firstPlayable=false;
     PcmCycle cycle{};
+    tetorica::MorphEndpoints endpoints{};
   };
   Generation requestFileImpl(std::string path,std::size_t flatTone,bool firstPlayable);
   void run();

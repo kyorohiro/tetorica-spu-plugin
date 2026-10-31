@@ -10,7 +10,7 @@
 
 namespace {
 using Parameters=std::array<double,kNumParams>;
-static_assert(kNumParams==24,"Update the state parameter mapping when adding parameters");
+static_assert(kNumParams==26,"Update the state parameter mapping when adding parameters");
 unsigned field(const Parameters& values,int index,unsigned maximum)
 {
   const double value=values[index];
@@ -49,6 +49,10 @@ tetorica::PmonSettings pmon(const Parameters& p)
   return {field(p,kParamPmonEnabled,1)!=0,static_cast<tetorica::WaveformShape>(field(p,kParamPmonWaveform,3)),
     p[kParamPmonRatio],p[kParamPmonDepth],p[kParamPmonDecay]};
 }
+tetorica::MorphSettings morph(const Parameters& p)
+{
+  return {field(p,kParamMorphEnabled,1)!=0,p[kParamMorphAmount]};
+}
 Parameters stateParameters(const tetorica::SavedInstrumentState& state)
 {
   Parameters p{};const auto words=state.envelope.custom;
@@ -76,6 +80,8 @@ Parameters stateParameters(const tetorica::SavedInstrumentState& state)
   p[kParamPmonRatio]=state.pmon.ratio;
   p[kParamPmonDepth]=state.pmon.depth;
   p[kParamPmonDecay]=state.pmon.decayMs;
+  p[kParamMorphEnabled]=state.morph.enabled?1:0;
+  p[kParamMorphAmount]=state.morph.amount;
   return p;
 }
 }
@@ -98,7 +104,7 @@ bool TetoricaSPU::SerializeState(iplug::IByteChunk& chunk) const
       position=next;
     }
     const auto definition = mEngines.snapshotDefinition();
-    const auto bytes = tetorica::encodeState(definition, values[kParamGain], envelope(values), reverb(values), noise(values), pmon(values));
+    const auto bytes = tetorica::encodeState(definition, values[kParamGain], envelope(values), reverb(values), noise(values), pmon(values), morph(values));
     if (chunk.Size() < 0 || bytes.size() > static_cast<std::size_t>(
           std::numeric_limits<int>::max() - chunk.Size()))
       return false;
@@ -156,7 +162,7 @@ int TetoricaSPU::UnserializeState(const iplug::IByteChunk& chunk, int startPos)
     discardCarriedMidi();
     mMidiOverflow = false;
     // This trusted complete parameter chunk was fully validated and allocated
-    // above. The framework sets all 24 values and calls OnParamReset.
+    // above. The framework sets all 26 values and calls OnParamReset.
     UnserializeParams(params, 0);
     // A host restore can arrive off the UI thread. Only publish a revision
     // here; OnIdle will refresh its model without requesting another engine.

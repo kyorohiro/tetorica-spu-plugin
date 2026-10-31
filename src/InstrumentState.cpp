@@ -40,6 +40,10 @@ void pmon(const PmonSettings& value) {
   // Raw Noise+PMON enabled is valid authoring/automation state. The consumer
   // resolves its effective topology with Noise priority without changing it.
 }
+void morph(const MorphSettings& value) {
+  if(!std::isfinite(value.amount)||value.amount<0||value.amount>1)
+    fail("SPU state: Morph amount must be finite 0-1");
+}
 std::size_t selected(const vab::Bank& bank,std::uint32_t program,std::uint32_t tone) {
   if(program>127||tone>15)fail("SPU state: Program/Tone is out of range");
   for(std::size_t i=0;i<bank.tones.size();++i)
@@ -73,8 +77,8 @@ void putGain(std::uint8_t* bytes,double value) {
 }
 
 InstrumentDefinition::InstrumentDefinition(Kind kind,std::vector<std::uint8_t> bank,
-                                           std::uint32_t program,std::uint32_t tone,PcmCycle cycle)
-  :mKind(kind),mBank(std::move(bank)),mProgram(program),mTone(tone),mPcmCycle(cycle) {}
+                                           std::uint32_t program,std::uint32_t tone,PcmCycle cycle,MorphEndpoints endpoints)
+  :mKind(kind),mBank(std::move(bank)),mProgram(program),mTone(tone),mPcmCycle(cycle),mMorphEndpoints(endpoints) {}
 
 std::shared_ptr<const InstrumentDefinition> InstrumentDefinition::builtin() {
   static const std::shared_ptr<const InstrumentDefinition> definition(
@@ -110,14 +114,26 @@ std::shared_ptr<const InstrumentDefinition> InstrumentDefinition::fromPcmCycle(c
   validatePcmCycle(cycle);
   return std::shared_ptr<const InstrumentDefinition>(new InstrumentDefinition(Kind::PcmCycle,{},0,0,cycle));
 }
+std::shared_ptr<const InstrumentDefinition> InstrumentDefinition::withMorphEndpoints(
+    const std::shared_ptr<const InstrumentDefinition>& source,const MorphEndpoints& endpoints) {
+  if(!source)throw std::invalid_argument("SPU state: missing Morph source definition");
+  validateMorphEndpoints(endpoints);
+  // Preserve authored binary32 values, including a signed zero. Float equality
+  // alone would silently replace a negative-zero-only edit with the old array.
+  if(!std::memcmp(source->morphEndpoints().a.data(),endpoints.a.data(),sizeof(float)*endpoints.a.size())&&
+     !std::memcmp(source->morphEndpoints().b.data(),endpoints.b.data(),sizeof(float)*endpoints.b.size()))return source;
+  return std::shared_ptr<const InstrumentDefinition>(new InstrumentDefinition(source->kind(),
+    source->bankBytes(),source->program(),source->tone(),source->pcmCycle(),endpoints));
+}
 
 std::vector<std::uint8_t> encodeState(const InstrumentDefinition& definition,double gainPercent,
-                                    EnvelopeSettings settings,ReverbSettings effects,NoiseSettings generator,PmonSettings modulation) {
+                                    EnvelopeSettings settings,ReverbSettings effects,NoiseSettings generator,PmonSettings modulation,MorphSettings blend) {
   gain(gainPercent);
   envelope(settings);
   reverb(effects);
   noise(generator);
   pmon(modulation);
+  morph(blend);validateMorphEndpoints(definition.morphEndpoints());
   const auto& bank=definition.bankBytes();
   if(bank.size()>vab::kMaxFileBytes)fail("SPU state: VAB exceeds 1 MiB");
   const bool pcm=definition.kind()==InstrumentDefinition::Kind::PcmCycle;
@@ -147,14 +163,21 @@ std::vector<std::uint8_t> encodeState(const InstrumentDefinition& definition,dou
   putGain(bytes.data()+88+size,modulation.ratio);
   putGain(bytes.data()+96+size,modulation.depth);
   putGain(bytes.data()+104+size,modulation.decayMs);
+  putWord(bytes.data()+112+size,blend.enabled?1u:0u);
+  putWord(bytes.data()+116+size,0);
+  putGain(bytes.data()+120+size,blend.amount);
+  for(std::size_t i=0;i<112;++i) {
+    putSample(bytes.data()+128+size+i*4,definition.morphEndpoints().a[i]);
+    putSample(bytes.data()+576+size+i*4,definition.morphEndpoints().b[i]);
+  }
   return bytes;
 }
 
 std::vector<std::uint8_t> encodeState(
     const std::shared_ptr<const InstrumentDefinition>& definition,double gainPercent,
-    EnvelopeSettings settings,ReverbSettings effects,NoiseSettings generator,PmonSettings modulation) {
+    EnvelopeSettings settings,ReverbSettings effects,NoiseSettings generator,PmonSettings modulation,MorphSettings blend) {
   if(!definition)throw std::invalid_argument("SPU state: missing instrument definition");
-  return encodeState(*definition,gainPercent,settings,effects,generator,modulation);
+  return encodeState(*definition,gainPercent,settings,effects,generator,modulation,blend);
 }
 
 SavedInstrumentState decodeState(vab::BytesView bytes) {
@@ -165,7 +188,7 @@ SavedInstrumentState decodeState(vab::BytesView bytes) {
   if(version<1||version>kStateSchemaVersion)fail("SPU state: unsupported schema");
   if(word(bytes.data+12)!=bytes.size)fail("SPU state: declared length differs");
   const auto kind=word(bytes.data+16),program=word(bytes.data+20),tone=word(bytes.data+24),n=word(bytes.data+28);
-  const auto fixed=version==1?40:version==2?48:version<=4?72:version==5?80:kStateFixedBytes;
+  const auto fixed=version==1?40:version==2?48:version<=4?72:version==5?80:version==6?112:kStateFixedBytes;
   if(n>vab::kMaxFileBytes||std::uint64_t(n)+fixed!=bytes.size)fail("SPU state: invalid bank length");
   if(kind>(version>=4?2u:1u))fail("SPU state: unsupported instrument kind");
   if(kind==0&&(n||program||tone))fail("SPU state: builtin must not contain a bank or selection");
@@ -204,14 +227,25 @@ SavedInstrumentState decodeState(vab::BytesView bytes) {
     modulation.ratio=readGain(bytes.data+88+n);modulation.depth=readGain(bytes.data+96+n);
     modulation.decayMs=readGain(bytes.data+104+n);pmon(modulation);
   }
-  if(kind==0)return {InstrumentDefinition::builtin(),gainPercent,settings,effects,generator,modulation};
+  MorphSettings blend;MorphEndpoints endpoints;
+  if(version>=7) {
+    const auto flags=word(bytes.data+112+n),reserved=word(bytes.data+116+n);
+    if(flags&~1u||reserved)fail("SPU state: unknown Morph flags or reserved bits");
+    blend.enabled=(flags&1)!=0;blend.amount=readGain(bytes.data+120+n);morph(blend);
+    for(std::size_t i=0;i<112;++i) {
+      endpoints.a[i]=readSample(bytes.data+128+n+i*4);
+      endpoints.b[i]=readSample(bytes.data+576+n+i*4);
+    }
+    validateMorphEndpoints(endpoints);
+  }
+  if(kind==0)return {InstrumentDefinition::withMorphEndpoints(InstrumentDefinition::builtin(),endpoints),gainPercent,settings,effects,generator,modulation,blend};
   if(kind==2) {
     PcmCycle cycle{};
     for(std::size_t i=0;i<cycle.size();++i)cycle[i]=readSample(bytes.data+kStateHeaderBytes+i*4);
-    return {InstrumentDefinition::fromPcmCycle(cycle),gainPercent,settings,effects,generator,modulation};
+    return {InstrumentDefinition::withMorphEndpoints(InstrumentDefinition::fromPcmCycle(cycle),endpoints),gainPercent,settings,effects,generator,modulation,blend};
   }
   std::vector<std::uint8_t> bank(bytes.data+kStateHeaderBytes,bytes.data+kStateHeaderBytes+n);
-  return {InstrumentDefinition::fromVab(std::move(bank),program,tone),gainPercent,settings,effects,generator,modulation};
+  return {InstrumentDefinition::withMorphEndpoints(InstrumentDefinition::fromVab(std::move(bank),program,tone),endpoints),gainPercent,settings,effects,generator,modulation,blend};
 }
 
 } // namespace tetorica

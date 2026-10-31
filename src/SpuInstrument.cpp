@@ -63,6 +63,21 @@ bool validPmon(PmonSettings settings) {
       std::isfinite(settings.depth)&&settings.depth>=0&&settings.depth<=1&&
       std::isfinite(settings.decayMs)&&settings.decayMs>=0&&settings.decayMs<=5000;
 }
+bool validMorphEndpoints(const MorphEndpoints& endpoints) {
+  for(const auto* cycle:{&endpoints.a,&endpoints.b})for(float value:*cycle)
+    if(!std::isfinite(value)||value< -1||value>1)return false;
+  return true;
+}
+std::array<std::int16_t,112> morphPcm(const MorphEndpoints& endpoints,double amount) {
+  // Callers validate before reaching this bounded path. Keep the authored
+  // Float32 blend in the pure helper compiled without floating contraction.
+  const auto mixed=blendMorph(endpoints,amount);
+  std::array<std::int16_t,112> pcm{};
+  for(unsigned i=0;i<pcm.size();++i){
+    pcm[i]=static_cast<std::int16_t>(std::clamp(std::floor(double(mixed[i])*32768+.5),-32768.,32767.));
+  }
+  return pcm;
+}
 std::uint16_t modulatorAdsr2(double decayMs,std::uint16_t carrierAdsr2) {
   // Web pmonAdsr: approximate retained linear-sustain decay durations, not
   // exact hardware timers. The immutable table is from the BSD SPU rates.
@@ -241,20 +256,21 @@ void SpuInstrument::initializeNoiseCache() {
   constexpr std::array<std::int16_t,112> silence{};
   for(unsigned i=0;i<kVoiceCount;++i)
     mSampleRepeatAddresses[i]=ps1_spu_read(mChip,i*16+14);
-  if(!ps1_spu_set_host_pcm(mChip,silence.data(),silence.size(),1)||
-      !ps1_spu_set_host_mask(mChip,0xffffff))
-    throw std::runtime_error("Could not prepare Native SPU noise loop");
-  for(unsigned i=0;i<kVoiceCount;++i){
-    write(i*16,0);write(i*16+2,0);write(i*16+4,4096);
-    write(i*16+8,0x000f);write(i*16+10,0x1fc0);
+  for(unsigned bank=0;bank<2;++bank){
+    if(!ps1_spu_set_host_pcm_bank(mChip,bank,silence.data(),silence.size(),1)||
+        !ps1_spu_set_host_masks(mChip,bank==0?0xffffff:0,bank==1?0xffffff:0))
+      throw std::runtime_error("Could not prepare Native SPU private loop");
+    for(unsigned i=0;i<kVoiceCount;++i){
+      write(i*16,0);write(i*16+2,0);write(i*16+4,4096);
+      write(i*16+8,0x000f);write(i*16+10,0x1fc0);
+    }
+    // Keep NOISE bits off while priming: retain its original shared sequence.
+    write(0x188,0xffff);write(0x18a,0x00ff);
+    renderNative(mNativeLeft.data(),mNativeRight.data(),1024);
+    write(0x18c,0xffff);write(0x18e,0x00ff);
+    renderNative(mNativeLeft.data(),mNativeRight.data(),1024);
   }
-  // Keep NOISE bits off while priming: its shared sequence must retain the
-  // same initial state as the ordinary sample-only instrument.
-  write(0x188,0xffff);write(0x18a,0x00ff);
-  renderNative(mNativeLeft.data(),mNativeRight.data(),1024);
-  write(0x18c,0xffff);write(0x18e,0x00ff);
-  renderNative(mNativeLeft.data(),mNativeRight.data(),1024);
-  mHealthy=(ps1_spu_set_host_mask(mChip,0)!=0)&&mHealthy;
+  mHealthy=(ps1_spu_set_host_masks(mChip,0,0)!=0)&&mHealthy;
   for(unsigned i=0;i<kVoiceCount;++i){
     write(i*16+8,mEnvelope.adsr1);write(i*16+10,mEnvelope.adsr2);
     // The SDK also writes a host cache's virtual loop address to this register.
@@ -318,7 +334,7 @@ void SpuInstrument::keyOn(unsigned physicalVoice) noexcept {
     // Mode changes already muted the old voice. Latch the new source before
     // an audition fade can reach an old one-shot END and clear its send bit.
     // A zero-level KON followed by audition On retains the128-frame fade-in.
-    if(!mNoise.enabled&&(!mPmon.enabled||physicalVoice%2))
+    if(!mNoise.enabled&&!mMorph.enabled&&(!mPmon.enabled||physicalVoice%2))
       write(physicalVoice*16+14,mSampleRepeatAddresses[physicalVoice]);
     write(0x188+(physicalVoice>=16?2:0),1u<<(physicalVoice%16));
     mFreshSource[physicalVoice]=false;
@@ -341,7 +357,8 @@ unsigned SpuInstrument::pitchFor(int note,int channel) const noexcept {
   const int delta=mPitchBend[channel]-8192;
   const double semitones=2.0*delta/(delta<0?8192.0:8191.0);
   const double frequency=440*std::exp2((note-69+semitones)/12.0);
-  return static_cast<unsigned>(std::lround(std::clamp(4096*frequency/mRootFrequencyHz,1.0,16383.0)));
+  const double root=mMorph.enabled?44100./112:mRootFrequencyHz;
+  return static_cast<unsigned>(std::lround(std::clamp(4096*frequency/root,1.0,16383.0)));
 }
 unsigned SpuInstrument::modulatorPitchFor(int note,int channel) const noexcept {
   const int delta=mPitchBend[channel]-8192;
@@ -457,12 +474,13 @@ void SpuInstrument::writeReverbSendMask() noexcept {
 void SpuInstrument::configureSourceMode(bool noise,bool pmon) noexcept {
   panic();mNoise.enabled=noise;mPmon.enabled=pmon;
   const unsigned hostMask=noise?0xffffff:pmon?0x555555:0;
-  mHealthy=(ps1_spu_set_host_mask(mChip,hostMask)!=0)&&mHealthy;
+  const unsigned morphMask=mMorph.enabled&&!noise?(pmon?0xaaaaaa:0xffffff):0;
+  mHealthy=(ps1_spu_set_host_masks(mChip,hostMask,morphMask)!=0)&&mHealthy;
   write(0x194,noise?0xffff:0);write(0x196,noise?0xff:0);
   write(0x190,pmon?0xaaaa:0);write(0x192,pmon?0xaa:0);
   for(unsigned i=0;i<kVoiceCount;++i){
     write(i*16+8,mEnvelope.adsr1);write(i*16+10,mEnvelope.adsr2);write(i*16+4,4096);
-    if(!(hostMask&(1u<<i)))write(i*16+14,mSampleRepeatAddresses[i]);
+    if(!((hostMask|morphMask)&(1u<<i)))write(i*16+14,mSampleRepeatAddresses[i]);
   }
   write(0x1aa,(ps1_spu_read(mChip,0x1aa)&~0x3f00u)|((noise?mNoise.clock:0)<<8));
   writeReverbSendMask();mFreshSource.fill(true);
@@ -484,6 +502,26 @@ bool SpuInstrument::setPmon(PmonSettings settings) noexcept {
   mPmon=settings;
   if(settings.enabled&&ratioChanged&&!topology)for(unsigned i=0;i<kVoiceCount;++i)
     if(mVoices[i].note>=0)write((carrierFor(i)-1)*16+4,modulatorPitchFor(mVoices[i].note,mVoices[i].channel));
+  return mHealthy;
+}
+bool SpuInstrument::setMorphEndpoints(const MorphEndpoints& endpoints) noexcept {
+  if(!validMorphEndpoints(endpoints))return false;
+  const auto pcm=morphPcm(endpoints,mMorph.amount);
+  if(!ps1_spu_update_host_pcm_bank(mChip,1,pcm.data(),pcm.size()))return false;
+  mMorphEndpoints=endpoints;mMorphWavePrepared=true;
+  return mHealthy;
+}
+bool SpuInstrument::setMorph(MorphSettings settings) noexcept {
+  if(!std::isfinite(settings.amount)||settings.amount<0||settings.amount>1)return false;
+  if(settings.enabled==mMorph.enabled&&settings.amount==mMorph.amount)return mHealthy;
+  if(settings.enabled&&(!mMorphWavePrepared||settings.amount!=mMorph.amount)){
+    const auto pcm=morphPcm(mMorphEndpoints,settings.amount);
+    if(!ps1_spu_update_host_pcm_bank(mChip,1,pcm.data(),pcm.size()))return false;
+    mMorphWavePrepared=true;
+  }else if(settings.amount!=mMorph.amount)mMorphWavePrepared=false;
+  const bool topology=settings.enabled!=mMorph.enabled&&!mNoise.enabled;
+  mMorph=settings;
+  if(topology)configureSourceMode(mNoise.enabled,mPmon.enabled);
   return mHealthy;
 }
 int SpuInstrument::activeVoiceCount() const noexcept {

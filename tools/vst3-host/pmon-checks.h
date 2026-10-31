@@ -162,7 +162,7 @@ template<class Factory> void checkPmon(Factory make,double rate,const char* host
     auto bad=wire;reverb_detail::putDouble(bad,field.first+448,field.second);invalid.push_back(bad);
   }
   auto bad=wire;bad.pop_back();invalid.push_back(bad);
-  bad=wire;envelope_detail::word(bad,8,7);invalid.push_back(bad);
+  bad=wire;envelope_detail::word(bad,8,8);invalid.push_back(bad);
   for(const auto& bytes:invalid)requirePmon(!state->tryStateRestoreForTest(bytes)&&state->stateBodyForTest()==wire,
     "Malformed PMON state changed pending source/parameters");
   reverb_detail::exact(*state,*reference,events,"Malformed PMON state altered the first restored key");

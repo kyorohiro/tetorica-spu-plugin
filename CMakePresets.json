@@ -24,8 +24,8 @@
     }
   ],
   "buildPresets": [
-    { "name": "offline", "configurePreset": "offline", "targets": ["spu_pmon_test", "spu_noise_test", "pcm_draft_test", "spu_waveform_test", "spu_instrument_test", "vab_bank_test", "spu_vab_instrument_test", "spu_engine_exchange_test", "instrument_state_test", "spu_vab_render"] },
-    { "name": "macos", "configurePreset": "macos", "targets": ["TetoricaSPU-app", "TetoricaSPU-au", "TetoricaSPU-vst3", "spu_pmon_test", "spu_noise_test", "pcm_draft_test", "spu_waveform_test", "spu_instrument_test", "vab_bank_test", "spu_vab_instrument_test", "spu_engine_exchange_test", "instrument_state_test", "spu_vab_render", "tetorica_au_state_check"] }
+    { "name": "offline", "configurePreset": "offline", "targets": ["spu_morph_test", "morph_draft_test", "spu_pmon_test", "spu_noise_test", "pcm_draft_test", "spu_waveform_test", "spu_instrument_test", "vab_bank_test", "spu_vab_instrument_test", "spu_engine_exchange_test", "instrument_state_test", "spu_vab_render"] },
+    { "name": "macos", "configurePreset": "macos", "targets": ["TetoricaSPU-app", "TetoricaSPU-au", "TetoricaSPU-vst3", "spu_morph_test", "morph_draft_test", "spu_pmon_test", "spu_noise_test", "pcm_draft_test", "spu_waveform_test", "spu_instrument_test", "vab_bank_test", "spu_vab_instrument_test", "spu_engine_exchange_test", "instrument_state_test", "spu_vab_render", "tetorica_au_state_check"] }
   ],
   "testPresets": [
     { "name": "offline", "configurePreset": "offline", "output": { "outputOnFailure": true } },

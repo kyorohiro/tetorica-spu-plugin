@@ -5,6 +5,7 @@
 // Editor-only source PCM. A stroke changes a local draft once on mouse-up;
 // neither pointer motion nor this control publishes an engine or host state.
 #include "SpuWaveform.h"
+#include "SpuMorph.h"
 #include <algorithm>
 #include <cmath>
 #include <cstdio>
@@ -27,9 +28,27 @@ public:
 
   void SetCycle(const tetorica::PcmCycle& cycle)
   {
-    if (cycle == mCycle) return;
+    if (!mMorph && cycle == mCycle) return;
     CancelPointerEdit();
+    mMorph = false;
     mCycle = cycle;
+    SetDirty(false);
+  }
+
+  void SetMorph(const tetorica::MorphEndpoints& endpoints, double amount,
+                bool editB, bool draft)
+  {
+    // A host may transiently supply an invalid plain parameter. Rendering the
+    // editor must stay safe while the audio layer rejects that tuple.
+    amount = std::isfinite(amount) ? std::clamp(amount, 0., 1.) : mAmount;
+    const bool endpointsChanged = !mMorph || endpoints.a != mEndpoints.a ||
+      endpoints.b != mEndpoints.b || editB != mEditB;
+    const bool changed = endpointsChanged || amount != mAmount || draft != mDraft;
+    if (!changed) return;
+    if (endpointsChanged) CancelPointerEdit();
+    mMorph = true; mEndpoints = endpoints; mEditB = editB;
+    mAmount = amount; mDraft = draft;
+    mCycle = editB ? endpoints.b : endpoints.a;
     SetDirty(false);
   }
 
@@ -52,23 +71,42 @@ public:
     for (float value : {-1.f, 0.f, 1.f})
       graphics.DrawLine(grid, plot.L, toY(value, plot), plot.R, toY(value, plot), &mBlend);
     const auto& cycle = mDrawing ? mStroke : mCycle;
-    graphics.PathClear();
-    for (std::size_t index = 0; index < cycle.size(); ++index)
+    const auto path = [&](const tetorica::PcmCycle& pcm, const IColor& color,
+                          float width, bool dashed) {
+      graphics.PathClear();
+      for (std::size_t index = 0; index < pcm.size(); ++index)
+      {
+        const float x = plot.L + plot.W() * float(index) / float(pcm.size() - 1);
+        const float y = toY(pcm[index], plot);
+        if (index) graphics.PathLineTo(x, y);
+        else graphics.PathMoveTo(x, y);
+      }
+      IStrokeOptions stroke;
+      float dashes[] = {6.f, 4.f};
+      if (dashed) stroke.mDash.SetDash(dashes, 0.f, 2);
+      graphics.PathStroke(IPattern(color), width, stroke, &mBlend);
+    };
+    if (mMorph)
     {
-      const float x = plot.L + plot.W() * float(index) / float(cycle.size() - 1);
-      const float y = toY(cycle[index], plot);
-      if (index) graphics.PathLineTo(x, y);
-      else graphics.PathMoveTo(x, y);
+      auto endpoints = mEndpoints;
+      (mEditB ? endpoints.b : endpoints.a) = cycle;
+      const IColor waveA(255, 123, 188, 247), waveB(255, 239, 154, 194), result(255, 232, 185, 86);
+      path(tetorica::blendMorph(endpoints, mAmount), result, 1.5f, true);
+      path(mEditB ? endpoints.a : endpoints.b, mEditB ? waveA : waveB, 1.5f, false);
+      path(cycle, mEditB ? waveB : waveA, 3.f, false);
     }
-    graphics.PathStroke(IPattern(accent), 2.f, IStrokeOptions(), &mBlend);
+    else path(cycle, accent, 2.f, false);
     const IText caption(11, text);
-    graphics.DrawText(caption.WithAlign(EAlign::Near), "Source PCM - draft",
+    const char* label = !mMorph ? "Source PCM - draft" :
+      mEditB ? "Edit B (pink) / A (blue) / Result (gold)" : "Edit A (blue) / B (pink) / Result (gold)";
+    graphics.DrawText(caption.WithAlign(EAlign::Near), label,
       IRECT(mRECT.L + 10, mRECT.T + 2, mRECT.MW(), mRECT.T + 18), &mBlend);
     char sample[80];
     if (mHoverIndex >= 0)
       std::snprintf(sample, sizeof(sample), "Sample %d: %.4f", mHoverIndex, cycle[std::size_t(mHoverIndex)]);
     else
-      std::snprintf(sample, sizeof(sample), "112 samples / -1 to +1");
+      std::snprintf(sample, sizeof(sample), "%s", mMorph ?
+        (mDraft ? "Draft preview / Apply to hear" : "Applied endpoints / live Amount") : "112 samples / -1 to +1");
     graphics.DrawText(caption.WithAlign(EAlign::Far), sample,
       IRECT(mRECT.MW(), mRECT.T + 2, mRECT.R - 10, mRECT.T + 18), &mBlend);
   }
@@ -160,6 +198,9 @@ private:
 
   Change mChange;
   tetorica::PcmCycle mCycle, mStroke;
+  tetorica::MorphEndpoints mEndpoints{};
+  bool mMorph = false, mEditB = false, mDraft = false;
+  double mAmount = 0;
   bool mDrawing = false;
   int mLastIndex = -1, mHoverIndex = -1;
   float mLastValue = 0;

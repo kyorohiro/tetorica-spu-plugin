@@ -19,21 +19,30 @@ target_include_directories(tetorica_vab PUBLIC src)
 
 find_package(Threads REQUIRED)
 add_library(tetorica_spu_instrument STATIC
-  src/SpuInstrument.cpp src/SpuWaveform.cpp src/SpuEngineExchange.cpp src/VabLoader.cpp src/InstrumentState.cpp)
+  src/SpuInstrument.cpp src/SpuWaveform.cpp src/SpuMorph.cpp src/SpuEngineExchange.cpp src/VabLoader.cpp src/InstrumentState.cpp)
 target_include_directories(tetorica_spu_instrument PUBLIC src)
 target_link_libraries(tetorica_spu_instrument PUBLIC tetorica::ps1_spu tetorica_vab Threads::Threads)
-# Keep cyclic encoder scoring equivalent to the Web's separate IEEE754
-# operations so saved PCM prepares the same ADPCM on supported toolchains.
+# Keep cyclic encoder scoring and Morph blending equivalent to the Web's
+# separate IEEE754 operations on supported toolchains.
 if(MSVC)
-  set_source_files_properties(src/SpuWaveform.cpp PROPERTIES COMPILE_OPTIONS "/fp:strict")
+  set_source_files_properties(src/SpuWaveform.cpp src/SpuMorph.cpp PROPERTIES COMPILE_OPTIONS "/fp:strict")
 elseif(CMAKE_CXX_COMPILER_ID MATCHES "GNU|Clang")
-  set_source_files_properties(src/SpuWaveform.cpp PROPERTIES COMPILE_OPTIONS "-ffp-contract=off")
+  set_source_files_properties(src/SpuWaveform.cpp src/SpuMorph.cpp PROPERTIES COMPILE_OPTIONS "-ffp-contract=off")
 endif()
 
 add_executable(spu_vab_render tools/spu-vab-render.cpp)
 target_link_libraries(spu_vab_render PRIVATE tetorica_spu_instrument)
 
 if(BUILD_TESTING)
+  add_executable(spu_morph_test tests/spu_morph_test.cpp)
+  target_link_libraries(spu_morph_test PRIVATE tetorica_spu_instrument)
+  target_compile_definitions(spu_morph_test PRIVATE VAB_FIXTURE_DIR="${CMAKE_CURRENT_SOURCE_DIR}/tests/fixtures/vab")
+  add_test(NAME spu.morph COMMAND spu_morph_test)
+  set_tests_properties(spu.morph PROPERTIES TIMEOUT 45)
+  add_executable(morph_draft_test tests/morph_draft_test.cpp)
+  target_include_directories(morph_draft_test PRIVATE plugin)
+  target_link_libraries(morph_draft_test PRIVATE tetorica_spu_instrument)
+  add_test(NAME spu.morph.draft COMMAND morph_draft_test)
   add_executable(spu_pmon_test tests/spu_pmon_test.cpp)
   target_link_libraries(spu_pmon_test PRIVATE tetorica_spu_instrument)
   target_compile_definitions(spu_pmon_test PRIVATE VAB_FIXTURE_DIR="${CMAKE_CURRENT_SOURCE_DIR}/tests/fixtures/vab")

@@ -32,15 +32,15 @@ PCMの4波形・自由描画・Apply / Revertも実装し、実AU/VST3とStandal
 
 ### Software Morphの今回の区切り（2026-11-01、実装前）
 
-- [ ] 元Builtin / VAB / PCMを保持したまま、112-sample Wave A / Wave Bを線形blendするSoftware Morphを追加する。初期 / 旧stateはOff、Amount0、A=Sine / B=Saw（既存PCM形状の振幅0.8）。Offは保持した元sampleへ戻る。
-- [ ] A / B / Resultを1つのcanvasへ重ね、編集対象A / Bを切り替えて4形状・自由描画を行う。Resultは編集不可のblend表示。A/B編集はdraft→Apply、Revertはdraftだけを戻す。通常PCM draftも独立して保持する。
-- [ ] A/B Applyは既存worker / engine交換を使い、保持音・残響を停止する。Amount0〜1だけは発音中・Sustain・Releaseにも再発音せず反映する。Webのendpoint編集即反映 / Offで最終blend保持とは異なることを明記する。
-- [ ] SPU実機の機能と区別してSoftware Morphと表示する。720×620とSource / ADSR / Reverbの3tabs・Reverb初期表示を維持し、AmountはSource内と共通keyboard横の2か所を同じhost parameterへbindする。
-- [ ] PMONとの併用に対応する。Native SDKのprivate host PCMを2banksへ広げ、bank0はNoise / PMON、bank1はMorph carrier。既存ABIはbank0として維持し、同一長のlive更新・mask選択を確保なしで行う。物理SPU RAM容量とGaussian / ADSR / cursorを保持する。
-- [ ] Morph On/Offの実効source変更は保持音・残響を停止し、Noise中は設定だけ保持する。Noiseは優先し、PMONの12音pair・carrier ADSR / send、Bend / Sustainを維持する。元Tone tuningへ戻せるようMorphは112周期用tuningを使う。
-- [ ] 既存ID0〜23を維持し、Morph Enabled24 / Amount25を追加する。A/Bはimmutable音源定義へ保存し、元source選択・PCM Applyで保持する。schema7固定1024bytesでflags / reserved0 / amount / A112f32 / B112f32を追加、旧1〜6 / legacyを読み込む。
-- [ ] 不正amount / flags / reserved / A/B非finite・範囲・長さをcommit前に拒否し、active / pending / 全parameterを保持する。遅延Apply観測・新しいdraft・host restore後の旧worker完了で古い内容へ戻さない。
-- [ ] coreでAmount両端 / 中間、held / Release更新、PMON併用、Noise優先、元sample復帰 / 全RAM / repeat、分割一致・C++確保破棄0、初期Sine byte一致を検証する。実AU/VST3で26params / state7 / 旧互換 / automation / MIDI / atomic failureを検証する。
+- [x] 元Builtin / VAB / PCMを保持したまま、112-sample Wave A / Wave Bを線形blendするSoftware Morphを追加する。初期 / 旧stateはOff、Amount0、A=Sine / B=Saw（既存PCM形状の振幅0.8）。Offは保持した元sampleへ戻る。
+- [x] A / B / Resultを1つのcanvasへ重ね、編集対象A / Bを切り替えて4形状・自由描画を行う。Resultは編集不可のblend表示。A/B編集はdraft→Apply、Revertはdraftだけを戻す。通常PCM draftも独立して保持する。
+- [x] A/B Applyは既存worker / engine交換を使い、保持音・残響を停止する。Amount0〜1だけは発音中・Sustain・Releaseにも再発音せず反映する。Webのendpoint編集即反映 / Offで最終blend保持とは異なることを明記する。
+- [x] SPU実機の機能と区別してSoftware Morphと表示する。720×620とSource / ADSR / Reverbの3tabs・Reverb初期表示を維持し、AmountはSource内と共通keyboard横の2か所を同じhost parameterへbindする。
+- [x] PMONとの併用に対応する。Native SDKのprivate host PCMを2banksへ広げ、bank0はNoise / PMON、bank1はMorph carrier。既存ABIはbank0として維持し、同一長のlive更新・mask選択を確保なしで行う。物理SPU RAM容量とGaussian / ADSR / cursorを保持する。
+- [x] Morph On/Offの実効source変更は保持音・残響を停止し、Noise中は設定だけ保持する。Noiseは優先し、PMONの12音pair・carrier ADSR / send、Bend / Sustainを維持する。元Tone tuningへ戻せるようMorphは112周期用tuningを使う。
+- [x] 既存ID0〜23を維持し、Morph Enabled24 / Amount25を追加する。A/Bはimmutable音源定義へ保存し、元source選択・PCM Applyで保持する。schema7固定1024bytesでflags / reserved0 / amount / A112f32 / B112f32を追加、旧1〜6 / legacyを読み込む。
+- [x] 不正amount / flags / reserved / A/B非finite・範囲・長さをcommit前に拒否し、active / pending / 全parameterを保持する。遅延Apply観測・新しいdraft・host restore後の旧worker完了で古い内容へ戻さない。
+- [x] coreでAmount両端 / 中間、held / Release更新、PMON併用、Noise優先、元sample復帰 / 全RAM / repeat、分割一致・C++確保破棄0、初期Sine byte一致を検証する。実AU/VST3で26params / state7 / 旧互換 / automation / MIDI / atomic failureを検証する。
 - [ ] Standaloneで1canvasのA/B切替・描画・Apply / Revert・2か所Amount同期と保存復元を確認する。build / CTest / sanitizer / validator / 両repo CI、既知AU退避更新とGarageBand旧state復元を確認し、結果をcommit / pushする。
 
 開始は`091fd42`、main / origin同期・clean tree。更新前installed AU manifestは[PMON記録](../pmon_20261031.json)。
