@@ -32,7 +32,7 @@ jobs:
       - name: Install and validate the user AU
         run: |
           python3 scripts/install_au.py --install
-          /usr/bin/auval -v aumu Tspu Tetr
+          python3 scripts/validate_au.py --refresh-ci-registry
       - name: Validate VST3
         run: sh scripts/validate_vst3.sh build/macos/out/TetoricaSPU.vst3
       - name: Render and restore the actual VST3

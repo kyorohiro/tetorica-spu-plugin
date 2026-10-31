@@ -61,7 +61,7 @@ opening an audio device. The WAV demo contains an original C/E/G chord and relea
 ```sh
 python3 scripts/install_au.py           # Inspect; no install unless requested
 python3 scripts/install_au.py --install # New user-only AU; refuses differing existing bundles
-/usr/bin/auval -v aumu Tspu Tetr
+python3 scripts/validate_au.py         # Wait for discovery, then run auval
 ```
 
 The destination is `~/Library/Audio/Plug-Ins/Components/TetoricaSPU.component`.
