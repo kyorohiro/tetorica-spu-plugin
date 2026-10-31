@@ -6,6 +6,14 @@ iPlug2OOSを土台に、tetorica-soundchip-nativeのPS1 SPUをDAWから演奏す
 最初の対象はmacOS Standalone / AUv2 / VST3。音声生成はC++で行う。
 既存Web版・Tauri版の配布物は変更しない。
 
+## 現在地
+
+Native Sineの最小プラグインはローカルでbuild・自動検証済み。
+固定依存とソースはGitHubにも保存した。
+[ハッシュ・ローカル検証記録](../verification_20261031.json)、
+[最初のCI](https://github.com/kyorohiro/tetorica-spu-plugin/actions/runs/41180834350)を確認し、
+次はAU / GarageBandでの確認、その後VAB読み込みへ進む。
+
 ## 再開手順
 
 1. `git status --short --branch` とこのファイルを読む。既存の変更を消さない。
@@ -40,7 +48,7 @@ iPlug2OOSを土台に、tetorica-soundchip-nativeのPS1 SPUをDAWから演奏す
 - [x] 初期Gain状態の保存・復元と44.1 / 48 / 96kHzの実VST3 offline renderを検査する。block sizeは公式validatorとcore分割一致で検査。
 - [ ] wrapperのイベント境界・順序・queue overflow復帰を実VST3で追加検査する。
 - [ ] GarageBandで読込・演奏・保存・再読込・書出しを確認する。
-- [ ] CIにオフライン検査とbuildを追加する。未検証OSを明記する。
+- [x] CIにオフライン検査とbuildを追加する。最初のLinux core / macOS build・VST3検査が成功。Windows build・各OSの実聴は未確認。
 
 ## 初期版の既知の制約・後続改善
 

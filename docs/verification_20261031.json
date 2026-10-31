@@ -1,0 +1,158 @@
+{
+  "date_jst": "2026-10-31",
+  "source_commit": "1e1c2e7befb95edbbfccb703fb31720058b7d532",
+  "architecture": "arm64",
+  "dependencies": {
+    "schema": 1,
+    "repositories": {
+      "vendor/iPlug2OOS": "9b214c1121a0da1e8db14b86a565c942a3bfea7e",
+      "vendor/iPlug2OOS/iPlug2": "b64192fe18afd9bc9a1fe324db5aceb48f4a0eee",
+      "vendor/tetorica-soundchip-native": "cf1747387eb2b66323124959d7b356b936197784",
+      "vendor/vst3sdk": "9fad9770f2ae8542ab1a548a68c1ad1ac690abe0",
+      "vendor/vst3sdk/base": "3d2e82f8e6bff59c1d8b7a27491a29c2286b5206",
+      "vendor/vst3sdk/pluginterfaces": "31d6eeba6daaa3e2a8bfbe3e7a90ca0b7fbfbc1c",
+      "vendor/vst3sdk/public.sdk": "a3911a4615dabbfdfd9d181ee26b05c70c289a95",
+      "vendor/vst3sdk/cmake": "de6e54eeaaab35b7145f5c32c279b5e892146e04"
+    },
+    "notes": [
+      "Native SDK uses an immutable public commit after v0.1.6, including SPU Gaussian and headroom corrections; it is not a published v0.1.7 release.",
+      "VST3 SDK v3.8.0_build_66. Only base, pluginterfaces, public.sdk and cmake submodules are needed.",
+      "Gitlinks are authoritative. Never update a dependency to moving master as part of a normal build."
+    ]
+  },
+  "source_sha256": {
+    ".github/workflows/verify.yml": "3f7a5eb7b304eaab8edb1017470f9f52608c9614dce0aaac851cd97407fc59db",
+    "CMakeLists.txt": "2126c0412c246ebb1f8c7a172877485ce61417a23e9603596f3cd710db8c075b",
+    "CMakePresets.json": "18390df1185761bbdfcf744cf7b223a073dcff3ef62fe9612b8e43c1b849c06f",
+    "dependencies.lock.json": "b25b354914829d3497db1bdf028cfa139701979bfcd7fecd3da41f37160f6336",
+    "plugin/CMakeLists.txt": "a447159d3fe3ec5a5594ab40cb5801f4d21c127d4ba24d967313e475a675a004",
+    "plugin/TetoricaSPU.cpp": "e5b6b3648b638b0af2f1d3e26468a3ab44bc5aab023ae245625b36efa3fb8247",
+    "plugin/TetoricaSPU.h": "2cd6044421597d432e5c80fe402d8fa9d74459512edbf2a3bb7360a753a63f6e",
+    "plugin/UPSTREAM.md": "e97a5df3e70a0248f4da748a4ae19e1e1adf9f889a0aeb4c4adf47b4cdccac20",
+    "plugin/config.h": "d646a0d4cafd9ceaa30cd458744f13ecbe3aeb719f538c02689e9e943d6de2e9",
+    "plugin/resources/THIRD_PARTY_NOTICES.txt": "d0686ed57334f5bc617481e976e6d220822dba8fc93b8dd51246455bb818db6e",
+    "plugin/resources/TetoricaSPU-AU-Info.plist": "94a46fcfc638d76a05aca50d5deedaff2a7a934aee55a816d007b6dff9c9bbc4",
+    "plugin/resources/TetoricaSPU-VST3-Info.plist": "0fe9965eadefafb0be705d9e3bba5a6df3c6e2561b608bdbf267d7f831e5d644",
+    "plugin/resources/TetoricaSPU-macOS-Info.plist": "1fec046b5560e89705ce207b4372e154e72e7e97951f2e0c4a23789827cf58c6",
+    "plugin/resources/TetoricaSPU-macOS-MainMenu.xib": "09be5cbc78bdc7abc9310e394d064caaa12b2e8be8b83c0c4a3ff81425bc5e43",
+    "plugin/resources/fonts/Roboto-Regular.ttf": "b2efabca5ea4bc56eea829713706b5cd0788b82aca153bd4adde9b1573933b4f",
+    "plugin/resources/main.rc_mac_dlg": "28abc0218b3ba618b2bbbd25d4d30d471b752943c8fe14f09a9dce79401db7c9",
+    "plugin/resources/main.rc_mac_menu": "a5d0a1ffe3b187e3932946eb8d4e76d09c65d3d49e519212eff360208f6ee473",
+    "plugin/resources/resource.h": "31b027713d116a90cae8c21db3e00abfc6a4089af934d645591027e8112834d6",
+    "scripts/bootstrap.py": "d10569aea0962813d908f02e5b2fc8cddb241197acea5f1083902508ee31ef8e",
+    "scripts/check_vst3_audio.sh": "eb28fc0ee983c7190854934a8b12e0333345de8ef119f14693f43cc82f3ccae7",
+    "scripts/validate_vst3.sh": "4ef13f9899fa47ac3039a7f8d032bef96c001f0e8832916f6b6dc5f3b9e179de",
+    "src/SpuInstrument.cpp": "0bbc2077d5765390551b13347466919c17acca5253dc3b616665d22732ff7592",
+    "src/SpuInstrument.h": "5da56f20dba36c8c619ee22cdabb2cabc3c979165fbd1585f8ff678bef4b043d",
+    "tests/spu_instrument_test.cpp": "b518f3c1d0efccba2d5441fa63fdcc89c00582d1d36672df2c58c97a3955db9f",
+    "tools/vst3-host/CMakeLists.txt": "3092f974fa9f97103f81e873a64cd2086ef7db345aef9bd311e7329161d4a5cc",
+    "tools/vst3-host/main.cpp": "c10e9ab577cb730d7d7516ea7a49a51d514a1f637ffdb20a72f7561c9b25b834"
+  },
+  "checks": {
+    "core_ctest": {
+      "suites_passed": 1,
+      "failed": 0
+    },
+    "stock_template_built": [
+      "APP",
+      "AUv2",
+      "VST3"
+    ],
+    "vst3_validator": {
+      "passed": 47,
+      "failed": 0
+    },
+    "vst3_pcm": [
+      {
+        "sample_rate": 44100,
+        "note_on_offset": 64,
+        "peak": 0.0373283,
+        "c4_hz": 261.667,
+        "release_peak": 0.0,
+        "restored_gain_ratio": 0.37,
+        "state_bytes": 12,
+        "independent_instances": true
+      },
+      {
+        "sample_rate": 48000,
+        "note_on_offset": 64,
+        "peak": 0.0373283,
+        "c4_hz": 261.667,
+        "release_peak": 0.0,
+        "restored_gain_ratio": 0.37,
+        "state_bytes": 12,
+        "independent_instances": true
+      },
+      {
+        "sample_rate": 96000,
+        "note_on_offset": 64,
+        "peak": 0.0373283,
+        "c4_hz": 261.667,
+        "release_peak": 0.0,
+        "restored_gain_ratio": 0.37,
+        "state_bytes": 12,
+        "independent_instances": true
+      }
+    ],
+    "standalone_launch_and_visual_layout": true,
+    "standalone_corrected_title_observed": true
+  },
+  "artifacts": {
+    "build/macos/out/TetoricaSPU.app": {
+      "binary_sha256": "0b43515a8ddcd4296c4984e147f249dfe88384b166a65244e216ee31fd4042a6",
+      "binary_bytes": 1798712,
+      "notice_sha256": "d0686ed57334f5bc617481e976e6d220822dba8fc93b8dd51246455bb818db6e"
+    },
+    "build/macos/out/TetoricaSPU.component": {
+      "binary_sha256": "63f5db3316aebaa08d66937fa4342c4bdf2f7440f20420f02ef1c1ef681da625",
+      "binary_bytes": 1249608,
+      "notice_sha256": "d0686ed57334f5bc617481e976e6d220822dba8fc93b8dd51246455bb818db6e"
+    },
+    "build/macos/out/TetoricaSPU.vst3": {
+      "binary_sha256": "54165b4be02c648af9c6775aee5ebecd99b695906a286ee1c555d6c68bb4f528",
+      "binary_bytes": 1547992,
+      "notice_sha256": "d0686ed57334f5bc617481e976e6d220822dba8fc93b8dd51246455bb818db6e"
+    }
+  },
+  "demo": {
+    "path": "build/spu-demo.wav",
+    "sample_rate": 48000,
+    "channels": 2,
+    "frames": 144000,
+    "sha256": "7a61b56d356ac198c35808b503cf0b61b55a9547b21770eb2a67c97d0cc4aef3"
+  },
+  "not_verified": [
+    "AU registration and auval",
+    "GarageBand project workflow",
+    "physical listening and long realtime continuity",
+    "VAB import and sample state",
+    "Windows and macOS Intel runtime"
+  ],
+  "ci": {
+    "run_id": 41180834350,
+    "url": "https://github.com/kyorohiro/tetorica-spu-plugin/actions/runs/41180834350",
+    "status": "completed",
+    "conclusion": "success",
+    "source_commit": "1e1c2e7befb95edbbfccb703fb31720058b7d532",
+    "jobs": [
+      {
+        "id": 124477744265,
+        "name": "offline",
+        "conclusion": "success"
+      },
+      {
+        "id": 124477744521,
+        "name": "macos",
+        "conclusion": "success"
+      }
+    ],
+    "completed_at_jst": "2026-10-31T16:33:52+09:00",
+    "artifact": {
+      "id": 13034597642,
+      "name": "macos-development-bundles",
+      "size_in_bytes": 2029169,
+      "digest": "sha256:b19bb95f6be3c4bf229d24aa78da05db46608e1a97f9a2d46715cb0aff3b72c2",
+      "downloaded_and_runtime_tested": false
+    }
+  }
+}

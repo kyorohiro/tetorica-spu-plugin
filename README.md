@@ -13,6 +13,8 @@ send audio through a browser, WebView, Tauri IPC or a separate CPAL device.
 ## Resume work
 
 Read [TODO](docs/issues/TODO.md) and [checkpoints](docs/progress.md) first.
+The [initial verification record](docs/verification_20261031.json) separates
+offline/native-plugin tests from pending DAW and physical listening checks.
 Dependency revisions are recorded both as Git submodules and in
 [dependencies.lock.json](dependencies.lock.json).
 

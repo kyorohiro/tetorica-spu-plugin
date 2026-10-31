@@ -45,3 +45,17 @@
 - 次: CI実行結果を記録し、AU / GarageBand確認、続いてVAB読み込みへ。
 - framework / SDK / SPU / font等のlicense textを `plugin/resources/THIRD_PARTY_NOTICES.txt` へ収集し、各bundleのResourcesへ同梱する。
 - 制限はREADMEとTODOを参照。署名・公証・Release公開・タグ作成はしていない。
+
+## 2026-10-31 JST — CI完了チェックポイント
+
+- 実装commit `1e1c2e7befb95edbbfccb703fb31720058b7d532` をmainへpushした。
+- [Verify SPU Plugin](https://github.com/kyorohiro/tetorica-spu-plugin/actions/runs/41180834350) は全job成功。
+  Linux offline job `124477744265`、macOS job `124477744521`。
+  初期化・固定SHA検査・build・CTest・公式VST3 validator・実VST3 PCM / state検査が成功。
+- CI開始16:30:04 JST、完了16:33:52 JST。
+- CI artifact `macos-development-bundles`（ID `13034597642`、2,029,169 bytes）を確認。
+  ZIP digest `b19bb95f6be3c4bf229d24aa78da05db46608e1a97f9a2d46715cb0aff3b72c2`。
+  artifact upload成功の記録であり、ダウンロード後の実機・実聴検証とは区別する。
+- [検証JSON](verification_20261031.json)にはソース・ローカルbundle・noticeのSHA、PCM計測値と未検証項目を保存。
+- **次の入口:** Phase 2のAU登録・auval / GarageBand確認、その後Phase 3のVAB読み込み。
+  既存Synthのリリースとは別repository。今回は開発版をmainへ保存しただけで、Release公開はしていない。
