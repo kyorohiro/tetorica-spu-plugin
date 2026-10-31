@@ -183,10 +183,13 @@ The ordinary `--install` still refuses a different existing bundle.
 ```sh
 python3 -m unittest discover -s tests -p 'test_install_au.py' -v
 python3 scripts/install_au.py --update \
-  --expected docs/au_vab_garageband_20261031.json --backup-root build/au-backups
+  --expected docs/midi_expression_20261031.json --backup-root build/au-backups
 # Use the printed manifest path to roll back; refuses an altered installation:
 python3 scripts/install_au.py --rollback build/au-backups/au-update-REPLACE/manifest.json
 ```
+
+The [MIDI verification record](docs/midi_expression_20261031.md) contains the
+current installed manifest, backup report and GarageBand restoration result.
 
 The destination is `~/Library/Audio/Plug-Ins/Components/TetoricaSPU.component`.
 This is an explicit test installation; the normal build still does not deploy.

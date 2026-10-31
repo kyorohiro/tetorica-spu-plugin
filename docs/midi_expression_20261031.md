@@ -69,7 +69,7 @@ Gainのsample単位automationは今回の変更に含めない。
   解除後のfresh note・中立Pitch・Releaseも成功。既存frameworkのreserved bypass propertyを実hostから使用する。
 - AUのsandbox内初回はlocal factory登録不可で終了。承認済みsandbox外の最終実行では全検査成功。
 - 最終ログは`build/midi-vst3-audio-final.log`、`build/midi-au-state-final.log`、`build/midi-vst3-validator-final.log`。
-  [機械可読記録・bundle manifest](midi_expression_20261031.json)。CIとinstalled AU更新は後で追記する。
+  [機械可読記録・bundle manifest](midi_expression_20261031.json)。
 
 再現コマンド:
 
@@ -87,3 +87,47 @@ sh scripts/check_au_state.sh build/macos/out/TetoricaSPU.component
 今回のMIDI機能は実hostからの自動入力で検証する。
 物理MIDI機器での演奏・実聴・長時間realtimeと区別する。画面のPitch wheel/Sustain checkboxは今回追加しない。
 UIで実際に音色を切り替えながらwheel/pedalを操作する追試も未実施で、引継ぎ処理のsource reviewと分ける。
+
+## installed AU更新とGarageBand
+
+実装は`69186420360e1b25888b5f17e9572ee957b882ca`へ保存し、origin/mainへpushした。
+
+- 検証copyを保存・GarageBand終了し、main processとAU hostが終了していることを確認した。
+  project全7 filesを`build/midi-update-project-2__gcqoj/spu-vab-check.band`へcopyし、hash一致を確認。
+- 既存AU全5 filesは前回の`au_vab_garageband_20261031.json`と一致した。
+  次の明示updateで旧copy・旧原本を保持した。
+
+  ```sh
+  python3 scripts/install_au.py --update \
+    --expected docs/au_vab_garageband_20261031.json --backup-root build/au-backups
+  ```
+
+- update report: `build/au-backups/au-update-8jqmbsej/manifest.json`。
+  旧binaryは`af3da1d43f73a86d6008a3bb1c98a363d104dfea5d0db367d9467db2d9a04bb5`、
+  新binaryは`5123606ad73f7acd5b4896150f9f9d4f09bbac0c59a60be1ffa28f5d8962d869`。
+  新installed/sourceの全5hash一致、old backup/original archiveの全5hash一致を確認した。
+- sandbox外で`python3 scripts/validate_au.py`成功。`AU VALIDATION SUCCEEDED.`を確認した。
+- 同じGarageBand copyを開き直し、録音・再生停止、AU editorでEmbedded VAB / P3 / T0 / Gain99 /
+  `Project sound restored.`を確認した。更新前後のembedded payload SHAは同じ
+  `f1fa0a3a18ec5e660d7266ee509b6c7f818c9e2c76a04d11fa6d70f1111bae10`。
+- 原本`spu-au-check.band`全11 fileの開始時hash一致も再確認した。
+
+次回の更新は今回のJSONを`--expected docs/midi_expression_20261031.json`として使用できる。
+復帰が必要な場合はhostを保存・終了し、新版のhashが変わっていない場合だけ次を実行する。
+
+```sh
+python3 scripts/install_au.py --rollback build/au-backups/au-update-8jqmbsej/manifest.json
+```
+
+実環境のrollbackは実行していない。署名・公証・Release公開は今回行っていない。
+
+## CI
+
+[CI 41199344245](https://github.com/kyorohiro/tetorica-spu-plugin/actions/runs/41199344245)は全job成功。
+sourceは上記`6918642`、21:02:33〜21:06:25 JST。
+Linux offlineとmacOSのbuild/CTest、AU、公式・実VST3、実AU MIDI/stateが通過した。
+各OSでinstaller11 tests・CTest5件、macOSで公式VST3 47件と新しいcontroller/bypass回帰も成功。
+job IDはoffline `124531855774`、macOS `124531855868`。
+artifact `macos-development-bundles`、ID `13041992521`、2,161,001 bytes、digest:
+`sha256:064f910de024bb67e7b35f54213b4aac41e441a6bc482126f5fcbad904ea05e3`。
+upload確認であり、download後の実聴確認とは区別する。

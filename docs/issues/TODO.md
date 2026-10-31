@@ -22,6 +22,8 @@ AUを既知manifest照合付きで更新し、GarageBand標準AUプリセット�
 [今回の記録](../au_vab_garageband_20261031.md)。人のLoad VAB操作からVAB読込・再生時の採用・保存・再起動後のP3/T0復元も確認済み。
 Toneの個別切替・保存・再起動後のP3/T1復元も確認済み。
 Program操作後のP3/T0と保存・project再表示も確認した。P11中間画面とToneのみのdirty判定は未確認。
+Pitch Bend / Sustainもcore・実AU/VST3・CIで検証し、installed AU更新とproject復元を完了。
+次の実装は[Web版との移植計画](../spu_synth_parity_plan.md)のADSR編集→SPU Reverb。
 
 ### Pitch Bend・Sustainの今回の区切り（2026-10-31、実装前）
 
@@ -33,12 +35,14 @@ Program操作後のP3/T0と保存・project再表示も確認した。P11中間�
 - [x] 固定iPlugのVST3 CC queueが最後のpointだけを処理する制約をplugin側adapterで補い、同block内のBend/pedal全pointを扱う（vendorは変更しない）。
 - [x] VST3 bypass中にProcessBlockが止まってもMIDIを蓄積しないよう、queue・voices・controllersを初期化し、bypass解除後の古いpedal再適用を回帰検査する。
 - [x] coreの音程・チャンネル分離・pedal・RT中new/deleteと、実AU/VST3のMIDI・offset・state回帰を検証する。
-- [ ] README・結果・未確認範囲を記録してcommit / pushし、CIを確認する。
-- [ ] 実plugin検証後、既知manifest付きの安全な手順でinstalled AUを更新・auval確認し、検証projectの復元を確認する。
+- [x] README・結果・未確認範囲を記録してcommit / pushし、CIを確認する（`6918642`、[CI全job成功](https://github.com/kyorohiro/tetorica-spu-plugin/actions/runs/41199344245)）。
+- [x] 実plugin検証後、既知manifest付きの安全な手順でinstalled AUを更新・auval確認し、検証projectの復元を確認する（P3/T0/Gain99、embedded一致、旧bundleとproject backup保持）。
 
 今回の範囲はDAW MIDIからの演奏機能。Bend/Sustainのlive値はpresetへ保存しない。
 Webの±2半音と離鍵保留を参考にし、MIDIのチャンネルごとに独立させる。
 既存のWeb版・installed AU・開いているGarageBandをbuildだけで書き換えない。
+今回は検証後にGarageBandを保存・終了し、明示的なmanifest付きupdateでinstalled AUも更新済み。
+次は[移植計画](../spu_synth_parity_plan.md)のADSR編集、続いてSPU Reverbを進める。
 
 ### Program/Tone・保存通知の今回の区切り（2026-10-31、開始時記録）
 

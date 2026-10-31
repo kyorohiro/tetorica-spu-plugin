@@ -120,7 +120,18 @@
       "Contents/Resources/Roboto-Regular.ttf": "b2efabca5ea4bc56eea829713706b5cd0788b82aca153bd4adde9b1573933b4f",
       "Contents/Resources/THIRD_PARTY_NOTICES.txt": "d0686ed57334f5bc617481e976e6d220822dba8fc93b8dd51246455bb818db6e"
     },
-    "installed": false
+    "installed": true,
+    "update_report": "build/au-backups/au-update-8jqmbsej/manifest.json",
+    "old_file_sha256": {
+      "Contents/Info.plist": "94a46fcfc638d76a05aca50d5deedaff2a7a934aee55a816d007b6dff9c9bbc4",
+      "Contents/MacOS/TetoricaSPU": "af3da1d43f73a86d6008a3bb1c98a363d104dfea5d0db367d9467db2d9a04bb5",
+      "Contents/PkgInfo": "d06a80ba92de0833d0ed03de1b02b7c8913f126d9e8c8931b190765dd5d83b11",
+      "Contents/Resources/Roboto-Regular.ttf": "b2efabca5ea4bc56eea829713706b5cd0788b82aca153bd4adde9b1573933b4f",
+      "Contents/Resources/THIRD_PARTY_NOTICES.txt": "d0686ed57334f5bc617481e976e6d220822dba8fc93b8dd51246455bb818db6e"
+    },
+    "old_backup_and_archive_verified": true,
+    "auval_passed": true,
+    "auval_log": "build/midi-auval.log"
   },
   "vst3": {
     "source": "build/macos/out/TetoricaSPU.vst3",
@@ -158,7 +169,59 @@
     }
   ],
   "ci": {
-    "status": "pending"
+    "status": "completed",
+    "conclusion": "success",
+    "run_id": 41199344245,
+    "url": "https://github.com/kyorohiro/tetorica-spu-plugin/actions/runs/41199344245",
+    "source_commit": "69186420360e1b25888b5f17e9572ee957b882ca",
+    "started_utc": "2026-10-31T12:02:33Z",
+    "last_job_completed_utc": "2026-10-31T12:06:24Z",
+    "completed_updated_utc": "2026-10-31T12:06:25Z",
+    "jobs": [
+      {
+        "name": "offline",
+        "id": 124531855774,
+        "conclusion": "success",
+        "started_utc": "2026-10-31T12:02:36Z",
+        "completed_utc": "2026-10-31T12:03:10Z",
+        "installer_tests_passed": 11,
+        "ctest_passed": 5
+      },
+      {
+        "name": "macos",
+        "id": 124531855868,
+        "conclusion": "success",
+        "started_utc": "2026-10-31T12:02:38Z",
+        "completed_utc": "2026-10-31T12:06:24Z",
+        "installer_tests_passed": 11,
+        "ctest_passed": 5,
+        "formats_built": [
+          "APP",
+          "AU",
+          "VST3"
+        ],
+        "auval_passed": true,
+        "official_vst3_passed": 47,
+        "actual_vst3_midi_rates": [
+          44100,
+          48000,
+          96000
+        ],
+        "actual_au_midi_rates": [
+          48000
+        ],
+        "mapped_ingress_and_bypass_regression_passed": true
+      }
+    ],
+    "artifact": {
+      "name": "macos-development-bundles",
+      "id": 13041992521,
+      "bytes": 2161001,
+      "digest": "sha256:064f910de024bb67e7b35f54213b4aac41e441a6bc482126f5fcbad904ea05e3",
+      "created_utc": "2026-10-31T12:06:21Z",
+      "upload_verified": true,
+      "download_runtime_verified": false
+    }
   },
   "not_verified": [
     "Physical MIDI hardware and listening",
@@ -166,5 +229,30 @@
     "Live UI bank/Tone switching while wheel or pedal remains held",
     "Earlier Program 11 intermediate screen and Tone-only GarageBand dirty verdict",
     "DAW GUI bypass gestures; automated VST3 test used the existing framework reserved bypass parameter"
-  ]
+  ],
+  "project_update": {
+    "backup_manifest": "/Users/kyorohiro/development8/wfm/hello_ymfm/w/tetorica-spu-plugin/build/midi-update-project-2__gcqoj/manifest.json",
+    "backup_files": 7,
+    "backup_verified": true,
+    "saved_selection_before_update": {
+      "program": 3,
+      "tone": 0,
+      "gain_percent": 99
+    },
+    "garageband_main_and_au_host_stopped": true,
+    "reopened_with_updated_au": true,
+    "ui_observed": {
+      "program": 3,
+      "tone": 0,
+      "gain_percent": 99,
+      "status": "Project sound restored."
+    },
+    "recording_and_playback_stopped": true,
+    "embedded_state_matches_before": true,
+    "payload_sha256": "f1fa0a3a18ec5e660d7266ee509b6c7f818c9e2c76a04d11fa6d70f1111bae10",
+    "before_report": "build/midi-au-project-before.json",
+    "after_report": "build/midi-au-project-after.json",
+    "original_project_unchanged_files": 11
+  },
+  "implementation_commit": "69186420360e1b25888b5f17e9572ee957b882ca"
 }

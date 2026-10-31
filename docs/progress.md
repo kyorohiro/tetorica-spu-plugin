@@ -1,5 +1,17 @@
 # 作業記録
 
+## 2026-10-31 JST — MIDI表現のCI成功、installed AU更新も完了
+
+- 実装`69186420360e1b25888b5f17e9572ee957b882ca`をpushし、[CI 41199344245](https://github.com/kyorohiro/tetorica-spu-plugin/actions/runs/41199344245)全job成功。
+- 検証copyを保存してGarageBandとAU hostを終了。project7 filesをverified copyへ保持した。
+- 前回manifest全5 filesと一致するAUだけを`au-update-8jqmbsej`で退避・更新した。
+  新installed/sourceと旧backup/archiveの各hash一致、sandbox外のauval成功を確認。
+- GarageBandを再起動し、P3/T0/Gain99のVABと表示を復元、embedded payloadも更新前と一致した。
+  原本project全11 filesの開始時hash一致も確認した。最後は録音・再生停止、AU画面を開いた状態。
+- [今回の結果・更新/rollback手順](midi_expression_20261031.md)、[manifestとCI](midi_expression_20261031.json)。
+- Web版相当の音作り機能を段階移植する計画を保存。次の実装はADSR編集→SPU Reverb。
+  Pitch/Sustainは今回はDAW MIDIから操作する。残る実聴・long realtime・live UI交換・Tone-only dirty等は未確認として保持する。
+
 ## 2026-10-31 JST — Pitch Bend・Sustainの実AU/VST3検証が成功
 
 - coreとwrapperの実装、VST3全point adapter、16channel設定、bypassとcontroller持越しの対処を完了した。
