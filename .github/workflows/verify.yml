@@ -13,6 +13,8 @@ jobs:
     runs-on: ubuntu-24.04
     steps:
       - uses: actions/checkout@v4
+      - name: Verify safe AU installer in temporary directories
+        run: python3 -m unittest discover -s tests -p 'test_install_au.py' -v
       - name: Initialize pinned native SDK
         run: git submodule update --init vendor/tetorica-soundchip-native
       - run: cmake --preset offline
@@ -23,6 +25,8 @@ jobs:
     runs-on: macos-14
     steps:
       - uses: actions/checkout@v4
+      - name: Verify safe AU installer in temporary directories
+        run: python3 -m unittest discover -s tests -p 'test_install_au.py' -v
       - name: Initialize and verify pinned dependencies
         run: python3 scripts/bootstrap.py
       - run: python3 scripts/bootstrap.py --check

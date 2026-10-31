@@ -1,5 +1,15 @@
 # 作業記録
 
+## 2026-10-31 JST — 既存AUの退避・更新完了、DAW操作の前
+
+- installerの11テスト成功。既知manifest限定のupdate・verified backup・条件付きrollbackを追加した。
+- GarageBandの未保存状態は「別名で保存」で`build/spu-vab-check.band`へ保持した。
+  原本は全11 fileをbackupし、Save AsのAutosave cleanupも復元して開始時hashと一致する。
+- host終了後に既存AUを退避して更新。reportは`build/au-backups/au-update-htc4qhrw/manifest.json`。
+  old原本・old copy・installed newの全hashを照合した。sandbox外のauvalも成功した。
+- [今回の記録と復帰コマンド](au_vab_garageband_20261031.md)。実環境のrollbackは未実行。
+- 次: 新AUをGarageBandのcopyで開き、VAB/Toneのみの変更通知・保存・元fileなしの再起動を確認する。
+
 ## 2026-10-31 JST — AU更新とGarageBand VAB確認の開始
 
 - ユーザーから継続の指示。cleanな `f312638` から開始し、今回のTODOを実装前に追加した。

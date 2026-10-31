@@ -22,8 +22,8 @@ VAB file読込・Program/Tone UIを実装し、ローカル検証と[CI全job成
 
 ### AU更新・GarageBand VAB確認の今回の区切り（2026-10-31、実装前）
 
-- [ ] 既存AUの既知manifestを照合し、退避・staging・更新・条件付きrollbackの手順を追加・検証する。
-- [ ] GarageBandなどのhostを保存・停止し、既存bundleをComponents外へ保持したまま新版へ更新する。
+- [x] 既存AUの既知manifestを照合し、退避・staging・更新・条件付きrollbackの手順を追加・検証する。
+- [x] GarageBandなどのhostを保存・停止し、既存bundleをComponents外へ保持したまま新版へ更新する。
 - [ ] 元の検証project全体を別copyにし、そのcopyでVAB読込・Program/Tone変更・dirty表示を確認する。
 - [ ] projectを保存・終了し、読み込み元の検証用VABを移動してから再起動し、音色と選択UIを確認する。
 - [ ] 可能なら前後の音声書出し・project内embedded stateを照合し、editor再表示と取消時の保持も確認する。
