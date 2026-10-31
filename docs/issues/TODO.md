@@ -14,6 +14,13 @@ Native Sineの最小プラグインはローカルでbuild・自動検証済み�
 [最初のCI](https://github.com/kyorohiro/tetorica-spu-plugin/actions/runs/41180834350)を確認し、
 次はAU / GarageBandでの確認、その後VAB読み込みへ進む。
 
+### 今回進める範囲（2026-10-31）
+
+- [ ] AUをユーザー専用Componentsへ新規配置し、auvalで検査する。既存bundleは上書きしない。
+- [ ] GarageBandで新規の検証用projectを作り、AU選択・演奏・保存・再読込・書出しを試す。
+- [ ] VST3のMIDI境界・overflow復帰テストを追加する。
+- [ ] 上記の結果と手動確認が残る範囲を記録し、commit / pushする。
+
 ## 再開手順
 
 1. `git status --short --branch` とこのファイルを読む。既存の変更を消さない。

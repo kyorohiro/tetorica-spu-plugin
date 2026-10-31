@@ -59,3 +59,11 @@
 - [検証JSON](verification_20261031.json)にはソース・ローカルbundle・noticeのSHA、PCM計測値と未検証項目を保存。
 - **次の入口:** Phase 2のAU登録・auval / GarageBand確認、その後Phase 3のVAB読み込み。
   既存Synthのリリースとは別repository。今回は開発版をmainへ保存しただけで、Release公開はしていない。
+
+## 2026-10-31 JST — AU / GarageBand検証の開始
+
+- ユーザーから継続の指示。まず今回の範囲をTODOへ追加した。
+- 作業tree clean、mainはoriginと同期した `cf4a002` から開始。
+- ユーザー専用 `~/Library/Audio/Plug-Ins/Components` にTetoricaSPU.componentは存在しないことを確認。
+- 次: 既存bundleを置換しないAU配置スクリプトを準備して登録・auval、GarageBand検証。
+- 別作業としてVST3イベント境界・overflow復帰テストを拡充する。まだ結果未確認。
