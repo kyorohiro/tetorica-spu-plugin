@@ -1,5 +1,13 @@
 # 作業記録
 
+## 2026-10-31 JST — Noiseモードの開始チェックポイント
+
+- `35d0a0d`、main / origin同期・clean treeから開始。実装前に今回の範囲をTODOへ保存した。
+- 初期Noise Off / clock48、共有clockは保持音へlive反映。Sample / Noise切替時は音・残響を停止する。
+- 元Builtin / PCM / VABを保持し、one-shotでもNoiseが止まらないprivate loopを準備する。
+  Source / ADSR / Reverbの3ページ、既存17parameter維持＋Noise2個、schema5と旧1〜4互換を予定する。
+- 次: core・state・Source UI・実AU/VST3検証。この時点ではNoise実装・build・installed AU更新は未実施。
+
 ## 2026-10-31 JST — PCM編集のCI成功・installed AU更新も完了
 
 - 実装`e53d7da7de63445a19c95f527627911f7bf76321`をpushし、

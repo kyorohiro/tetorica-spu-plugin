@@ -28,6 +28,21 @@ ADSR編集とSPU Reverbも実装・ローカル検証・installed AU更新済み
 PCMの4波形・自由描画・Apply / Revertも実装し、実AU/VST3とStandaloneで検証した。
 [PCMの記録](../pcm_waveform_20261031.md)を参照。次の機能候補はNoise、続いてPMON。
 
+### Noiseモードの今回の区切り（2026-10-31、実装前）
+
+- [ ] SPUの全24voice共通Noiseモードと、共有Noise clock 0〜63（初期48）を公開する。初期はSample、Noise Offで従来音を保つ。
+- [ ] Noise clockは発音中・Release中にも再発音せず反映する。Note / Pitch BendはNoiseの音階を変えず、鍵盤・velocity・ADSR・Sustain・Reverbを使って演奏する。
+- [ ] Sample / Noise切替時は保持音・残響を止める。元Builtin / PCM / VABを保持し、Sampleへ戻ると元音源を使う。Noiseはprivate loopを準備し、元VABがone-shotでもsample ENDで止めない。
+- [ ] PCMタブをSourceへ広げ、Sample時の単一canvasとNoise時のClock説明を切り替える。720×620と3タブ・共通bank / Gain / keyboardを維持し、NoiseがSPU機能であることとClockが共有の質感変更であることを表示する。
+- [ ] 既存parameter ID0〜16を維持し、Noise Enabled17 / Clock18を追加する。schema5に保存し、旧schema1〜4・Gain-onlyをNoise Off / clock48で復元する。不正stateは全設定・現音源・正常pendingを保つ。
+- [ ] 元sampleとprivate loopを非audioで読み込み・cache準備し、mode / clock切替・発音・renderでC++確保/破棄を行わない。ADSR / Reverbのregister bitsを壊さず、clock変更では保持音・sample位置をresetしない。
+- [ ] coreでlive clock / pitch非追従 / private loop / 24voices / reset・panic / 分割一致 / RT確保と初期Sine byte一致を検証する。
+- [ ] 実AU/VST3の19parameter保存・復元・旧形式・automation・不正state保持を検証し、Sourceページの実操作を確認する。build / CTest / validator / CIと結果をcommit / pushする。
+- [ ] host保存・終了と既知manifest照合後にinstalled AUを更新し、GarageBandの旧schema4互換と設定復元を確認する。
+
+今回のNoiseは既存sourceを保持する共有モード。VAB sample255の自動Noise Tone再構築、PMON、NoiseのNoteへの調律は追加しない。
+開始時点は`35d0a0d`、main / origin同期・clean tree。最終AU既知manifestは[PCM記録](../pcm_waveform_20261031.json)。
+
 ### PCM波形選択・描画の今回の区切り（2026-10-31、実装前）
 
 - [x] Webと同じ112-sample周期、Sine / Triangle / Saw / Squareと単一canvasでの自由描画を追加する。softwareで作るPCMをSPU ADPCMへ変換する機能と表示する。
