@@ -25,7 +25,7 @@ AU / GarageBandでの録音・保存・復元・WAVE書出しを追試済み。
 - [x] 旧engineの破棄をaudio callback外へ戻し、退避queue満杯時は交換を延期する。
 - [x] workerでVAB解析・Tone準備を行う入口と、pluginへの交換層の接続を用意する。
 - [x] 再生中の交換・sample rate変更・終了時の所有権・競合・callbackのnew/deleteを検証する。
-- [ ] 結果と次のstate/UI作業を記録し、commit / pushとCI確認を行う。
+- [x] 結果と次のstate/UI作業を記録し、commit / pushする。[CI全job成功](https://github.com/kyorohiro/tetorica-spu-plugin/actions/runs/41187048655)。
 
 この区切りではVAB読み込みUIをまだ公開しない。DAW stateを復元した直後に正しい音が出る設計も別途検証する。
 

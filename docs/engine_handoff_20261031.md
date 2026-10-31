@@ -99,4 +99,15 @@ ctest --test-dir build/asan-handoff -R '^spu.engine.exchange$' --output-on-failu
 
 TSanはbuild directoryを`build/tsan-handoff`、両flagを`-fsanitize=thread`として同様に実行。
 ローカルAppleClang 17 / macOS ARM64で検査した。Windowsのbuild・実host検査は未実施。
-CI結果はpush後に追記する。
+
+## GitHub保存・CI
+
+- 開始TODO: `058fa89`、実装: `cb8d3f6af992c6fd2b9b7c64fad240b3cf578c6c`。origin/mainへpush済み。
+- [Verify SPU Plugin / 41187048655](https://github.com/kyorohiro/tetorica-spu-plugin/actions/runs/41187048655)
+  全job成功。Linux offline `124495982069`、macOS `124495981895`。
+- 2026-10-31 18:02:52〜18:06:41 JST。fresh runnerで依存取得・APP/AU/VST3 build・各4 CTest suite、
+  AU配置/auval、公式VST3、実VST3のPCM/state/scheduler検査まで完了。
+- artifact `macos-development-bundles`: ID `13037257134`、2,039,556 bytes、SHA-256
+  `551763708a009a4b44349f31a3dbaff4bf84f54e4a6122e3e9df394ed9120612`。
+  upload成功の記録であり、download後の実機試験・Release公開とは区別する。
+- ASan / TSanは上記ローカル実行の結果で、今回のCI workflowには追加していない。

@@ -1,5 +1,14 @@
 # 作業記録
 
+## 2026-10-31 JST — 音源交換のCIも成功
+
+- 実装 `cb8d3f6af992c6fd2b9b7c64fad240b3cf578c6c` をorigin/mainへpushした。
+- [CI 41187048655](https://github.com/kyorohiro/tetorica-spu-plugin/actions/runs/41187048655) 全job成功。
+  Linux / macOSの4 suite、APP/AU/VST3 build、auval、公式VST3と実VST3検査が成功した。
+- CI 18:02:52〜18:06:41 JST。artifactとsource SHAは[音源交換記録](engine_handoff_20261031.md)に保存。
+- 次はembedded bank / selection / Gainのcustom state。復元直後の最初のrenderと不正state時の保持を検査してから、VAB読込UIへ進む。
+- 交換層をpluginへ接続したが、現UIはloaderを起動しない。実VST3での交換時MIDI検査もstate/UI接続時に追加する。
+
 ## 2026-10-31 JST — 音源交換・worker準備のローカル検証完了
 
 - 開始TODOを `058fa89` にcommit / pushしてから実装した。
