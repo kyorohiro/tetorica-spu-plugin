@@ -1,5 +1,13 @@
 # 作業記録
 
+## 2026-10-31 JST — AU更新とGarageBand VAB確認の開始
+
+- ユーザーから継続の指示。cleanな `f312638` から開始し、今回のTODOを実装前に追加した。
+- 既存AUのmanifest照合付き退避・更新・rollbackを準備し、GarageBandでは前回projectのcopyを使用する。
+- VAB/Toneのみの変更通知、embedded bankの保存、元fileなしでの再起動とUI復元を確認する。
+- 既存の未保存projectがあれば保持し、ユーザーによる処理が必要な場合だけ確認する。
+- 次: installerの検証と、現在のGarageBand画面・既存AUのread-only確認。
+
 ## 2026-10-31 JST — VAB UIのCIも成功
 
 - 実装 `80f895cb462ebd1179398eb5562f24b3d8a006b8` をorigin/mainへpushした。

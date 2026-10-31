@@ -20,6 +20,18 @@ AU / GarageBandでの録音・保存・復元・WAVE書出しを追試済み。
 VAB file読込・Program/Tone UIを実装し、ローカル検証と[CI全job成功](https://github.com/kyorohiro/tetorica-spu-plugin/actions/runs/41191105787)。[今回の記録](../vab_ui_20261031.md)を参照。
 次は安全なAU更新と実DAWでのVAB操作・保存再起動・UI復元確認へ進む。
 
+### AU更新・GarageBand VAB確認の今回の区切り（2026-10-31、実装前）
+
+- [ ] 既存AUの既知manifestを照合し、退避・staging・更新・条件付きrollbackの手順を追加・検証する。
+- [ ] GarageBandなどのhostを保存・停止し、既存bundleをComponents外へ保持したまま新版へ更新する。
+- [ ] 元の検証project全体を別copyにし、そのcopyでVAB読込・Program/Tone変更・dirty表示を確認する。
+- [ ] projectを保存・終了し、読み込み元の検証用VABを移動してから再起動し、音色と選択UIを確認する。
+- [ ] 可能なら前後の音声書出し・project内embedded stateを照合し、editor再表示と取消時の保持も確認する。
+- [ ] 必要な修正と回帰検査を行い、結果・復帰先・未確認項目をcommit / pushしてCIを確認する。
+
+ユーザー自身の未保存projectが見つかった場合は勝手に閉じない。既存の`spu-au-check.band`は原本として保持する。
+更新は既知の旧manifestと一致する場合だけ行い、未知のAU・projectを上書きしない。
+
 ### VAB UIの今回の区切り（2026-10-31、実装前チェックポイント）
 
 - [x] complete VABをファイル選択し、1 MiB上限付きでworkerから読む入口を追加する。
