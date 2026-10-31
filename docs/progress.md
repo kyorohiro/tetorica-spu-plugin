@@ -1,5 +1,16 @@
 # 作業記録
 
+## 2026-10-31 JST — VAB UIのCIも成功
+
+- 実装 `80f895cb462ebd1179398eb5562f24b3d8a006b8` をorigin/mainへpushした。
+- [CI 41191105787](https://github.com/kyorohiro/tetorica-spu-plugin/actions/runs/41191105787) は全job成功。
+  Linux offline `124507902503`、macOS `124507902676`。
+- 19:02:29〜19:06:14 JST。各5 CTest、APP/AU/VST3 build、auval、公式VST3、実AU/VST3 stateが成功。
+  artifactのID / digestと未検証範囲は[VAB UI記録](vab_ui_20261031.md)へ保存。
+- 既存AUが前回manifest全5件と一致すること、既存検証projectのAlternativeデータhash一致もread-onlyで確認。
+  次回の安全なAU更新・別copyでのDAW VAB確認の入口を記録した。既存AU・projectは変更していない。
+- 次はAU更新とGarageBandでのdirty判定・保存再起動・UI復元。Release公開はまだ行っていない。
+
 ## 2026-10-31 JST — VAB読み込み・選択UIのローカル検証完了
 
 - 開始TODO `d3f7083` をcommit / pushしてから実装した。

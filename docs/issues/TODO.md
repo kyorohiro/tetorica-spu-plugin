@@ -17,7 +17,7 @@ AU / GarageBandでの録音・保存・復元・WAVE書出しを追試済み。
 [VAB解析・offline音源準備](../vab_offline_20261031.md)も完了。
 [音源交換・worker準備](../engine_handoff_20261031.md)も実装・検証済み。
 [embedded DAW state](../embedded_state_20261031.md)も実装済みで、[CI全job成功](https://github.com/kyorohiro/tetorica-spu-plugin/actions/runs/41189325333)。
-VAB file読込・Program/Tone UIを実装し、ローカル検証済み。[今回の記録](../vab_ui_20261031.md)を参照。
+VAB file読込・Program/Tone UIを実装し、ローカル検証と[CI全job成功](https://github.com/kyorohiro/tetorica-spu-plugin/actions/runs/41191105787)。[今回の記録](../vab_ui_20261031.md)を参照。
 次は安全なAU更新と実DAWでのVAB操作・保存再起動・UI復元確認へ進む。
 
 ### VAB UIの今回の区切り（2026-10-31、実装前チェックポイント）
@@ -28,7 +28,7 @@ VAB file読込・Program/Tone UIを実装し、ローカル検証済み。[今�
 - [x] host restore後とeditor再表示時に、保存された音色をUIへ反映する。UI反映だけではengineを再要求しない（実装・source review、実DAW追試は下記）。
 - [x] UI起点の成功した音色変更をhostへ通知する。取消・失敗・host restoreでは変更通知しない（DAW固有dirty判定は下記）。
 - [x] worker file入力・state/音源交換・実AU/VST3の回帰と、可能な範囲の実UI操作を検証する。
-- [ ] 結果、未確認の実DAW操作、再開手順を記録してcommit / pushし、CIを確認する。
+- [x] 結果、未確認の実DAW操作、再開手順を記録してcommit / pushし、CIを確認する。
 
 complete `.vab`を最初の対象とする。分割VH/VBの複数file dialogは後続。
 元pathは読み込み入力にだけ使用し、DAW stateには既存のembedded bank形式を使用する。
