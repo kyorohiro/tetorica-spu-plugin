@@ -1,5 +1,29 @@
 # 作業記録
 
+## 2026-10-31 JST — Pitch Bend・Sustainの実AU/VST3検証が成功
+
+- coreとwrapperの実装、VST3全point adapter、16channel設定、bypassとcontroller持越しの対処を完了した。
+- 最終実VST3は44.1/48/96 kHz、実AUは48 kHzでMIDIからのPCM検査が成功。
+  ±2半音、pedal閾値、channel分離、Release tail、同block複数point、restore/deactivate/overflow、
+  将来offsetのcontroller破棄とfresh Note維持、VST3 bypass跨blockペダルを検査した。
+- 公式VST3は最終buildで47成功。offline/macOS各5 suite、ASan2 suiteも成功。
+  初期Sine PCMは変更前と完全一致。新しいproduction依存は追加していない。
+- 初回VST3はconfig headerだけではframework全TUへ16channelが届かず失敗した。
+  target compile definitionsへ接続して直した。AU sandbox初回のfactory登録拒否はoutside再実行で成功した。
+- [今回の結果とmanifest](midi_expression_20261031.json)、[挙動とコマンド](midi_expression_20261031.md)、
+  [Web版との段階移植計画](spu_synth_parity_plan.md)を保存した。
+- 次: 実装をcommit / pushしてCIを確認し、保存・停止と既知manifest照合後にinstalled AUを更新する。
+
+## 2026-10-31 JST — MIDI実装の統合検証、VST3 bypassの保留イベントを対処
+
+- coreのBend/Sustain検査、offline/macOS各5 CTest、ASan core/VAB 2 suite、APP/AU/VST3 build、公式VST3 47検査が成功した。
+- 固定iPlugのVST3 CCはqueue末尾だけを読むため、plugin側のbounded adapterで全pointを接続した。
+  通常Gain/bypassは元のframeworkへ渡し、16channelを公開する。vendor自体は変更しない。
+- reviewでbypass中にProcessBlockが呼ばれず、複数blockのpedalイベントが蓄積して古いOnが後から適用される経路を発見した。
+  bypass中はqueue・発音・controllersをclearする方針で修正し、解除後のstuck note回帰を追加している。
+- 実AU/VST3 host検査の完了後、検証projectを保存・host停止し、既知manifestを照合してAUを明示更新する。
+  buildだけではinstalled AUを置換しない。更新前のbundleとprojectを引き続き保持する。
+
 ## 2026-10-31 JST — Web機能移植の整理、Pitch Bend・Sustain実装を開始
 
 - ユーザーがPitch Bend→Sustainを承認。Web spu-synthと同じ音作り機能を段階的に移す方向も確認した。

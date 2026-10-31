@@ -12,6 +12,8 @@
 #include "public.sdk/source/vst/hosting/parameterchanges.h"
 #include "public.sdk/source/vst/hosting/plugprovider.h"
 #include "InstrumentState.h"
+#include "midi-controller-checks.h"
+#include "pluginterfaces/vst/ivstmidicontrollers.h"
 
 #include <algorithm>
 #include <array>
@@ -22,6 +24,7 @@
 #include <cstring>
 #include <iostream>
 #include <limits>
+#include <memory>
 #include <stdexcept>
 #include <vector>
 
@@ -161,6 +164,55 @@ public:
   std::vector<float> render(const Event* event = nullptr) {
     return renderEvents(event ? std::vector<Event>{*event} : std::vector<Event>{});
   }
+  std::vector<float> renderMidi(const std::vector<tetorica::test::Midi>& messages,int frames=kBlock) {
+    std::vector<Event> events;
+    FUnknownPtr<IMidiMapping> mapping(controller);
+    require(bool(mapping),"Actual VST3 lacks IMidiMapping");
+    for(const auto& message:messages) {
+      const int type=message.status&0xf0,channel=message.status&15;
+      if(type==0x90||type==0x80) {
+        auto event=note(type==0x90,message.offset);
+        if(type==0x90) {
+          event.noteOn.channel=channel;event.noteOn.pitch=message.data1;
+          event.noteOn.velocity=message.data2/127.f;event.noteOn.noteId=channel*128+message.data1;
+        } else {
+          event.noteOff.channel=channel;event.noteOff.pitch=message.data1;
+          event.noteOff.noteId=channel*128+message.data1;
+        }
+        events.push_back(event);
+      } else if(type==0xb0||type==0xe0) {
+        ParamID mapped=0;
+        const auto controllerNumber=type==0xe0?kPitchBend:message.data1;
+        ok(mapping->getMidiControllerAssignment(0,channel,controllerNumber,mapped),
+          "VST3 MIDI controller/channel assignment rejected");
+        int32 queueIndex=0,pointIndex=0;
+        auto* queue=parameters.addParameterData(mapped,queueIndex);
+        require(queue,"Cannot add MIDI-mapped host parameter queue");
+        const double value=type==0xe0?((message.data1|(message.data2<<7))/16384.):message.data2/127.;
+        ok(queue->addPoint(message.offset,value,pointIndex),"Cannot add MIDI-mapped point");
+      } else throw std::runtime_error("Unsupported test MIDI message");
+    }
+    return renderEvents(events,frames);
+  }
+  void resetForMidiTest() { restartProcessing();parameters.clearQueue(); }
+  void reactivateForMidiTest() { stop();start();parameters.clearQueue(); }
+  void importForMidiTest(const std::vector<std::uint8_t>& bank) {
+    auto bytes=tetorica::encodeState(tetorica::InstrumentDefinition::fromVab(bank,3,0),100);
+    bytes.insert(bytes.end(),4,0);allowAsymmetric();restoreForMidiTest(bytes);
+  }
+  ParamID mappedControllerForTest(int channel,int controllerNumber) {
+    FUnknownPtr<IMidiMapping> mapping(controller);require(bool(mapping),"Missing IMidiMapping");
+    ParamID id=0;ok(mapping->getMidiControllerAssignment(0,channel,controllerNumber,id),
+      "Cannot map test controller");return id;
+  }
+  void parameterForTest(ParamID id,double value,int offset) {
+    int32 queueIndex=0,pointIndex=0;auto* queue=parameters.addParameterData(id,queueIndex);
+    require(queue,"Cannot add adversarial host parameter");
+    ok(queue->addPoint(offset,value,pointIndex),"Cannot add adversarial parameter point");
+  }
+  void restoreForMidiTest(const std::vector<std::uint8_t>& bytes) {
+    require(tryRestore(bytes),"Controller test state restore failed");parameters.clearQueue();
+  }
   std::vector<float> renderEvents(const std::vector<Event>& eventBatch,
                                 int frames = kBlock) {
     require(active, "Render on inactive instance");
@@ -205,7 +257,7 @@ private:
   IPtr<IComponent> component;
   IPtr<IEditController> controller;
   FUnknownPtr<IAudioProcessor> processor;
-  ParameterChanges parameters{1};
+  ParameterChanges parameters{16*kCountCtrlNumber+2};
   ParamID gainId{};
   double rate;
   int64 position = 0;
@@ -439,6 +491,80 @@ void checkRate(const PluginFactory& factory, const ClassInfo& info, double rate)
     << " restoredGainRatio=" << ratio << " stateBytes=" << state.getSize()
     << " independentInstances=true\n";
 }
+void checkMappedIngress(const PluginFactory& factory,const ClassInfo& info) {
+  constexpr double rate=48000;
+  auto savedGain=[](Instance& instance) {
+    const auto bytes=instance.savedBytes();
+    return tetorica::decodeState({bytes.data(),bytes.size()-4}).gainPercent;
+  };
+  Instance invalid(factory,info,rate),reference(factory,info,rate);
+  invalid.start();reference.start();
+  invalid.renderMidi({tetorica::test::on()});reference.renderMidi({tetorica::test::on()});
+  tetorica::test::equalBlocks(invalid,reference,16,"Invalid-controller warmup diverged");
+  invalid.setGain(.37);reference.setGain(.37);
+  const auto pitch=invalid.mappedControllerForTest(0,kPitchBend);
+  const auto pedal=invalid.mappedControllerForTest(0,kCtrlSustainOnOff);
+  int at=0;
+  for(const double value:{-.1,1.1,std::numeric_limits<double>::quiet_NaN(),
+      std::numeric_limits<double>::infinity()}) {
+    invalid.parameterForTest(pitch,value,at);
+    invalid.parameterForTest(pedal,value,at++);
+  }
+  invalid.parameterForTest(pitch,1.,-1);
+  invalid.parameterForTest(invalid.mappedControllerForTest(15,kPitchBend)+kCountCtrlNumber,1.,0);
+  invalid.parameterForTest(invalid.mappedControllerForTest(0,kCtrlModWheel),1.,0);
+  require(difference(invalid.renderMidi({}),reference.renderMidi({}))<1e-7,
+    "Invalid/unsupported MIDI-mapped points changed PCM or dropped Gain automation");
+  require(savedGain(invalid)==37,
+    "Filtered MIDI ingress lost ordinary Gain state");
+  require(difference(invalid.renderMidi({tetorica::test::off()}),
+    reference.renderMidi({tetorica::test::off()}))<1e-7,"Invalid MIDI points changed NoteOff");
+  tetorica::test::equalBlocks(invalid,reference,400,"Invalid MIDI points changed release/pedal state");
+
+  Instance overloaded(factory,info,rate);overloaded.start();
+  overloaded.renderMidi({tetorica::test::bend(16383,15),tetorica::test::cc(64,127,15),tetorica::test::on(15)});
+  renderBlocks(overloaded,16);
+  const auto mapped=overloaded.mappedControllerForTest(15,kPitchBend);
+  for(int point=0;point<1025;++point)overloaded.parameterForTest(mapped,.75,point);
+  overloaded.setGain(.37);
+  require(peak(overloaded.renderMidi({}))<1e-12,"Oversized mapped queue did not invoke safe panic");
+  require(savedGain(overloaded)==37,
+    "Mapped-point overflow dropped regular Gain automation");
+  overloaded.renderMidi({tetorica::test::on(15)});
+  require(std::abs(tetorica::test::frequency(tetorica::test::blocks(overloaded,64),rate)-261.625565)<1.,
+    "Mapped-point overflow retained live bend");
+  overloaded.renderMidi({tetorica::test::off(15)});renderBlocks(overloaded,400);
+  require(peak(overloaded.render())<1e-7,"Mapped-point overflow retained sustain");
+
+  // Instruments do not advertise an ordinary bypass parameter in this pinned
+  // framework. Exercise its existing reserved bypass-processing path directly;
+  // IMidiMapping's CC0 tag follows the reserved bypass/preset tags by two IDs.
+  Instance bypassed(factory,info,rate);bypassed.start();
+  bypassed.renderMidi({tetorica::test::bend(12288,15),tetorica::test::on(15)});
+  require(peak(renderBlocks(bypassed,16))>1e-4,"Bypass test had no held voice");
+  const auto bypassId=bypassed.mappedControllerForTest(0,kCtrlBankSelectMSB)-2;
+  bypassed.parameterForTest(bypassId,1.,0);bypassed.setGain(.37);
+  require(peak(bypassed.renderMidi({tetorica::test::cc(64,127,15,100),
+    tetorica::test::bend(16383,15,120),tetorica::test::on(15,60,160)}))<1e-12,
+    "Bypass did not mute an already-held voice");
+  require(peak(bypassed.renderMidi({tetorica::test::cc(64,0,15,0),tetorica::test::off(15,60,32)}))<1e-12,
+    "Bypassed control/note block produced audio");
+  const auto bypassState=bypassed.savedBytes();
+  require(bypassState[bypassState.size()-4]==1&&savedGain(bypassed)==37,
+    "Bypass filtering lost ordinary bypass/Gain forwarding");
+  bypassed.parameterForTest(bypassId,0.,0);
+  const auto resumed=bypassed.renderMidi({tetorica::test::on(15,60,37)});
+  require(peak({resumed.begin(),resumed.begin()+37})<1e-12&&peak(resumed)>1e-4,
+    "Unbypass retained old audio/events or discarded its fresh NoteOn");
+  require(std::abs(tetorica::test::frequency(tetorica::test::blocks(bypassed,64),rate)-261.625565)<1.,
+    "Unbypass replayed old bend/controllers");
+  bypassed.renderMidi({tetorica::test::off(15)});renderBlocks(bypassed,400);
+  require(peak(bypassed.render())<1e-7,
+    "Cross-block bypass pedal events replayed out of time and stranded a voice");
+  std::cout<<"PASS VST3 mapped ingress invalidNormalizedIgnored=true invalidChannelIgnored=true"
+    <<" unsupportedCCIgnored=true negativeOffsetIgnored=true points1025Panic=true gainPreserved=true"
+    <<" bypassMuteQueueReset=true bypassCrossBlockPedal=true freshUnbypassNote=true\n";
+}
 using StateBytes=std::vector<std::uint8_t>;
 StateBytes originalBank() {
   std::ifstream file(std::string(VAB_FIXTURE_DIR)+"/spu-synth-demo.vab",std::ios::binary);
@@ -604,8 +730,12 @@ int main(int argc, char** argv) {
           checkRate(factory, info, rate);
           checkScheduler(factory, info, rate);
           checkEmbeddedState(factory,info,rate);
+          tetorica::test::checkControllers([&] {
+            auto instance=std::make_unique<Instance>(factory,info,rate);instance->start();return instance;
+          },rate,"VST3 IMidiMapping");
         }
         checkStateFailures(factory,info);
+        checkMappedIngress(factory,info);
         PluginContextFactory::instance().setPluginContext(nullptr);
         std::cout << "PASS VST3 offline PCM, scheduler, lifecycle, state and instance isolation\n";
         return 0;

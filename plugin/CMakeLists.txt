@@ -3,6 +3,7 @@ iplug_add_plugin(TetoricaSPU
   SOURCES
     TetoricaSPU.cpp
     InstrumentUI.cpp
+    MidiAdapters.cpp
     InstrumentState.cpp
     StateAdapters.cpp
     TetoricaSPU.h
@@ -16,3 +17,9 @@ iplug_add_plugin(TetoricaSPU
   LINK
     tetorica_spu_instrument
 )
+
+# The framework's separate translation units do not include plugin/config.h.
+# Keep their MIDI bus/mapping/controller registry identical to our wrapper.
+target_compile_definitions(TetoricaSPU-vst3 PRIVATE
+  VST3_NUM_MIDI_IN_CHANS=16
+  VST3_NUM_CC_CHANS=16)

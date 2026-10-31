@@ -31,6 +31,7 @@ void TetoricaSPU::OnReset()
 {
   mMidiCount = 0;
   mMidiOverflow = false;
+  resetControllerCache();
   mReady = mEngines.instrument().prepare(GetSampleRate());
   mEngines.instrument().panic();
 }
@@ -41,7 +42,9 @@ void TetoricaSPU::OnActivate(bool active)
   {
     mMidiCount = 0;
     mMidiOverflow = false;
+    resetControllerCache();
     mEngines.instrument().panic();
+    mEngines.instrument().resetControllers();
   }
 }
 
@@ -50,7 +53,11 @@ void TetoricaSPU::ProcessMidiMsg(const iplug::IMidiMsg& msg)
   using iplug::IMidiMsg;
   const auto status = msg.StatusMsg();
   if (status != IMidiMsg::kNoteOn && status != IMidiMsg::kNoteOff &&
-      status != IMidiMsg::kControlChange)
+      status != IMidiMsg::kControlChange && status != IMidiMsg::kPitchWheel)
+    return;
+  // Raw MIDI data bytes have seven bits. Do not let malformed input wrap to
+  // a different wheel position or controller value.
+  if (msg.mData1 > 127 || msg.mData2 > 127)
     return;
   if (mMidiOverflow)
     return;
@@ -78,6 +85,7 @@ void TetoricaSPU::ProcessMidiMsg(const iplug::IMidiMsg& msg)
 void TetoricaSPU::applyMidi(const iplug::IMidiMsg& msg)
 {
   using iplug::IMidiMsg;
+  const auto channel = static_cast<std::size_t>(msg.Channel());
   switch (msg.StatusMsg())
   {
     case IMidiMsg::kNoteOn:
@@ -90,14 +98,56 @@ void TetoricaSPU::applyMidi(const iplug::IMidiMsg& msg)
       mEngines.instrument().noteOff(msg.NoteNumber(), msg.Channel());
       break;
     case IMidiMsg::kControlChange:
-      if (msg.mData1 == 120)
+      if (msg.mData1 == 64)
+      {
+        mSustain[channel] = msg.mData2 >= 64;
+        mEngines.instrument().setSustain(mSustain[channel], msg.Channel());
+      }
+      else if (msg.mData1 == 120)
         mEngines.instrument().panic();
+      else if (msg.mData1 == 121)
+      {
+        mBend[channel] = 0;
+        mSustain[channel] = false;
+        mEngines.instrument().resetControllers(msg.Channel());
+      }
       else if (msg.mData1 == 123)
         mEngines.instrument().allNotesOff(msg.Channel());
       break;
+    case IMidiMsg::kPitchWheel:
+    {
+      const int value = int(msg.mData1) | (int(msg.mData2) << 7);
+      mBend[channel] = static_cast<std::int16_t>(value - 8192);
+      mEngines.instrument().setPitchBend(value, msg.Channel());
+      break;
+    }
     default:
       break;
   }
+}
+
+void TetoricaSPU::resetControllerCache() noexcept
+{
+  mBend.fill(0);
+  mSustain.fill(false);
+}
+
+void TetoricaSPU::applyControllerCache() noexcept
+{
+  for (int channel = 0; channel < 16; ++channel)
+  {
+    mEngines.instrument().setPitchBend(int(mBend[channel]) + 8192, channel);
+    mEngines.instrument().setSustain(mSustain[channel], channel);
+  }
+}
+
+void TetoricaSPU::discardCarriedMidi() noexcept
+{
+  std::size_t kept = 0;
+  for (std::size_t event = 0; event < mMidiCount; ++event)
+    if (!mMidi[event].carried)
+      mMidi[kept++] = mMidi[event];
+  mMidiCount = kept;
 }
 
 void TetoricaSPU::renderRange(iplug::sample** outputs, int offset, int nFrames, double gain)
@@ -121,6 +171,10 @@ void TetoricaSPU::ProcessBlock(iplug::sample**, iplug::sample** outputs, int nFr
   if (mMidiOverflow)
   {
     mEngines.instrument().panic();
+    // Part of a pedal/wheel sequence may have been dropped along with a
+    // NoteOff. Return both the engine and its swap cache to a known baseline.
+    mEngines.instrument().resetControllers();
+    resetControllerCache();
     mMidiCount = 0;
     mMidiOverflow = false;
   }
@@ -128,12 +182,17 @@ void TetoricaSPU::ProcessBlock(iplug::sample**, iplug::sample** outputs, int nFr
     return;
   if (mEngines.beginBlock(GetSampleRate()))
   {
-    // A replacement starts with no held notes. Discard events deferred by the
-    // previous instrument, while preserving new events already delivered by
-    // the host for this block (including NoteOn at zero after a state restore).
+    applyControllerCache();
+    // A UI replacement starts with no held notes, but physical wheel/pedal
+    // input still belongs to the MIDI stream. Preserve carried controllers,
+    // especially a pedal-up at the block boundary, and discard old note events.
+    // Successful host restore has already discarded all carried MIDI. Fresh
+    // events for this block (including first post-restore NoteOn) stay ordered.
     std::size_t kept = 0;
     for (std::size_t event = 0; event < mMidiCount; ++event)
-      if (!mMidi[event].carried)
+      if (!mMidi[event].carried ||
+          mMidi[event].message.StatusMsg() == iplug::IMidiMsg::kControlChange ||
+          mMidi[event].message.StatusMsg() == iplug::IMidiMsg::kPitchWheel)
         mMidi[kept++] = mMidi[event];
     mMidiCount = kept;
     mReady = true;

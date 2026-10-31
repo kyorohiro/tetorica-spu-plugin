@@ -4,11 +4,16 @@ PS1 SPU instrument for DAWs, using iPlug2 and tetorica-soundchip-native.
 Initial development targets macOS Standalone, AUv2 and VST3. Not a published release.
 
 Current prototype: original built-in Sine, MIDI Note On/Off and velocity,
-24 voices, channel-aware note ownership, All sound off, Gain and mouse keyboard.
+24 voices, channel-aware note ownership, Pitch Bend, Sustain, All sound off,
+Gain and mouse keyboard.
 Load a complete VAB from the editor and select a Program and Tone to audition.
 The bank, selection and Gain are embedded in the DAW project state.
 Additional SPU controls remain planned. The same VAB parser and selected-Tone
 engine can also be exercised with the offline tool below.
+
+The goal is to bring the Web SPU Synth's sound-design features to the native
+plugin in stages. See the [feature parity plan](docs/spu_synth_parity_plan.md)
+for what is implemented, what comes next and which controls belong to the DAW.
 
 The audio engine runs directly as native C++ in the host callback. It does not
 send audio through a browser, WebView, Tauri IPC or a separate CPAL device.
@@ -58,6 +63,33 @@ build/offline/spu_instrument_test --wav build/spu-demo.wav
 
 The VST3 checks load the actual bundle without registering it with a DAW or
 opening an audio device. The WAV demo contains an original C/E/G chord and release.
+
+## MIDI performance
+
+All 16 MIDI channels have independent Pitch Bend and Sustain state.
+Pitch Bend is 14-bit, centered at 8192, with a fixed range of **±2 semitones**.
+It updates held notes and release tails without restarting samples and also
+affects subsequent notes. The SPU's PITCH register still limits the available
+range for a given sample. RPN bend-range changes are not implemented yet.
+
+CC64 values 64–127 hold released keys; values 0–63 release only those deferred
+notes, leaving physically held keys playing. Sustain postpones Note Off rather
+than extending a one-shot sample or overriding its authored ADSR.
+CC123 acts as releasing the channel's keys and respects Sustain. CC121 returns
+the channel's bend to center and releases Sustain. CC120 currently silences all
+channels, as does the editor's **All sound off** button.
+
+MIDI offsets are honored inside blocks, including multiple controller points
+in a VST3 block. The plugin supplies a bounded adapter for mapped VST3 MIDI CCs
+without changing its pinned framework. Normal Gain and bypass parameters
+continue through the framework.
+
+Wheel/pedal positions are live MIDI input, not preset data. UI bank/Tone changes
+retain them for subsequent notes; successful project-state restore, audio reset,
+deactivation and MIDI overflow recovery return them to neutral. Invalid state
+restore leaves the existing instrument and controller state intact.
+VST3 bypass also clears held/deferred notes and controllers, so input from
+bypassed blocks is not replayed when processing resumes.
 
 ## VAB offline preview
 

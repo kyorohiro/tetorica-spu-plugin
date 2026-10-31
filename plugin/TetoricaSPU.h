@@ -41,6 +41,7 @@ public:
   int UnserializeState(const iplug::IByteChunk& chunk, int startPos) override;
 
 #if defined(VST3_API)
+  Steinberg::tresult PLUGIN_API process(Steinberg::Vst::ProcessData& data) override;
   Steinberg::tresult PLUGIN_API setState(Steinberg::IBStream* state) override;
   Steinberg::tresult PLUGIN_API getState(Steinberg::IBStream* state) override;
 #endif
@@ -90,6 +91,9 @@ private:
   std::atomic<std::uint64_t> mInstrumentUIRevision{0};
 #endif
   void applyMidi(const iplug::IMidiMsg& msg);
+  void resetControllerCache() noexcept;
+  void applyControllerCache() noexcept;
+  void discardCarriedMidi() noexcept;
   void renderRange(iplug::sample** outputs, int offset, int nFrames, double gain);
 
   // All MIDI and render storage is allocated with the instance, never while
@@ -111,6 +115,11 @@ private:
   std::size_t mMidiCount = 0;
   bool mMidiOverflow = false;
   bool mReady = false;
+  // Audio-thread-owned live MIDI state, separate from saved instrument state.
+  // A UI bank/tone replacement inherits it; host restore/reset starts neutral.
+  // Bend is stored as the signed displacement from raw MIDI center 8192.
+  std::array<std::int16_t, 16> mBend{};
+  std::array<bool, 16> mSustain{};
   std::array<float, kScratchFrames> mLeft{};
   std::array<float, kScratchFrames> mRight{};
 #endif

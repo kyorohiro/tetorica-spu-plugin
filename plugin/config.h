@@ -36,6 +36,12 @@
 #define AUV2_VIEW_CLASS_STR "TetoricaSPU_View"
 
 #define VST3_SUBCATEGORY "Instrument|Synth"
+#ifndef VST3_NUM_MIDI_IN_CHANS
+#define VST3_NUM_MIDI_IN_CHANS 16
+#endif
+#ifndef VST3_NUM_CC_CHANS
+#define VST3_NUM_CC_CHANS 16
+#endif
 #define CLAP_MANUAL_URL "https://github.com/kyorohiro/tetorica-spu-plugin"
 #define CLAP_SUPPORT_URL "https://github.com/kyorohiro/tetorica-spu-plugin/issues"
 #define CLAP_DESCRIPTION "A PS1 SPU instrument using Tetorica's native sound core"

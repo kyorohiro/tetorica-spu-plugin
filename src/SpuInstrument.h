@@ -32,18 +32,23 @@ public:
 
   // RT-safe after construction. Accepts 8--384 kHz; invalid rates do not
   // change the existing instrument. A valid prepare silences all voices and
-  // clears only adapter phase/history, retaining the warmed SDK caches.
+  // resets controllers and adapter phase/history, retaining warmed SDK caches.
   bool prepare(double hostSampleRate) noexcept;
   // MIDI0--127 accepted; tuning saturates the hardware14-bit PITCH register.
   // Built-in112-sample sine reaches its limit above~1.575kHz (notes92+).
   // Imported range depends on rootFrequencyHz. Velocity0 is NoteOff.
   void noteOn(int note, int velocity, int channel = 0) noexcept;
   void noteOff(int note, int channel = 0) noexcept;
-  void allNotesOff(int channel = -1) noexcept; // Authored release, optional MIDI channel.
-  void panic() noexcept;                     // Immediate mute, all MIDI channels.
+  // Runtime MIDI controllers are independent per channel and are not authored
+  // instrument state. Bend0/8192/16383 maps exactly to -2/0/+2 semitones.
+  void setPitchBend(int value14, int channel = 0) noexcept;
+  void setSustain(bool down, int channel = 0) noexcept;
+  void resetControllers(int channel = -1) noexcept; // Neutral bend; release pedal only.
+  void allNotesOff(int channel = -1) noexcept;      // Key releases, respecting pedal.
+  void panic() noexcept; // Immediate mute; controllers retained until reset/prepare.
   void render(float* left, float* right, int frames) noexcept;
 
-  int activeVoiceCount() const noexcept; // Held keys; releasing voices are excluded.
+  int activeVoiceCount() const noexcept; // Physically held keys; pedal-held/releasing excluded.
   bool healthy() const noexcept { return mHealthy; }
   double sampleRate() const noexcept { return mHostRate; }
   std::uint64_t nativeFramesRendered() const noexcept { return mNativeFrames; }
@@ -53,10 +58,13 @@ private:
     int note = -1;
     int channel = 0;
     bool held = false;
+    bool deferred = false;
     std::uint64_t order = 0;
   };
   bool write(unsigned offset, unsigned value) noexcept;
   bool renderNative(float* left, float* right, unsigned count) noexcept;
+  unsigned pitchFor(int note, int channel) const noexcept;
+  void releaseVoice(unsigned voice) noexcept;
   void clearRateHistory() noexcept;
   void initialize();
   void initializeTone(const vab::PreparedTone& tone);
@@ -64,6 +72,8 @@ private:
   void* mChip = nullptr;
   bool mHealthy = true;
   std::array<Voice, kVoiceCount> mVoices{};
+  std::array<int,16> mPitchBend{};
+  std::array<bool,16> mSustain{};
   unsigned mCursor = 0;
   std::uint64_t mOrder = 0;
   std::uint64_t mNativeFrames = 0;

@@ -1,6 +1,7 @@
 // SPDX-License-Identifier: BSD-3-Clause
 // Copyright (c) 2026 kyorohiro
 #include "SpuInstrument.h"
+#include "VabBank.h"
 #include <algorithm>
 #include <atomic>
 #include <cmath>
@@ -64,6 +65,31 @@ double frequency(const Stereo& pcm, double rate) {
     }
   CHECK(crossings>10);
   return (crossings-1)*rate/(last-first);
+}
+double expectedFrequency(int note,double semitones=0){
+  const double root=44100./112;
+  const auto pitch=std::lround(4096*440*std::exp2((note-69+semitones)/12)/root);
+  return std::clamp(pitch,1l,16383l)*root/4096;
+}
+double magnitude(const Stereo& pcm,double hz,double rate){
+  double real=0,imaginary=0;const auto count=pcm.left.size()-4096;
+  for(std::size_t i=4096;i<pcm.left.size();++i){
+    const double phase=2*3.14159265358979323846*hz*i/rate;
+    real+=pcm.left[i]*std::cos(phase);imaginary+=pcm.left[i]*std::sin(phase);
+  }
+  return std::sqrt(real*real+imaginary*imaginary)/count;
+}
+tetorica::vab::PreparedTone longReleaseTone(){
+  tetorica::vab::PreparedTone tone;
+  tone.adpcm={
+    38,6,68,85,85,102,117,118,102,119,119,118,103,103,87,102,
+    38,0,70,70,69,52,36,35,18,17,0,224,224,222,222,220,
+    38,0,188,188,171,171,170,154,154,169,153,169,153,170,169,155,
+    38,3,172,187,204,204,237,221,255,14,240,2,33,34,51,67};
+  tone.rootFrequencyHz=44100./112;tone.decodedFrames=112;tone.loopStartSamples=0;
+  tone.adsr1=15;tone.adsr2=0x1fd0; //Fast attack, held sustain, ~3-second linear release.
+  tone.volumeLeft=tone.volumeRight=1;
+  return tone;
 }
 void testRatesPitchAndRelease() {
   for (double rate : {8000., 44100., 48000., 88200., 96000., 192000., 384000.}) {
@@ -154,6 +180,123 @@ void testMidiOffset() {
   CHECK(std::all_of(pcm.left.begin(),pcm.left.begin()+193,[](float value){return value==0;}));
   CHECK(peak(pcm,193)>.02f);
 }
+void testPitchBend(){
+  //Endpoint PCM must equal independent semitone transposition, including new
+  //notes on a second channel which must remain unaffected by the first bend.
+  for(const auto pair:{std::array<int,2>{0,67},{4096,68},{8192,69},{16383,71}}){
+    SpuInstrument a,b;CHECK(a.prepare(48000)&&b.prepare(48000));
+    a.setPitchBend(pair[0],3);a.noteOn(69,127,3);a.noteOn(60,100,4);
+    b.noteOn(pair[1],127,3);b.noteOn(60,100,4);
+    Stereo out(48000),reference(48000);render(a,out);render(b,reference,7);
+    CHECK(out.left==reference.left&&out.right==reference.right);
+  }
+  SpuInstrument held;CHECK(held.prepare(44100));
+  held.noteOn(69,127,0);held.noteOn(60,127,1);
+  Stereo warm(4099),out(44100);render(held,warm);
+  held.setPitchBend(16383,0);render(held,out);
+  CHECK(magnitude(out,expectedFrequency(69,2),44100)>.015);
+  CHECK(magnitude(out,expectedFrequency(60),44100)>.015);
+  CHECK(magnitude(out,expectedFrequency(60,2),44100)<.002);
+
+  //Bend a released but still audible voice. Its first sample remains identical
+  //to an unbent continuation: restarting its ADPCM/envelope would fail here.
+  auto tone=longReleaseTone();SpuInstrument a(tone),b(tone);
+  CHECK(a.prepare(44100)&&b.prepare(44100));a.noteOn(69,127,15);b.noteOn(69,127,15);
+  Stereo before(4099),copy(4099);render(a,before);render(b,copy);CHECK(before.left==copy.left);
+  a.noteOff(69,15);b.noteOff(69,15);a.setPitchBend(0,15);
+  std::array<float,1> al{},ar{},bl{},br{};
+  a.render(al.data(),ar.data(),1);b.render(bl.data(),br.data(),1);
+  CHECK(al[0]==bl[0]&&std::abs(al[0])>.005f&&a.activeVoiceCount()==0);
+  render(a,out);CHECK(std::abs(frequency(out,44100)-expectedFrequency(69,-2))<.3);
+  CHECK(peak(out)>.02f);
+}
+void testSustainAndAllNotesOff(){
+  SpuInstrument a,b;CHECK(a.prepare(48000)&&b.prepare(48000));
+  a.setSustain(true,0);a.noteOn(69,127,0);a.noteOn(60,100,1);
+  b.noteOn(69,127,0);b.noteOn(60,100,1);
+  Stereo out(8192),reference(8192);render(a,out);render(b,reference);
+  a.allNotesOff();b.noteOff(60,1); //CC123 respects pedal0, but channel1 releases.
+  CHECK(a.activeVoiceCount()==0&&b.activeVoiceCount()==1);
+  render(a,out);render(b,reference);CHECK(out.left==reference.left&&peak(out)>.02f);
+  a.setSustain(false,0);b.noteOff(69,0);
+  render(a,out);render(b,reference);CHECK(out.left==reference.left&&peak(out,2048)==0);
+
+  a.setSustain(true,3);a.noteOn(69,127,3);b.noteOn(69,127,3);
+  render(a,out);render(b,reference);CHECK(out.left==reference.left);
+  a.noteOff(69,3); //Leave hardware gate unchanged while the pedal is held.
+  render(a,out);render(b,reference);CHECK(out.left==reference.left);
+  a.noteOn(69,127,3);b.noteOn(69,127,3); //Deferred retrigger reuses the same slot.
+  render(a,out);render(b,reference);CHECK(out.left==reference.left&&a.activeVoiceCount()==1);
+  a.setSustain(false,3); //Must not release a physically held retriggered key.
+  render(a,out);render(b,reference);CHECK(out.left==reference.left&&peak(out)>.02f);
+  a.noteOff(69,3);b.noteOff(69,3);render(a,out);render(b,reference);
+  CHECK(out.left==reference.left&&peak(out,2048)==0);
+}
+void testDeferredVoiceAllocation(){
+  SpuInstrument a,b;CHECK(a.prepare(44100)&&b.prepare(44100));
+  a.setSustain(true,0);a.noteOn(69,127,0);b.noteOn(69,127,0);
+  Stereo out(8192),reference(8192);render(a,out);render(b,reference);
+  a.noteOff(69,0);
+  for(int note=40;note<63;++note){a.noteOn(note,100,1);b.noteOn(note,100,1);}
+  CHECK(a.activeVoiceCount()==23&&b.activeVoiceCount()==24);
+  render(a,out);render(b,reference);CHECK(out.left==reference.left);
+  //All24 slots are busy (one deferred); oldest deferred voice is stolen.
+  a.noteOn(75,100,2);b.noteOn(75,100,2);
+  CHECK(a.activeVoiceCount()==24&&b.activeVoiceCount()==24);
+  a.setSustain(false,0);a.noteOff(69,0);b.noteOff(69,0);
+  render(a,out);render(b,reference);CHECK(out.left==reference.left);
+}
+void testControllerResetPanicAndInvalid(){
+  SpuInstrument synth;CHECK(synth.prepare(44100));
+  synth.setPitchBend(16383,0);synth.setPitchBend(0,1);synth.setSustain(true,0);
+  synth.noteOn(69,127,0);synth.noteOn(60,127,1);synth.noteOn(67,127,0);
+  Stereo warm(4099),out(44100);render(synth,warm);synth.noteOff(67,0);
+  synth.resetControllers(0);CHECK(synth.activeVoiceCount()==2);render(synth,out);
+  CHECK(magnitude(out,expectedFrequency(69),44100)>.015);
+  CHECK(magnitude(out,expectedFrequency(60,-2),44100)>.015);
+  CHECK(magnitude(out,expectedFrequency(67),44100)<.002);
+  synth.resetControllers();render(synth,out);
+  CHECK(magnitude(out,expectedFrequency(60),44100)>.015&&synth.activeVoiceCount()==2);
+  synth.allNotesOff();render(synth,out);CHECK(peak(out,2048)==0);
+
+  synth.setPitchBend(16383,15);synth.setSustain(true,15);synth.noteOn(69,127,15);
+  synth.panic();synth.noteOn(69,127,15);render(synth,warm);synth.noteOff(69,15);
+  render(synth,out);CHECK(peak(out)>.02f&&synth.activeVoiceCount()==0);
+  CHECK(std::abs(frequency(out,44100)-expectedFrequency(69,2))<.3); //Panic retains both controllers.
+  CHECK(!synth.prepare(0));render(synth,out);CHECK(peak(out)>.02f);
+  CHECK(synth.prepare(44100));synth.noteOn(69,127,15);render(synth,out);
+  CHECK(std::abs(frequency(out,44100)-expectedFrequency(69))<.3);
+  synth.noteOff(69,15);render(synth,out);CHECK(peak(out,2048)==0); //Valid prepare resets pedal too.
+
+  SpuInstrument a,b;CHECK(a.prepare(48000)&&b.prepare(48000));
+  a.noteOn(69,127,0);a.noteOn(60,100,15);b.noteOn(69,127,0);b.noteOn(60,100,15);
+  a.setPitchBend(-1,0);a.setPitchBend(16384,0);a.setPitchBend(0,-1);a.setPitchBend(16383,16);
+  a.setSustain(true,-1);a.setSustain(true,16);a.resetControllers(-2);a.resetControllers(16);
+  Stereo compared(out.left.size());render(a,out);render(b,compared);CHECK(out.left==compared.left);
+  a.allNotesOff();b.allNotesOff();render(a,out);render(b,compared);
+  CHECK(out.left==compared.left&&peak(out,2048)==0);
+}
+void testControllerPartitionInvariance(){
+  for(double rate:{8000.,44100.,48000.,96000.}){
+    SpuInstrument a,b;CHECK(a.prepare(rate)&&b.prepare(rate));
+    Stereo whole(4099),parts(4099);
+    a.noteOn(69,127,4);b.noteOn(69,127,4);
+    for(int stage=0;stage<8;++stage){
+      switch(stage){
+        case 0:a.setSustain(true,4);b.setSustain(true,4);break;
+        case 1:a.noteOff(69,4);b.noteOff(69,4);break;
+        case 2:a.setPitchBend(16383,4);b.setPitchBend(16383,4);break;
+        case 3:a.noteOn(69,127,4);b.noteOn(69,127,4);break;
+        case 4:a.allNotesOff(4);b.allNotesOff(4);break;
+        case 5:a.setPitchBend(0,4);b.setPitchBend(0,4);break;
+        case 6:a.resetControllers(4);b.resetControllers(4);break;
+        case 7:a.panic();b.panic();break;
+      }
+      render(a,whole,4099);render(b,parts,7);
+      CHECK(whole.left==parts.left&&whole.right==parts.right);
+    }
+  }
+}
 void testNoCallbackNewDelete() {
   SpuInstrument synth;
   std::array<float,1024> left{},right{};
@@ -164,12 +307,15 @@ void testNoCallbackNewDelete() {
     prepared=synth.prepare(rate)&&prepared;
     for (int i=0; i<240; ++i) {
       synth.noteOn(i%128,1+i%127,i%16);
+      synth.setPitchBend((i*797)%16384,i%16);
+      synth.setSustain(i%3!=0,i%16);
       synth.render(left.data(),right.data(),1024);
       if (i%3==0) synth.noteOff(i%128,i%16);
       if (i%11==0) synth.allNotesOff(i%16);
       if (i%29==0) synth.panic();
+      if (i%37==0) synth.resetControllers(i%16);
     }
-    synth.allNotesOff();
+    synth.allNotesOff();synth.resetControllers();
     for (int i=0; i<64; ++i) synth.render(left.data(),right.data(),1024);
   }
   gTrackAllocations=false;
@@ -204,7 +350,9 @@ int main(int argc,char** argv) {
   testRatesPitchAndRelease(); testPartitionInvariance();
   testPolyphonyChannelsAndPanic(); testInvalidRatesAndInstanceIsolation();
   testMidiOffset(); testNoCallbackNewDelete();
+  testPitchBend();testSustainAndAllNotesOff();testDeferredVoiceAllocation();
+  testControllerResetPanicAndInvalid();testControllerPartitionInvariance();
   if (argc==3 && std::strcmp(argv[1],"--wav")==0) writeDemo(argv[2]);
-  std::puts("PASS: Native SPU pitch/release/polyphony/channels/panic/partition/isolation/rates/MIDI offsets; zero callback C++ new/delete after cache priming");
+  std::puts("PASS: Native SPU pitch/release/polyphony/channels/panic/partition/isolation/rates/MIDI offsets; per-channel bend/sustain/reset/retrigger/deferred-steal; zero callback C++ new/delete after cache priming");
   return 0;
 }

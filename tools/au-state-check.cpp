@@ -3,6 +3,7 @@
 // Process-local AU registration and offline PCM/state checks; no device/editor,
 // no installation into ~/Library/Audio/Plug-Ins and no external sample path in state.
 #include "InstrumentState.h"
+#include "vst3-host/midi-controller-checks.h"
 #include <AudioToolbox/AudioToolbox.h>
 #include <CoreFoundation/CoreFoundation.h>
 #include <algorithm>
@@ -13,6 +14,7 @@
 #include <filesystem>
 #include <fstream>
 #include <iostream>
+#include <memory>
 #include <stdexcept>
 #include <vector>
 
@@ -121,12 +123,36 @@ public:
     ok(AudioUnitGetParameter(mUnit, 0, kAudioUnitScope_Global, 0, &result), "Cannot read AU Gain");
     return result;
   }
+  std::vector<std::uint8_t> savedBytes() const {
+    const auto state=save();return body(state.get());
+  }
+  void restoreForMidiTest(const std::vector<std::uint8_t>& bytes) {
+    const auto state=save();const auto dictionary=withData(state.get(),bytes);
+    ok(restore(dictionary.get()),"AU controller test state restore failed");
+  }
+  void resetForMidiTest() {
+    ok(AudioUnitReset(mUnit,kAudioUnitScope_Global,0),"AU controller lifecycle reset failed");
+  }
+  void reactivateForMidiTest() {
+    ok(AudioUnitUninitialize(mUnit),"AU controller deactivation failed");
+    ok(AudioUnitInitialize(mUnit),"AU controller reactivation failed");
+  }
+  void importForMidiTest(const std::vector<std::uint8_t>& bank) {
+    restoreForMidiTest(tetorica::encodeState(tetorica::InstrumentDefinition::fromVab(bank,3,0),100));
+  }
+  std::vector<float> renderMidi(const std::vector<tetorica::test::Midi>& messages,int frames=256) {
+    require(frames>0&&frames<=256,"Invalid AU controller test block size");
+    for(const auto& message:messages)
+      ok(MusicDeviceMIDIEvent(mUnit,message.status,message.data1,message.data2,message.offset),
+        "AU controller MIDIEvent rejected");
+    const auto audio=render(frames);return {audio.begin(),audio.begin()+frames};
+  }
   std::array<float, 256> noteBlock(int offset)
   {
     ok(MusicDeviceMIDIEvent(mUnit, 0x90, 60, 127, offset), "AU MIDI NoteOn rejected");
     return render();
   }
-  std::array<float, 256> render()
+  std::array<float, 256> render(int frames=256)
   {
     std::array<float, 256> left{}, right{};
     struct StereoBuffers { UInt32 count; AudioBuffer channels[2]; } buffers{
@@ -135,10 +161,10 @@ public:
     timestamp.mFlags = kAudioTimeStampSampleTimeValid;
     timestamp.mSampleTime = mPosition;
     AudioUnitRenderActionFlags flags = 0;
-    ok(AudioUnitRender(mUnit, &flags, &timestamp, 0, 256,
+    ok(AudioUnitRender(mUnit, &flags, &timestamp, 0, frames,
       reinterpret_cast<AudioBufferList*>(&buffers)), "Offline AU render failed");
-    mPosition += 256;
-    for (std::size_t i = 0; i < left.size(); ++i)
+    mPosition += frames;
+    for (int i = 0; i < frames; ++i)
       require(std::isfinite(left[i]) && std::isfinite(right[i]) &&
         std::abs(left[i]) <= 1 && std::abs(right[i]) <= 1, "AU PCM is nonfinite or out of bounds");
     return left;
@@ -258,6 +284,7 @@ int main(int argc, char** argv)
     const auto decoded = tetorica::decodeState({legacyBody.data(), legacyBody.size()});
     require(decoded.definition->kind() == tetorica::InstrumentDefinition::Kind::Builtin &&
       decoded.gainPercent == 17., "Legacy AU state did not migrate to a builtin definition");
+    tetorica::test::checkControllers([&] { return std::make_unique<Instance>(component); },48000,"AU MIDIEvent");
     std::cout << "PASS: local AU embedded VAB/Gain round-trip, first-render MIDI/PCM, separate instance, "
       "malformed CF/state rejection with pending/active preservation, legacy AU migration; no audio device/editor/install\n";
   }

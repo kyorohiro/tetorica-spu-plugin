@@ -46,8 +46,9 @@ public:
   // Single audio thread only. No allocation, destruction, mutex or notification.
   // A full retire queue defers taking pending work. A stale/unhealthy candidate
   // or one with an invalid host rate is retired; the active engine is retained.
-  // Returns true only after adopting a ready engine. Clear earlier-block
-  // deferred MIDI then; preserve fresh host events belonging to this block.
+  // Returns true only after adopting a ready engine. Clear the old instrument's
+  // deferred note events then; preserve fresh host events for this block.
+  // Live controller carry/reset policy belongs to the consumer wrapper.
   bool beginBlock(double hostRate) noexcept;
   SpuInstrument& instrument() noexcept;
 

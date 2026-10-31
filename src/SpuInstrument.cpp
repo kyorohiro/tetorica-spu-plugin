@@ -58,11 +58,13 @@ void validateTone(const vab::PreparedTone& tone) {
 }
 
 SpuInstrument::SpuInstrument() : mChip(ps1_spu_create()) {
+  mPitchBend.fill(8192);
   if (!mChip) throw std::runtime_error("Could not create Native SPU");
   try { initialize(); }
   catch (...) { ps1_spu_destroy(mChip); mChip = nullptr; throw; }
 }
 SpuInstrument::SpuInstrument(const vab::PreparedTone& tone) {
+  mPitchBend.fill(8192);
   validateTone(tone);
   mChip=ps1_spu_create();
   if (!mChip) throw std::runtime_error("Could not create Native SPU");
@@ -153,6 +155,7 @@ void SpuInstrument::clearRateHistory() noexcept {
 bool SpuInstrument::prepare(double hostSampleRate) noexcept {
   if (!std::isfinite(hostSampleRate) || hostSampleRate < 8000 || hostSampleRate > 384000) return false;
   panic();
+  resetControllers();
   mHostRate = hostSampleRate;
   mRatio = kNativeSampleRate / hostSampleRate;
   return mHealthy;
@@ -164,17 +167,16 @@ void SpuInstrument::noteOn(int note, int velocity, int channel) noexcept {
   // A repeated MIDI note retriggers its existing slot. Other channels retain
   // independent identities; late Off for a stolen note cannot stop its successor.
   for (int i=0; i<kVoiceCount; ++i)
-    if (mVoices[i].held && mVoices[i].note == note && mVoices[i].channel == channel) { slot=i; break; }
+    if ((mVoices[i].held||mVoices[i].deferred) && mVoices[i].note == note && mVoices[i].channel == channel) { slot=i; break; }
   if (slot < 0) for (unsigned offset=0; offset<kVoiceCount; ++offset) {
     const unsigned candidate = (mCursor+offset)%kVoiceCount;
-    if (!mVoices[candidate].held) { slot=static_cast<int>(candidate); break; }
+    if (!mVoices[candidate].held&&!mVoices[candidate].deferred) { slot=static_cast<int>(candidate); break; }
   }
   if (slot < 0) {
     slot = 0;
     for (int i=1; i<kVoiceCount; ++i) if (mVoices[i].order < mVoices[slot].order) slot=i;
   }
-  const double frequency = 440 * std::exp2((note-69)/12.0);
-  const auto pitch = static_cast<unsigned>(std::lround(std::clamp(4096*frequency/mRootFrequencyHz, 1.0, 16383.0)));
+  const auto pitch = pitchFor(note,channel);
   const unsigned volumeLeft = mVolumeLeft * static_cast<unsigned>(velocity) / 127;
   const unsigned volumeRight = mVolumeRight * static_cast<unsigned>(velocity) / 127;
   const unsigned base = static_cast<unsigned>(slot)*16;
@@ -184,7 +186,7 @@ void SpuInstrument::noteOn(int note, int velocity, int channel) noexcept {
     write(reg,ps1_spu_read(mChip,reg)|(1u<<(slot%16)));
   }
   mHealthy = (ps1_spu_audition_key(mChip, static_cast<unsigned>(slot), 1) != 0) && mHealthy;
-  mVoices[slot] = {note, channel, true, ++mOrder};
+  mVoices[slot] = {note, channel, true, false, ++mOrder};
   mCursor = (static_cast<unsigned>(slot)+1)%kVoiceCount;
 }
 void SpuInstrument::noteOff(int note, int channel) noexcept {
@@ -192,9 +194,42 @@ void SpuInstrument::noteOff(int note, int channel) noexcept {
   for (unsigned i=0; i<kVoiceCount; ++i) {
     auto& voice = mVoices[i];
     if (voice.held && voice.note == note && voice.channel == channel) {
-      mHealthy = (ps1_spu_audition_key(mChip, i, 0) != 0) && mHealthy;
       voice.held = false;
+      if(mSustain[channel])voice.deferred=true;
+      else releaseVoice(i);
     }
+  }
+}
+unsigned SpuInstrument::pitchFor(int note,int channel) const noexcept {
+  const int delta=mPitchBend[channel]-8192;
+  const double semitones=2.0*delta/(delta<0?8192.0:8191.0);
+  const double frequency=440*std::exp2((note-69+semitones)/12.0);
+  return static_cast<unsigned>(std::lround(std::clamp(4096*frequency/mRootFrequencyHz,1.0,16383.0)));
+}
+void SpuInstrument::releaseVoice(unsigned voice) noexcept {
+  mVoices[voice].deferred=false;
+  mHealthy=(ps1_spu_audition_key(mChip,voice,0)!=0)&&mHealthy;
+}
+void SpuInstrument::setPitchBend(int value14,int channel) noexcept {
+  if(!validChannel(channel)||value14<0||value14>16383||mPitchBend[channel]==value14)return;
+  mPitchBend[channel]=value14;
+  // Released tails retain their note identity until the slot is reused. Change
+  // only PITCH, preserving the sample cursor, ADSR stage and key-on history.
+  for(unsigned i=0;i<kVoiceCount;++i)
+    if(mVoices[i].note>=0&&mVoices[i].channel==channel)
+      write(i*16+4,pitchFor(mVoices[i].note,channel));
+}
+void SpuInstrument::setSustain(bool down,int channel) noexcept {
+  if(!validChannel(channel)||mSustain[channel]==down)return;
+  mSustain[channel]=down;
+  if(!down)for(unsigned i=0;i<kVoiceCount;++i)
+    if(mVoices[i].deferred&&mVoices[i].channel==channel)releaseVoice(i);
+}
+void SpuInstrument::resetControllers(int channel) noexcept {
+  if(channel!=-1&&!validChannel(channel))return;
+  for(int ch=0;ch<16;++ch)if(channel==-1||ch==channel){
+    setPitchBend(8192,ch);
+    setSustain(false,ch);
   }
 }
 void SpuInstrument::allNotesOff(int channel) noexcept {
@@ -202,8 +237,9 @@ void SpuInstrument::allNotesOff(int channel) noexcept {
   for (unsigned i=0; i<kVoiceCount; ++i) {
     auto& voice = mVoices[i];
     if (voice.held && (channel == -1 || voice.channel == channel)) {
-      mHealthy = (ps1_spu_audition_key(mChip, i, 0) != 0) && mHealthy;
       voice.held = false;
+      if(mSustain[voice.channel])voice.deferred=true;
+      else releaseVoice(i);
     }
   }
 }

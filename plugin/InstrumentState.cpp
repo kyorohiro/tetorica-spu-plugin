@@ -71,6 +71,12 @@ int TetoricaSPU::UnserializeState(const iplug::IByteChunk& chunk, int startPos)
     if (params.Put(&state.gainPercent) != sizeof(double))
       return 0;
     mEngines.commitPrepared(std::move(prepared), state.definition);
+    // Successful host restore is a quiescent lifecycle operation. Wheel and
+    // pedal are live input, not preset data; a UI-only bank swap retains them.
+    // Do this after the transactional commit so invalid state changes nothing.
+    resetControllerCache();
+    discardCarriedMidi();
+    mMidiOverflow = false;
     // This trusted one-double chunk was fully validated above. The pinned
     // framework then sets Gain and calls OnParamReset without further reads.
     UnserializeParams(params, 0);

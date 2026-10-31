@@ -1,0 +1,170 @@
+{
+  "started_on": "2026-10-31",
+  "timezone": "Asia/Tokyo",
+  "start_todo_commit": "b8c95c8",
+  "features": {
+    "midi_channels": 16,
+    "bend_bits": 14,
+    "bend_center": 8192,
+    "bend_range_semitones": [
+      -2,
+      2
+    ],
+    "sustain_cc": 64,
+    "sustain_on_minimum": 64,
+    "live_controllers_saved": false,
+    "state_schema_unchanged": 1
+  },
+  "production_source_sha256": {
+    "src/SpuInstrument.h": "8aebfa40ee150ae11bd9dec2ac98fd2f107068dabf5a971af144dd4665d89c45",
+    "src/SpuInstrument.cpp": "808464a7db45cbf7f1ed09cec868a8a4b59a1057369ce8eeff263fc48635a8ba",
+    "src/SpuEngineExchange.h": "96a531960a3de391b2d9a7f4306c4d0bd9bda24d9d8c6cb82b52055f8f3980b5",
+    "plugin/TetoricaSPU.h": "18248913594249cfdd4ce4153e6c91234273053dfccbe6ec730d15064c89e856",
+    "plugin/TetoricaSPU.cpp": "a52a0ba98446cdf5c3d70d4fc7969f3bba780721754d0c2c5be1955cc5b7d5cd",
+    "plugin/InstrumentState.cpp": "5d078d48f7cfff4435d4a8bf6645f3ade2330c2d385aa3aff425b14555145540",
+    "plugin/MidiAdapters.cpp": "b969b14e4b5634e081124a5094bea5faae06ba7fd1904ab18aab64f0b3b91143",
+    "plugin/config.h": "90269157bf8f87f8877d8fd328bae651a4e190072bbff4225b484c77233c5243",
+    "plugin/CMakeLists.txt": "09a8637a867744fc0e5f1b2f8054bb9cc167aa0fd912acf3c5758c023f262cb9"
+  },
+  "dependency_lock_sha256": "b25b354914829d3497db1bdf028cfa139701979bfcd7fecd3da41f37160f6336",
+  "local_checks": {
+    "offline_ctest": {
+      "passed": 5,
+      "failed": 0,
+      "seconds": 1.94
+    },
+    "macos_ctest": {
+      "passed": 5,
+      "failed": 0,
+      "seconds": 2.31
+    },
+    "asan_core_and_vab": {
+      "passed": 2,
+      "failed": 0,
+      "seconds": 13.85,
+      "diagnostics": 0
+    },
+    "vst3_validator": {
+      "passed": 47,
+      "failed": 0
+    },
+    "actual_vst3_midi": {
+      "passed": true,
+      "sample_rates": [
+        44100,
+        48000,
+        96000
+      ],
+      "route": "IMidiMapping and IParameterChanges, including multiple points per queue"
+    },
+    "actual_au_midi": {
+      "passed": true,
+      "sample_rates": [
+        48000
+      ],
+      "route": "MusicDeviceMIDIEvent; workspace AU loaded in-process outside sandbox"
+    },
+    "mapped_ingress_overflow_and_invalid": true,
+    "vst3_bypass_cross_block_pedal_and_fresh_note": true,
+    "future_controllers_discarded_on_restore": true,
+    "core_callback_cpp_new_delete": [
+      0,
+      0
+    ],
+    "neutral_demo_matches_previous_bytes": true,
+    "neutral_demo_sha256": "7a61b56d356ac198c35808b503cf0b61b55a9547b21770eb2a67c97d0cc4aef3"
+  },
+  "logs": {
+    "build/midi-vst3-audio-final.log": {
+      "sha256": "868cf0fdf0d481d4960094070a2303d83fb2afb6c6f8cf01877f3f8c072bb11a",
+      "pass_lines": [
+        "PASS: fixed dependency revisions and VST3 SDK links",
+        "PASS sampleRate=44100 offset=64 peak=0.0373283 c4Hz=261.667 releasePeak=0 restoredGainRatio=0.37 stateBytes=44 independentInstances=true",
+        "PASS scheduler sampleRate=44100 blockEndDeferred=true shortBlocks=true sameOffsetOrder=true unsortedOffsets=true velocityZeroOff=true overflow2049Recovered=true processingRestartSilent=true reactivateSilent=true reconfigureSilent=true",
+        "PASS embedded state sampleRate=44100 sparseTones=3 stereoPan=true firstBlock=true activeRestore=true heldDeferredCleared=true freshNotePreserved=true repeatedRestores=12 embeddedBytes=3744",
+        "PASS VST3 IMidiMapping controllers sampleRate=44100 bend14Endpoints=true multiPointOffsets=true splitBlocks=true noRetrigger=true sustain64_63=true channel15Isolation=true CC123Pedal=true CC121HeldDeferred=true panicPreservesControllers=true resetRestoreOverflowClear=true liveStateExcluded=true deferredController=true reactivateReset=true releaseTailRetunedNoKON=true restoreDiscardsFutureControllers=true",
+        "PASS sampleRate=48000 offset=64 peak=0.0373283 c4Hz=261.667 releasePeak=0 restoredGainRatio=0.37 stateBytes=44 independentInstances=true",
+        "PASS scheduler sampleRate=48000 blockEndDeferred=true shortBlocks=true sameOffsetOrder=true unsortedOffsets=true velocityZeroOff=true overflow2049Recovered=true processingRestartSilent=true reactivateSilent=true reconfigureSilent=true",
+        "PASS embedded state sampleRate=48000 sparseTones=3 stereoPan=true firstBlock=true activeRestore=true heldDeferredCleared=true freshNotePreserved=true repeatedRestores=12 embeddedBytes=3744",
+        "PASS VST3 IMidiMapping controllers sampleRate=48000 bend14Endpoints=true multiPointOffsets=true splitBlocks=true noRetrigger=true sustain64_63=true channel15Isolation=true CC123Pedal=true CC121HeldDeferred=true panicPreservesControllers=true resetRestoreOverflowClear=true liveStateExcluded=true deferredController=true reactivateReset=true releaseTailRetunedNoKON=true restoreDiscardsFutureControllers=true",
+        "PASS sampleRate=96000 offset=64 peak=0.0373283 c4Hz=261.667 releasePeak=0 restoredGainRatio=0.37 stateBytes=44 independentInstances=true",
+        "PASS scheduler sampleRate=96000 blockEndDeferred=true shortBlocks=true sameOffsetOrder=true unsortedOffsets=true velocityZeroOff=true overflow2049Recovered=true processingRestartSilent=true reactivateSilent=true reconfigureSilent=true",
+        "PASS embedded state sampleRate=96000 sparseTones=3 stereoPan=true firstBlock=true activeRestore=true heldDeferredCleared=true freshNotePreserved=true repeatedRestores=12 embeddedBytes=3744",
+        "PASS VST3 IMidiMapping controllers sampleRate=96000 bend14Endpoints=true multiPointOffsets=true splitBlocks=true noRetrigger=true sustain64_63=true channel15Isolation=true CC123Pedal=true CC121HeldDeferred=true panicPreservesControllers=true resetRestoreOverflowClear=true liveStateExcluded=true deferredController=true reactivateReset=true releaseTailRetunedNoKON=true restoreDiscardsFutureControllers=true",
+        "PASS malformed embedded state cases=25 atomicGainStatePCM=true readyRestorePreserved=true legacyGain12=true",
+        "PASS VST3 mapped ingress invalidNormalizedIgnored=true invalidChannelIgnored=true unsupportedCCIgnored=true negativeOffsetIgnored=true points1025Panic=true gainPreserved=true bypassMuteQueueReset=true bypassCrossBlockPedal=true freshUnbypassNote=true",
+        "PASS VST3 offline PCM, scheduler, lifecycle, state and instance isolation"
+      ]
+    },
+    "build/midi-au-state-final.log": {
+      "sha256": "a4f47a7d917fb9592175f97adbe8b4f59c5eed2c8e6c815288ac13f58bf6030f",
+      "pass_lines": [
+        "PASS AU MIDIEvent controllers sampleRate=48000 bend14Endpoints=true multiPointOffsets=true splitBlocks=true noRetrigger=true sustain64_63=true channel15Isolation=true CC123Pedal=true CC121HeldDeferred=true panicPreservesControllers=true resetRestoreOverflowClear=true liveStateExcluded=true deferredController=true reactivateReset=true releaseTailRetunedNoKON=true restoreDiscardsFutureControllers=true",
+        "PASS: local AU embedded VAB/Gain round-trip, first-render MIDI/PCM, separate instance, malformed CF/state rejection with pending/active preservation, legacy AU migration; no audio device/editor/install"
+      ]
+    },
+    "build/midi-vst3-validator-final.log": {
+      "sha256": "d6e996dcd849c8a52f111ecfd53d586869699a178797899924a5f3e37a4ca26f",
+      "pass_lines": [
+        "PASS: fixed dependency revisions and VST3 SDK links",
+        "Result: 47 tests passed, 0 tests failed"
+      ]
+    }
+  },
+  "au": {
+    "source": "build/macos/out/TetoricaSPU.component",
+    "file_sha256": {
+      "Contents/Info.plist": "94a46fcfc638d76a05aca50d5deedaff2a7a934aee55a816d007b6dff9c9bbc4",
+      "Contents/MacOS/TetoricaSPU": "5123606ad73f7acd5b4896150f9f9d4f09bbac0c59a60be1ffa28f5d8962d869",
+      "Contents/PkgInfo": "d06a80ba92de0833d0ed03de1b02b7c8913f126d9e8c8931b190765dd5d83b11",
+      "Contents/Resources/Roboto-Regular.ttf": "b2efabca5ea4bc56eea829713706b5cd0788b82aca153bd4adde9b1573933b4f",
+      "Contents/Resources/THIRD_PARTY_NOTICES.txt": "d0686ed57334f5bc617481e976e6d220822dba8fc93b8dd51246455bb818db6e"
+    },
+    "installed": false
+  },
+  "vst3": {
+    "source": "build/macos/out/TetoricaSPU.vst3",
+    "file_sha256": {
+      "Contents/Info.plist": "0fe9965eadefafb0be705d9e3bba5a6df3c6e2561b608bdbf267d7f831e5d644",
+      "Contents/MacOS/TetoricaSPU": "be4cfbfffc74efc63a76c3a50edaedd365cc3d4ca04099c39feb420f027de155",
+      "Contents/PkgInfo": "d06a80ba92de0833d0ed03de1b02b7c8913f126d9e8c8931b190765dd5d83b11",
+      "Contents/Resources/Roboto-Regular.ttf": "b2efabca5ea4bc56eea829713706b5cd0788b82aca153bd4adde9b1573933b4f",
+      "Contents/Resources/THIRD_PARTY_NOTICES.txt": "d0686ed57334f5bc617481e976e6d220822dba8fc93b8dd51246455bb818db6e"
+    }
+  },
+  "app": {
+    "source": "build/macos/out/TetoricaSPU.app",
+    "file_sha256": {
+      "Contents/Info.plist": "1fec046b5560e89705ce207b4372e154e72e7e97951f2e0c4a23789827cf58c6",
+      "Contents/MacOS/TetoricaSPU": "1ffb65ff3573478495d63723c9e134ebb3a330e78a61f045136e54fd1583b3f6",
+      "Contents/PkgInfo": "82502191c9484b04d685374f9879a0066069c49b8acae7a04b01d38d07e8eca0",
+      "Contents/Resources/Roboto-Regular.ttf": "b2efabca5ea4bc56eea829713706b5cd0788b82aca153bd4adde9b1573933b4f",
+      "Contents/Resources/THIRD_PARTY_NOTICES.txt": "d0686ed57334f5bc617481e976e6d220822dba8fc93b8dd51246455bb818db6e",
+      "Contents/Resources/TetoricaSPU-macOS-MainMenu.nib": "7ba57e13c5fdbc1f77eaf801fd49f7762dfbef93a2ce6526e547901f66d4719e"
+    }
+  },
+  "first_attempts": [
+    {
+      "route": "AU in sandbox",
+      "result": "Cannot register local AU factory",
+      "resolution": "Outside-sandbox final run passed",
+      "log": "build/midi-au-state.log"
+    },
+    {
+      "route": "VST3 mapping",
+      "result": "Controller/channel assignment rejected",
+      "resolution": "Set MIDI/CC channels=16 on all framework translation units via target compile definitions; final run passed",
+      "log": "build/midi-vst3-audio.log"
+    }
+  ],
+  "ci": {
+    "status": "pending"
+  },
+  "not_verified": [
+    "Physical MIDI hardware and listening",
+    "Long realtime endurance",
+    "Live UI bank/Tone switching while wheel or pedal remains held",
+    "Earlier Program 11 intermediate screen and Tone-only GarageBand dirty verdict",
+    "DAW GUI bypass gestures; automated VST3 test used the existing framework reserved bypass parameter"
+  ]
+}

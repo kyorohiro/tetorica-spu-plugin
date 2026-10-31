@@ -25,13 +25,16 @@ Program操作後のP3/T0と保存・project再表示も確認した。P11中間�
 
 ### Pitch Bend・Sustainの今回の区切り（2026-10-31、実装前）
 
-- [ ] Web spu-synthとの機能差を整理し、音作り機能の段階移植計画を保存する。
-- [ ] チャンネル別14-bit Pitch Bendを追加する。中心8192、初期範囲±2半音、発音中とRelease中の音を再発音せず変更し、新規音にも適用する。
-- [ ] チャンネル別Sustain（CC64、64以上でOn）を追加する。離鍵を保留し、解除時は離鍵済みの音だけReleaseする。
-- [ ] 同音再発音・voice stealing・CC123・CC121・panic/overflow・reset/activate・host restore時の保持音とcontroller状態を整理し、stuck noteを防ぐ。
-- [ ] sample offsetを含むMIDI接続を行う。UI音源切替ではwheel/pedalの状態を引き継ぎ、host restoreとlifecycle resetでは初期化する。
-- [ ] coreの音程・チャンネル分離・pedal・RT中new/deleteと、実AU/VST3のMIDI・offset・state回帰を検証する。
+- [x] Web spu-synthとの機能差を整理し、[段階移植計画](../spu_synth_parity_plan.md)を保存する。
+- [x] チャンネル別14-bit Pitch Bendを追加する。中心8192、初期範囲±2半音、発音中とRelease中の音を再発音せず変更し、新規音にも適用する。
+- [x] チャンネル別Sustain（CC64、64以上でOn）を追加する。離鍵を保留し、解除時は離鍵済みの音だけReleaseする。
+- [x] 同音再発音・voice stealing・CC123・CC121・panic/overflow・reset/activate・host restore時の保持音とcontroller状態を整理し、stuck noteを防ぐ。
+- [x] sample offsetを含むMIDI接続を行う。UI音源切替ではwheel/pedalの状態を引き継ぎ、host restoreとlifecycle resetでは初期化する（実装/source review、live UI交換は実機未追試）。
+- [x] 固定iPlugのVST3 CC queueが最後のpointだけを処理する制約をplugin側adapterで補い、同block内のBend/pedal全pointを扱う（vendorは変更しない）。
+- [x] VST3 bypass中にProcessBlockが止まってもMIDIを蓄積しないよう、queue・voices・controllersを初期化し、bypass解除後の古いpedal再適用を回帰検査する。
+- [x] coreの音程・チャンネル分離・pedal・RT中new/deleteと、実AU/VST3のMIDI・offset・state回帰を検証する。
 - [ ] README・結果・未確認範囲を記録してcommit / pushし、CIを確認する。
+- [ ] 実plugin検証後、既知manifest付きの安全な手順でinstalled AUを更新・auval確認し、検証projectの復元を確認する。
 
 今回の範囲はDAW MIDIからの演奏機能。Bend/Sustainのlive値はpresetへ保存しない。
 Webの±2半音と離鍵保留を参考にし、MIDIのチャンネルごとに独立させる。
@@ -177,7 +180,7 @@ complete `.vab`を最初の対象とする。分割VH/VBの複数file dialogは�
 
 - [ ] 内蔵112標本Sineは約1,575HzでSPU PITCH上限。MIDI92以降も演奏できる波形構成を用意する。
 - [ ] sample rate変換の品質・遅延報告を検討する。44.1kHz未満のanti-alias filterは未実装。
-- [ ] Pitch Bend / Sustainを追加する。
+- [x] Pitch Bend / Sustainを追加する（[検証記録](../midi_expression_20261031.md)）。
 - [ ] CC120をチャンネル別の即時停止にする（現状はglobal panic、CC123はchannel release）。
 - [ ] Gain変更を滑らかにし、sample単位のautomationの扱いを検討する。
 - [ ] AUでrender thread以外から届くMIDIのbounded ingressを検証・対応する。現状のhost MIDI / lifecycle操作は単一consumerとして直列化される前提。
@@ -192,7 +195,7 @@ complete `.vab`を最初の対象とする。分割VH/VBの複数file dialogは�
 - [x] version付きembedded bank stateを実装する。復元直後の最初のrenderと不正stateのatomic failureを検査する。
 - [x] VAB読み込み、Program / Tone選択を追加する。
 - [x] サンプルを含む音色と設定のproject保存・復元を実装する。
-- [ ] 実DAWの画面からVABを読み、project保存・再起動・復元とUI表示を確認する（UI接続後）。
+- [x] 実DAWの画面からVABを読み、project保存・再起動・復元とUI表示を確認する（GarageBandの独自Load/Tone、P3/T0とP3/T1）。
 - [x] GarageBand標準AUプリセット経由で、VAB embedded stateのproject保存・元fileなし再起動・UI復元・音声PCM一致を確認する。
 - [ ] VAB/Toneのみの変更でDAWがprojectを変更済みと扱うことを確認する。VST3はoptional setDirty、AUはpublic PresentPreset通知を使用中。
 - [ ] editorを開いたままのhost restoreと、file dialog / Program・Tone popup中のeditor close/reopenを実DAWで追試する。
