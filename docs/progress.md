@@ -1,5 +1,14 @@
 # 作業記録
 
+## 2026-10-31 JST — PCM波形選択・描画の開始チェックポイント
+
+- `adaba1b`、main / origin同期・clean treeから開始。実装前に今回の範囲をTODOへ保存した。
+- Webは112 samples / 64-byte cyclic ADPCM。pluginも112周期で4形状と単一canvasのdraft編集を行う。
+- Apply時だけworkerで変換・cacheを準備し、既存exchangeで交換する。保持音・残響は交換で停止する。
+  今回はlive RAM書換えやMorphではなく、元PCMをprojectへ含める音色編集を実装する。
+- 次: coreのcyclic encoder・音源定義/state・PCM page、実AU/VST3回帰を進める。
+  この時点ではPCM実装・build・installed AU更新は未実施。
+
 ## 2026-10-31 JST — SPU ReverbのCIも成功
 
 - 実装`552a45afdf88635d102dcba910b04be5f60be5cd`をpushし、
