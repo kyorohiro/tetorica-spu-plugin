@@ -147,7 +147,7 @@
     }
   },
   "not_verified": [
-    "Program/Tone selector changes in the remote GarageBand AU view",
+    "Program selector changes in the remote GarageBand AU view",
     "Project dirty notification from a plugin Tone-only edit",
     "Closing the AU editor while its file dialog or popup is open",
     "Physical listening, loopback and long realtime endurance",
@@ -244,5 +244,72 @@
     "program_tone_controls_verified": false,
     "scope": "Custom file load, playback adoption, project save and reopened UI were verified. The earlier P3/T1 preset-route test separately covered absent source copies and matching audio exports. The Manual label is not evidence of Tone-only project dirty behavior.",
     "original_project_file_hashes_reverified": 11
+  },
+  "tone_only_followup": {
+    "project": "build/spu-vab-check.band",
+    "load_route": "Plugin Tone selector, operated by the user after the custom Load VAB P3/T0 verification",
+    "previous_program": 3,
+    "previous_tone": 0,
+    "user_selected_tone": 1,
+    "code_fix_made": false,
+    "gain_and_midi_region_unchanged": true,
+    "ui_observed_after_tone_change": {
+      "kind": "Embedded VAB",
+      "program": 3,
+      "tone": 1,
+      "gain_percent": 99,
+      "status_before_audio_block": "Ready. Waiting for an audio block.",
+      "status_after_garageband_playback": "Loaded. Play MIDI or the keyboard."
+    },
+    "playback_adoption_observed": true,
+    "save_prompt_on_quit_observed": true,
+    "save_selected_on_quit": true,
+    "main_process_exit_confirmed": true,
+    "saved_project_state": {
+      "report": "build/garageband-tone-ui-state.json",
+      "file": "build/spu-vab-check.band/Alternatives/000/ProjectData",
+      "file_bytes": 240528,
+      "file_sha256": "9bfbc573c786642d822731a75eef5f1a71c76c2e2d7a4030ecb6be9610ad1a6b",
+      "candidate_count": 1,
+      "conflicting_candidates": [],
+      "xml_offset": 118729,
+      "xml_end": 124394,
+      "xml_bytes": 5665,
+      "xml_sha256": "1cbbf226df02631d3518590d19f00b7bfa899adcbaf9142a819db9090086aef9",
+      "au_identity": {
+        "type": 1635085685,
+        "subtype": 1416851573,
+        "manufacturer": 1415935090
+      },
+      "au_version": 256,
+      "payload_bytes": 3784,
+      "payload_sha256": "272c96ddb52aaca232f2c95674ce6cf2c32a80d3144f36676a58ed0cfd652f2b",
+      "schema": 1,
+      "kind": "VAB",
+      "program": 3,
+      "tone": 1,
+      "gain_percent": 99.0,
+      "bank_bytes": 3744,
+      "bank_sha256": "71a7de205c0ebe1b8743288d90cd3b0204da9bd81aed9159af31f404d7cf2be6",
+      "matches_expected": true,
+      "exact_original_vab_match": true,
+      "active_binding_proven_by_extractor": false
+    },
+    "reopen_ui_verification": "confirmed",
+    "tone_only_project_dirty_proven": false,
+    "dirty_limitation": "The pre-change project clean baseline was not independently established, so the quit-time Save prompt is not treated as proof of Tone-only dirty notification.",
+    "program_control_verified": false,
+    "scope": "User Tone selection, audio-block adoption, embedded state saving and reopened UI were verified separately from the earlier preset and custom-file load routes. These values describe the end of Tone-selector verification, before subsequent Program-selector checks. Tone-only project dirty behavior remains unverified.",
+    "verification_checkpoint": "End of Tone-selector verification, before subsequent Program-selector checks",
+    "saved_quit_and_reopened": true,
+    "ui_observed_after_reopen": {
+      "kind": "Embedded VAB",
+      "program": 3,
+      "tone": 1,
+      "gain_percent": 99,
+      "status": "Project sound restored."
+    },
+    "recording_and_playback_stopped_after_reopen": true,
+    "editor_open_at_checkpoint": true
   }
 }

@@ -59,11 +59,11 @@ python3 scripts/install_au.py --rollback build/au-backups/au-update-htc4qhrw/man
   保存後はこのcopyを移動し、元pathなしでprojectが復元されることを確認する。
 - project内のAU plistとembedded bank bytesの比較、前後のWAVE出力も可能な範囲で検査する。
 
-読み取り専用の確認入口:
+Tone検証終了時の状態を照合する、読み取り専用の確認入口:
 
 ```sh
 python3 scripts/check_garageband_vab_state.py build/spu-vab-check.band \
-  --expected-vab tests/fixtures/vab/spu-synth-demo.vab --program 3 --tone 0 --gain 99
+  --expected-vab tests/fixtures/vab/spu-synth-demo.vab --program 3 --tone 1 --gain 99
 ```
 
 これは観測したAU XML断片を検査し、GarageBand全containerや候補のactive bindingを断定しない。
@@ -137,7 +137,7 @@ FFTでも同じ帯域を確認した。これはデジタル書き出しの解�
 - 保存済みP3/T1からP3/T0へ変わり、独自loader経由の読込を識別できた。
   `scripts/check_garageband_vab_state.py`を`--program 3 --tone 0 --gain 99`で実行し、
   candidate 1件・conflict 0件、embedded bank3744 bytesがfixtureと完全一致した。
-  最新reportは`build/garageband-vab-ui-state.json`。
+  この時点のreportは`build/garageband-vab-ui-state.json`。
   payload3784 bytesのSHA-256は`f1fa0a3a18ec5e660d7266ee509b6c7f818c9e2c76a04d11fa6d70f1111bae10`、
   `Alternatives/000/ProjectData`は`4e0389c4d67c3913df2a56c5442870bf155790eb3e77c569113fa9277b986496`。
 - 保存してGarageBandを終了し、main processの終了を確認した。終了後の保存stateも同じP3/T0とpayload SHAだった。
@@ -148,7 +148,25 @@ FFTでも同じ帯域を確認した。これはデジタル書き出しの解�
 - host preset表示の`Manual`への変化は観測したが、Toneだけの変更やproject dirtyの証拠とは扱わない。
   保存状態の変化と、DAWが自動的に変更済みと判断することは分けて検証する。
 
-残る確認は、Program/Tone操作、Toneだけのproject dirty、dialog / popup中のeditor close/reopen。
-独自file選択から保存・再起動後のUI復元までは確認済み。今回は不具合修正がなく、既存の自動検証は繰り返していない。
+## Tone selector経由の追試
+
+- 独自Load後のP3/T0から、ユーザーがTone 1を選択した。CUAでもP3/T1/Gain99と
+  `Ready. Waiting for an audio block.`を確認した。
+- GainとMIDI regionは変更せず、GarageBandを短時間再生して停止した。editorを再表示し、
+  `Loaded. Play MIDI or the keyboard.`を確認した。
+- Quit時の保存確認でSaveを選び、GarageBand main processの終了を確認した。
+  保存後の`build/garageband-tone-ui-state.json`はcandidate 1件・conflict 0件、
+  P3/T1/Gain99、full bank3744 bytesがfixtureと完全一致した。
+  payload SHA-256は`272c96ddb52aaca232f2c95674ce6cf2c32a80d3144f36676a58ed0cfd652f2b`、
+  `Alternatives/000/ProjectData`は`9bfbc573c786642d822731a75eef5f1a71c76c2e2d7a4030ecb6be9610ad1a6b`。
+- 再起動後、AXで録音・再生停止を確認してSettingsを開き、CUAで
+  Embedded VAB / P3 / T1 / Gain99 / `Project sound restored.`を確認した。
+  これはTone検証終了時の状態であり、後続のProgram操作の結果とは分けて記録する。
+- Tone変更直前のprojectがcleanだったことを独立に確認できていないため、
+  Quit時の保存確認だけでTone-onlyのproject dirtyが証明されたとは扱わない。
+
+残る確認は、Program操作、Toneだけのproject dirty、dialog / popup中のeditor close/reopen。
+独自file選択とTone選択について、保存・再起動後のUI復元まで確認済み。
+今回は不具合修正がなく、既存の自動検証は繰り返していない。
 
 物理的な実聴・長時間realtime試験、署名・公証・Release公開とは区別する。

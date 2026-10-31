@@ -1,5 +1,16 @@
 # 作業記録
 
+## 2026-10-31 JST — Tone個別変更の保存・再起動後復元も確認
+
+- ユーザーがTone 1を選択。CUAでもEmbedded VAB/P3/T1/Gain99とReady表示を確認した。
+- GarageBandで既存MIDIを短時間再生し停止、editor再表示でLoadedを確認した。
+  Gain・regionの内容は変更していない。終了時の保存確認でSaveを選び、main process終了を確認した。
+- `build/garageband-tone-ui-state.json`でfull bank3744 bytes一致、P3/T1/Gain99、candidate1/conflict0を確認。
+  payload3784 bytesのSHA-256は`272c96ddb52aaca232f2c95674ce6cf2c32a80d3144f36676a58ed0cfd652f2b`。
+- GarageBandでcopyを再起動し、録音・再生停止、AU画面でP3/T1/Gain99/Project sound restored.を確認した。
+- Toneだけの切替・保存・復元は成功。前述の基準問題があるため、Tone-only dirtyは依然未確認。
+- 次はProgram 11→3の各切替でTone 0になるかをユーザーへ依頼した。code/installed AUは変更していない。
+
 ## 2026-10-31 JST — Tone選択は人の入力待ち、dirtyの基準を分離
 
 - 開始TODOを`3057dd6`へ保存してpushした。AU画面はP3/T0/Gain99の復元状態。
