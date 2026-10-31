@@ -1,5 +1,14 @@
 # 作業記録
 
+## 2026-10-31 JST — embedded DAW stateのCIも成功
+
+- 実装 `57a710923af41c7e60971c1e73aa48e7101977b0` をorigin/mainへpushした。
+- [CI 41189325333](https://github.com/kyorohiro/tetorica-spu-plugin/actions/runs/41189325333) 全job成功。
+  Linux / macOS各5 suite、APP/AU/VST3 build、auval、公式VST3、実VST3、追加の実AU state試験が成功。
+- CI 18:35:33〜18:39:16 JST。artifactとsource SHAは[embedded state記録](embedded_state_20261031.md)に保存。
+- 次はVABファイル選択・Program/Tone・状態表示のUIと、実DAWでの操作→保存→再起動→復元確認。
+- stateは埋め込みbankを持ち、外部pathを必要としない。現時点で画面からのVAB読み込みはまだ公開していない。
+
 ## 2026-10-31 JST — embedded DAW stateのローカル検証完了
 
 - 開始TODO `ba2b656` をcommit / pushしてから実装した。

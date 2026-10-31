@@ -97,9 +97,38 @@ sh scripts/check_au_state.sh build/macos/out/TetoricaSPU.component
 ASan/TSanは前回の`build/asan-handoff` / `build/tsan-handoff`を再configureし、
 `instrument_state_test spu_engine_exchange_test`をbuildして、
 `ctest --test-dir ... -R '^spu.(instrument.state|engine.exchange)$' --output-on-failure`で実行した。
-CI結果とsource commitはpush後に追記する。
+
+## GitHub保存・CI
+
+- 開始TODO `ba2b656`、実装 `57a710923af41c7e60971c1e73aa48e7101977b0`。origin/mainへpush済み。
+- [Verify SPU Plugin / 41189325333](https://github.com/kyorohiro/tetorica-spu-plugin/actions/runs/41189325333)
+  全job成功。Linux offline `124502646964`、macOS `124502647169`。
+- 2026-10-31 18:35:33〜18:39:16 JST。fresh runnerの各5 CTest suite、APP/AU/VST3 build、auval、
+  公式VST3、実VST3、今回追加の実AU state検証まで成功した。
+- artifact `macos-development-bundles`: ID `13038361338`、2,083,993 bytes、SHA-256
+  `0449225a9d8396961ef3cf131de8bf8a048fa4ec76474f0a916e3d6ba1c031e7`。
+  upload完了の記録であり、download後の実機試験・Release公開とは別。
+- ASan / TSanは上記ローカル実行の結果。今回のCI workflowには含めていない。
 
 ## 次の入口
 
 VABファイル選択、Program/Tone選択、読込状況・エラー、復元された音色のUI表示。
 その後、実DAWで操作→project保存→再起動→音色と選択UIの復元を確認する。
+
+次の実装前にTODOを更新し、以下を入口にする。固定vendorの調査のみ完了しており、UIは未実装。
+
+- `PromptForFile(..., EFileAction::Open, "vab", completion)`でcomplete VABを選ぶ。
+  macOSでは非同期なので、callbackの文字列をコピーし、editor closeで無効になる弱い寿命tokenを使う。
+  worker側で1 MiB capを確認してから読み、既存loaderへ接続する。pathは一時入力に留める。
+- Program/Toneはparameterに結び付かないbuttonと所有する`IPopupMenu`で選び、tagをsparse Program ID / Toneへ対応付ける。
+  `IVMenuButtonControl(kNoParameter)`は固定版でGetParamを参照するため使わない。
+- `OnIdle`でloader statusとadopted generationを読む。Readyは公開済み、Loadedはaudio採用済みとして表示する。
+  host restoreはUI threadとは限らないため、refresh flagから次のOnIdleでimmutable snapshotを読み直す。
+  表示更新のためにengineを再requestしない。
+- 既存720×360のGainとkeyboardを保ち、上部にLoad/Builtin・Program/Tone・statusを配置する。
+- UI起点の成功した公開だけ、UI threadでhostへ変更通知する。失敗・cancel・host restoreでは通知しない。
+  VST3は`GetComponentHandler()`からoptionalな`IComponentHandler2::setDirty(true)`を使う。
+  固定版の`InformHostOfPresetChange()`はVST3で空実装。
+  AUは`InformListeners(kAudioUnitProperty_ClassInfo, kAudioUnitScope_Global)`でcustom state変更を通知する。
+  AUのproject dirty判定とVST3 optional interfaceの対応はhost依存なので、DAWで確認する。
+  変更していないGainのautomationを代用しない。
