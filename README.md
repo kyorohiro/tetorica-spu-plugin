@@ -143,12 +143,32 @@ python3 scripts/install_au.py --install # New user-only AU; refuses differing ex
 python3 scripts/validate_au.py         # Wait for discovery, then run auval
 ```
 
+An explicit development update can replace a known previous AU after all audio
+hosts have quit. It verifies the previous record, retains full backups outside
+Components, stages the new bundle, and records a conditional rollback command.
+The ordinary `--install` still refuses a different existing bundle.
+
+```sh
+python3 -m unittest discover -s tests -p 'test_install_au.py' -v
+python3 scripts/install_au.py --update \
+  --expected docs/au_vab_garageband_20261031.json --backup-root build/au-backups
+# Use the printed manifest path to roll back; refuses an altered installation:
+python3 scripts/install_au.py --rollback build/au-backups/au-update-REPLACE/manifest.json
+```
+
 The destination is `~/Library/Audio/Plug-Ins/Components/TetoricaSPU.component`.
 This is an explicit test installation; the normal build still does not deploy.
 GarageBand lists it under **AU Instruments → Tetorica → TetoricaSPU → Stereo**.
 Local AU validation and a GarageBand MIDI-record/save/reopen/WAVE-export workflow
 were completed; physical listening and long realtime testing remain separate.
 See [the AU / GarageBand record](docs/au_garageband_20261031.md).
+
+The [VAB GarageBand check](docs/au_vab_garageband_20261031.md) used the host's
+standard AU preset loader to load an embedded VAB, save a copied project, quit,
+and reopen without the loaded preset file. Program/Tone/Gain were restored and
+the before/after exported PCM matched exactly. The original project and old AU
+were preserved. Remote AU custom-control clicks and Tone-only dirty behavior
+still need a direct user check; the verified host-preset route is separate.
 
 ## Prototype limits
 

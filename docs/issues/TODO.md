@@ -18,16 +18,20 @@ AU / GarageBandでの録音・保存・復元・WAVE書出しを追試済み。
 [音源交換・worker準備](../engine_handoff_20261031.md)も実装・検証済み。
 [embedded DAW state](../embedded_state_20261031.md)も実装済みで、[CI全job成功](https://github.com/kyorohiro/tetorica-spu-plugin/actions/runs/41189325333)。
 VAB file読込・Program/Tone UIを実装し、ローカル検証と[CI全job成功](https://github.com/kyorohiro/tetorica-spu-plugin/actions/runs/41191105787)。[今回の記録](../vab_ui_20261031.md)を参照。
-次は安全なAU更新と実DAWでのVAB操作・保存再起動・UI復元確認へ進む。
+AUを既知manifest照合付きで更新し、GarageBand標準AUプリセット経由でVAB保存・再起動・UI復元・PCM一致を確認した。
+[今回の記録](../au_vab_garageband_20261031.md)。次はAU独自ボタンの人によるclickと、Toneのみのdirty判定を確認する。
 
 ### AU更新・GarageBand VAB確認の今回の区切り（2026-10-31、実装前）
 
 - [x] 既存AUの既知manifestを照合し、退避・staging・更新・条件付きrollbackの手順を追加・検証する。
 - [x] GarageBandなどのhostを保存・停止し、既存bundleをComponents外へ保持したまま新版へ更新する。
-- [ ] 元の検証project全体を別copyにし、そのcopyでVAB読込・Program/Tone変更・dirty表示を確認する。
-- [ ] projectを保存・終了し、読み込み元の検証用VABを移動してから再起動し、音色と選択UIを確認する。
-- [ ] 可能なら前後の音声書出し・project内embedded stateを照合し、editor再表示と取消時の保持も確認する。
-- [ ] 必要な修正と回帰検査を行い、結果・復帰先・未確認項目をcommit / pushしてCIを確認する。
+- [x] 元の検証project全体と未保存状態を別copyへ保持する。
+- [x] GarageBand標準のAUプリセット読込から、VAB P3/T1/Gain99を読み、projectへ保存する。
+- [ ] copyのAU独自ボタンでVAB読込・Program/Tone変更・dirty表示を確認する（人によるclickの確認待ち、CUAではBuiltinも反応せず）。
+- [x] projectを保存・終了し、読み込み元の検証用aupresetとVAB copyを移動してから再起動し、音色と選択UIを確認する。
+- [x] 前後の音声書出し・project内embedded stateを照合する（PCM最大差0、bank bytes完全一致）。editor再表示も確認する。
+- [ ] dialog/popup中の取消・editor close/reopen時の保持を実DAWで確認する。
+- [x] 回帰検査を行い、結果・復帰先・未確認項目をcommit / pushしてCIを確認する。11 installer testsを含み全job成功。
 
 ユーザー自身の未保存projectが見つかった場合は勝手に閉じない。既存の`spu-au-check.band`は原本として保持する。
 更新は既知の旧manifestと一致する場合だけ行い、未知のAU・projectを上書きしない。
@@ -130,7 +134,7 @@ complete `.vab`を最初の対象とする。分割VH/VBの複数file dialogは�
 - [ ] Gain変更を滑らかにし、sample単位のautomationの扱いを検討する。
 - [ ] AUでrender thread以外から届くMIDIのbounded ingressを検証・対応する。現状のhost MIDI / lifecycle操作は単一consumerとして直列化される前提。
 - [ ] AU factory presetの名前を初期化し、auvalのpreset-name warningを解消する。
-- [ ] 今後のAU更新時は既存bundleと前回配置したhashを照合し、退避・更新できる手順を用意する（現在のinstallerは新規配置・同一内容の確認だけ）。
+- [x] AU更新時は既存bundleと前回配置したhashを照合し、退避・更新できる手順を用意する（explicit update / 条件付きrollback、11 tests、実更新済み）。
 
 ## Phase 3: VAB楽器と音作り
 
@@ -141,6 +145,7 @@ complete `.vab`を最初の対象とする。分割VH/VBの複数file dialogは�
 - [x] VAB読み込み、Program / Tone選択を追加する。
 - [x] サンプルを含む音色と設定のproject保存・復元を実装する。
 - [ ] 実DAWの画面からVABを読み、project保存・再起動・復元とUI表示を確認する（UI接続後）。
+- [x] GarageBand標準AUプリセット経由で、VAB embedded stateのproject保存・元fileなし再起動・UI復元・音声PCM一致を確認する。
 - [ ] VAB/Toneのみの変更でDAWがprojectを変更済みと扱うことを確認する。VST3はoptional setDirty、AUはpublic PresentPreset通知を使用中。
 - [ ] editorを開いたままのhost restoreと、file dialog / Program・Tone popup中のeditor close/reopenを実DAWで追試する。
 - [ ] 分割VH/VBのファイル選択を追加する（parserとoffline APIは対応済み）。

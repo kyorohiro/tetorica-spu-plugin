@@ -1,5 +1,22 @@
 # 作業記録
 
+## 2026-10-31 JST — GarageBand VAB保存・再起動とCI成功、独自clickは人の確認待ち
+
+- installer・state検査scriptを`ece046c`へ保存し、[CI 41192817552](https://github.com/kyorohiro/tetorica-spu-plugin/actions/runs/41192817552)は全job成功。
+  両OSのinstaller11 tests、各5 CTest、APP/AU/VST3、auval・公式/実VST3・実AU stateが成功した。
+- 既存AUはverified backup付きで更新済み。GarageBandで新UIとlegacy Gain99の復元を確認した。
+- CUAからAU独自Load VAB / Builtinへのclickはhoverだけが見え、statusは変化しなかった。
+  別processのAUHostingServiceへの入力経路の可能性があるが、原因は確定していない。
+  人によるLoad VABの一度のclickをasync質問した。根拠のないplugin初期化修正はしていない。
+- 独立して進められるGarageBand標準AU preset読込から、オリジナルVAB P3/T1/Gain99を読み、copy projectへ保存した。
+  projectのAU XML断片で1候補・bank3744 bytes完全一致、state3784 bytesを確認した。
+- loaded aupresetと検証用VAB copyを元pathから移動し、GarageBandを完全終了・再起動して同じ音色とUIを確認した。
+  前後の44.1kHz stereo PCM16（4秒）書出しは最大差0、差RMS0。
+  旧Builtinとは音程も変わり、選択Toneの予測値に一致した。実聴とは区別する。
+- 原本project全11 fileの開始時hash一致を最終確認。copyを保存し、録音・再生停止、AU editorを開いた状態で残した。
+- [詳細・復帰手順](au_vab_garageband_20261031.md)、[計測JSONと現installed manifest](au_vab_garageband_20261031.json)。
+- 次は人のLoad VAB / Program / Tone操作とToneのみdirtyの確認。今回のhost preset経路を独自ボタン検証済みとは扱わない。
+
 ## 2026-10-31 JST — 既存AUの退避・更新完了、DAW操作の前
 
 - installerの11テスト成功。既知manifest限定のupdate・verified backup・条件付きrollbackを追加した。

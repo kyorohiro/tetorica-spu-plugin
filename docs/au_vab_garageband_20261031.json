@@ -1,0 +1,171 @@
+{
+  "date_jst": "2026-10-31",
+  "verification_commit": "ece046ca100df90ed8dfa5e9d292282c17800937",
+  "plugin_ui_commit": "80f895cb462ebd1179398eb5562f24b3d8a006b8",
+  "au_update": {
+    "report": "build/au-backups/au-update-htc4qhrw/manifest.json",
+    "state": "installed",
+    "old_binary_sha256": "63f5db3316aebaa08d66937fa4342c4bdf2f7440f20420f02ef1c1ef681da625",
+    "new_binary_sha256": "af3da1d43f73a86d6008a3bb1c98a363d104dfea5d0db367d9467db2d9a04bb5",
+    "old_original_and_copy_verified": true,
+    "new_installed_verified": true,
+    "temporary_directory_installer_tests": 11,
+    "real_rollback_executed": false,
+    "auval_success": true,
+    "auval_required_outside_sandbox": true
+  },
+  "garageband": {
+    "version": "10.4.12",
+    "project": "build/spu-vab-check.band",
+    "original_project": "build/spu-au-check.band",
+    "original_backup": "build/spu-au-original-20261031.band",
+    "original_file_hashes_preserved": 11,
+    "pending_original_changes_preserved_with_save_as": true,
+    "load_route": "GarageBand AU toolbar > Advanced > Load own .aupreset, not the plugin Load VAB button",
+    "loaded_preset": "build/ui-check/garageband-p3-t1.aupreset",
+    "loaded_preset_absent_at_reopen": true,
+    "test_vab_copy_absent_at_reopen": true,
+    "source_copies_retained_at": "build/garageband-source-away",
+    "saved_quit_and_reopened": true,
+    "ui_observed_after_reopen": {
+      "kind": "Embedded VAB",
+      "program": 3,
+      "tone": 1,
+      "gain_percent": 99
+    },
+    "recording_and_playback_stopped": true,
+    "final_editor_open": true
+  },
+  "project_xml_evidence": {
+    "candidate_count": 1,
+    "conflicting_candidates": [],
+    "candidate": {
+      "file": "build/spu-vab-check.band/Alternatives/000/ProjectData",
+      "xml_offset": 118729,
+      "xml_end": 124394,
+      "xml_bytes": 5665,
+      "xml_sha256": "1cbbf226df02631d3518590d19f00b7bfa899adcbaf9142a819db9090086aef9",
+      "au_identity": {
+        "type": 1635085685,
+        "subtype": 1416851573,
+        "manufacturer": 1415935090
+      },
+      "au_version": 256,
+      "payload_bytes": 3784,
+      "payload_sha256": "272c96ddb52aaca232f2c95674ce6cf2c32a80d3144f36676a58ed0cfd652f2b",
+      "schema": 1,
+      "kind": "VAB",
+      "program": 3,
+      "tone": 1,
+      "gain_percent": 99.0,
+      "bank_bytes": 3744,
+      "bank_sha256": "71a7de205c0ebe1b8743288d90cd3b0204da9bd81aed9159af31f404d7cf2be6",
+      "matches_expected": true
+    },
+    "exact_original_vab_match": true,
+    "active_binding_proven_by_extractor": false,
+    "scope": "XML fragment inspection is paired with GUI reopen and digital audio exports; not a GarageBand container decoder."
+  },
+  "export_comparison": {
+    "exports": [
+      {
+        "sample_rate": 44100,
+        "channels": 2,
+        "sample_bytes": 2,
+        "frames": 176400,
+        "file": "spu-vab-before.wav",
+        "sha256": "bc56cbdad437e84ff6d92eac3080a15a3b32e4de474ed75f8912ad4622fd8d34",
+        "peak": 0.988494873046875,
+        "rms": 0.49054809454776194
+      },
+      {
+        "sample_rate": 44100,
+        "channels": 2,
+        "sample_bytes": 2,
+        "frames": 176400,
+        "file": "spu-vab-after.wav",
+        "sha256": "a992c9eb6fd70a7e8797beb192a4b1fbe6eefcbdbc92341106ff77421062c45e",
+        "peak": 0.988494873046875,
+        "rms": 0.49054809454776194
+      }
+    ],
+    "max_difference_pcm16": 0,
+    "rms_difference": 0.0,
+    "passed": true,
+    "scope": "GarageBand exports include host effects and output processing; not a physical loopback or an absolute Gain calibration."
+  },
+  "independent_pitch_hz": {
+    "windows_seconds": [
+      [
+        0.2,
+        0.6
+      ],
+      [
+        0.9,
+        1.3
+      ],
+      [
+        1.7,
+        2.1
+      ]
+    ],
+    "positive_crossings_vab": [
+      202.642467,
+      227.442697,
+      255.313573
+    ],
+    "positive_crossings_previous_builtin": [
+      130.8373,
+      146.788165,
+      164.766737
+    ],
+    "expected_from_selected_tone": [
+      202.642822,
+      227.444458,
+      255.322266
+    ],
+    "scope": "Digital export analysis, not physical listening or absolute Gain calibration."
+  },
+  "ci": {
+    "id": 41192817552,
+    "url": "https://github.com/kyorohiro/tetorica-spu-plugin/actions/runs/41192817552",
+    "source_commit": "ece046ca100df90ed8dfa5e9d292282c17800937",
+    "conclusion": "success",
+    "started_at_jst": "2026-10-31T19:27:23+09:00",
+    "completed_at_jst": "2026-10-31T19:31:22+09:00",
+    "jobs": {
+      "macos": 124512904335,
+      "offline": 124512904442
+    },
+    "artifact": {
+      "id": 13039677346,
+      "name": "macos-development-bundles",
+      "size_in_bytes": 2152962,
+      "digest": "sha256:c2a667e4253008c593e0748ff7088fc339bd27b558ccb45483b635b718c1c0dc",
+      "downloaded_and_runtime_tested": false
+    }
+  },
+  "not_verified": [
+    "Plugin Load VAB / Program / Tone clicks in the remote GarageBand AU view; CUA hover works but both Load and Builtin actions did not respond, cause not established",
+    "Project dirty notification from a plugin Tone-only edit",
+    "Closing the AU editor while its file dialog or popup is open",
+    "Physical listening, loopback and long realtime endurance",
+    "Signing, notarization and Release distribution"
+  ],
+  "au": {
+    "installed_to": "~/Library/Audio/Plug-Ins/Components/TetoricaSPU.component",
+    "file_sha256": {
+      "Contents/Info.plist": "94a46fcfc638d76a05aca50d5deedaff2a7a934aee55a816d007b6dff9c9bbc4",
+      "Contents/MacOS/TetoricaSPU": "af3da1d43f73a86d6008a3bb1c98a363d104dfea5d0db367d9467db2d9a04bb5",
+      "Contents/PkgInfo": "d06a80ba92de0833d0ed03de1b02b7c8913f126d9e8c8931b190765dd5d83b11",
+      "Contents/Resources/Roboto-Regular.ttf": "b2efabca5ea4bc56eea829713706b5cd0788b82aca153bd4adde9b1573933b4f",
+      "Contents/Resources/THIRD_PARTY_NOTICES.txt": "d0686ed57334f5bc617481e976e6d220822dba8fc93b8dd51246455bb818db6e"
+    },
+    "component": {
+      "type": "aumu",
+      "subtype": "Tspu",
+      "manufacturer": "Tetr",
+      "version": 256
+    }
+  }
+}
