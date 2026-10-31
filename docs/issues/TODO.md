@@ -38,12 +38,12 @@ PCMの4波形・自由描画・Apply / Revertも実装し、実AU/VST3とStandal
 - [x] 既存parameter ID0〜16を維持し、Noise Enabled17 / Clock18を追加する。schema5に保存し、旧schema1〜4・Gain-onlyをNoise Off / clock48で復元する。不正stateは全設定・現音源・正常pendingを保つ。
 - [x] 元sampleとprivate loopを非audioで読み込み・cache準備し、mode / clock切替・発音・renderでC++確保/破棄を行わない。ADSR / Reverbのregister bitsを壊さず、clock変更では保持音・sample位置をresetしない。
 - [x] coreでlive clock / pitch非追従 / private loop / 24voices / reset・panic / 分割一致 / RT確保と初期Sine byte一致を検証する。
-- [ ] 実AU/VST3の19parameter保存・復元・旧形式・automation・不正state保持を検証し、Sourceページの実操作を確認する。build / CTest / validator / CIと結果をcommit / pushする。
-- [ ] 初回Noise CIのmacOS14 jobが公式brownoutで実行前cancelledとなったため、workflowをmacos-15へ移し、新runで全検証する。初回Offline8/8成功と未実行macOSを記録に残す。
-- [ ] host保存・終了と既知manifest照合後にinstalled AUを更新し、GarageBandの旧schema4互換と設定復元を確認する。
+- [x] 実AU/VST3の19parameter保存・復元・旧形式・automation・不正state保持を検証し、Sourceページの実操作を確認する。build / CTest / validator / CIと結果をcommit / pushする（実装`e43d031`、runner移行`3c10dfd`、[CI全job成功](https://github.com/kyorohiro/tetorica-spu-plugin/actions/runs/41210254431)）。
+- [x] 初回Noise CIのmacOS14 jobが公式brownoutで実行前cancelledとなったため、workflowをmacos-15へ移し、新runで全検証する。初回Offline8/8成功と未実行macOSを記録に残す。
+- [x] host保存・終了と既知manifest照合後にinstalled AUを更新し、GarageBandの旧schema4互換と設定復元を確認する（`au-update-j01640dh`、P3/T0/Gain99、schema4payload3816bytes一致、原本11files不変）。
 
 今回のNoiseは既存sourceを保持する共有モード。VAB sample255の自動Noise Tone再構築、PMON、NoiseのNoteへの調律は追加しない。
-開始時点は`35d0a0d`、main / origin同期・clean tree。最終AU既知manifestは[PCM記録](../pcm_waveform_20261031.json)。
+開始時点は`35d0a0d`、main / origin同期・clean tree。今回の最終AU既知manifestは[Noise記録](../noise_20261031.json)。
 
 ### PCM波形選択・描画の今回の区切り（2026-10-31、実装前）
 

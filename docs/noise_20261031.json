@@ -125,7 +125,9 @@
       "Clock default48, typed23 and page roundtrip retains23",
       "Sample returns original Builtin and unapplied Triangle draft",
       "Repeated Sample/Noise toggles work after Escape closes numeric entry"
-    ]
+    ],
+    "auval_succeeded": true,
+    "auval_known_warning": "Preset name is not retained in retrieved class data"
   },
   "resolved_validation_findings": [
     "Private host-loop overwrote physical repeat registers; restore after warm, Noise off and before first physical KON. Original markerless/R31/all24/idle regression now exact without threshold changes.",
@@ -232,6 +234,12 @@
         "Release focused CTest 4/4 PASS 2.66 s; details ../Testing/Temporary/LastTest.log",
         "ASan full CTest 8/8 PASS 28.85 s; details ../../noise-asan/Testing/Temporary/LastTest.log"
       ]
+    },
+    "build/noise-auval.log": {
+      "sha256": "b0de67d765d05382393587173830344f48fa4a918e8c3eb8c21df34faf6a5d36",
+      "pass_lines": [
+        "AU VALIDATION SUCCEEDED."
+      ]
     }
   },
   "au": {
@@ -243,8 +251,18 @@
       "Contents/Resources/Roboto-Regular.ttf": "b2efabca5ea4bc56eea829713706b5cd0788b82aca153bd4adde9b1573933b4f",
       "Contents/Resources/THIRD_PARTY_NOTICES.txt": "d0686ed57334f5bc617481e976e6d220822dba8fc93b8dd51246455bb818db6e"
     },
-    "installed": false,
-    "previous_expected_record": "docs/pcm_waveform_20261031.json"
+    "installed": true,
+    "previous_expected_record": "docs/pcm_waveform_20261031.json",
+    "update_report": "build/au-backups/au-update-j01640dh/manifest.json",
+    "old_file_sha256": {
+      "Contents/Info.plist": "94a46fcfc638d76a05aca50d5deedaff2a7a934aee55a816d007b6dff9c9bbc4",
+      "Contents/MacOS/TetoricaSPU": "506642967e747e3bcc54aea8171cc919dcfb40d87d9a1b84ba377b49afda98c3",
+      "Contents/PkgInfo": "d06a80ba92de0833d0ed03de1b02b7c8913f126d9e8c8931b190765dd5d83b11",
+      "Contents/Resources/Roboto-Regular.ttf": "b2efabca5ea4bc56eea829713706b5cd0788b82aca153bd4adde9b1573933b4f",
+      "Contents/Resources/THIRD_PARTY_NOTICES.txt": "d0686ed57334f5bc617481e976e6d220822dba8fc93b8dd51246455bb818db6e"
+    },
+    "backup_and_archive_verified": true,
+    "rollback_executed": false
   },
   "garageband": {
     "project": "build/spu-vab-check.band",
@@ -256,10 +274,882 @@
     "payload_sha256_before": "e0971a317d2774d23d4a68d502984bea432031865cfabcac0d8fb2f788c60e9f",
     "program": 3,
     "tone": 0,
-    "gain_percent": 99
+    "gain_percent": 99,
+    "after_report": "build/noise-au-project-after.json",
+    "after_report_sha256": "969922d04b4d0c9812d6d5632d3c31cb674c386914fb9a9f06a0da4464db8777",
+    "schema_after": 4,
+    "payload_bytes_after": 3816,
+    "payload_sha256_after": "e0971a317d2774d23d4a68d502984bea432031865cfabcac0d8fb2f788c60e9f",
+    "payload_unchanged_after_update": true,
+    "original_project_start_manifest_files_unchanged": 11,
+    "gui": [
+      "Embedded VAB / Program3 / Tone0 / Gain99 / Project sound restored",
+      "New Source/ADSR/Reverb page buttons",
+      "Reverb Off / Return L25 R25 / All notes",
+      "Recording and playback stopped, AU editor open"
+    ]
   },
   "ci": {
-    "status": "pending-push"
+    "schema": 1,
+    "repository": "kyorohiro/tetorica-spu-plugin",
+    "implementation_sha": "e43d031f22d6c6b260d5fdc230c3527250531234",
+    "source_sha": "3c10dfd3e38b80799da49d3bb296b2cbe3d4a328",
+    "runner_migration": {
+      "old": "macos-14",
+      "new": "macos-15",
+      "commit": "3c10dfd3e38b80799da49d3bb296b2cbe3d4a328",
+      "production_and_lock_unchanged": true,
+      "verified_changed_paths": [
+        ".github/workflows/verify.yml",
+        "docs/issues/TODO.md",
+        "docs/progress.md"
+      ]
+    },
+    "run": {
+      "conclusion": "success",
+      "created_at": "2026-10-31T14:28:07Z",
+      "event": "push",
+      "head_sha": "3c10dfd3e38b80799da49d3bb296b2cbe3d4a328",
+      "html_url": "https://github.com/kyorohiro/tetorica-spu-plugin/actions/runs/41210254431",
+      "id": 41210254431,
+      "name": "Verify SPU Plugin",
+      "run_attempt": 1,
+      "run_started_at": "2026-10-31T14:28:07Z",
+      "status": "completed",
+      "updated_at": "2026-10-31T14:32:15Z"
+    },
+    "jobs": [
+      {
+        "completed_at": "2026-10-31T14:28:40Z",
+        "conclusion": "success",
+        "html_url": "https://github.com/kyorohiro/tetorica-spu-plugin/actions/runs/41210254431/job/124563573205",
+        "id": 124563573205,
+        "labels": [
+          "ubuntu-24.04"
+        ],
+        "name": "offline",
+        "runner_name": "GitHub Actions 1000011650",
+        "started_at": "2026-10-31T14:28:11Z",
+        "status": "completed",
+        "steps": [
+          {
+            "completed_at": "2026-10-31T14:28:12Z",
+            "conclusion": "success",
+            "name": "Set up job",
+            "number": 1,
+            "started_at": "2026-10-31T14:28:12Z",
+            "status": "completed"
+          },
+          {
+            "completed_at": "2026-10-31T14:28:13Z",
+            "conclusion": "success",
+            "name": "Run actions/checkout@v4",
+            "number": 2,
+            "started_at": "2026-10-31T14:28:12Z",
+            "status": "completed"
+          },
+          {
+            "completed_at": "2026-10-31T14:28:14Z",
+            "conclusion": "success",
+            "name": "Verify safe AU installer in temporary directories",
+            "number": 3,
+            "started_at": "2026-10-31T14:28:13Z",
+            "status": "completed"
+          },
+          {
+            "completed_at": "2026-10-31T14:28:15Z",
+            "conclusion": "success",
+            "name": "Initialize pinned native SDK",
+            "number": 4,
+            "started_at": "2026-10-31T14:28:14Z",
+            "status": "completed"
+          },
+          {
+            "completed_at": "2026-10-31T14:28:18Z",
+            "conclusion": "success",
+            "name": "Run cmake --preset offline",
+            "number": 5,
+            "started_at": "2026-10-31T14:28:15Z",
+            "status": "completed"
+          },
+          {
+            "completed_at": "2026-10-31T14:28:33Z",
+            "conclusion": "success",
+            "name": "Run cmake --build --preset offline --parallel 4",
+            "number": 6,
+            "started_at": "2026-10-31T14:28:18Z",
+            "status": "completed"
+          },
+          {
+            "completed_at": "2026-10-31T14:28:38Z",
+            "conclusion": "success",
+            "name": "Run ctest --preset offline",
+            "number": 7,
+            "started_at": "2026-10-31T14:28:33Z",
+            "status": "completed"
+          },
+          {
+            "completed_at": "2026-10-31T14:28:38Z",
+            "conclusion": "success",
+            "name": "Post Run actions/checkout@v4",
+            "number": 14,
+            "started_at": "2026-10-31T14:28:38Z",
+            "status": "completed"
+          },
+          {
+            "completed_at": "2026-10-31T14:28:38Z",
+            "conclusion": "success",
+            "name": "Complete job",
+            "number": 15,
+            "started_at": "2026-10-31T14:28:38Z",
+            "status": "completed"
+          }
+        ]
+      },
+      {
+        "completed_at": "2026-10-31T14:32:15Z",
+        "conclusion": "success",
+        "html_url": "https://github.com/kyorohiro/tetorica-spu-plugin/actions/runs/41210254431/job/124563573370",
+        "id": 124563573370,
+        "labels": [
+          "macos-15"
+        ],
+        "name": "macos",
+        "runner_name": "GitHub Actions 1000011651",
+        "started_at": "2026-10-31T14:28:11Z",
+        "status": "completed",
+        "steps": [
+          {
+            "completed_at": "2026-10-31T14:28:13Z",
+            "conclusion": "success",
+            "name": "Set up job",
+            "number": 1,
+            "started_at": "2026-10-31T14:28:12Z",
+            "status": "completed"
+          },
+          {
+            "completed_at": "2026-10-31T14:28:14Z",
+            "conclusion": "success",
+            "name": "Run actions/checkout@v4",
+            "number": 2,
+            "started_at": "2026-10-31T14:28:13Z",
+            "status": "completed"
+          },
+          {
+            "completed_at": "2026-10-31T14:28:15Z",
+            "conclusion": "success",
+            "name": "Verify safe AU installer in temporary directories",
+            "number": 3,
+            "started_at": "2026-10-31T14:28:14Z",
+            "status": "completed"
+          },
+          {
+            "completed_at": "2026-10-31T14:28:26Z",
+            "conclusion": "success",
+            "name": "Initialize and verify pinned dependencies",
+            "number": 4,
+            "started_at": "2026-10-31T14:28:15Z",
+            "status": "completed"
+          },
+          {
+            "completed_at": "2026-10-31T14:28:26Z",
+            "conclusion": "success",
+            "name": "Run python3 scripts/bootstrap.py --check",
+            "number": 5,
+            "started_at": "2026-10-31T14:28:26Z",
+            "status": "completed"
+          },
+          {
+            "completed_at": "2026-10-31T14:28:33Z",
+            "conclusion": "success",
+            "name": "Run cmake --preset macos",
+            "number": 6,
+            "started_at": "2026-10-31T14:28:26Z",
+            "status": "completed"
+          },
+          {
+            "completed_at": "2026-10-31T14:30:43Z",
+            "conclusion": "success",
+            "name": "Run cmake --build --preset macos --parallel 4",
+            "number": 7,
+            "started_at": "2026-10-31T14:28:33Z",
+            "status": "completed"
+          },
+          {
+            "completed_at": "2026-10-31T14:30:48Z",
+            "conclusion": "success",
+            "name": "Run ctest --preset macos",
+            "number": 8,
+            "started_at": "2026-10-31T14:30:43Z",
+            "status": "completed"
+          },
+          {
+            "completed_at": "2026-10-31T14:30:55Z",
+            "conclusion": "success",
+            "name": "Install and validate the user AU",
+            "number": 9,
+            "started_at": "2026-10-31T14:30:48Z",
+            "status": "completed"
+          },
+          {
+            "completed_at": "2026-10-31T14:31:34Z",
+            "conclusion": "success",
+            "name": "Validate VST3",
+            "number": 10,
+            "started_at": "2026-10-31T14:30:55Z",
+            "status": "completed"
+          },
+          {
+            "completed_at": "2026-10-31T14:32:04Z",
+            "conclusion": "success",
+            "name": "Render and restore the actual VST3",
+            "number": 11,
+            "started_at": "2026-10-31T14:31:34Z",
+            "status": "completed"
+          },
+          {
+            "completed_at": "2026-10-31T14:32:07Z",
+            "conclusion": "success",
+            "name": "Restore embedded state in the actual AU",
+            "number": 12,
+            "started_at": "2026-10-31T14:32:04Z",
+            "status": "completed"
+          },
+          {
+            "completed_at": "2026-10-31T14:32:09Z",
+            "conclusion": "success",
+            "name": "Run actions/upload-artifact@v4",
+            "number": 13,
+            "started_at": "2026-10-31T14:32:07Z",
+            "status": "completed"
+          },
+          {
+            "completed_at": "2026-10-31T14:32:11Z",
+            "conclusion": "success",
+            "name": "Post Run actions/checkout@v4",
+            "number": 26,
+            "started_at": "2026-10-31T14:32:09Z",
+            "status": "completed"
+          },
+          {
+            "completed_at": "2026-10-31T14:32:12Z",
+            "conclusion": "success",
+            "name": "Complete job",
+            "number": 27,
+            "started_at": "2026-10-31T14:32:11Z",
+            "status": "completed"
+          }
+        ]
+      }
+    ],
+    "artifacts": [
+      {
+        "created_at": "2026-10-31T14:32:09Z",
+        "digest": "sha256:c863bf24d3b1cdead38ff431c51de1177e8256db853444b0d1ffef669eef9e4c",
+        "expired": false,
+        "id": 13046032379,
+        "name": "macos-development-bundles",
+        "size_in_bytes": 2244585,
+        "updated_at": "2026-10-31T14:32:09Z"
+      }
+    ],
+    "prior_attempts": [
+      {
+        "run": {
+          "conclusion": "cancelled",
+          "created_at": "2026-10-31T14:24:05Z",
+          "event": "push",
+          "head_sha": "e43d031f22d6c6b260d5fdc230c3527250531234",
+          "html_url": "https://github.com/kyorohiro/tetorica-spu-plugin/actions/runs/41209955649",
+          "id": 41209955649,
+          "name": "Verify SPU Plugin",
+          "run_attempt": 1,
+          "run_started_at": "2026-10-31T14:24:05Z",
+          "status": "completed",
+          "updated_at": "2026-10-31T14:24:45Z"
+        },
+        "jobs": [
+          {
+            "completed_at": "2026-10-31T14:24:44Z",
+            "conclusion": "success",
+            "html_url": "https://github.com/kyorohiro/tetorica-spu-plugin/actions/runs/41209955649/job/124562669229",
+            "id": 124562669229,
+            "name": "offline",
+            "started_at": "2026-10-31T14:24:09Z",
+            "status": "completed",
+            "steps": [
+              {
+                "completed_at": "2026-10-31T14:24:10Z",
+                "conclusion": "success",
+                "name": "Set up job",
+                "number": 1,
+                "started_at": "2026-10-31T14:24:10Z",
+                "status": "completed"
+              },
+              {
+                "completed_at": "2026-10-31T14:24:11Z",
+                "conclusion": "success",
+                "name": "Run actions/checkout@v4",
+                "number": 2,
+                "started_at": "2026-10-31T14:24:10Z",
+                "status": "completed"
+              },
+              {
+                "completed_at": "2026-10-31T14:24:12Z",
+                "conclusion": "success",
+                "name": "Verify safe AU installer in temporary directories",
+                "number": 3,
+                "started_at": "2026-10-31T14:24:11Z",
+                "status": "completed"
+              },
+              {
+                "completed_at": "2026-10-31T14:24:13Z",
+                "conclusion": "success",
+                "name": "Initialize pinned native SDK",
+                "number": 4,
+                "started_at": "2026-10-31T14:24:12Z",
+                "status": "completed"
+              },
+              {
+                "completed_at": "2026-10-31T14:24:16Z",
+                "conclusion": "success",
+                "name": "Run cmake --preset offline",
+                "number": 5,
+                "started_at": "2026-10-31T14:24:13Z",
+                "status": "completed"
+              },
+              {
+                "completed_at": "2026-10-31T14:24:38Z",
+                "conclusion": "success",
+                "name": "Run cmake --build --preset offline --parallel 4",
+                "number": 6,
+                "started_at": "2026-10-31T14:24:16Z",
+                "status": "completed"
+              },
+              {
+                "completed_at": "2026-10-31T14:24:42Z",
+                "conclusion": "success",
+                "name": "Run ctest --preset offline",
+                "number": 7,
+                "started_at": "2026-10-31T14:24:38Z",
+                "status": "completed"
+              },
+              {
+                "completed_at": "2026-10-31T14:24:42Z",
+                "conclusion": "success",
+                "name": "Post Run actions/checkout@v4",
+                "number": 14,
+                "started_at": "2026-10-31T14:24:42Z",
+                "status": "completed"
+              },
+              {
+                "completed_at": "2026-10-31T14:24:42Z",
+                "conclusion": "success",
+                "name": "Complete job",
+                "number": 15,
+                "started_at": "2026-10-31T14:24:42Z",
+                "status": "completed"
+              }
+            ]
+          },
+          {
+            "completed_at": "2026-10-31T14:24:07Z",
+            "conclusion": "cancelled",
+            "html_url": "https://github.com/kyorohiro/tetorica-spu-plugin/actions/runs/41209955649/job/124562669493",
+            "id": 124562669493,
+            "name": "macos",
+            "started_at": "2026-10-31T14:24:06Z",
+            "status": "completed",
+            "steps": []
+          }
+        ],
+        "reason": "GitHub scheduled macOS 14 runner-image brownout. macOS job was cancelled before runner assignment and had no steps; plugin build/tests did not run on macOS in this attempt.",
+        "annotation": {
+          "annotation_level": "failure",
+          "message": "\"This job failed because of a scheduled macOS 14 runner image brownout. macOS 14 runner images will be retired on November 2, 2026. For migration options and the brownout schedule, see https://github.com/actions/runner-images/issues/13518\"",
+          "api": "https://api.github.com/repos/kyorohiro/tetorica-spu-plugin/check-runs/124562669493/annotations"
+        },
+        "official_notice": "https://github.com/actions/runner-images/issues/13518",
+        "scheduled_window_utc": "2026-10-31T14:00:00Z/2026-11-01T00:00:00Z",
+        "offline_installer_tests_passed": 11,
+        "offline_ctest_passed": 8,
+        "offline_log_evidence": [
+          "2026-10-31T14:24:12.0176618Z Ran 11 tests in 0.132s",
+          "2026-10-31T14:24:12.0178068Z OK",
+          "2026-10-31T14:24:38.8758809Z 1/8 Test #1: spu.noise ........................   Passed    0.29 sec",
+          "2026-10-31T14:24:38.8843710Z 2/8 Test #2: spu.pcm.draft ....................   Passed    0.00 sec",
+          "2026-10-31T14:24:39.7311773Z 3/8 Test #3: spu.waveform .....................   Passed    0.85 sec",
+          "2026-10-31T14:24:40.8683185Z 4/8 Test #4: spu.instrument ...................   Passed    1.14 sec",
+          "2026-10-31T14:24:40.8958917Z 5/8 Test #5: spu.vab.bank .....................   Passed    0.03 sec",
+          "2026-10-31T14:24:41.8089872Z 6/8 Test #6: spu.vab.instrument ...............   Passed    0.91 sec",
+          "2026-10-31T14:24:42.1946188Z 7/8 Test #7: spu.engine.exchange ..............   Passed    0.39 sec",
+          "2026-10-31T14:24:42.4247403Z 8/8 Test #8: spu.instrument.state .............   Passed    0.23 sec",
+          "2026-10-31T14:24:42.4251468Z 100% tests passed, 0 tests failed out of 8"
+        ]
+      }
+    ],
+    "log_verification": {
+      "offline": {
+        "job_id": 124563573205,
+        "log_api": "https://api.github.com/repos/kyorohiro/tetorica-spu-plugin/actions/jobs/124563573205/logs",
+        "installer_tests_passed": 11,
+        "ctest_passed": 8,
+        "ctest_failed": 0,
+        "evidence_lines": [
+          "2026-10-31T14:28:14.1857079Z Ran 11 tests in 0.155s",
+          "2026-10-31T14:28:14.1858101Z OK",
+          "2026-10-31T14:28:34.6631398Z 1/8 Test #1: spu.noise ........................   Passed    0.28 sec",
+          "2026-10-31T14:28:34.6702957Z 2/8 Test #2: spu.pcm.draft ....................   Passed    0.00 sec",
+          "2026-10-31T14:28:35.4824950Z 3/8 Test #3: spu.waveform .....................   Passed    0.81 sec",
+          "2026-10-31T14:28:36.5817313Z 4/8 Test #4: spu.instrument ...................   Passed    1.10 sec",
+          "2026-10-31T14:28:36.6112688Z 5/8 Test #5: spu.vab.bank .....................   Passed    0.03 sec",
+          "2026-10-31T14:28:37.4801212Z 6/8 Test #6: spu.vab.instrument ...............   Passed    0.87 sec",
+          "2026-10-31T14:28:37.8369815Z 7/8 Test #7: spu.engine.exchange ..............   Passed    0.36 sec",
+          "2026-10-31T14:28:38.0487107Z 8/8 Test #8: spu.instrument.state .............   Passed    0.21 sec",
+          "2026-10-31T14:28:38.0490931Z 100% tests passed, 0 tests failed out of 8"
+        ]
+      },
+      "macos": {
+        "job_id": 124563573370,
+        "log_api": "https://api.github.com/repos/kyorohiro/tetorica-spu-plugin/actions/jobs/124563573370/logs",
+        "installer_tests_passed": 11,
+        "ctest_passed": 8,
+        "ctest_failed": 0,
+        "auval_passed": true,
+        "vst3_validator_passed": 47,
+        "vst3_validator_failed": 0,
+        "actual_noise": [
+          {
+            "host": "VST3 parameters/events Noise",
+            "sample_rate": 44100,
+            "flags": {
+              "full19Params": true,
+              "firstRestoreBlock": true,
+              "noNoteBendTracking": true,
+              "clockLive": true,
+              "sameClockNoop": true,
+              "topologyPanic": true,
+              "oldCarriedNotesCleared": true,
+              "freshNotePreserved": true,
+              "sourceRetained": true,
+              "malformedAtomic": true,
+              "schema1To4Legacy": true,
+              "schema4PCMFX": true
+            },
+            "evidence": "2026-10-31T14:32:04.5711660Z PASS VST3 parameters/events Noise sampleRate=44100 full19Params=true firstRestoreBlock=true noNoteBendTracking=true clockLive=true sameClockNoop=true topologyPanic=true oldCarriedNotesCleared=true freshNotePreserved=true sourceRetained=true malformedAtomic=true schema1To4Legacy=true schema4PCMFX=true"
+          },
+          {
+            "host": "VST3 parameters/events Noise",
+            "sample_rate": 48000,
+            "flags": {
+              "full19Params": true,
+              "firstRestoreBlock": true,
+              "noNoteBendTracking": true,
+              "clockLive": true,
+              "sameClockNoop": true,
+              "topologyPanic": true,
+              "oldCarriedNotesCleared": true,
+              "freshNotePreserved": true,
+              "sourceRetained": true,
+              "malformedAtomic": true,
+              "schema1To4Legacy": true,
+              "schema4PCMFX": true
+            },
+            "evidence": "2026-10-31T14:32:04.5736780Z PASS VST3 parameters/events Noise sampleRate=48000 full19Params=true firstRestoreBlock=true noNoteBendTracking=true clockLive=true sameClockNoop=true topologyPanic=true oldCarriedNotesCleared=true freshNotePreserved=true sourceRetained=true malformedAtomic=true schema1To4Legacy=true schema4PCMFX=true"
+          },
+          {
+            "host": "VST3 parameters/events Noise",
+            "sample_rate": 96000,
+            "flags": {
+              "full19Params": true,
+              "firstRestoreBlock": true,
+              "noNoteBendTracking": true,
+              "clockLive": true,
+              "sameClockNoop": true,
+              "topologyPanic": true,
+              "oldCarriedNotesCleared": true,
+              "freshNotePreserved": true,
+              "sourceRetained": true,
+              "malformedAtomic": true,
+              "schema1To4Legacy": true,
+              "schema4PCMFX": true
+            },
+            "evidence": "2026-10-31T14:32:04.5768720Z PASS VST3 parameters/events Noise sampleRate=96000 full19Params=true firstRestoreBlock=true noNoteBendTracking=true clockLive=true sameClockNoop=true topologyPanic=true oldCarriedNotesCleared=true freshNotePreserved=true sourceRetained=true malformedAtomic=true schema1To4Legacy=true schema4PCMFX=true"
+          },
+          {
+            "host": "AU parameters/MIDIEvent Noise",
+            "sample_rate": 48000,
+            "flags": {
+              "full19Params": true,
+              "firstRestoreBlock": true,
+              "noNoteBendTracking": true,
+              "clockLive": true,
+              "sameClockNoop": true,
+              "topologyPanic": true,
+              "oldCarriedNotesCleared": true,
+              "freshNotePreserved": true,
+              "sourceRetained": true,
+              "malformedAtomic": true,
+              "schema1To4Legacy": true,
+              "schema4PCMFX": true
+            },
+            "evidence": "2026-10-31T14:32:07.2036480Z PASS AU parameters/MIDIEvent Noise sampleRate=48000 full19Params=true firstRestoreBlock=true noNoteBendTracking=true clockLive=true sameClockNoop=true topologyPanic=true oldCarriedNotesCleared=true freshNotePreserved=true sourceRetained=true malformedAtomic=true schema1To4Legacy=true schema4PCMFX=true"
+          }
+        ],
+        "actual_pcm_cycles": [
+          {
+            "host": "VST3 state/events PCM cycles",
+            "sample_rate": 44100,
+            "flags": {
+              "shapes4Distinct": true,
+              "pitchAndLoop": true,
+              "samples112Exact": true,
+              "customDrawnState": true,
+              "firstRestoreBlock": true,
+              "pendingActiveAtomic": true,
+              "separateInstances": true,
+              "heldCarriedRestore": true,
+              "settingsIndependent": true
+            },
+            "evidence": "2026-10-31T14:32:04.5707670Z PASS VST3 state/events PCM cycles sampleRate=44100 shapes4Distinct=true pitchAndLoop=true samples112Exact=true customDrawnState=true firstRestoreBlock=true pendingActiveAtomic=true separateInstances=true heldCarriedRestore=true settingsIndependent=true"
+          },
+          {
+            "host": "VST3 state/events PCM cycles",
+            "sample_rate": 48000,
+            "flags": {
+              "shapes4Distinct": true,
+              "pitchAndLoop": true,
+              "samples112Exact": true,
+              "customDrawnState": true,
+              "firstRestoreBlock": true,
+              "pendingActiveAtomic": true,
+              "separateInstances": true,
+              "heldCarriedRestore": true,
+              "settingsIndependent": true
+            },
+            "evidence": "2026-10-31T14:32:04.5734870Z PASS VST3 state/events PCM cycles sampleRate=48000 shapes4Distinct=true pitchAndLoop=true samples112Exact=true customDrawnState=true firstRestoreBlock=true pendingActiveAtomic=true separateInstances=true heldCarriedRestore=true settingsIndependent=true"
+          },
+          {
+            "host": "VST3 state/events PCM cycles",
+            "sample_rate": 96000,
+            "flags": {
+              "shapes4Distinct": true,
+              "pitchAndLoop": true,
+              "samples112Exact": true,
+              "customDrawnState": true,
+              "firstRestoreBlock": true,
+              "pendingActiveAtomic": true,
+              "separateInstances": true,
+              "heldCarriedRestore": true,
+              "settingsIndependent": true
+            },
+            "evidence": "2026-10-31T14:32:04.5764020Z PASS VST3 state/events PCM cycles sampleRate=96000 shapes4Distinct=true pitchAndLoop=true samples112Exact=true customDrawnState=true firstRestoreBlock=true pendingActiveAtomic=true separateInstances=true heldCarriedRestore=true settingsIndependent=true"
+          },
+          {
+            "host": "AU state/MIDIEvent PCM cycles",
+            "sample_rate": 48000,
+            "flags": {
+              "shapes4Distinct": true,
+              "pitchAndLoop": true,
+              "samples112Exact": true,
+              "customDrawnState": true,
+              "firstRestoreBlock": true,
+              "pendingActiveAtomic": true,
+              "separateInstances": true,
+              "heldCarriedRestore": true,
+              "settingsIndependent": true
+            },
+            "evidence": "2026-10-31T14:32:07.2034680Z PASS AU state/MIDIEvent PCM cycles sampleRate=48000 shapes4Distinct=true pitchAndLoop=true samples112Exact=true customDrawnState=true firstRestoreBlock=true pendingActiveAtomic=true separateInstances=true heldCarriedRestore=true settingsIndependent=true"
+          }
+        ],
+        "actual_adsr": [
+          {
+            "host": "VST3 parameter changes ADSR",
+            "sample_rate": 44100,
+            "flags": {
+              "nineFieldsState": true,
+              "schema1Migration": true,
+              "legacyDefaults": true,
+              "malformedAtomic": true,
+              "firstRestoreBlock": true,
+              "sourcePreserved": true,
+              "disabledOriginalPCM": true,
+              "blockAutomation": true,
+              "nextNoteDeferred": true,
+              "heldNoRetrigger": true,
+              "applyOffOnRefresh": true
+            },
+            "evidence": "2026-10-31T14:32:04.5678420Z PASS VST3 parameter changes ADSR sampleRate=44100 nineFieldsState=true schema1Migration=true legacyDefaults=true malformedAtomic=true firstRestoreBlock=true sourcePreserved=true disabledOriginalPCM=true blockAutomation=true nextNoteDeferred=true heldNoRetrigger=true applyOffOnRefresh=true"
+          },
+          {
+            "host": "VST3 parameter changes ADSR",
+            "sample_rate": 48000,
+            "flags": {
+              "nineFieldsState": true,
+              "schema1Migration": true,
+              "legacyDefaults": true,
+              "malformedAtomic": true,
+              "firstRestoreBlock": true,
+              "sourcePreserved": true,
+              "disabledOriginalPCM": true,
+              "blockAutomation": true,
+              "nextNoteDeferred": true,
+              "heldNoRetrigger": true,
+              "applyOffOnRefresh": true
+            },
+            "evidence": "2026-10-31T14:32:04.5729850Z PASS VST3 parameter changes ADSR sampleRate=48000 nineFieldsState=true schema1Migration=true legacyDefaults=true malformedAtomic=true firstRestoreBlock=true sourcePreserved=true disabledOriginalPCM=true blockAutomation=true nextNoteDeferred=true heldNoRetrigger=true applyOffOnRefresh=true"
+          },
+          {
+            "host": "VST3 parameter changes ADSR",
+            "sample_rate": 96000,
+            "flags": {
+              "nineFieldsState": true,
+              "schema1Migration": true,
+              "legacyDefaults": true,
+              "malformedAtomic": true,
+              "firstRestoreBlock": true,
+              "sourcePreserved": true,
+              "disabledOriginalPCM": true,
+              "blockAutomation": true,
+              "nextNoteDeferred": true,
+              "heldNoRetrigger": true,
+              "applyOffOnRefresh": true
+            },
+            "evidence": "2026-10-31T14:32:04.5752650Z PASS VST3 parameter changes ADSR sampleRate=96000 nineFieldsState=true schema1Migration=true legacyDefaults=true malformedAtomic=true firstRestoreBlock=true sourcePreserved=true disabledOriginalPCM=true blockAutomation=true nextNoteDeferred=true heldNoRetrigger=true applyOffOnRefresh=true"
+          },
+          {
+            "host": "AU parameters ADSR",
+            "sample_rate": 48000,
+            "flags": {
+              "nineFieldsState": true,
+              "schema1Migration": true,
+              "legacyDefaults": true,
+              "malformedAtomic": true,
+              "firstRestoreBlock": true,
+              "sourcePreserved": true,
+              "disabledOriginalPCM": true,
+              "blockAutomation": true,
+              "nextNoteDeferred": true,
+              "heldNoRetrigger": true,
+              "applyOffOnRefresh": true
+            },
+            "evidence": "2026-10-31T14:32:07.2031200Z PASS AU parameters ADSR sampleRate=48000 nineFieldsState=true schema1Migration=true legacyDefaults=true malformedAtomic=true firstRestoreBlock=true sourcePreserved=true disabledOriginalPCM=true blockAutomation=true nextNoteDeferred=true heldNoRetrigger=true applyOffOnRefresh=true"
+          }
+        ],
+        "actual_reverb": [
+          {
+            "host": "VST3 parameter changes Reverb",
+            "sample_rate": 44100,
+            "flags": {
+              "full17Params": true,
+              "firstWetRestore": true,
+              "sourceSend": true,
+              "presetAutomationIndependent": true,
+              "presetsDiffer": true,
+              "disabledDry": true,
+              "zeroReturnDry": true,
+              "stereoReturns": true,
+              "releasedTail": true,
+              "panicClears": true,
+              "offClears": true,
+              "restoreClearsHistory": true,
+              "malformedAtomic": true,
+              "schema1Schema2Schema3Legacy": true
+            },
+            "evidence": "2026-10-31T14:32:04.5702650Z PASS VST3 parameter changes Reverb sampleRate=44100 full17Params=true firstWetRestore=true sourceSend=true presetAutomationIndependent=true presetsDiffer=true disabledDry=true zeroReturnDry=true stereoReturns=true releasedTail=true panicClears=true offClears=true restoreClearsHistory=true malformedAtomic=true schema1Schema2Schema3Legacy=true"
+          },
+          {
+            "host": "VST3 parameter changes Reverb",
+            "sample_rate": 48000,
+            "flags": {
+              "full17Params": true,
+              "firstWetRestore": true,
+              "sourceSend": true,
+              "presetAutomationIndependent": true,
+              "presetsDiffer": true,
+              "disabledDry": true,
+              "zeroReturnDry": true,
+              "stereoReturns": true,
+              "releasedTail": true,
+              "panicClears": true,
+              "offClears": true,
+              "restoreClearsHistory": true,
+              "malformedAtomic": true,
+              "schema1Schema2Schema3Legacy": true
+            },
+            "evidence": "2026-10-31T14:32:04.5732140Z PASS VST3 parameter changes Reverb sampleRate=48000 full17Params=true firstWetRestore=true sourceSend=true presetAutomationIndependent=true presetsDiffer=true disabledDry=true zeroReturnDry=true stereoReturns=true releasedTail=true panicClears=true offClears=true restoreClearsHistory=true malformedAtomic=true schema1Schema2Schema3Legacy=true"
+          },
+          {
+            "host": "VST3 parameter changes Reverb",
+            "sample_rate": 96000,
+            "flags": {
+              "full17Params": true,
+              "firstWetRestore": true,
+              "sourceSend": true,
+              "presetAutomationIndependent": true,
+              "presetsDiffer": true,
+              "disabledDry": true,
+              "zeroReturnDry": true,
+              "stereoReturns": true,
+              "releasedTail": true,
+              "panicClears": true,
+              "offClears": true,
+              "restoreClearsHistory": true,
+              "malformedAtomic": true,
+              "schema1Schema2Schema3Legacy": true
+            },
+            "evidence": "2026-10-31T14:32:04.5758690Z PASS VST3 parameter changes Reverb sampleRate=96000 full17Params=true firstWetRestore=true sourceSend=true presetAutomationIndependent=true presetsDiffer=true disabledDry=true zeroReturnDry=true stereoReturns=true releasedTail=true panicClears=true offClears=true restoreClearsHistory=true malformedAtomic=true schema1Schema2Schema3Legacy=true"
+          },
+          {
+            "host": "AU parameters Reverb",
+            "sample_rate": 48000,
+            "flags": {
+              "full17Params": true,
+              "firstWetRestore": true,
+              "sourceSend": true,
+              "presetAutomationIndependent": true,
+              "presetsDiffer": true,
+              "disabledDry": true,
+              "zeroReturnDry": true,
+              "stereoReturns": true,
+              "releasedTail": true,
+              "panicClears": true,
+              "offClears": true,
+              "restoreClearsHistory": true,
+              "malformedAtomic": true,
+              "schema1Schema2Schema3Legacy": true
+            },
+            "evidence": "2026-10-31T14:32:07.2032940Z PASS AU parameters Reverb sampleRate=48000 full17Params=true firstWetRestore=true sourceSend=true presetAutomationIndependent=true presetsDiffer=true disabledDry=true zeroReturnDry=true stereoReturns=true releasedTail=true panicClears=true offClears=true restoreClearsHistory=true malformedAtomic=true schema1Schema2Schema3Legacy=true"
+          }
+        ],
+        "actual_midi": [
+          {
+            "host": "VST3 IMidiMapping controllers",
+            "sample_rate": 44100,
+            "flags": {
+              "bend14Endpoints": true,
+              "multiPointOffsets": true,
+              "splitBlocks": true,
+              "noRetrigger": true,
+              "sustain64_63": true,
+              "channel15Isolation": true,
+              "CC123Pedal": true,
+              "CC121HeldDeferred": true,
+              "panicPreservesControllers": true,
+              "resetRestoreOverflowClear": true,
+              "liveStateExcluded": true,
+              "deferredController": true,
+              "reactivateReset": true,
+              "releaseTailRetunedNoKON": true,
+              "restoreDiscardsFutureControllers": true
+            },
+            "evidence": "2026-10-31T14:32:04.5714130Z PASS VST3 IMidiMapping controllers sampleRate=44100 bend14Endpoints=true multiPointOffsets=true splitBlocks=true noRetrigger=true sustain64_63=true channel15Isolation=true CC123Pedal=true CC121HeldDeferred=true panicPreservesControllers=true resetRestoreOverflowClear=true liveStateExcluded=true deferredController=true reactivateReset=true releaseTailRetunedNoKON=true restoreDiscardsFutureControllers=true"
+          },
+          {
+            "host": "VST3 IMidiMapping controllers",
+            "sample_rate": 48000,
+            "flags": {
+              "bend14Endpoints": true,
+              "multiPointOffsets": true,
+              "splitBlocks": true,
+              "noRetrigger": true,
+              "sustain64_63": true,
+              "channel15Isolation": true,
+              "CC123Pedal": true,
+              "CC121HeldDeferred": true,
+              "panicPreservesControllers": true,
+              "resetRestoreOverflowClear": true,
+              "liveStateExcluded": true,
+              "deferredController": true,
+              "reactivateReset": true,
+              "releaseTailRetunedNoKON": true,
+              "restoreDiscardsFutureControllers": true
+            },
+            "evidence": "2026-10-31T14:32:04.5740260Z PASS VST3 IMidiMapping controllers sampleRate=48000 bend14Endpoints=true multiPointOffsets=true splitBlocks=true noRetrigger=true sustain64_63=true channel15Isolation=true CC123Pedal=true CC121HeldDeferred=true panicPreservesControllers=true resetRestoreOverflowClear=true liveStateExcluded=true deferredController=true reactivateReset=true releaseTailRetunedNoKON=true restoreDiscardsFutureControllers=true"
+          },
+          {
+            "host": "VST3 IMidiMapping controllers",
+            "sample_rate": 96000,
+            "flags": {
+              "bend14Endpoints": true,
+              "multiPointOffsets": true,
+              "splitBlocks": true,
+              "noRetrigger": true,
+              "sustain64_63": true,
+              "channel15Isolation": true,
+              "CC123Pedal": true,
+              "CC121HeldDeferred": true,
+              "panicPreservesControllers": true,
+              "resetRestoreOverflowClear": true,
+              "liveStateExcluded": true,
+              "deferredController": true,
+              "reactivateReset": true,
+              "releaseTailRetunedNoKON": true,
+              "restoreDiscardsFutureControllers": true
+            },
+            "evidence": "2026-10-31T14:32:04.5775470Z PASS VST3 IMidiMapping controllers sampleRate=96000 bend14Endpoints=true multiPointOffsets=true splitBlocks=true noRetrigger=true sustain64_63=true channel15Isolation=true CC123Pedal=true CC121HeldDeferred=true panicPreservesControllers=true resetRestoreOverflowClear=true liveStateExcluded=true deferredController=true reactivateReset=true releaseTailRetunedNoKON=true restoreDiscardsFutureControllers=true"
+          },
+          {
+            "host": "AU MIDIEvent controllers",
+            "sample_rate": 48000,
+            "flags": {
+              "bend14Endpoints": true,
+              "multiPointOffsets": true,
+              "splitBlocks": true,
+              "noRetrigger": true,
+              "sustain64_63": true,
+              "channel15Isolation": true,
+              "CC123Pedal": true,
+              "CC121HeldDeferred": true,
+              "panicPreservesControllers": true,
+              "resetRestoreOverflowClear": true,
+              "liveStateExcluded": true,
+              "deferredController": true,
+              "reactivateReset": true,
+              "releaseTailRetunedNoKON": true,
+              "restoreDiscardsFutureControllers": true
+            },
+            "evidence": "2026-10-31T14:32:07.2028740Z PASS AU MIDIEvent controllers sampleRate=48000 bend14Endpoints=true multiPointOffsets=true splitBlocks=true noRetrigger=true sustain64_63=true channel15Isolation=true CC123Pedal=true CC121HeldDeferred=true panicPreservesControllers=true resetRestoreOverflowClear=true liveStateExcluded=true deferredController=true reactivateReset=true releaseTailRetunedNoKON=true restoreDiscardsFutureControllers=true"
+          }
+        ],
+        "other_host_pass_evidence": [
+          "2026-10-31T14:32:04.5673630Z PASS sampleRate=44100 offset=64 peak=0.0373283 c4Hz=261.667 releasePeak=0 restoredGainRatio=0.37 stateBytes=84 independentInstances=true",
+          "2026-10-31T14:32:04.5674960Z PASS scheduler sampleRate=44100 blockEndDeferred=true shortBlocks=true sameOffsetOrder=true unsortedOffsets=true velocityZeroOff=true overflow2049Recovered=true processingRestartSilent=true reactivateSilent=true reconfigureSilent=true",
+          "2026-10-31T14:32:04.5676580Z PASS embedded state sampleRate=44100 sparseTones=3 stereoPan=true firstBlock=true activeRestore=true heldDeferredCleared=true freshNotePreserved=true repeatedRestores=12 embeddedBytes=3744",
+          "2026-10-31T14:32:04.5718650Z PASS sampleRate=48000 offset=64 peak=0.0373283 c4Hz=261.667 releasePeak=0 restoredGainRatio=0.37 stateBytes=84 independentInstances=true",
+          "2026-10-31T14:32:04.5720030Z PASS scheduler sampleRate=48000 blockEndDeferred=true shortBlocks=true sameOffsetOrder=true unsortedOffsets=true velocityZeroOff=true overflow2049Recovered=true processingRestartSilent=true reactivateSilent=true reconfigureSilent=true",
+          "2026-10-31T14:32:04.5721510Z PASS embedded state sampleRate=48000 sparseTones=3 stereoPan=true firstBlock=true activeRestore=true heldDeferredCleared=true freshNotePreserved=true repeatedRestores=12 embeddedBytes=3744",
+          "2026-10-31T14:32:04.5742100Z PASS sampleRate=96000 offset=64 peak=0.0373283 c4Hz=261.667 releasePeak=0 restoredGainRatio=0.37 stateBytes=84 independentInstances=true",
+          "2026-10-31T14:32:04.5743270Z PASS scheduler sampleRate=96000 blockEndDeferred=true shortBlocks=true sameOffsetOrder=true unsortedOffsets=true velocityZeroOff=true overflow2049Recovered=true processingRestartSilent=true reactivateSilent=true reconfigureSilent=true",
+          "2026-10-31T14:32:04.5748600Z PASS embedded state sampleRate=96000 sparseTones=3 stereoPan=true firstBlock=true activeRestore=true heldDeferredCleared=true freshNotePreserved=true repeatedRestores=12 embeddedBytes=3744",
+          "2026-10-31T14:32:04.5782860Z PASS malformed embedded state cases=25 atomicGainStatePCM=true readyRestorePreserved=true legacyGain12=true",
+          "2026-10-31T14:32:04.5786210Z PASS VST3 mapped ingress invalidNormalizedIgnored=true invalidChannelIgnored=true unsupportedCCIgnored=true negativeOffsetIgnored=true points1025Panic=true gainPreserved=true bypassMuteQueueReset=true bypassCrossBlockPedal=true freshUnbypassNote=true bypassClearsReverb=true",
+          "2026-10-31T14:32:04.5788410Z PASS VST3 offline PCM, scheduler, lifecycle, state and instance isolation"
+        ],
+        "validation_evidence_lines": [
+          "2026-10-31T14:28:15.4980740Z Ran 11 tests in 0.184s",
+          "2026-10-31T14:30:44.7087250Z 1/8 Test #1: spu.noise ........................   Passed    0.84 sec",
+          "2026-10-31T14:30:44.7291150Z 2/8 Test #2: spu.pcm.draft ....................   Passed    0.01 sec",
+          "2026-10-31T14:30:45.5156430Z 3/8 Test #3: spu.waveform .....................   Passed    0.81 sec",
+          "2026-10-31T14:30:46.6734460Z 4/8 Test #4: spu.instrument ...................   Passed    1.16 sec",
+          "2026-10-31T14:30:46.7695700Z 5/8 Test #5: spu.vab.bank .....................   Passed    0.10 sec",
+          "2026-10-31T14:30:47.4498680Z 6/8 Test #6: spu.vab.instrument ...............   Passed    0.68 sec",
+          "2026-10-31T14:30:48.0999950Z 7/8 Test #7: spu.engine.exchange ..............   Passed    0.65 sec",
+          "2026-10-31T14:30:48.3623530Z 8/8 Test #8: spu.instrument.state .............   Passed    0.26 sec",
+          "2026-10-31T14:30:48.3681700Z 100% tests passed out of 8",
+          "2026-10-31T14:30:55.7647930Z AU VALIDATION SUCCEEDED.",
+          "2026-10-31T14:31:34.7216050Z Result: 47 tests passed, 0 tests failed"
+        ]
+      }
+    },
+    "scope": "Run, all job steps and artifact metadata were read from GitHub API. Completed job logs independently confirm installer/CTest/validator results and actual AU/VST3 Noise/PCM/state/controller suites. Each actual suite has four host/rate conditions: VST3 at 44100/48000/96000 Hz and AU at 48000 Hz. First macOS-14 brownout cancellation is retained separately from the successful macOS-15 source commit. Uploaded artifact metadata was inspected; the archive was not downloaded or executed locally. No source, docs, GUI, project or installed AU changes were made by this CI check.",
+    "status": "completed",
+    "local_summary": {
+      "path": "build/noise-ci-summary.json",
+      "sha256": "10c8a4e210a3f584d727c143c59d8bc5473299f34d4dade9af3ea5082ae0fac3"
+    },
+    "production_sources_lock_and_ci_configuration_unchanged": true,
+    "artifacts_downloaded_and_runtime_tested": false
   },
   "not_verified": [
     "Physical listening",
@@ -267,5 +1157,8 @@
     "AU custom Noise/Clock gestures and DAW automation recording",
     "Numeric entry after Return: remote clicks needed Escape; cause not isolated",
     "Uploaded CI archive runtime"
-  ]
+  ],
+  "implementation_commit": "e43d031f22d6c6b260d5fdc230c3527250531234",
+  "ci_configuration_commit": "3c10dfd3e38b80799da49d3bb296b2cbe3d4a328",
+  "ci_workflow_sha256": "c28dd66315812086301d374317501ff28e1cf04319276fdac2519cdb174493dc"
 }

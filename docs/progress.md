@@ -1,5 +1,18 @@
 # 作業記録
 
+## 2026-10-31 JST — NoiseのCI成功・installed AU更新も完了
+
+- 実装`e43d031`とrunner移行`3c10dfd`をpush、
+  [CI 41210254431](https://github.com/kyorohiro/tetorica-spu-plugin/actions/runs/41210254431)のoffline / macos-15全job成功。
+  両jobのinstaller11・CTest8/8、auval・公式validator47/0、実AU/VST3のNoise / PCM / ADSR / Reverb / MIDIを確認した。
+- CIは23:28:07〜23:32:15 JST。初回macOS14 brownout cancellationと成功runを分け、
+  metadata / artifact digest / ログを[検証JSON](noise_20261031.json)へ保存した。artifactのdownload/runtimeは未確認。
+- AUは既知PCM版5filesを退避し`au-update-j01640dh`で更新、auval成功。新旧bundle各5files・原本11files一致。
+  GarageBandで旧schema4 P3/T0/Gain99とSourceボタンを確認、saved payload3816bytesは更新前後で完全一致。
+- **次の入口:** PMON。実装前に次の区切りをTODOへ追加する。
+  [操作・更新・復帰手順](noise_20261031.md)を参照。実聴・長時間・DAW独自Noise操作は未確認。
+  最後は録音/再生停止・AU editor表示。Release公開・version/tag変更はしていない。
+
 ## 2026-10-31 JST — Noise CIの旧macOSランナー停止を対処
 
 - 実装`e43d031`の[CI 41209955649](https://github.com/kyorohiro/tetorica-spu-plugin/actions/runs/41209955649)は
@@ -7,7 +20,7 @@
 - annotationと[公式告知](https://github.com/actions/runner-images/issues/13518)で、10月31日14:00UTC〜
   翌0:00UTCのmacOS14 brownoutと一致することを確認した。Noiseソース/テストの失敗ではない。
 - 対応案をTODOへ追加後、workflowをmacos-15へ移して再実行する。bundleの最低OS target13.0は維持する。
-  この時点でNoise AUは`au-update-j01640dh`により更新済み、auval・GarageBand再表示はこれから。
+  この時点ではauval・GarageBand再表示は未実施。上のチェックポイントで成功を確認した。
 
 ## 2026-10-31 JST — Noise実装・実AU/VST3・Source UI検証完了
 
