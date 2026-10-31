@@ -22,6 +22,15 @@ AUを既知manifest照合付きで更新し、GarageBand標準AUプリセット�
 [今回の記録](../au_vab_garageband_20261031.md)。人のLoad VAB操作からVAB読込・再生時の採用・保存・再起動後のP3/T0復元も確認済み。
 次はProgram/Toneの個別操作と、Toneのみのdirty判定を確認する。
 
+### Program/Tone・保存通知の今回の区切り（2026-10-31、開始時記録）
+
+- [ ] 保存済みP3/T0/Gain99のcopyを基準に、Tone 1だけへ変更する。停止中は必要に応じて再生し採用する。
+- [ ] GainやMIDI regionを編集せず、GarageBandの終了・close時の保存確認でTone-only変更通知を追試する。
+- [ ] 保存後のembedded P3/T1/Gain99と、再起動後の選択UIを照合する。
+- [ ] Program 11→3の個別切替を確認し、各Programの最初の再生可能Toneが選ばれることを確認する。
+- [ ] popup取消・通常のeditor close/reopenを確認する。CUAで操作できない所は人の操作を一度依頼する。
+- [ ] 結果と未確認範囲を記録しcommit / pushする。再現した不具合があれば修正前に記録する。
+
 ### AU独自UIの追試（2026-10-31、開始時記録）
 
 - [x] ユーザーが実際のclickでLoad VABのファイル選択が開くと確認した。

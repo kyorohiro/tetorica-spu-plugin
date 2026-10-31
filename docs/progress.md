@@ -1,5 +1,13 @@
 # 作業記録
 
+## 2026-10-31 JST — Program/Tone・Toneのみ保存通知の確認を開始
+
+- ユーザーから継続の指示。cleanな`bee1019`から開始し、今回の確認順をTODOへ記録した。
+- 保存済みcopyのP3/T0/Gain99を基準にToneだけ変更し、DAWの保存確認を独立して検証する。
+  Gain・MIDI regionは変更しない。Program切替とpopup取消は、その後で別に確認する。
+- rootがGarageBand操作、並行してAUの既存通知経路をsource reviewする。
+- 次: 開いているAU画面を確認しTone 1へ。CUAのAU入力制限が続く場合、必要なclickだけユーザーに依頼する。
+
 ## 2026-10-31 JST — AU独自Load VAB成功、保存・GarageBand再起動も確認
 
 - ユーザーが検証用`build/ui-check/garageband-ui-source.vab`を選択した。
