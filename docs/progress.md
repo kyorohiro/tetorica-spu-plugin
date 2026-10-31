@@ -90,3 +90,16 @@
   ローカルのregistrarは終了させていない。検証本体の失敗を繰り返して隠す処理はない。
 - [修正版CI](https://github.com/kyorohiro/tetorica-spu-plugin/actions/runs/41183069247) を確認するのが次の再開手順。
 - GarageBand自体の確認は上記の通り完了しており、CIの登録問題とは分けて記録する。
+
+## 2026-10-31 JST — 修正版CIも成功
+
+- `41183069247` は全job成功。source `1e869e52d247111ae4f598a4afd996147a95b9bc`。
+  macOS job `124484283601` / Linux offline job `124484283716`。
+- CI開始17:04:05 JST、完了17:07:52 JST。CI registrar SIGTERM更新exit0、約7.4秒後にAU発見、
+  `AU VALIDATION SUCCEEDED.`、VST3公式47成功、scheduler / lifecycleの3rate全成功をログで照合した。
+- artifact `13036075459` / `macos-development-bundles` / 2,029,169 bytes。
+  digest `96a0cc9f1b1efccc5edf3a03bebab54bcfae40baa1b88e48dd25fbc7751a83c7`。
+  配布物を公開した記録ではない。最初のCI失敗も検証JSONに履歴として残した。
+- 最後のGarageBand状態は検証用project保存済み、録音・再生停止、SPU / Gain99%。
+- **次の作業:** `docs/vab_import_plan.md` の純粋なVABパーサーとTone準備関数。
+  実聴・長時間動作の確認、AU preset-name warning、将来の安全なAU更新はTODOとして残す。

@@ -103,6 +103,37 @@
     "id": 41183069247,
     "url": "https://github.com/kyorohiro/tetorica-spu-plugin/actions/runs/41183069247",
     "source_commit": "1e869e52d247111ae4f598a4afd996147a95b9bc",
-    "status": "in_progress"
+    "status": "completed",
+    "conclusion": "success",
+    "completed_at_jst": "2026-10-31T17:07:52+09:00",
+    "jobs": [
+      {
+        "id": 124484283601,
+        "name": "macos",
+        "conclusion": "success"
+      },
+      {
+        "id": 124484283716,
+        "name": "offline",
+        "conclusion": "success"
+      }
+    ],
+    "verified_log_lines": [
+      "macos\tInstall and validate the user AU\t2026-10-31T08:06:52.7011550Z CI registrar refresh exit=0 (1 may mean not running)",
+      "macos\tInstall and validate the user AU\t2026-10-31T08:07:00.1245370Z PASS: TetoricaSPU was discovered by the Audio Component service",
+      "macos\tInstall and validate the user AU\t2026-10-31T08:07:00.4734180Z AU VALIDATION SUCCEEDED.",
+      "macos\tValidate VST3\t2026-10-31T08:07:32.8000970Z Result: 47 tests passed, 0 tests failed",
+      "macos\tRender and restore the actual VST3\t2026-10-31T08:07:47.9437360Z PASS scheduler sampleRate=44100 blockEndDeferred=true shortBlocks=true sameOffsetOrder=true unsortedOffsets=true velocityZeroOff=true overflow2049Recovered=true processingRestartSilent=true reactivateSilent=true reconfigureSilent=true",
+      "macos\tRender and restore the actual VST3\t2026-10-31T08:07:47.9439900Z PASS scheduler sampleRate=48000 blockEndDeferred=true shortBlocks=true sameOffsetOrder=true unsortedOffsets=true velocityZeroOff=true overflow2049Recovered=true processingRestartSilent=true reactivateSilent=true reconfigureSilent=true",
+      "macos\tRender and restore the actual VST3\t2026-10-31T08:07:47.9463230Z PASS scheduler sampleRate=96000 blockEndDeferred=true shortBlocks=true sameOffsetOrder=true unsortedOffsets=true velocityZeroOff=true overflow2049Recovered=true processingRestartSilent=true reactivateSilent=true reconfigureSilent=true"
+    ],
+    "log_sha256": "98f7c1cfad70ca2caea9add58d5b73e5a3849b689030be0f5067eefce19923c5",
+    "artifact": {
+      "id": 13036075459,
+      "name": "macos-development-bundles",
+      "size_in_bytes": 2029169,
+      "digest": "sha256:96a0cc9f1b1efccc5edf3a03bebab54bcfae40baa1b88e48dd25fbc7751a83c7",
+      "downloaded_and_runtime_tested": false
+    }
   }
 }

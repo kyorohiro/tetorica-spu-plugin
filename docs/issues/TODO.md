@@ -13,6 +13,7 @@ Native Sineの最小プラグインはローカルでbuild・自動検証済み�
 [ハッシュ・ローカル検証記録](../verification_20261031.json)、
 [最初のCI](https://github.com/kyorohiro/tetorica-spu-plugin/actions/runs/41180834350)も成功。
 AU / GarageBandでの録音・保存・復元・WAVE書出しを追試済み。
+[AU検証を含む修正版CI](https://github.com/kyorohiro/tetorica-spu-plugin/actions/runs/41183069247)も全job成功。
 次は[VAB取り込み計画](../vab_import_plan.md)の純粋パーサー・Tone準備関数から進む。
 
 ### 今回進める範囲（2026-10-31）
@@ -20,7 +21,7 @@ AU / GarageBandでの録音・保存・復元・WAVE書出しを追試済み。
 - [x] AUをユーザー専用Componentsへ新規配置し、auvalで検査する。既存bundleは上書きしない。
 - [x] GarageBandで新規の検証用projectを作り、AU選択・演奏・保存・再読込・書出しを試す。
 - [x] VST3のMIDI境界・overflow復帰テストを追加する。
-- [ ] 上記の結果と手動確認が残る範囲を記録し、commit / pushする。
+- [x] 上記の結果と手動確認が残る範囲を記録し、commit / pushする。
 
 ## 再開手順
 
@@ -66,6 +67,7 @@ AU / GarageBandでの録音・保存・復元・WAVE書出しを追試済み。
 - [ ] CC120をチャンネル別の即時停止にする（現状はglobal panic、CC123はchannel release）。
 - [ ] Gain変更を滑らかにし、sample単位のautomationの扱いを検討する。
 - [ ] AU factory presetの名前を初期化し、auvalのpreset-name warningを解消する。
+- [ ] 今後のAU更新時は既存bundleと前回配置したhashを照合し、退避・更新できる手順を用意する（現在のinstallerは新規配置・同一内容の確認だけ）。
 
 ## Phase 3: VAB楽器と音作り
 

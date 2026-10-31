@@ -27,7 +27,10 @@ factory preset名をclass dataへ保持していないwarningが1件あるため
 実行ユーザーのregistrarだけをSIGTERMで更新し、最大30秒の発見待ちを追加した。
 ローカルではこの更新オプションを拒否し、サービスを変更しない。
 発見後のauval本検証は一度だけ実行し、失敗をそのまま返す。
-ローカルの発見待ち付き検証も成功。登録反映・cacheが原因との見立ては、CI再実行で確認する。
+ローカルの発見待ち付き検証も成功。
+[修正版CI](https://github.com/kyorohiro/tetorica-spu-plugin/actions/runs/41183069247)も全job成功し、
+registrar更新後、約7.4秒でAUを発見してauval本検証へ進んだことをログで確認した。
+登録反映・cacheが原因との見立ては、この手順で解消した観測として記録し、OS内部の単一原因を断定しない。
 
 ## GarageBand実操作
 
