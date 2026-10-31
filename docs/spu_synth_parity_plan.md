@@ -23,9 +23,9 @@ Gainは現在0〜100%。WebのMaster 200%とは異なる。
 
 | 段階 | Web版でできること | pluginで進めること |
 | --- | --- | --- |
-| 今回：演奏controller | ±2半音Pitch、Sustainによる離鍵保留 | チャンネル別MIDI Pitch Bend / CC64。発音中・Release中・新規音への反映、sample offsetと音源交換を検証する。 |
-| 次：ADSR | rate/modeの数値編集、A/D/S/Rのドラッグ、保持音への適用切替 | VABから読み込んだ値も編集できるようにし、現在のlevel/sample位置を保つ更新と次のNote Onからの更新を分ける。編集値のDAW保存・復元も接続する。 |
-| SPU Reverb | preset、Enable、左右return。preset選択時に自動Enable | 共有preset/returnとvoice sendを公開する。Off、bypass、残響、保存・復元を確認する。 |
+| 実装済み：演奏controller | ±2半音Pitch、Sustainによる離鍵保留 | チャンネル別MIDI Pitch Bend / CC64。発音中・Release中・新規音への反映、sample offset、交換cacheを検証済み。実UI交換中の追試は残る。 |
+| 実装済み：ADSR | rate/modeの数値編集、A/D/S/Rのドラッグ、保持音への適用切替 | 元Toneを保つCustom編集、現在level/sample位置からの更新、次Noteからの更新、host parameter / state2を実装・検証済み。実DAW automation録音等は残る。 |
+| 次：SPU Reverb | preset、Enable、左右return。preset選択時に自動Enable | 共有preset/returnとvoice sendを公開する。Off、bypass、残響、保存・復元を確認する。 |
 | PCM / Noise / PMON | 112-sample周期の4形状・自由描画、Noise clock、PMON変調波形・Ratio・Depth・Decay | 固定Sine以外の音作りを追加する。Noiseは共有clock、PMONは隣接voiceの12組構成を保ち、切替時の発音数・保持音の扱いを明示する。 |
 | Software morph | A/B/Resultを同じcanvasへ表示し、編集対象を切替。保持音を再発音せずblend変更 | PCM編集を土台にA/B定義・amount・更新経路を追加し、software機能と表示する。Webの初期設定はOn、A=Sine、B=Saw、amount=0%。 |
 | 音色・素材の入力 | `.spu.json`、audio、PSF1/MiniPSFからの静的VAB抽出、VH+VB | 分割VH/VBとpreset互換から始め、sample stateを設計してAudio・PSF抽出へ広げる。C++の明示VH/VB parserは既にあるが、file pickerはcomplete VABのみ。既知のNative loop flag制限も別途修正・検証する。 |
@@ -33,7 +33,7 @@ Gainは現在0〜100%。WebのMaster 200%とは異なる。
 
 各段階で、音の変化だけでなく、演奏中の編集・保存直後の復元・不正入力時の現音源保持を確認する。
 coreのoffline検証と実AU/VST3の検証を行い、実DAWのUI確認や実聴とは区別して記録する。
-ADSR以降の編集parameterには、host automationとstate保存の扱いも設計する。
+今後の編集parameterにも、host automationとstate保存の扱いを設計する。
 
 ## 今回のPitch Bend / Sustain
 
@@ -66,7 +66,7 @@ PMONは1音に2 voicesを使うため、通常の24音から12音になる。
 この区別はpluginの画面と説明にも引き継ぐ。
 
 WebのAudio入力は短い録音をSPU ADPCMへ変換し、長い録音をSoftware audioへ切り替える。
-pluginの現stateはBuiltin/VABの2種類で、bank上限1 MiB、payload上限1 MiB+40 bytes。
+pluginの現stateはBuiltin/VABの2種類で、bank上限1 MiB、schema2のpayload上限1 MiB+48 bytes。
 長いPCMを入れる際は、音源kind、version互換、容量上限、所有権、workerでの準備、
 DAW project内のsample保持を改めて設計する。現在のVAB上限だけを増やして対応済みとはしない。
 

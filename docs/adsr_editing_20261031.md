@@ -79,4 +79,8 @@ rollbackそのものは実行していない。次回の安全なAU更新のexpe
 AU独自controlへCUAのclickが届きにくい制限は、Standalone操作とheadless AU検証で補った。
 Tone-only dirty・Program11中間画面等の以前からのTODOも保持する。
 次の実装はSPU Reverb。外部入力ReverbとMorph LFOは対象にしない。
+実装`550fbab`の[CI 41201681624](https://github.com/kyorohiro/tetorica-spu-plugin/actions/runs/41201681624)は全job成功。
+実AU/VST3のADSR suite、公式validator47/0、各jobのinstaller11件・CTest5件をログで照合した。
+開始21:34:02 / 完了21:37:44 JST。artifactは`macos-development-bundles`、ID13043285892、
+2,188,245 bytes。upload成功の記録であり、download後の実機検証はしていない。
 CI・hash・実行ログの記録は[検証JSON](adsr_editing_20261031.json)を参照。

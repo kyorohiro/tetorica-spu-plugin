@@ -222,7 +222,64 @@
     }
   ],
   "ci": {
-    "status": "pending-push"
+    "run_id": 41201681624,
+    "url": "https://github.com/kyorohiro/tetorica-spu-plugin/actions/runs/41201681624",
+    "source_commit": "550fbab804305378f6e647d468ff5d5784cbe919",
+    "status": "completed",
+    "conclusion": "success",
+    "started_utc": "2026-10-31T12:34:02Z",
+    "completed_updated_utc": "2026-10-31T12:37:44Z",
+    "jobs": [
+      {
+        "id": 124538554287,
+        "name": "macos",
+        "conclusion": "success",
+        "started_utc": "2026-10-31T12:34:05Z",
+        "completed_utc": "2026-10-31T12:37:43Z"
+      },
+      {
+        "id": 124538554367,
+        "name": "offline",
+        "conclusion": "success",
+        "started_utc": "2026-10-31T12:34:05Z",
+        "completed_utc": "2026-10-31T12:34:20Z"
+      }
+    ],
+    "log_checks": {
+      "installer_tests_each_job": 11,
+      "ctest_each_job": 5,
+      "auval_succeeded": true,
+      "vst3_validator": {
+        "passed": 47,
+        "failed": 0
+      },
+      "actual_vst3_adsr_rates": [
+        44100,
+        48000,
+        96000
+      ],
+      "actual_au_adsr_rates": [
+        48000
+      ],
+      "schema1_and_legacy_migration": true,
+      "all_nine_fields_state": true,
+      "malformed_atomic": true,
+      "first_restore_block": true,
+      "block_automation": true,
+      "next_note_deferred": true,
+      "held_no_retrigger": true,
+      "apply_off_on_refresh": true,
+      "existing_midi_and_bypass_regressions": true
+    },
+    "artifact": {
+      "id": 13043285892,
+      "name": "macos-development-bundles",
+      "size_in_bytes": 2188245,
+      "digest": "sha256:f1c7046e6cb5810d2c6b70cde0609e0feae9b3b1f19f350528c8b372916c0e0e",
+      "created_at": "2026-10-31T12:37:40Z",
+      "expired": false,
+      "downloaded_and_runtime_tested": false
+    }
   },
   "not_verified": [
     "Physical listening",

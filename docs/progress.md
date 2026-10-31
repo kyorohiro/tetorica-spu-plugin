@@ -1,5 +1,14 @@
 # 作業記録
 
+## 2026-10-31 JST — ADSRのCIも成功
+
+- 実装`550fbab804305378f6e647d468ff5d5784cbe919`をpushし、
+  [CI 41201681624](https://github.com/kyorohiro/tetorica-spu-plugin/actions/runs/41201681624)のoffline / macosが全job成功。
+- 新しいADSR検査を含む実AU / VST3 PCM・state、公式validator、installer / CTestをCIログでも確認した。
+  詳細は[検証JSON](adsr_editing_20261031.json)。installed AUも同じ実装で更新・GarageBand復元済み。
+- **次の入口:** SPU Reverbのpreset / Enable / return / voice send。実装前にその区切りをTODOへ追加する。
+  実聴・長時間・DAW automation録音は未確認項目のまま保持する。Release公開・version/tag変更はしていない。
+
 ## 2026-10-31 JST — ADSR編集・実AU/VST3検証とinstalled AU更新
 
 - Tone原本を保つCustom ADSR、9つのrate/mode、Apply、編集graphとtyped入力を追加した。

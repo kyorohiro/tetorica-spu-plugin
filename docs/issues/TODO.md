@@ -34,7 +34,7 @@ ADSR編集も実装・ローカル検証・installed AU更新済み。[検証記
 - [x] 新設定をversion付きstateへ保存する。旧schema1・Gain-only stateは元Toneの音を保って復元し、不正stateは音源と全parameterを保持する。
 - [x] coreのlive / deferred / Release / partition / RT確保と、実AU/VST3でのparameter・state・旧形式回帰を検証する。
 - [x] Standalone / AU / VST3をbuildし、Standalone実操作とGarageBandでの旧state復元・新panel表示を確認する。
-- [ ] 検証結果・制限をcommit / pushし、CIを確認する。
+- [x] 検証結果・制限をcommit / pushし、CIを確認する（`550fbab`、[CI全job成功](https://github.com/kyorohiro/tetorica-spu-plugin/actions/runs/41201681624)）。
 - [x] 検証後に既知manifest付きでinstalled AUを安全に更新し、検証projectの旧state復元を確認する（P3/T0/Gain99、Tone ADSR、Apply On）。
 
 CustomをOffにするとbank内のADSRへ戻る。Custom値はProgram/Toneを切り替えても保持し、Copy toneで明示的に取り込めるようにする。
@@ -221,7 +221,9 @@ complete `.vab`を最初の対象とする。分割VH/VBの複数file dialogは�
 - [ ] editorを開いたままのhost restoreと、file dialog / Program・Tone popup中のeditor close/reopenを実DAWで追試する。
 - [ ] 分割VH/VBのファイル選択を追加する（parserとoffline APIは対応済み）。
 - [ ] Native SDKのrepeat先packetにflag 2がないloopを別途修正・検証する。現在のengineは明示的に拒否、parserは元bytesを保持する。
-- [ ] ADSR / Reverb / Noise / PMONを順に公開する。
+- [x] ADSRをhost parameter / state / graph編集へ公開する（[実AU/VST3・GUI検証](../adsr_editing_20261031.md)）。
+- [ ] SPU Reverb、Noise、PMONを順に公開する。
+- [ ] 実DAWでADSR automation録音・graph drag中のeditor close / host restoreを追試する。headless PCMとStandalone操作の検証とは分ける。
 - [ ] 必要に応じてsoftware morph等のWeb版機能を移す（SPU実機機能とは表示を分ける）。
 
 ## 人による最終確認
