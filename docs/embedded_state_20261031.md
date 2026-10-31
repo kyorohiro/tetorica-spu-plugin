@@ -129,6 +129,7 @@ VABファイル選択、Program/Tone選択、読込状況・エラー、復元�
 - UI起点の成功した公開だけ、UI threadでhostへ変更通知する。失敗・cancel・host restoreでは通知しない。
   VST3は`GetComponentHandler()`からoptionalな`IComponentHandler2::setDirty(true)`を使う。
   固定版の`InformHostOfPresetChange()`はVST3で空実装。
-  AUは`InformListeners(kAudioUnitProperty_ClassInfo, kAudioUnitScope_Global)`でcustom state変更を通知する。
+  AUの`InformListeners(kAudioUnitProperty_ClassInfo, kAudioUnitScope_Global)`は調査後にprivateと判明したため、
+  pluginから直接呼ばない。VAB UIではpublicな`InformHostOfPresetChange()`のPresentPreset通知を使用する。
   AUのproject dirty判定とVST3 optional interfaceの対応はhost依存なので、DAWで確認する。
   変更していないGainのautomationを代用しない。

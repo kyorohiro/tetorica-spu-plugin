@@ -6,57 +6,23 @@
 #include <algorithm>
 #include <cmath>
 
-#if IPLUG_EDITOR
-#include "IControls.h"
-
-namespace
-{
-// The upstream keyboard clears its touched key on mouse-out. Release it first
-// so a mouse gesture leaving the control cannot leave a note held indefinitely.
-class SpuKeyboardControl final : public iplug::igraphics::IVKeyboardControl
-{
-public:
-  using IVKeyboardControl::IVKeyboardControl;
-  void OnMouseOut() override
-  {
-    OnTouchCancelled(0.f, 0.f, iplug::igraphics::IMouseMod{});
-    IVKeyboardControl::OnMouseOut();
-  }
-};
-}
-#endif
-
 TetoricaSPU::TetoricaSPU(const iplug::InstanceInfo& info)
 : iplug::Plugin(info, iplug::MakeConfig(kNumParams, 1))
 {
   GetParam(kParamGain)->InitDouble("Gain", 100., 0., 100., 0.1, "%");
 
 #if IPLUG_EDITOR
-  using namespace iplug;
-  using namespace igraphics;
-  mMakeGraphicsFunc = [&]() {
-    return MakeGraphics(*this, PLUG_WIDTH, PLUG_HEIGHT, PLUG_FPS);
+  mMakeGraphicsFunc = [this]() {
+    return iplug::igraphics::MakeGraphics(*this, PLUG_WIDTH, PLUG_HEIGHT, PLUG_FPS);
   };
-  mLayoutFunc = [&](IGraphics* graphics) {
-    graphics->LoadFont("Roboto-Regular", ROBOTO_FN);
-    graphics->AttachPanelBackground(IColor(255, 239, 248, 250));
-    graphics->AttachControl(new ITextControl(IRECT(24, 18, 550, 60),
-      "Tetorica SPU", IText(30, IColor(255, 27, 62, 73))));
-    graphics->AttachControl(new ITextControl(IRECT(24, 62, 550, 96),
-      "Native PS1 SPU instrument", IText(17)));
-    graphics->AttachControl(new ITextControl(IRECT(24, 104, 550, 134),
-      "Play MIDI from your DAW or click the keyboard below.", IText(14)));
-    graphics->AttachControl(new IVKnobControl(IRECT(576, 28, 696, 152),
-      kParamGain, "Gain"));
-    graphics->AttachControl(new IVButtonControl(IRECT(24, 150, 154, 185),
-      [this](IControl*) {
-        // MIDI travels through the framework's UI-to-audio queue, not directly
-        // into the engine from the UI thread.
-        SendMidiMsgFromUI(IMidiMsg(0, 0xb0, 120, 0));
-      }, "All sound off"));
-    graphics->AttachControl(new SpuKeyboardControl(IRECT(24, 206, 696, 336), 48, 84),
-      kCtrlKeyboard);
-  };
+  initializeInstrumentUI();
+#endif
+}
+
+TetoricaSPU::~TetoricaSPU()
+{
+#if IPLUG_EDITOR
+  closeInstrumentUI();
 #endif
 }
 

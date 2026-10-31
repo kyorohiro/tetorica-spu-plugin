@@ -2,6 +2,7 @@
 iplug_add_plugin(TetoricaSPU
   SOURCES
     TetoricaSPU.cpp
+    InstrumentUI.cpp
     InstrumentState.cpp
     StateAdapters.cpp
     TetoricaSPU.h

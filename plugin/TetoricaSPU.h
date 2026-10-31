@@ -6,8 +6,12 @@
 
 #if IPLUG_DSP
 #include "SpuEngineExchange.h"
+#include "VabLoader.h"
 #include <array>
+#include <atomic>
 #include <cstddef>
+#include <cstdint>
+#include <memory>
 #include <mutex>
 #endif
 
@@ -19,19 +23,32 @@ enum EParams
 
 enum ECtrlTags
 {
-  kCtrlKeyboard = 0
+  kCtrlKeyboard = 0,
+  kCtrlLoadVab,
+  kCtrlBuiltin,
+  kCtrlBankLabel,
+  kCtrlProgram,
+  kCtrlTone,
+  kCtrlInstrumentStatus
 };
 
 class TetoricaSPU final : public iplug::Plugin
 {
 public:
   explicit TetoricaSPU(const iplug::InstanceInfo& info);
+  ~TetoricaSPU() override;
   bool SerializeState(iplug::IByteChunk& chunk) const override;
   int UnserializeState(const iplug::IByteChunk& chunk, int startPos) override;
 
 #if defined(VST3_API)
   Steinberg::tresult PLUGIN_API setState(Steinberg::IBStream* state) override;
   Steinberg::tresult PLUGIN_API getState(Steinberg::IBStream* state) override;
+#endif
+
+#if IPLUG_EDITOR
+  void OnIdle() override;
+  void OnUIOpen() override;
+  void OnUIClose() override;
 #endif
 #if defined(AU_API)
   OSStatus SetState(CFPropertyListRef state) override;
@@ -45,6 +62,33 @@ public:
   void OnActivate(bool active) override;
 
 private:
+  // Host restore calls this only after a successful transactional commit.
+  // UI controls and file-dialog callbacks are refreshed on the UI timer.
+  void scheduleInstrumentUIRefresh() noexcept
+  {
+#if IPLUG_EDITOR
+    mInstrumentUIRevision.fetch_add(1, std::memory_order_release);
+#endif
+  }
+#if IPLUG_EDITOR
+  struct InstrumentUIState;
+  void initializeInstrumentUI();
+  void closeInstrumentUI() noexcept;
+  void promptForVab();
+  void requestBuiltinFromUI();
+  void requestProgramFromUI(
+    std::shared_ptr<const tetorica::InstrumentDefinition> source,
+    std::uint64_t revision, tetorica::SpuEngineExchange::Generation generation,
+    std::uint32_t program);
+  void requestSelectionFromUI(
+    std::shared_ptr<const tetorica::InstrumentDefinition> source,
+    std::uint64_t revision, tetorica::SpuEngineExchange::Generation generation,
+    std::uint32_t program, std::uint32_t tone);
+  void updateInstrumentControls();
+  void notifyHostOfInstrumentEdit();
+  std::shared_ptr<InstrumentUIState> mInstrumentUI;
+  std::atomic<std::uint64_t> mInstrumentUIRevision{0};
+#endif
   void applyMidi(const iplug::IMidiMsg& msg);
   void renderRange(iplug::sample** outputs, int offset, int nFrames, double gain);
 
@@ -56,6 +100,8 @@ private:
   // Host state operations are non-RT. Audio never takes this mutex or reads
   // the immutable authoring snapshot used by serialization.
   mutable std::mutex mStateMutex;
+  // Destruction joins the non-RT worker before destroying the exchange.
+  tetorica::VabLoader mLoader{mEngines};
   struct QueuedMidi
   {
     iplug::IMidiMsg message;

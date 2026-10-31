@@ -14,6 +14,7 @@
 #include <cstdio>
 #include <cstdlib>
 #include <fstream>
+#include <filesystem>
 #include <future>
 #include <iterator>
 #include <limits>
@@ -54,6 +55,7 @@ std::array<Allocation,4096> allocations{};
 std::mutex gateMutex;
 std::condition_variable gateWake;
 std::atomic<bool> gateEnabled{false};
+std::atomic<std::size_t> gateSize{sizeof(Engine)};
 bool gateEntered = false, gateReleased = false;
 
 [[noreturn]] void fail(const char* expression,int line) {
@@ -63,7 +65,7 @@ bool gateEntered = false, gateReleased = false;
 
 void beforeAllocate(std::size_t size) {
   if(rtTracking)++rtNew;
-  if(size==sizeof(Engine)&&gateEnabled.load(std::memory_order_acquire)) {
+  if(size==gateSize.load(std::memory_order_relaxed)&&gateEnabled.load(std::memory_order_acquire)) {
     CHECK(!rtTracking);
     std::unique_lock<std::mutex> lock(gateMutex);
     if(gateEnabled.load(std::memory_order_relaxed)) {
@@ -134,7 +136,7 @@ struct RtProbe {
   ~RtProbe(){rtTracking=false;CHECK(rtNew==0&&rtDelete==0);++probes;}
 };
 struct Gate {
-  Gate(){std::lock_guard<std::mutex> lock(gateMutex);CHECK(!gateEnabled);gateEntered=false;gateReleased=false;gateEnabled=true;}
+  explicit Gate(std::size_t size=sizeof(Engine)){std::lock_guard<std::mutex> lock(gateMutex);CHECK(!gateEnabled);gateEntered=false;gateReleased=false;gateSize=size;gateEnabled=true;}
   void wait(){std::unique_lock<std::mutex> lock(gateMutex);CHECK(gateWake.wait_for(lock,5s,[]{return gateEntered;}));}
   void open(){std::lock_guard<std::mutex> lock(gateMutex);gateEnabled=false;gateReleased=true;gateWake.notify_all();}
   ~Gate(){open();}
@@ -207,12 +209,30 @@ Loader::Status waitStatus(Loader& loader,Exchange::Generation generation,Loader:
   for(;;) {
     auto status=loader.status();
     CHECK(status.generation==generation);
-    if(status.state!=Loader::State::Loading){CHECK(status.state==state);return status;}
+    if(status.state!=Loader::State::Loading){
+      if(status.state!=state)std::fprintf(stderr,"Unexpected loader status (%s): got %d expected %d error=%s\n",comparisonContext,static_cast<int>(status.state),static_cast<int>(state),status.error.c_str());
+      CHECK(status.state==state);return status;}
     CHECK(Clock::now()<deadline);
     // Bounded completion polling; correctness never depends on this interval.
     std::this_thread::sleep_for(1ms);
   }
 }
+
+struct FileFixtures {
+  std::filesystem::path directory;
+  FileFixtures(){
+    directory=std::filesystem::temp_directory_path()/
+        ("tetorica-spu-loader-"+std::to_string(Clock::now().time_since_epoch().count()));
+    CHECK(std::filesystem::create_directory(directory));
+  }
+  ~FileFixtures(){std::error_code error;std::filesystem::remove_all(directory,error);}
+  std::string path(const std::string& name)const{return (directory/std::filesystem::u8path(name)).u8string();}
+  std::string write(const std::string& name,const std::vector<std::uint8_t>& bytes){
+    const auto result=path(name);std::ofstream out(std::filesystem::u8path(result),std::ios::binary|std::ios::trunc);
+    CHECK(out.good());out.write(reinterpret_cast<const char*>(bytes.data()),static_cast<std::streamsize>(bytes.size()));
+    out.close();CHECK(!out.fail());return result;
+  }
+};
 
 void baseline(const std::vector<std::uint8_t>&) {
   Exchange exchange;Engine reference;Pcm actual,expected;
@@ -382,6 +402,125 @@ void inFlightSupersession(const std::vector<std::uint8_t>& bytes) {
   }
 }
 
+void workerFilesAndSelections(const std::vector<std::uint8_t>& bytes) {
+  FileFixtures files;Exchange exchange;Loader loader(exchange);Engine reference;
+  CHECK(exchange.instrument().prepare(48000)&&reference.prepare(48000));
+  exchange.instrument().noteOn(60,127);reference.noteOn(60,127);
+  auto truncated=bytes;truncated.pop_back();
+  const auto empty=files.write("empty.vab",{});
+  const auto shortFile=files.write("truncated.vab",truncated);
+  const auto malformed=files.write("invalid.vab",std::vector<std::uint8_t>(128,42));
+  const auto oversized=files.path("oversized.vab");
+  {std::ofstream out(oversized,std::ios::binary);CHECK(out.good());out.seekp(tetorica::vab::kMaxFileBytes);out.put(0);CHECK(out.good());}
+  for(const auto& path:std::vector<std::string>{"",files.path("missing.vab"),files.directory.u8string(),empty,shortFile,malformed,oversized}){
+    const auto gen=loader.requestFile(path);
+    CHECK(!waitStatus(loader,gen,Loader::State::Failed).error.empty());CHECK(!begin(exchange));
+    matchContinuation(exchange,reference);
+  }
+  auto nulPath=files.path("valid.vab");nulPath.push_back('\0');nulPath+="ignored";
+  auto gen=loader.requestFile(nulPath);CHECK(!waitStatus(loader,gen,Loader::State::Failed).error.empty());
+  CHECK(!begin(exchange));matchContinuation(exchange,reference);
+
+  const auto unreadable=files.write("unreadable.vab",bytes);
+  std::error_code permissionError;
+  std::filesystem::permissions(unreadable,std::filesystem::perms::none,std::filesystem::perm_options::replace,permissionError);
+  if(!permissionError){
+    std::ifstream permissionProbe(unreadable,std::ios::binary);
+    if(!permissionProbe){gen=loader.requestFile(unreadable);CHECK(!waitStatus(loader,gen,Loader::State::Failed).error.empty());CHECK(!begin(exchange));matchContinuation(exchange,reference);}
+    permissionProbe.close();
+    std::filesystem::permissions(unreadable,std::filesystem::perms::owner_all,std::filesystem::perm_options::replace,permissionError);
+  }
+
+  const auto valid=files.write("音色.vab",bytes);
+  gen=loader.requestFile(valid);waitStatus(loader,gen,Loader::State::Ready);CHECK(begin(exchange));
+  CHECK(exchange.snapshotDefinition()->program()==3&&exchange.snapshotDefinition()->tone()==0);
+  matchNewNote(exchange,tone(bytes),48000);
+  const auto source=exchange.snapshotDefinition();
+  CHECK(std::filesystem::remove(std::filesystem::u8path(valid)));
+  gen=loader.requestSelection(source,3,1);waitStatus(loader,gen,Loader::State::Ready);CHECK(begin(exchange));
+  CHECK(exchange.snapshotDefinition()->program()==3&&exchange.snapshotDefinition()->tone()==1);
+  matchNewNote(exchange,tone(bytes,1),48000); //Embedded bank survives deletion of source file.
+  const auto* current=&exchange.instrument();
+  const auto currentDef=exchange.snapshotDefinition();
+  gen=loader.requestSelection(source,11,1);CHECK(!waitStatus(loader,gen,Loader::State::Failed).error.empty());
+  CHECK(!begin(exchange)&&&exchange.instrument()==current&&exchange.snapshotDefinition()==currentDef);
+  gen=loader.requestSelection(nullptr,3,0);waitStatus(loader,gen,Loader::State::Failed);CHECK(!begin(exchange));
+  gen=loader.requestSelection(tetorica::InstrumentDefinition::builtin(),0,0);
+  waitStatus(loader,gen,Loader::State::Failed);CHECK(!begin(exchange));
+
+  auto firstNoise=bytes;firstNoise[0x820+22]=255;firstNoise[0x820+23]=0;
+  const auto noisePath=files.write("first-noise.vab",firstNoise);
+  gen=loader.requestFile(noisePath);waitStatus(loader,gen,Loader::State::Ready);CHECK(begin(exchange));
+  CHECK(exchange.snapshotDefinition()->program()==3&&exchange.snapshotDefinition()->tone()==1);
+  matchNewNote(exchange,tone(firstNoise,1),48000);
+  const auto playable=exchange.snapshotDefinition();
+  gen=loader.requestFile(noisePath,0);waitStatus(loader,gen,Loader::State::Failed);
+  CHECK(!begin(exchange)&&exchange.snapshotDefinition()==playable); //Explicit index must not skip.
+  auto none=firstNoise;none[0x840+22]=255;none[0x840+23]=0;none[0xa20+22]=0;none[0xa20+23]=0;
+  gen=loader.requestFile(files.write("none-playable.vab",none));
+  CHECK(waitStatus(loader,gen,Loader::State::Failed).error.find("No playable Tone")!=std::string::npos);
+  CHECK(!begin(exchange)&&exchange.snapshotDefinition()==playable);
+  auto flag4=bytes;flag4[3616+16+1]=4;
+  gen=loader.requestFile(files.write("unsupported-loop-first.vab",flag4));
+  waitStatus(loader,gen,Loader::State::Ready);CHECK(begin(exchange));
+  CHECK(exchange.snapshotDefinition()->program()==11&&exchange.snapshotDefinition()->tone()==0);
+  Engine oneShot(tone(flag4,2));CHECK(oneShot.prepare(48000));Pcm actual,expected;float firstPeak=0;
+  {RtProbe probe;exchange.instrument().noteOn(69,127);oneShot.noteOn(69,127);
+   for(int i=0;i<8;++i){render(exchange.instrument(),actual);render(oneShot,expected);same(actual,expected);firstPeak=std::max(firstPeak,peak(actual.left));}}
+  CHECK(firstPeak>0&&peak(actual.left)==0);
+
+  auto programBytes=bytes;programBytes[0x820+22]=255;programBytes[0x840+22]=2;
+  auto programSource=tetorica::InstrumentDefinition::fromVab(programBytes,11,0);
+  gen=loader.requestProgram(programSource,3);waitStatus(loader,gen,Loader::State::Ready);CHECK(begin(exchange));
+  CHECK(exchange.snapshotDefinition()->program()==3&&exchange.snapshotDefinition()->tone()==1);
+  auto selectedProgram=exchange.snapshotDefinition();
+  // Both P3 Tones unavailable, although P11 remains playable: never silently
+  // switch to another Program when the user explicitly chose Program3.
+  programBytes[0x840+22]=255;
+  programSource=tetorica::InstrumentDefinition::fromVab(programBytes,11,0);
+  gen=loader.requestProgram(programSource,3);
+  CHECK(waitStatus(loader,gen,Loader::State::Failed).error.find("Program")!=std::string::npos);
+  CHECK(!begin(exchange)&&exchange.snapshotDefinition()==selectedProgram);
+  gen=loader.requestProgram(programSource,0);waitStatus(loader,gen,Loader::State::Failed);CHECK(!begin(exchange));
+  gen=loader.requestProgram(nullptr,3);waitStatus(loader,gen,Loader::State::Failed);CHECK(!begin(exchange));
+}
+
+void changedFileAndRestoreSupersession(const std::vector<std::uint8_t>& bytes) {
+  FileFixtures files;
+  for(const bool grow:{false,true}){
+    comparisonContext=grow?"file grew after measurement":"file shrank after measurement";
+    Exchange exchange;Loader loader(exchange);const auto file=files.write(grow?"grow.vab":"shrink.vab",bytes);
+    Gate gate(bytes.size()); //Worker has measured size; pauses before allocating its file buffer.
+    const auto gen=loader.requestFile(file,0);gate.wait();
+    if(grow){std::ofstream out(file,std::ios::binary|std::ios::app);out.put(0);out.close();CHECK(!out.fail());}
+    else std::filesystem::resize_file(file,16);
+    gate.open();CHECK(!waitStatus(loader,gen,Loader::State::Failed).error.empty());
+    CHECK(!begin(exchange)&&exchange.adoptedGeneration()==0);
+  }
+  const auto file=files.write("restore-supersession.vab",bytes);
+  {
+    Exchange next;Loader loader(next);Gate gate;
+    const auto old=loader.requestFile(file,0);gate.wait();
+    auto right=bytes;right[0x820+3]=127;
+    const auto latest=loader.requestFile(files.write("latest.vab",right),0);
+    CHECK(latest>old);gate.open();waitStatus(loader,latest,Loader::State::Ready);
+    CHECK(begin(next)&&next.adoptedGeneration()==latest);matchNewNote(next,tone(right),48000);
+  }
+  Exchange exchange;
+  auto definition=tetorica::InstrumentDefinition::fromVab(bytes,3,1);
+  auto hostPrepared=tetorica::prepareDefinition(*definition);
+  auto loader=std::make_unique<Loader>(exchange);Gate gate;
+  const auto old=loader->requestFile(file,0);gate.wait();
+  const auto restored=exchange.commitPrepared(std::move(hostPrepared),definition);
+  CHECK(restored>old&&begin(exchange));
+  const auto status=loader->status();
+  CHECK(status.generation==old&&status.state==Loader::State::Failed&&!status.error.empty());
+  CHECK(exchange.snapshotDefinition()==definition);
+  gate.open();loader.reset(); //Join old completion; it must not publish over host restore.
+  CHECK(exchange.latestGeneration()==restored&&exchange.adoptedGeneration()==restored);
+  CHECK(exchange.snapshotDefinition()==definition);matchNewNote(exchange,tone(bytes,1),48000);
+}
+
 void concurrentPublication(const std::vector<std::uint8_t>& bytes) {
   Exchange exchange;const auto left=sideTone(bytes,false),right=sideTone(bytes,true);
   std::mutex mutex;std::condition_variable wake;int requested=0,completed=0;
@@ -459,6 +598,8 @@ int main() {
   run("full retirement defers then resumes",fullRetirement,bytes);
   run("worker success/failure/latest/builtin",loaderSuccessFailureAndLatest,bytes);
   run("deterministic in-flight supersession",inFlightSupersession,bytes);
+  run("worker bounded files/first-playable/embedded selection",workerFilesAndSelections,bytes);
+  run("changed file/host restore supersession",changedFileAndRestoreSupersession,bytes);
   run("concurrent producer/audio publication",concurrentPublication,bytes);
   run("pending/retired/in-flight shutdown ownership",shutdownOwnership,bytes);
   CHECK(liveCount()==0&&engineAllocations==engineFrees&&engineRtFrees==0);

@@ -1,5 +1,18 @@
 # 作業記録
 
+## 2026-10-31 JST — VAB読み込み・選択UIのローカル検証完了
+
+- 開始TODO `d3f7083` をcommit / pushしてから実装した。
+- Load VAB / Builtin / sparse Program・Tone / statusを720×360内へ追加し、Gain・鍵盤を維持した。
+- worker上のbounded file読込と、file初回・Program内限定の最初の再生可能Tone選択を接続した。
+- editor寿命token、revision / generation fence、restore後のOnIdle表示更新、lock外のhost通知を追加。
+- offline / macOS各5 suite、state / exchange ASan・TSan各2 suite、公式VST3 47検査と実AU/VST3のstate/PCM回帰が成功。
+- Standaloneで日本語・空白file名の読込、Program 3/11、Tone 1、Builtin復帰、失敗とcancel後の選択保持を確認した。
+  最終binaryの起動と描画も確認し、検証後終了。物理的な実聴・DAW VAB操作確認は別。
+- AU hostはsandboxのCoreAudio制限により承認済みsandbox外実行で成功。既存AUとGarageBand projectは変更していない。
+- [詳細・再現手順](vab_ui_20261031.md)。次は安全なAU更新、実DAWのdirty判定・保存再起動・UI復元確認。
+- 現時点でCIは実装push後に確認する。Release公開・署名・公証は行っていない。
+
 ## 2026-10-31 JST — VAB読み込み・選択UIの開始
 
 - ユーザーから継続の指示。cleanな `619f693` から開始し、実装前に今回のTODOを追加した。

@@ -74,6 +74,10 @@ int TetoricaSPU::UnserializeState(const iplug::IByteChunk& chunk, int startPos)
     // This trusted one-double chunk was fully validated above. The pinned
     // framework then sets Gain and calls OnParamReset without further reads.
     UnserializeParams(params, 0);
+    // A host restore can arrive off the UI thread. Only publish a revision
+    // here; OnIdle will refresh its model without requesting another engine.
+    // Failed validation/preparation above must leave an in-flight UI load alone.
+    scheduleInstrumentUIRefresh();
     return chunk.Size();
   }
   catch (...)

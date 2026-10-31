@@ -5,9 +5,10 @@ Initial development targets macOS Standalone, AUv2 and VST3. Not a published rel
 
 Current prototype: original built-in Sine, MIDI Note On/Off and velocity,
 24 voices, channel-aware note ownership, All sound off, Gain and mouse keyboard.
-VAB file selection in the plugin and additional SPU controls remain planned.
-The UI-independent VAB parser and selected-Tone engine can now be exercised
-with the offline tool below.
+Load a complete VAB from the editor and select a Program and Tone to audition.
+The bank, selection and Gain are embedded in the DAW project state.
+Additional SPU controls remain planned. The same VAB parser and selected-Tone
+engine can also be exercised with the offline tool below.
 
 The audio engine runs directly as native C++ in the host callback. It does not
 send audio through a browser, WebView, Tauri IPC or a separate CPAL device.
@@ -82,8 +83,22 @@ reconstruction. Sample 0 (unassigned), sample 255 (Noise), malformed ADPCM and
 selected payloads beyond usable SPU RAM are rejected. The pinned Native SDK
 also requires the repeat-address packet to carry flag 2; structurally valid
 loops without it, including flag 4 alone, are rejected for playback. No sample
-flags are silently rewritten. File UI is the next integration step; see
-[TODO](docs/issues/TODO.md).
+flags are silently rewritten. See [TODO](docs/issues/TODO.md) for remaining work.
+
+## VAB in the plugin editor
+
+Choose **Load VAB** and open a standard v6/v7 complete `.vab` file (up to 1 MiB).
+Reading, parsing and sample-cache preparation run on a worker. Initial loading
+selects the first playable Tone. **Program** chooses the first playable Tone
+within that Program; **Tone** chooses an exact entry. Both menus use the bank's
+original IDs. This auditions one Tone at a time.
+**Built-in Sine** returns to the original instrument.
+
+The status distinguishes preparation from audio adoption. A prepared instrument
+can wait for the next audio block when processing is stopped. A failed load keeps
+the current sound and selection; cancelling the file dialog keeps them too.
+The editor shows the embedded bank after project restoration without reopening
+the source file. Split `.vh` + `.vb` file selection remains follow-up work.
 
 The prepared-engine exchange is now connected at plugin block boundaries.
 `src/VabLoader.h` supplies a non-audio-thread API to prepare a complete VAB Tone
@@ -92,7 +107,8 @@ keeps the current instrument. The audio side adopts prepared engines without
 allocating, destroying engines, taking an application mutex or notifying a
 worker. Old engines return through a bounded retirement queue; a full queue
 defers the switch. This layer does not make the entire host/framework callback
-lock-free. No loader thread is started by the current plugin UI.
+lock-free. Each plugin instance owns its loader and joins it before destroying
+the engine exchange.
 
 ## Embedded DAW state
 
@@ -114,8 +130,10 @@ sh scripts/check_vst3_audio.sh build/macos/out/TetoricaSPU.vst3
 
 These hosts load the workspace bundles without opening a device or editor.
 State restore is a non-audio-thread host lifecycle operation, with processing
-quiescent during the call. The next UI step will expose VAB loading and Program/
-Tone selection; the current UI still starts with the built-in instrument.
+quiescent during the call. A new instance starts with Built-in Sine; reopening
+the editor after restoration displays the saved bank and Program/Tone.
+See [the VAB UI verification record](docs/vab_ui_20261031.md) for checks completed
+and remaining DAW-specific validation.
 
 ## macOS AU / GarageBand verification
 
