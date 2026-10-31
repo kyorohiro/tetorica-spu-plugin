@@ -1,5 +1,14 @@
 # 作業記録
 
+## 2026-10-31 JST — Noise CIの旧macOSランナー停止を対処
+
+- 実装`e43d031`の[CI 41209955649](https://github.com/kyorohiro/tetorica-spu-plugin/actions/runs/41209955649)は
+  Offlineのinstaller11・CTest8/8成功、macOSはrunner割当前にcancelled（stepsなし）。
+- annotationと[公式告知](https://github.com/actions/runner-images/issues/13518)で、10月31日14:00UTC〜
+  翌0:00UTCのmacOS14 brownoutと一致することを確認した。Noiseソース/テストの失敗ではない。
+- 対応案をTODOへ追加後、workflowをmacos-15へ移して再実行する。bundleの最低OS target13.0は維持する。
+  この時点でNoise AUは`au-update-j01640dh`により更新済み、auval・GarageBand再表示はこれから。
+
 ## 2026-10-31 JST — Noise実装・実AU/VST3・Source UI検証完了
 
 - TODO `cd0c82d`の後、共有Noise / Clock0〜63を実装。Sample sourceとPCM draft保持、Clockは保持音・Releaseへlive反映。
