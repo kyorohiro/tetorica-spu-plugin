@@ -29,6 +29,10 @@ jobs:
       - run: cmake --preset macos
       - run: cmake --build --preset macos --parallel 4
       - run: ctest --preset macos
+      - name: Install and validate the user AU
+        run: |
+          python3 scripts/install_au.py --install
+          /usr/bin/auval -v aumu Tspu Tetr
       - name: Validate VST3
         run: sh scripts/validate_vst3.sh build/macos/out/TetoricaSPU.vst3
       - name: Render and restore the actual VST3

@@ -11,14 +11,15 @@ iPlug2OOSを土台に、tetorica-soundchip-nativeのPS1 SPUをDAWから演奏す
 Native Sineの最小プラグインはローカルでbuild・自動検証済み。
 固定依存とソースはGitHubにも保存した。
 [ハッシュ・ローカル検証記録](../verification_20261031.json)、
-[最初のCI](https://github.com/kyorohiro/tetorica-spu-plugin/actions/runs/41180834350)を確認し、
-次はAU / GarageBandでの確認、その後VAB読み込みへ進む。
+[最初のCI](https://github.com/kyorohiro/tetorica-spu-plugin/actions/runs/41180834350)も成功。
+AU / GarageBandでの録音・保存・復元・WAVE書出しを追試済み。
+次は[VAB取り込み計画](../vab_import_plan.md)の純粋パーサー・Tone準備関数から進む。
 
 ### 今回進める範囲（2026-10-31）
 
-- [ ] AUをユーザー専用Componentsへ新規配置し、auvalで検査する。既存bundleは上書きしない。
-- [ ] GarageBandで新規の検証用projectを作り、AU選択・演奏・保存・再読込・書出しを試す。
-- [ ] VST3のMIDI境界・overflow復帰テストを追加する。
+- [x] AUをユーザー専用Componentsへ新規配置し、auvalで検査する。既存bundleは上書きしない。
+- [x] GarageBandで新規の検証用projectを作り、AU選択・演奏・保存・再読込・書出しを試す。
+- [x] VST3のMIDI境界・overflow復帰テストを追加する。
 - [ ] 上記の結果と手動確認が残る範囲を記録し、commit / pushする。
 
 ## 再開手順
@@ -50,11 +51,11 @@ Native Sineの最小プラグインはローカルでbuild・自動検証済み�
 
 ## Phase 2: プラグインとしての検証
 
-- [ ] AUをauvalで検証する（登録に必要な操作はその時点で確認）。
+- [x] AUをauvalで検証する。ユーザーComponentsへ新規配置し、sandbox外で成功。factory preset名のwarningは後続TODO。
 - [x] VST3をSteinberg公式validatorで検証する（47成功、0失敗）。
 - [x] 初期Gain状態の保存・復元と44.1 / 48 / 96kHzの実VST3 offline renderを検査する。block sizeは公式validatorとcore分割一致で検査。
-- [ ] wrapperのイベント境界・順序・queue overflow復帰を実VST3で追加検査する。
-- [ ] GarageBandで読込・演奏・保存・再読込・書出しを確認する。
+- [x] wrapperのイベント境界・順序・queue overflow復帰を実VST3で追加検査する（44.1 / 48 / 96kHz）。
+- [x] GarageBandで読込・MIDI録音・保存・再読込・WAVE書出しを確認する。Gain99%復元、前後のPCM差最大1LSB。実聴は別。
 - [x] CIにオフライン検査とbuildを追加する。最初のLinux core / macOS build・VST3検査が成功。Windows build・各OSの実聴は未確認。
 
 ## 初期版の既知の制約・後続改善
@@ -64,6 +65,7 @@ Native Sineの最小プラグインはローカルでbuild・自動検証済み�
 - [ ] Pitch Bend / Sustainを追加する。
 - [ ] CC120をチャンネル別の即時停止にする（現状はglobal panic、CC123はchannel release）。
 - [ ] Gain変更を滑らかにし、sample単位のautomationの扱いを検討する。
+- [ ] AU factory presetの名前を初期化し、auvalのpreset-name warningを解消する。
 
 ## Phase 3: VAB楽器と音作り
 

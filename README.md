@@ -56,6 +56,21 @@ build/offline/spu_instrument_test --wav build/spu-demo.wav
 The VST3 checks load the actual bundle without registering it with a DAW or
 opening an audio device. The WAV demo contains an original C/E/G chord and release.
 
+## macOS AU / GarageBand verification
+
+```sh
+python3 scripts/install_au.py           # Inspect; no install unless requested
+python3 scripts/install_au.py --install # New user-only AU; refuses differing existing bundles
+/usr/bin/auval -v aumu Tspu Tetr
+```
+
+The destination is `~/Library/Audio/Plug-Ins/Components/TetoricaSPU.component`.
+This is an explicit test installation; the normal build still does not deploy.
+GarageBand lists it under **AU Instruments → Tetorica → TetoricaSPU → Stereo**.
+Local AU validation and a GarageBand MIDI-record/save/reopen/WAVE-export workflow
+were completed; physical listening and long realtime testing remain separate.
+See [the AU / GarageBand record](docs/au_garageband_20261031.md).
+
 ## Prototype limits
 
 - The fixed 112-frame Sine reaches the SPU PITCH ceiling at about 1,575 Hz;
