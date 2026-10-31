@@ -28,13 +28,13 @@ ADSR編集とSPU Reverbも実装・ローカル検証・installed AU更新済み
 
 ### PCM波形選択・描画の今回の区切り（2026-10-31、実装前）
 
-- [ ] Webと同じ112-sample周期、Sine / Triangle / Saw / Squareと単一canvasでの自由描画を追加する。softwareで作るPCMをSPU ADPCMへ変換する機能と表示する。
-- [ ] editorはPCM / ADSR / Reverbのpage切替で720×620を維持し、共通bank・Gain・keyboardを残す。描画はdraftとし、Apply PCMで反映、Revertで現在音源へ戻せるようにする。
-- [ ] Apply PCMはworkerでcyclic ADPCM変換・engine/cache準備を完了し、既存exchangeでblock境界に交換する。交換で保持音と残響が止まることをUIへ明記し、次のNote Onから新波形を使う。drag中にRAMを書き換えない。
-- [ ] PCM原本112個をimmutableな音源定義へ保存し、元ファイルなしでproject復元できるようにする。新stateは旧schema1/2/3・Gain-onlyを読み、既存parameter ID0〜16を保つ。
-- [ ] 値域・finite・長さ・kindの不正入力をcommit前に拒否し、現音源・設定・準備中の正常stateを保つ。VABのProgram/Tone選択は引き続きVABに限定する。
-- [ ] 初期Builtin SineのPCM byte一致、cyclic encoderのWeb基準、4形状の音程・音の差・loop、RT確保・交換・保存互換をcoreで検証する。
-- [ ] 実AU/VST3でPCM入りstate・最初のNote On・不正stateのatomic性・ADSR/Reverb/MIDI回帰を検証し、Standaloneの描画・Apply/Revert・page切替を確認する。
+- [x] Webと同じ112-sample周期、Sine / Triangle / Saw / Squareと単一canvasでの自由描画を追加する。softwareで作るPCMをSPU ADPCMへ変換する機能と表示する。
+- [x] editorはPCM / ADSR / Reverbのpage切替で720×620を維持し、共通bank・Gain・keyboardを残す。描画はdraftとし、Apply PCMで反映、Revertで現在音源へ戻せるようにする。
+- [x] Apply PCMはworkerでcyclic ADPCM変換・engine/cache準備を完了し、既存exchangeでblock境界に交換する。交換で保持音と残響が止まることをUIへ明記し、次のNote Onから新波形を使う。drag中にRAMを書き換えない。
+- [x] PCM原本112個をimmutableな音源定義へ保存し、元ファイルなしでproject復元できるようにする。新stateは旧schema1/2/3・Gain-onlyを読み、既存parameter ID0〜16を保つ。
+- [x] 値域・finite・長さ・kindの不正入力をcommit前に拒否し、現音源・設定・準備中の正常stateを保つ。VABのProgram/Tone選択は引き続きVABに限定する。
+- [x] 初期Builtin SineのPCM byte一致、cyclic encoderのWeb基準、4形状の音程・音の差・loop、RT確保・交換・保存互換をcoreで検証する。
+- [x] 実AU/VST3でPCM入りstate・最初のNote On・不正stateのatomic性・ADSR/Reverb/MIDI回帰を検証し、Standaloneの描画・Apply/Revert・page切替を確認する。
 - [ ] build / CTest / validator / CIを確認し、結果・制限・次の入口をcommit / pushする。installed AUの更新はhost保存・終了と既知manifest照合を経て行う。
 
 初期Builtin SineとVABの既存音は変更しない。PCMの選択・描画は音色stateとして保存し、今回host automation parameterには追加しない。

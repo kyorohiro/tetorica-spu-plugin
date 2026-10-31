@@ -56,6 +56,14 @@ constexpr std::array<std::array<std::uint16_t,32>,8> kReverbRegisters{{
     0x01a0,0x00e3,0x0058,0x0040,0x0028,0x0014,0x8000,0x8000}}
 }};
 bool validChannel(int channel) { return channel >= 0 && channel < 16; }
+vab::PreparedTone cycleTone(const PcmCycle& pcm) {
+  const auto adpcm=encodePcmCycle(pcm);
+  vab::PreparedTone tone;
+  tone.adpcm.assign(adpcm.begin(),adpcm.end());
+  tone.rootFrequencyHz=44100./112;tone.decodedFrames=112;tone.loopStartSamples=0;
+  tone.adsr1=0x000f;tone.adsr2=0x1fc0;tone.volumeLeft=tone.volumeRight=1;
+  return tone;
+}
 
 void validateTone(const vab::PreparedTone& tone) {
   const auto& bytes=tone.adpcm;
@@ -104,6 +112,7 @@ SpuInstrument::SpuInstrument(const vab::PreparedTone& tone) {
   try { initializeTone(tone); }
   catch (...) { ps1_spu_destroy(mChip); mChip=nullptr; throw; }
 }
+SpuInstrument::SpuInstrument(const PcmCycle& pcm) : SpuInstrument(cycleTone(pcm)) {}
 SpuInstrument::~SpuInstrument() { ps1_spu_destroy(mChip); }
 
 bool SpuInstrument::write(unsigned offset, unsigned value) noexcept {

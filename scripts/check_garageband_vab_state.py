@@ -94,14 +94,16 @@ def decode_payload(payload):
     if len(payload) < 40 or payload[:8] != b'TSPUST01':
         raise ValueError('Expected complete TSPUST01 custom state or legacy Gain')
     schema, total, kind, program, tone, size = struct.unpack_from('<6I', payload, 8)
-    if schema not in (1, 2, 3) or total != len(payload) or size > MAX_BANK or total != {1: 40, 2: 48, 3: 72}[schema] + size:
+    if schema not in (1, 2, 3, 4) or total != len(payload) or size > MAX_BANK or total != {1: 40, 2: 48, 3: 72, 4: 72}[schema] + size:
         raise ValueError('Invalid state schema, total or bank length')
-    if kind not in (0, 1) or program > 127 or tone > 15:
+    if kind not in ((0, 1, 2) if schema >= 4 else (0, 1)) or program > 127 or tone > 15:
         raise ValueError('Invalid state kind or sparse selection')
     if kind == 0 and (size or program or tone):
         raise ValueError('Builtin state has an unexpected bank or selection')
     if kind == 1 and not size:
         raise ValueError('VAB state has no embedded bank')
+    if kind == 2 and (size != 448 or program or tone):
+        raise ValueError('PCM cycle must contain 112 samples and no VAB selection')
     gain, = struct.unpack_from('<d', payload, 32 + size)
     if not math.isfinite(gain) or not 0 <= gain <= 100:
         raise ValueError('Invalid custom-state Gain')
@@ -112,13 +114,16 @@ def decode_payload(payload):
     if preset > 7 or effects & ~3 or any(not math.isfinite(value) or not 0 <= value <= 1 for value in (left, right)):
         raise ValueError('Invalid reverb preset, flags or return volumes')
     bank = payload[32:32 + size]
-    return dict(result, schema=schema, kind='VAB' if kind else 'Builtin',
+    if kind == 2 and any(not math.isfinite(value) or not -1 <= value <= 1 for value in struct.unpack('<112f', bank)):
+        raise ValueError('PCM cycle samples must be finite in [-1, 1]')
+    return dict(result, schema=schema, kind={0: 'Builtin', 1: 'VAB', 2: 'PcmCycle'}[kind],
                 program=program, tone=tone, gain_percent=gain,
                 envelope={'enabled': bool(flags & 1), 'live': bool(flags & 2),
                           'adsr1': packed & 65535, 'adsr2': packed >> 16},
                 reverb={'preset': preset, 'enabled': bool(effects & 1), 'use_tone_send': bool(effects & 2),
                         'volume_left': left, 'volume_right': right},
-                bank_bytes=size, bank_sha256=sha(bank) if size else None), bank
+                bank_bytes=size if kind == 1 else 0, bank_sha256=sha(bank) if kind == 1 else None,
+                pcm_samples=112 if kind == 2 else None, pcm_sha256=sha(bank) if kind == 2 else None), bank if kind == 1 else b''
 
 
 def scan_file(path):

@@ -15,6 +15,8 @@ VAB由来のADSR・tuning・loop・volume/panを使用する。ADSRはCustom ove
 ほかの元Tone設定の編集UIは後続。[ADSRの検証記録](adsr_editing_20261031.md)を参照。
 共有Reverbのpreset / Enable / Return / sendも実装した。初期Offで元の音を保つ。
 [Reverbの検証記録](reverb_20261031.md)を参照。
+112-sample PCMの4形状・単一canvasでのdraft描画・Applyも実装中。
+Applyはworkerで準備した音源への交換であり、保持音・残響は停止する。live PCM書換えは後続。
 Gainは現在0〜100%。WebのMaster 200%とは異なる。
 
 実DAWでの確認済み範囲と残るProgram操作・dirty判定は、
@@ -27,7 +29,8 @@ Gainは現在0〜100%。WebのMaster 200%とは異なる。
 | 実装済み：演奏controller | ±2半音Pitch、Sustainによる離鍵保留 | チャンネル別MIDI Pitch Bend / CC64。発音中・Release中・新規音への反映、sample offset、交換cacheを検証済み。実UI交換中の追試は残る。 |
 | 実装済み：ADSR | rate/modeの数値編集、A/D/S/Rのドラッグ、保持音への適用切替 | 元Toneを保つCustom編集、現在level/sample位置からの更新、次Noteからの更新、host parameter / state2を実装・検証済み。実DAW automation録音等は残る。 |
 | 実装済み：SPU Reverb | preset、Enable、左右return。preset選択時に自動Enable | 共有preset/returnとAll notes / Tone send、state3を実装。Off・bypass・残響・保存互換を実AU/VST3で検証。実聴・DAW automation録音等は残る。 |
-| 次：PCM / Noise / PMON | 112-sample周期の4形状・自由描画、Noise clock、PMON変調波形・Ratio・Depth・Decay | 固定Sine以外の音作りを追加する。Noiseは共有clock、PMONは隣接voiceの12組構成を保ち、切替時の発音数・保持音の扱いを明示する。 |
+| 作業中：PCM | 112-sample周期の4形状・自由描画 | 単一canvasのdraft / Apply / Revertとschema4の元PCM保存を追加。workerで循環ADPCMを準備し、交換時に保持音・残響を停止する。 |
+| 次：Noise / PMON | Noise clock、PMON変調波形・Ratio・Depth・Decay | Noiseは共有clock、PMONは隣接voiceの12組構成を保ち、切替時の発音数・保持音の扱いを明示する。 |
 | Software morph | A/B/Resultを同じcanvasへ表示し、編集対象を切替。保持音を再発音せずblend変更 | PCM編集を土台にA/B定義・amount・更新経路を追加し、software機能と表示する。Webの初期設定はOn、A=Sine、B=Saw、amount=0%。 |
 | 音色・素材の入力 | `.spu.json`、audio、PSF1/MiniPSFからの静的VAB抽出、VH+VB | 分割VH/VBとpreset互換から始め、sample stateを設計してAudio・PSF抽出へ広げる。C++の明示VH/VB parserは既にあるが、file pickerはcomplete VABのみ。既知のNative loop flag制限も別途修正・検証する。 |
 | monitor・演奏UI | Envelope/Waveform/Spectrum、Guitar/Bass/Ukulele、Octave、Pitch/Morph wheel、Master 200% | 必要なmonitorと操作を追加する。DAWで代替できる操作は優先度を分け、Standaloneの利便性も考慮する。 |
@@ -67,7 +70,8 @@ PMONは1音に2 voicesを使うため、通常の24音から12音になる。
 この区別はpluginの画面と説明にも引き継ぐ。
 
 WebのAudio入力は短い録音をSPU ADPCMへ変換し、長い録音をSoftware audioへ切り替える。
-pluginの現stateはBuiltin/VABの2種類で、bank上限1 MiB、schema3のpayload上限1 MiB+72 bytes。
+pluginのschema4はBuiltin/VAB/PCM cycleの3種類で、bank上限1 MiB、payload上限1 MiB+72 bytes。
+PCM cycleは112 Float32、448bytesの元波形を保持し、prepared ADPCMは保存しない。
 長いPCMを入れる際は、音源kind、version互換、容量上限、所有権、workerでの準備、
 DAW project内のsample保持を改めて設計する。現在のVAB上限だけを増やして対応済みとはしない。
 

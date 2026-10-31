@@ -521,6 +521,95 @@ void changedFileAndRestoreSupersession(const std::vector<std::uint8_t>& bytes) {
   CHECK(exchange.snapshotDefinition()==definition);matchNewNote(exchange,tone(bytes,1),48000);
 }
 
+void workerPcmCycles(const std::vector<std::uint8_t>& bytes) {
+  using Shape=tetorica::WaveformShape;
+  using Definition=tetorica::InstrumentDefinition;
+  Exchange exchange;Loader loader(exchange);Pcm actual,expected;
+  for(const auto shape:{Shape::Sine,Shape::Triangle,Shape::Saw,Shape::Square}) {
+    const auto cycle=tetorica::makePcmCycle(shape);
+    Engine reference(cycle);CHECK(reference.prepare(48000));
+    const auto generation=loader.requestPcmCycle(cycle);
+    waitStatus(loader,generation,Loader::State::Ready);
+    const auto snapshot=exchange.snapshotDefinition();
+    CHECK(snapshot&&snapshot->kind()==Definition::Kind::PcmCycle&&snapshot->pcmCycle()==cycle);
+    // Ready is saveable even before the next audio callback. A successful
+    // replacement silences the old keys; fresh notes use the authored cycle.
+    const auto saved=tetorica::encodeState(snapshot,42.5);
+    CHECK(tetorica::decodeState({saved.data(),saved.size()}).definition->pcmCycle()==cycle);
+    CHECK(begin(exchange)&&exchange.adoptedGeneration()==generation);
+    {
+      RtProbe probe;
+      CHECK(exchange.instrument().activeVoiceCount()==0);
+      render(exchange.instrument(),actual);render(reference,expected);same(actual,expected);
+      CHECK(peak(actual.left)==0&&peak(actual.right)==0);
+      exchange.instrument().noteOn(60,100,15);reference.noteOn(60,100,15);
+      for(int block=0;block<8;++block){render(exchange.instrument(),actual);render(reference,expected);same(actual,expected);}
+    }
+    CHECK(peak(actual.left)>.001f);
+    exchange.collectRetired();
+  }
+
+  // Caller edits after submission cannot mutate the job's owned PCM.
+  auto custom=tetorica::makePcmCycle(Shape::Triangle);custom[17]=-.1234567f;
+  const auto original=custom;
+  const auto pending=loader.requestPcmCycle(custom);custom.fill(1.f);
+  waitStatus(loader,pending,Loader::State::Ready);
+  const auto ready=exchange.snapshotDefinition();CHECK(ready->pcmCycle()==original);
+  const auto previousGeneration=exchange.latestGeneration();
+  for(float invalid:{-1.01f,1.01f,std::numeric_limits<float>::infinity(),
+                     std::numeric_limits<float>::quiet_NaN()}) {
+    auto bad=original;bad[43]=invalid;bool rejected=false;
+    try {loader.requestPcmCycle(bad);}catch(const std::exception&){rejected=true;}
+    CHECK(rejected&&exchange.latestGeneration()==previousGeneration);
+    CHECK(exchange.snapshotDefinition()==ready&&loader.status().state==Loader::State::Ready);
+  }
+  CHECK(begin(exchange)&&exchange.adoptedGeneration()==pending);
+  Engine reference(original);CHECK(reference.prepare(48000));
+  {RtProbe probe;exchange.instrument().noteOn(64,127);reference.noteOn(64,127);}
+  matchContinuation(exchange,reference);
+
+  // VAB-only operations remain rejected rather than interpreting PCM bytes as
+  // an archive. A failed request leaves the current waveform audible.
+  auto failed=loader.requestProgram(ready,3);waitStatus(loader,failed,Loader::State::Failed);
+  CHECK(!begin(exchange)&&exchange.snapshotDefinition()==ready);matchContinuation(exchange,reference);
+  failed=loader.requestSelection(ready,3,0);waitStatus(loader,failed,Loader::State::Failed);
+  CHECK(!begin(exchange)&&exchange.snapshotDefinition()==ready);matchContinuation(exchange,reference);
+
+  const auto imported=loader.request(bytes,0);waitStatus(loader,imported,Loader::State::Ready);
+  CHECK(begin(exchange)&&exchange.snapshotDefinition()->kind()==Definition::Kind::Vab);
+  const auto builtin=loader.requestBuiltin();waitStatus(loader,builtin,Loader::State::Ready);
+  CHECK(begin(exchange)&&exchange.snapshotDefinition()->kind()==Definition::Kind::Builtin);
+}
+
+void pcmCycleSupersession(const std::vector<std::uint8_t>&) {
+  using Shape=tetorica::WaveformShape;
+  const auto first=tetorica::makePcmCycle(Shape::Triangle);
+  const auto second=tetorica::makePcmCycle(Shape::Square);
+  {
+    Exchange exchange;Loader loader(exchange);Gate gate;
+    const auto old=loader.requestPcmCycle(first);gate.wait();
+    const auto latest=loader.requestPcmCycle(second);CHECK(latest>old);
+    gate.open();waitStatus(loader,latest,Loader::State::Ready);
+    CHECK(begin(exchange)&&exchange.adoptedGeneration()==latest);
+    CHECK(exchange.snapshotDefinition()->pcmCycle()==second);
+  }
+  {
+    Exchange exchange;
+    const auto restoredDefinition=tetorica::InstrumentDefinition::fromPcmCycle(second);
+    auto restoredEngine=tetorica::prepareDefinition(*restoredDefinition);
+    auto loader=std::make_unique<Loader>(exchange);Gate gate;
+    const auto old=loader->requestPcmCycle(first);gate.wait();
+    const auto restored=exchange.commitPrepared(std::move(restoredEngine),restoredDefinition);
+    CHECK(restored>old&&begin(exchange));
+    gate.open();loader.reset(); // Join the stale worker before final assertions.
+    CHECK(exchange.latestGeneration()==restored&&exchange.adoptedGeneration()==restored);
+    CHECK(exchange.snapshotDefinition()==restoredDefinition);
+    Engine reference(second);CHECK(reference.prepare(48000));
+    {RtProbe probe;exchange.instrument().noteOn(60,127);reference.noteOn(60,127);}
+    matchContinuation(exchange,reference);
+  }
+}
+
 void concurrentPublication(const std::vector<std::uint8_t>& bytes) {
   Exchange exchange;const auto left=sideTone(bytes,false),right=sideTone(bytes,true);
   std::mutex mutex;std::condition_variable wake;int requested=0,completed=0;
@@ -600,6 +689,8 @@ int main() {
   run("deterministic in-flight supersession",inFlightSupersession,bytes);
   run("worker bounded files/first-playable/embedded selection",workerFilesAndSelections,bytes);
   run("changed file/host restore supersession",changedFileAndRestoreSupersession,bytes);
+  run("PCM worker shapes/owned input/invalid pending/selection",workerPcmCycles,bytes);
+  run("PCM latest request/host restore supersession",pcmCycleSupersession,bytes);
   run("concurrent producer/audio publication",concurrentPublication,bytes);
   run("pending/retired/in-flight shutdown ownership",shutdownOwnership,bytes);
   CHECK(liveCount()==0&&engineAllocations==engineFrees&&engineRtFrees==0);

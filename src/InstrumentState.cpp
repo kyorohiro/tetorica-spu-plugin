@@ -39,6 +39,14 @@ std::uint32_t word(const std::uint8_t* bytes) {
 void putWord(std::uint8_t* bytes,std::uint32_t value) {
   for(unsigned i=0;i<4;++i)bytes[i]=static_cast<std::uint8_t>(value>>(i*8));
 }
+float readSample(const std::uint8_t* bytes) {
+  static_assert(sizeof(float)==4&&std::numeric_limits<float>::is_iec559,
+                "SPU PCM state requires IEEE754 binary32");
+  const auto bits=word(bytes);float value;std::memcpy(&value,&bits,sizeof value);return value;
+}
+void putSample(std::uint8_t* bytes,float value) {
+  std::uint32_t bits;std::memcpy(&bits,&value,sizeof value);putWord(bytes,bits);
+}
 double readGain(const std::uint8_t* bytes) {
   static_assert(sizeof(double)==8&&std::numeric_limits<double>::is_iec559,
                 "SPU state requires IEEE754 binary64");
@@ -52,8 +60,8 @@ void putGain(std::uint8_t* bytes,double value) {
 }
 
 InstrumentDefinition::InstrumentDefinition(Kind kind,std::vector<std::uint8_t> bank,
-                                           std::uint32_t program,std::uint32_t tone)
-  :mKind(kind),mBank(std::move(bank)),mProgram(program),mTone(tone) {}
+                                           std::uint32_t program,std::uint32_t tone,PcmCycle cycle)
+  :mKind(kind),mBank(std::move(bank)),mProgram(program),mTone(tone),mPcmCycle(cycle) {}
 
 std::shared_ptr<const InstrumentDefinition> InstrumentDefinition::builtin() {
   static const std::shared_ptr<const InstrumentDefinition> definition(
@@ -85,6 +93,11 @@ std::shared_ptr<const InstrumentDefinition> InstrumentDefinition::fromVabFlatInd
       Kind::Vab,std::move(owned),prepared.tone.program,prepared.tone.index));
 }
 
+std::shared_ptr<const InstrumentDefinition> InstrumentDefinition::fromPcmCycle(const PcmCycle& cycle) {
+  validatePcmCycle(cycle);
+  return std::shared_ptr<const InstrumentDefinition>(new InstrumentDefinition(Kind::PcmCycle,{},0,0,cycle));
+}
+
 std::vector<std::uint8_t> encodeState(const InstrumentDefinition& definition,double gainPercent,
                                     EnvelopeSettings settings,ReverbSettings effects) {
   gain(gainPercent);
@@ -92,22 +105,26 @@ std::vector<std::uint8_t> encodeState(const InstrumentDefinition& definition,dou
   reverb(effects);
   const auto& bank=definition.bankBytes();
   if(bank.size()>vab::kMaxFileBytes)fail("SPU state: VAB exceeds 1 MiB");
-  std::vector<std::uint8_t> bytes(kStateFixedBytes+bank.size());
+  const bool pcm=definition.kind()==InstrumentDefinition::Kind::PcmCycle;
+  const auto size=pcm?definition.pcmCycle().size()*4:bank.size();
+  std::vector<std::uint8_t> bytes(kStateFixedBytes+size);
   std::copy(kStateMagic.begin(),kStateMagic.end(),bytes.begin());
   putWord(bytes.data()+8,kStateSchemaVersion);
   putWord(bytes.data()+12,static_cast<std::uint32_t>(bytes.size()));
   putWord(bytes.data()+16,static_cast<std::uint32_t>(definition.kind()));
   putWord(bytes.data()+20,definition.program());putWord(bytes.data()+24,definition.tone());
-  putWord(bytes.data()+28,static_cast<std::uint32_t>(bank.size()));
-  std::copy(bank.begin(),bank.end(),bytes.begin()+kStateHeaderBytes);
-  putGain(bytes.data()+kStateHeaderBytes+bank.size(),gainPercent);
-  putWord(bytes.data()+40+bank.size(),std::uint32_t(settings.custom.adsr1)|
+  putWord(bytes.data()+28,static_cast<std::uint32_t>(size));
+  if(pcm)for(std::size_t i=0;i<definition.pcmCycle().size();++i)
+    putSample(bytes.data()+kStateHeaderBytes+i*4,definition.pcmCycle()[i]);
+  else std::copy(bank.begin(),bank.end(),bytes.begin()+kStateHeaderBytes);
+  putGain(bytes.data()+kStateHeaderBytes+size,gainPercent);
+  putWord(bytes.data()+40+size,std::uint32_t(settings.custom.adsr1)|
     (std::uint32_t(settings.custom.adsr2)<<16));
-  putWord(bytes.data()+44+bank.size(),(settings.enabled?1u:0u)|(settings.live?2u:0u));
-  putWord(bytes.data()+48+bank.size(),static_cast<std::uint32_t>(effects.preset));
-  putWord(bytes.data()+52+bank.size(),(effects.enabled?1u:0u)|(effects.useToneSend?2u:0u));
-  putGain(bytes.data()+56+bank.size(),effects.volumeLeft);
-  putGain(bytes.data()+64+bank.size(),effects.volumeRight);
+  putWord(bytes.data()+44+size,(settings.enabled?1u:0u)|(settings.live?2u:0u));
+  putWord(bytes.data()+48+size,static_cast<std::uint32_t>(effects.preset));
+  putWord(bytes.data()+52+size,(effects.enabled?1u:0u)|(effects.useToneSend?2u:0u));
+  putGain(bytes.data()+56+size,effects.volumeLeft);
+  putGain(bytes.data()+64+size,effects.volumeRight);
   return bytes;
 }
 
@@ -128,9 +145,10 @@ SavedInstrumentState decodeState(vab::BytesView bytes) {
   const auto kind=word(bytes.data+16),program=word(bytes.data+20),tone=word(bytes.data+24),n=word(bytes.data+28);
   const auto fixed=version==1?40:version==2?48:kStateFixedBytes;
   if(n>vab::kMaxFileBytes||std::uint64_t(n)+fixed!=bytes.size)fail("SPU state: invalid bank length");
-  if(kind>1)fail("SPU state: unsupported instrument kind");
+  if(kind>(version>=4?2u:1u))fail("SPU state: unsupported instrument kind");
   if(kind==0&&(n||program||tone))fail("SPU state: builtin must not contain a bank or selection");
   if(kind==1&&(!n||program>127||tone>15))fail("SPU state: invalid VAB selection");
+  if(kind==2&&(n!=sizeof(float)*PcmCycle{}.size()||program||tone))fail("SPU state: invalid PCM cycle length or selection");
   const auto gainPercent=readGain(bytes.data+32+n);gain(gainPercent);
   EnvelopeSettings settings;
   if(version>=2) {
@@ -150,6 +168,11 @@ SavedInstrumentState decodeState(vab::BytesView bytes) {
     reverb(effects);
   }
   if(kind==0)return {InstrumentDefinition::builtin(),gainPercent,settings,effects};
+  if(kind==2) {
+    PcmCycle cycle{};
+    for(std::size_t i=0;i<cycle.size();++i)cycle[i]=readSample(bytes.data+kStateHeaderBytes+i*4);
+    return {InstrumentDefinition::fromPcmCycle(cycle),gainPercent,settings,effects};
+  }
   std::vector<std::uint8_t> bank(bytes.data+kStateHeaderBytes,bytes.data+kStateHeaderBytes+n);
   return {InstrumentDefinition::fromVab(std::move(bank),program,tone),gainPercent,settings,effects};
 }

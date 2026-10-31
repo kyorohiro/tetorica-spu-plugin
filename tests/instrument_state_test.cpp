@@ -63,7 +63,7 @@ std::size_t bankLength(const Bytes& bytes){
   std::uint32_t result=0;for(unsigned i=0;i<4;++i)result|=std::uint32_t(bytes.at(28+i))<<(i*8);return result;
 }
 Bytes oldSchema(Bytes bytes,unsigned version){
-  bytes.resize(bankLength(bytes)+(version==1?40:48));word(bytes,8,version);
+  bytes.resize(bankLength(bytes)+(version==1?40:version==2?48:72));word(bytes,8,version);
   word(bytes,12,static_cast<std::uint32_t>(bytes.size()));return bytes;
 }
 struct Stereo{std::vector<float> left,right;explicit Stereo(std::size_t n):left(n),right(n){}};
@@ -77,7 +77,7 @@ void codec(){
   CHECK(builtin->kind()==Def::Kind::Builtin&&builtin->bankBytes().empty()&&builtin->program()==0&&builtin->tone()==0);
   const auto encoded=encodeState(builtin,37.5);
   CHECK(encoded.size()==72&&std::equal(kStateMagic.begin(),kStateMagic.end(),encoded.begin()));
-  CHECK(encoded[8]==3&&encoded[12]==72&&encoded[16]==0);
+  CHECK(encoded[8]==4&&encoded[12]==72&&encoded[16]==0);
   CHECK(encoded[37]==0xc0&&encoded[38]==0x42&&encoded[39]==0x40); //LE binary64 37.5.
   auto restored=decode(encoded);CHECK(restored.gainPercent==37.5&&restored.definition==builtin);
   CHECK(sameEnvelope(restored.envelope,{})&&sameReverb(restored.reverb,{}));
@@ -174,6 +174,50 @@ void malformed(){
     bad=good;for(unsigned i=0;i<8;++i)bad[32+bankLength(bad)+i]=static_cast<std::uint8_t>(bits>>(i*8));
     rejects([&]{decode(bad);});
   }
+}
+void pcmCycles(){
+  static_assert(std::is_same<decltype(std::declval<const Def&>().pcmCycle()),const PcmCycle&>::value);
+  const EnvelopeSettings envelope{{0xa937,0xd7bb},false,false};
+  const ReverbSettings effects{ReverbPreset::Hall,true,false,.375,.8125};
+  for(auto shape:{WaveformShape::Sine,WaveformShape::Triangle,WaveformShape::Saw,WaveformShape::Square}) {
+    auto cycle=makePcmCycle(shape);const auto original=cycle;
+    const auto definition=Def::fromPcmCycle(cycle);cycle.fill(0);
+    CHECK(definition->kind()==Def::Kind::PcmCycle&&definition->bankBytes().empty());
+    CHECK(definition->program()==0&&definition->tone()==0&&definition->pcmCycle()==original);
+    const auto wire=encodeState(definition,37,envelope,effects);const auto read=decode(wire);
+    CHECK(wire.size()==520&&wire[8]==4&&wire[16]==2&&bankLength(wire)==448);
+    CHECK(read.definition->pcmCycle()==original&&sameEnvelope(read.envelope,envelope)&&sameReverb(read.reverb,effects));
+    CHECK(encodeState(read.definition,read.gainPercent,read.envelope,read.reverb)==wire);
+    auto bad=wire;word(bad,8,3);rejects([&]{decode(bad);}); //Older versions do not know kind2.
+    for(auto at:{20u,24u}){bad=wire;word(bad,at,1);rejects([&]{decode(bad);});}
+    for(auto size:{0u,447u,449u}) {
+      bad=wire;bad.resize(size+72);word(bad,28,size);word(bad,12,static_cast<std::uint32_t>(bad.size()));
+      rejects([&]{decode(bad);});
+    }
+    for(auto bits:{0x7f800000u,0x7fc00000u,0xbf800001u,0x3f800001u}) {
+      bad=wire;word(bad,32+4*111,bits);rejects([&]{decode(bad);});
+    }
+  }
+  PcmCycle custom{};custom[0]=1;custom[1]=-1;custom[2]=-.0f;custom[111]=.125f;
+  const auto bytes=encodeState(Def::fromPcmCycle(custom),37);
+  CHECK(bytes[34]==0x80&&bytes[35]==0x3f&&bytes[39]==0xbf); //Canonical binary32 LE endpoints.
+  CHECK(bytes[43]==0x80); //Keep signed zero as authored, rather than normalizing samples.
+  CHECK(decode(bytes).definition->pcmCycle()==custom);
+  for(float value:{-1.01f,1.01f,std::numeric_limits<float>::infinity(),std::numeric_limits<float>::quiet_NaN()}) {
+    auto invalid=custom;invalid[3]=value;rejects([&]{Def::fromPcmCycle(invalid);});
+  }
+  // Schema3 reproduces the preceding complete envelope/reverb tuple, while
+  // source kind0/1 retain their previous meaning and exact source bytes.
+  const auto imported=Def::fromVab(fixture(),3,1);
+  const auto old=decode(oldSchema(encodeState(imported,37,envelope,effects),3));
+  CHECK(old.definition->bankBytes()==imported->bankBytes()&&sameEnvelope(old.envelope,envelope)&&sameReverb(old.reverb,effects));
+  // A prepared custom cycle enters the same transactional exchange and sounds
+  // on the immediately following block, matching an independent preparation.
+  const auto def=Def::fromPcmCycle(makePcmCycle(WaveformShape::Triangle));
+  SpuEngineExchange exchange;auto independent=prepareDefinition(*def);CHECK(independent->prepare(48000));
+  exchange.commitPrepared(prepareDefinition(*def),def);CHECK(exchange.snapshotDefinition()==def&&exchange.beginBlock(48000));
+  Stereo a(8192),b(8192);exchange.instrument().noteOn(60,127);independent->noteOn(60,127);
+  render(exchange.instrument(),a);render(*independent,b);CHECK(a.left==b.left&&a.right==b.right&&peak(a)>.01f);
 }
 void immediateRestore(){
   const auto state=decode(encodeState(Def::fromVab(fixture(),3,1),37.));
@@ -286,7 +330,7 @@ void concurrentSnapshots(){
 }
 }
 int main(){
-  codec();malformed();immediateRestore();snapshotsAndAtomicFailure();
+  codec();malformed();pcmCycles();immediateRestore();snapshotsAndAtomicFailure();
   callbackAndDefinitionLifetime();loaderMetadata();concurrentSnapshots();
-  std::puts("PASS immutable VAB state, schema3 Reverb/ADSR, schema1/2 migration/source preservation, strict codec, immediate PCM restore, snapshots, failure atomicity, RT lifetime and concurrent collection");
+  std::puts("PASS immutable VAB/PCM state, schema4 PCM cycles/Reverb/ADSR, schema1/2/3 migration/source preservation, strict codec, immediate PCM restore, snapshots, failure atomicity, RT lifetime and concurrent collection");
 }

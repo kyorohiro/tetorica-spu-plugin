@@ -4,6 +4,7 @@
 
 #include "SpuEnvelope.h"
 #include "SpuReverb.h"
+#include "SpuWaveform.h"
 #include <array>
 #include <cstdint>
 
@@ -28,6 +29,9 @@ public:
   // on invalid metadata or SDK-unsupported repeat flags; retains original bytes.
   // Imported reverb send is retained, with shared reverb still Off initially.
   explicit SpuInstrument(const vab::PreparedTone& tone);
+  // Encode and prime a112-point periodic PCM cycle away from audio. The four
+  // ADPCM packets use the ordinary SPU RAM/ADSR/Gaussian/PMON/reverb path.
+  explicit SpuInstrument(const PcmCycle& pcm);
   ~SpuInstrument();
   SpuInstrument(const SpuInstrument&) = delete;
   SpuInstrument& operator=(const SpuInstrument&) = delete;

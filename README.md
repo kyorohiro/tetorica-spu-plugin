@@ -5,9 +5,9 @@ Initial development targets macOS Standalone, AUv2 and VST3. Not a published rel
 
 Current prototype: original built-in Sine, MIDI Note On/Off and velocity,
 24 voices, channel-aware note ownership, Pitch Bend, Sustain, All sound off,
-Gain, custom ADSR editing, shared SPU Reverb and mouse keyboard.
+Gain, a PCM waveform editor, custom ADSR editing, shared SPU Reverb and mouse keyboard.
 Load a complete VAB from the editor and select a Program and Tone to audition.
-The bank, selection, Gain, ADSR and Reverb settings are embedded in the DAW project state.
+The bank or PCM cycle, selection, Gain, ADSR and Reverb settings are embedded in the DAW project state.
 Additional SPU controls remain planned. The same VAB parser and selected-Tone
 engine can also be exercised with the offline tool below.
 
@@ -91,6 +91,33 @@ restore leaves the existing instrument and controller state intact.
 VST3 bypass also clears held/deferred notes and controllers, so input from
 bypassed blocks is not replayed when processing resumes.
 
+## PCM waveform editing
+
+Open the **PCM** page to choose Sine, Triangle, Saw or Square, or draw one cycle
+on the single canvas. The editor uses 112 signed PCM samples in `[-1, 1]`.
+The four shapes have amplitude 0.8, matching the original built-in Sine.
+Edits are a draft until **Apply PCM**; **Revert** discards the draft.
+Unapplied changes are not included in project state.
+
+Applying prepares a new instrument on the worker, then exchanges it at the next
+audio block. Held notes and old reverb tails stop at that exchange; play a new
+note to hear the new cycle. Gain, custom ADSR, Reverb and live wheel/pedal values
+are retained. Draft editing never writes sample RAM on the audio thread.
+
+This is a **software authoring feature**: Tetorica converts the drawn PCM to four
+looping SPU ADPCM packets. The SPU plays the encoded result with its normal
+quantization and Gaussian interpolation. The cyclic encoder scores the second
+decode pass to avoid the flattened first packet of independent encoding.
+It does not replace ADPCM with host PCM. PCM sound definitions have no original
+Tone reverb-send flag; use **Send: all notes** to send them to Reverb.
+
+Applied cycles are stored as 112 Float32 samples in the project and encoded
+again when restored. No external file is needed. Shape selection and drawing
+are instrument edits rather than host automation parameters; the existing
+17 parameter IDs remain unchanged. **Builtin Sine** still restores the original
+fixed sample. Editing a VAB does not rewrite its sample bank: Apply replaces
+the current source with the authored PCM cycle.
+
 ## ADSR editing
 
 The default **Tone ADSR** mode uses the built-in instrument's or selected VAB
@@ -123,7 +150,7 @@ uploads, engine replacement or application-level audio-thread allocations.
 
 ## SPU Reverb
 
-The **ADSR / Reverb** page buttons share the same bank, Gain and keyboard.
+The **PCM / ADSR / Reverb** page buttons share the same bank, Gain and keyboard.
 Choose a **Shared preset** to enable Reverb automatically: Room, Studio Small,
 Studio Medium, Studio Large, Hall, Space Echo or Half Echo. These are the pinned
 core's named approximations of PS1 Reverb, not a complete hardware algorithm.
@@ -203,7 +230,7 @@ the engine exchange.
 
 ## Embedded DAW state
 
-Custom state now embeds the complete original VAB, sparse Program/Tone selection
+Custom state now embeds the complete original VAB or authored PCM cycle, sparse Program/Tone selection
 and Gain, custom ADSR, Apply and Reverb settings. Restoring a project prepares a fresh SPU synchronously before reporting
 success; it does not need an external sample path. Malformed or unsupported state
 keeps the current sound, parameters and an already prepared pending replacement.
@@ -213,6 +240,8 @@ Schema 2 keeps the original bank bytes and adds the custom ADSR settings.
 Schema 3 adds the shared Reverb settings. Schema 1/2 and Gain-only states restore
 with Reverb Off, preserving the original sound. Live delay history is not saved;
 restoring a project starts the effect with empty buffers.
+Schema 4 adds a PCM-cycle source kind with an exact 448-byte Float32 payload.
+Schema 1/2/3 Builtin and VAB states remain readable with their saved settings.
 
 The actual AU and VST3 have been tested for embedded-bank round-trip, separate
 instances, immediate first-render MIDI/PCM and malformed-state rejection. VST3
@@ -271,15 +300,15 @@ still need a direct user check; the verified host-preset route is separate.
 
 ## Prototype limits
 
-- The fixed 112-frame Sine reaches the SPU PITCH ceiling at about 1,575 Hz;
+- The 112-frame Sine and authored PCM cycles reach the SPU PITCH ceiling at about 1,575 Hz;
   MIDI notes 92 and above clamp. Full-range multisampling is follow-up work.
 - Host rate conversion uses continuous linear interpolation. Anti-alias filtering
   below 44.1 kHz and improved conversion quality remain follow-up work.
-- State schema 1 stores a built-in instrument or one selected VAB Tone, with
-  a 1 MiB bank limit. Key zones, layers and game-driver performance state are
+- State schema 4 stores a built-in instrument, one selected VAB Tone or one
+  authored 112-sample PCM cycle, with a 1 MiB bank limit. Key zones, layers and game-driver performance state are
   not reconstructed. Held notes, release tails, decoder caches and host rate
   are not saved.
-- Pitch Bend, Sustain, smooth Gain changes and per-channel CC120 remain TODO.
+- Configurable Pitch Bend range, smooth Gain changes and per-channel CC120 remain TODO.
   Currently CC120 immediately stops all channels; CC123 releases its own channel.
 - Prepared-engine changes start with no held notes and cut the previous tail.
   Carried MIDI from previous blocks is removed; new current-block host MIDI is

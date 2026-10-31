@@ -135,6 +135,18 @@ VabLoader::Generation VabLoader::requestBuiltin() {
   return generation;
 }
 
+VabLoader::Generation VabLoader::requestPcmCycle(const PcmCycle& cycle) {
+  validatePcmCycle(cycle);
+  Generation generation;
+  {
+    std::lock_guard<std::mutex> lock(mMutex);
+    generation=mExchange.beginRequest();
+    Job job;job.generation=generation;job.kind=Job::Kind::PcmCycle;job.cycle=cycle;
+    mJob.emplace(std::move(job));mStatus={generation,State::Loading,{}};
+  }
+  mWake.notify_one();return generation;
+}
+
 VabLoader::Status VabLoader::status() const {
   std::lock_guard<std::mutex> lock(mMutex);
   if(mStatus.state==State::Loading&&mStatus.generation!=mExchange.latestGeneration())
@@ -181,6 +193,7 @@ void VabLoader::run() {
       }
       if(!current(job->generation)){finish(job->generation,nullptr,kSuperseded);continue;}
       if(job->kind==Job::Kind::Builtin)definition=InstrumentDefinition::builtin();
+      else if(job->kind==Job::Kind::PcmCycle)definition=InstrumentDefinition::fromPcmCycle(job->cycle);
       else if(job->kind==Job::Kind::Selection) {
         if(!job->source||job->source->kind()!=InstrumentDefinition::Kind::Vab)
           throw std::runtime_error("Choose a loaded VAB bank before selecting a Tone");

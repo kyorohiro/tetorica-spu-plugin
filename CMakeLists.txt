@@ -19,14 +19,28 @@ target_include_directories(tetorica_vab PUBLIC src)
 
 find_package(Threads REQUIRED)
 add_library(tetorica_spu_instrument STATIC
-  src/SpuInstrument.cpp src/SpuEngineExchange.cpp src/VabLoader.cpp src/InstrumentState.cpp)
+  src/SpuInstrument.cpp src/SpuWaveform.cpp src/SpuEngineExchange.cpp src/VabLoader.cpp src/InstrumentState.cpp)
 target_include_directories(tetorica_spu_instrument PUBLIC src)
 target_link_libraries(tetorica_spu_instrument PUBLIC tetorica::ps1_spu tetorica_vab Threads::Threads)
+# Keep cyclic encoder scoring equivalent to the Web's separate IEEE754
+# operations so saved PCM prepares the same ADPCM on supported toolchains.
+if(MSVC)
+  set_source_files_properties(src/SpuWaveform.cpp PROPERTIES COMPILE_OPTIONS "/fp:strict")
+elseif(CMAKE_CXX_COMPILER_ID MATCHES "GNU|Clang")
+  set_source_files_properties(src/SpuWaveform.cpp PROPERTIES COMPILE_OPTIONS "-ffp-contract=off")
+endif()
 
 add_executable(spu_vab_render tools/spu-vab-render.cpp)
 target_link_libraries(spu_vab_render PRIVATE tetorica_spu_instrument)
 
 if(BUILD_TESTING)
+  add_executable(pcm_draft_test tests/pcm_draft_test.cpp)
+  target_include_directories(pcm_draft_test PRIVATE plugin)
+  target_link_libraries(pcm_draft_test PRIVATE tetorica_spu_instrument)
+  add_test(NAME spu.pcm.draft COMMAND pcm_draft_test)
+  add_executable(spu_waveform_test tests/spu_waveform_test.cpp)
+  target_link_libraries(spu_waveform_test PRIVATE tetorica_spu_instrument)
+  add_test(NAME spu.waveform COMMAND spu_waveform_test)
   add_executable(spu_instrument_test tests/spu_instrument_test.cpp)
   target_link_libraries(spu_instrument_test PRIVATE tetorica_spu_instrument)
   add_test(NAME spu.instrument COMMAND spu_instrument_test)

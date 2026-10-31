@@ -16,10 +16,18 @@ add_subdirectory("${VST3_SDK}" sdk EXCLUDE_FROM_ALL)
 add_executable(tetorica_vst3_audio_check
   main.cpp
   "${TETORICA_ROOT}/src/InstrumentState.cpp"
+  "${TETORICA_ROOT}/src/SpuWaveform.cpp"
   "${TETORICA_ROOT}/src/VabBank.cpp"
   "${VST3_SDK}/public.sdk/source/common/memorystream.cpp"
   "${VST3_SDK}/public.sdk/source/vst/hosting/plugprovider.cpp")
 target_compile_features(tetorica_vst3_audio_check PRIVATE cxx_std_17)
+if(CMAKE_CXX_COMPILER_ID MATCHES "Clang|GNU")
+  set_source_files_properties("${TETORICA_ROOT}/src/SpuWaveform.cpp"
+    PROPERTIES COMPILE_OPTIONS "-ffp-contract=off")
+elseif(MSVC)
+  set_source_files_properties("${TETORICA_ROOT}/src/SpuWaveform.cpp"
+    PROPERTIES COMPILE_OPTIONS "/fp:strict")
+endif()
 target_include_directories(tetorica_vst3_audio_check PRIVATE "${TETORICA_ROOT}/src")
 target_compile_definitions(tetorica_vst3_audio_check PRIVATE VAB_FIXTURE_DIR="${TETORICA_ROOT}/tests/fixtures/vab")
 target_link_libraries(tetorica_vst3_audio_check PRIVATE sdk_hosting)

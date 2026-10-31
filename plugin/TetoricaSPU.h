@@ -7,6 +7,7 @@
 #if IPLUG_DSP
 #include "SpuEngineExchange.h"
 #include "SpuReverb.h"
+#include "SpuWaveform.h"
 #include "VabLoader.h"
 #include <array>
 #include <atomic>
@@ -63,7 +64,18 @@ enum ECtrlTags
   kCtrlReverbRight,
   kCtrlReverbToneSend,
   kCtrlReverbInfo,
-  kCtrlReverbStatus
+  kCtrlReverbStatus,
+  kCtrlPagePcm,
+  kCtrlPcmHeading,
+  kCtrlPcmSine,
+  kCtrlPcmTriangle,
+  kCtrlPcmSaw,
+  kCtrlPcmSquare,
+  kCtrlPcmGraph,
+  kCtrlPcmRevert,
+  kCtrlPcmApply,
+  kCtrlPcmInfo,
+  kCtrlPcmStatus
 };
 
 class TetoricaSPU final : public iplug::Plugin
@@ -107,6 +119,7 @@ private:
   }
 #if IPLUG_EDITOR
   struct InstrumentUIState;
+  enum class InstrumentPage { Pcm, Envelope, Reverb };
   void initializeInstrumentUI();
   void closeInstrumentUI() noexcept;
   void promptForVab();
@@ -121,7 +134,11 @@ private:
     std::uint32_t program, std::uint32_t tone);
   void updateInstrumentControls();
   void copyToneEnvelopeFromUI();
-  void showInstrumentPage(bool reverb);
+  void showInstrumentPage(InstrumentPage page);
+  void setPcmDraftFromUI(const tetorica::PcmCycle& cycle);
+  void choosePcmShapeFromUI(tetorica::WaveformShape shape);
+  void applyPcmDraftFromUI();
+  void revertPcmDraftFromUI();
   void chooseReverbPresetFromUI(int preset);
   void notifyHostOfInstrumentEdit();
   std::shared_ptr<InstrumentUIState> mInstrumentUI;

@@ -146,6 +146,7 @@ void SpuEngineExchange::collectRetired() {
 
 std::unique_ptr<SpuInstrument> prepareDefinition(const InstrumentDefinition& definition) {
   if(definition.kind()==InstrumentDefinition::Kind::Builtin)return std::make_unique<SpuInstrument>();
+  if(definition.kind()==InstrumentDefinition::Kind::PcmCycle)return std::make_unique<SpuInstrument>(definition.pcmCycle());
   const auto& bytes=definition.bankBytes();
   const auto bank=vab::parse({bytes.data(),bytes.size()});
   for(std::size_t i=0;i<bank.tones.size();++i)

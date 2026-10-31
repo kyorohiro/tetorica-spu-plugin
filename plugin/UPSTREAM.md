@@ -17,3 +17,9 @@ Reverb. Ordinary host parameters store Gain, ADSR and Reverb alongside the
 versioned embedded instrument state. Native SDK revisions are pinned in
 `dependencies.lock.json`; the Reverb history-clear API was added upstream and
 consumed through a new fixed revision rather than an uncommitted vendor patch.
+
+The software PCM cycle encoder in `src/SpuWaveform.cpp` is ported from
+Tetorica's BSD-3-Clause Web `docs/js/ps1_adpcm_encoder.js`. Its original test
+vectors retain the reference source hash and can be regenerated from a local
+copy using `tests/fixtures/waveform/generate_web_vectors.mjs`. This prepare-side
+encoder does not modify the pinned Native SPU decoder or its interpolation.

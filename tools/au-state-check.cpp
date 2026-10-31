@@ -6,6 +6,7 @@
 #include "vst3-host/midi-controller-checks.h"
 #include "vst3-host/envelope-checks.h"
 #include "vst3-host/reverb-checks.h"
+#include "vst3-host/pcm-cycle-checks.h"
 #include <AudioToolbox/AudioToolbox.h>
 #include <CoreFoundation/CoreFoundation.h>
 #include <algorithm>
@@ -302,6 +303,7 @@ int main(int argc, char** argv)
     tetorica::test::checkControllers([&] { return std::make_unique<Instance>(component); },48000,"AU MIDIEvent");
     tetorica::test::checkEnvelopes([&] { return std::make_unique<Instance>(component); },48000,"AU parameters",bank);
     tetorica::test::checkReverbs([&] { return std::make_unique<Instance>(component); },48000,"AU parameters",bank);
+    tetorica::test::checkPcmCycles([&] { return std::make_unique<Instance>(component); },48000,"AU state/MIDIEvent");
     std::cout << "PASS: local AU embedded VAB/Gain round-trip, first-render MIDI/PCM, separate instance, "
       "malformed CF/state rejection with pending/active preservation, legacy AU migration; no audio device/editor/install\n";
   }

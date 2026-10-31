@@ -1,5 +1,18 @@
 # 作業記録
 
+## 2026-10-31 JST — PCM編集の実装・実ホスト検証完了
+
+- TODO `16c4bb5`の後、112-cycleの4形状・単一canvasのdraft / Apply / Revert、Software表示を実装した。
+- 変換・sample/cache準備はworker、Applyでengine交換する。旧保持音・残響は停止、17parameterは維持。
+  schema4は448-byte元PCMを内包し、schema1/2/3とGain-only互換。不正入力は正常pending/現音を保つ。
+- Offline/macOS CTest各7/7、ASan6/6、実AU48kHz・実VST3 44.1/48/96kHz、公式validator47/0成功。
+  Web8vectors完全一致、explicitPCM SineはBuiltinと5ratesで一致、初期WAV hash不変。
+- Apply連打のdraft競合をtracked testで修正。GUIでページ切替時の表示跡を検出・修正し、2回の往復で確認した。
+  Standaloneで描画・Apply/Revert・手描きPCM保持も確認し、終了した。
+- [詳細](pcm_waveform_20261031.md) / [hash・ログ](pcm_waveform_20261031.json)。
+  次: 実装をpushしてCI確認、旧AU既知manifest照合後の更新・GarageBand旧schema3復元。
+  検証copyは旧Reverb版で保存・終了し7filesをbackupした。まだinstalled AUは旧Reverb版。
+
 ## 2026-10-31 JST — PCM波形選択・描画の開始チェックポイント
 
 - `adaba1b`、main / origin同期・clean treeから開始。実装前に今回の範囲をTODOへ保存した。

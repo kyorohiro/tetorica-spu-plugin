@@ -141,13 +141,14 @@ template<class Factory> void checkReverbs(Factory make,double rate,const char* h
   auto fresh=make();requireReverb(fresh->tryStateRestoreForTest(full)&&state->tryStateRestoreForTest(full),"Wet re-restore failed");
   exact(*state,*fresh,on,"Old wet history leaked into the first post-restore block");
   for(int i=0;i<heldBlocks;++i)exact(*state,*fresh,{},"Old wet history survived state restore");
-  for(unsigned schema:{1u,2u}) {
-    auto old=full;old.resize(bank.size()+(schema==1?40:48));word(old,8,schema);word(old,12,static_cast<std::uint32_t>(old.size()));
+  for(unsigned schema:{1u,2u,3u}) {
+    auto old=full;old.resize(bank.size()+(schema==1?40:schema==2?48:72));word(old,8,schema);word(old,12,static_cast<std::uint32_t>(old.size()));
     requireReverb(state->tryStateRestoreForTest(old),"Old schema Reverb migration rejected");
     snapshot=envelope_detail::saved(*state);
-    requireReverb(same(snapshot.reverb,{})&&snapshot.definition->bankBytes()==bank&&
+    const auto expectedEffects=schema>=3?authored:ReverbSettings{};
+    requireReverb(same(snapshot.reverb,expectedEffects)&&snapshot.definition->bankBytes()==bank&&
       envelope_detail::equal(snapshot.envelope,schema==1?EnvelopeSettings{}:envelope),"Old schema did not migrate to disabled Reverb with source/ADSR retained");
-    requireReverb(fresh->tryStateRestoreForTest(encodeState(definition,37,schema==1?EnvelopeSettings{}:envelope)),"Dry migration reference rejected");
+    requireReverb(fresh->tryStateRestoreForTest(encodeState(definition,37,schema==1?EnvelopeSettings{}:envelope,expectedEffects)),"Migration reference rejected");
     exact(*state,*fresh,on,"Old schema dry first PCM changed after Reverb migration");
   }
   Bytes legacy(8);putDouble(legacy,0,17);
@@ -158,6 +159,6 @@ template<class Factory> void checkReverbs(Factory make,double rate,const char* h
   std::cout<<"PASS "<<host<<" Reverb sampleRate="<<rate
     <<" full17Params=true firstWetRestore=true sourceSend=true presetAutomationIndependent=true presetsDiffer=true"
     <<" disabledDry=true zeroReturnDry=true stereoReturns=true releasedTail=true panicClears=true offClears=true"
-    <<" restoreClearsHistory=true malformedAtomic=true schema1Schema2Legacy=true\n";
+    <<" restoreClearsHistory=true malformedAtomic=true schema1Schema2Schema3Legacy=true\n";
 }
 } // namespace tetorica::test
