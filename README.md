@@ -89,6 +89,8 @@ stop are discarded; subsequent UI NoteOns can play. Queue overflow safely stops
 all voices and resets controllers. This UI path has one editor producer and
 one audio consumer; host MIDI retains its existing serialized-ingress contract.
 
+See the [CC120 verification and deployment status](docs/cc120_20261101.md).
+
 MIDI offsets are honored inside blocks, including multiple controller points
 in a VST3 block. The plugin supplies a bounded adapter for mapped VST3 MIDI CCs
 without changing its pinned framework. Normal Gain and bypass parameters
@@ -279,9 +281,10 @@ changing this control or saving the bank.
 
 Turning **Enable reverb** Off immediately mutes wet output, keeps the selected
 preset/return values and lets the effect decay silently. Selecting **Off** also
-clears its history. **All sound off**, audio reset and deactivation clear voices
-and effect history, so old tails cannot return after restarting. Selecting a
-different active preset keeps the current voices and effect history.
+clears its history. The editor's **All sound off** button, audio reset and
+deactivation clear voices and effect history, so old tails cannot return after
+restarting. Selecting a different active preset keeps the current voices and
+effect history.
 This immediate bypass and Off-history clearing differs from the Web editor's
 send-only Enable switch. Preset selection auto-enables only through the editor;
 DAW automation and project restore retain the independent Enable value.

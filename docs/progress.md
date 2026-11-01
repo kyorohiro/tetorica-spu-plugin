@@ -681,3 +681,9 @@
 - 7source×3rateのcore検査、UI SPSC 1024件 /snapshot後追加 /overflow /wrap /2thread10万件順序・RT new/delete0を追加。通常 /macOS /ASan+UBSan各27件成功、UI queueのTSanも成功。
 - 実AU48k /実VST3全3rateで16channel CC120、survivor PCM、held/deferred/release、offset/split/future/fresh、12組nonzero PMON停止再利用、shared Reverb tail保持を確認。既存Gain/MIDI/音源/state回帰も成功、VST3 validator47/0。
 - CIはこれから確認。installed AUは前回Gain版のままで、GarageBandを操作していない。実DAW独自All sound off buttonの操作・実聴・長時間確認は別に残す。
+
+## 2026-11-01 JST — CC120のCI成功・記録完了
+
+- 実装`0bb1bb7` exact headの[CI 41299598667](https://github.com/kyorohiro/tetorica-spu-plugin/actions/runs/41299598667)でoffline /macos全2job・全step成功。CIのAU install /auval、VST3 validator・実host、AU実hostも成功した。
+- [仕様・検証・次の配置入口](cc120_20261101.md) /[source・binary・log hash /CI metadata](cc120_20261101.json)を保存。artifact digestは記録したが、artifact /log archiveのdownloadや配布物実行は行っていない。
+- 手元installed AU全5filesはGain版manifestのまま一致。新CC120はsource /workspace bundleにあり、今回installed AUとGarageBandは変更していない。次の入口はknown manifest照合付きAU更新。実GUI全停止button・実聴・長時間・実DAW automation等の人確認TODOを維持した。

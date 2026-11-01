@@ -40,8 +40,10 @@ flag4-only /markerless repeatの互換性も修正し、元bytesのまま実AU/V
 Gain smoothingも実装し、unit /実AU・VST3 /sanitizer /CIを確認した。[検証記録](../gain_smoothing_20261101.md)。
 Gain版installed AUへの退避更新・旧VABの保存再起動も完了した。
 [現在のAU更新・復元記録](../au_gain_update_20261101.md)と[current installed AU manifest](../au_gain_update_20261101.json)を参照。
+CC120のチャンネル別停止も実装・検証・[CI全2job成功](https://github.com/kyorohiro/tetorica-spu-plugin/actions/runs/41299598667)まで完了した。
+[仕様・配置状況](../cc120_20261101.md)を参照。installed AUはGain版のままで、新CC120はまだ配置していない。
 
-### CC120チャンネル別停止の今回の区切り（2026-11-01、CI確認中）
+### CC120チャンネル別停止の今回の区切り（2026-11-01、完了）
 
 開始Plugin `faa8922`、Native SDK `95cf71a`。ユーザーの続行指示で、作業前TODOを保存する。
 
@@ -50,7 +52,12 @@ Gain版installed AUへの退避更新・旧VABの保存再起動も完了した�
 - [x] UIのAll sound offは独立したthread-safe global panic要求へ接続し、全channel・共有残響停止を維持する。reset /host restore /deactivate /bypass /overflowの既存global cleanupを維持する。
   UIのNoteOnと全停止を同じ固定容量SPSC FIFOに載せる。別atomic flagではframework queueのdrain直後に古いNoteOnが遅れて届くraceがあるため、順序付きcommandとして渡す。
 - [x] unitと実AU /VST3でchannel0 /15、held /sustain /release、PMON /Noise /Morph /Software PCM、他channelのPCM連続性、同offset順序 /future offset /分割、controller保持 /state不変を検証する。新処理のRT確保・lockを避ける（全27件×3構成、UI queueのTSan、実AU48k /VST3全3rate成功）。
-- [ ] build /CTest /sanitizer /validator /CIを確認し、仕様・制限・source /binary /log記録と再開TODOをcommit /pushする。
+- [x] build /CTest /sanitizer /validator /CIを確認し、仕様・制限・source /binary /log記録と再開TODOをcommit /pushする（実装`0bb1bb7`、[CI全2job成功](https://github.com/kyorohiro/tetorica-spu-plugin/actions/runs/41299598667)）。
+
+[検証記録](../cc120_20261101.md) /[source・binary・log hash /CI metadata](../cc120_20261101.json)。
+
+- [ ] 次の配置更新でGain版installed AUのknown manifestを照合し、host保存終了・退避update後にGarageBand旧projectの復元を確認する。
+- [ ] 実DAWのAll sound off buttonを操作し、保持音・共有残響の全停止と停止後の新しいUI NoteOnを確認する。unit /source reviewと実host MIDI CC120検査は成功済みで、実GUI操作は別に確認する。
 
 既存parameter ID0〜25 /state schema9 /Gain範囲を維持する。
 installed AUとGarageBandはこの実装buildでは変更しない。次の配置更新には
