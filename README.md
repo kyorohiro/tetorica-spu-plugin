@@ -294,7 +294,10 @@ This is selected-Tone audition, not song playback or automatic key-zone/layer
 reconstruction. Sample 0 (unassigned), sample 255 (Noise), malformed ADPCM and
 selected payloads beyond usable SPU RAM are rejected. Loop playback follows the END packet's Repeat flag and the original loop-start
 marker or explicit repeat address. A loop-start packet does not need Repeat
-flag 2. Original ADPCM flags and bytes are preserved. See
+flag 2. Original ADPCM flags and bytes are preserved. Native plugin tests cover
+flag4-only and markerless targets, exact PCM against flag6/2 controls, embedded
+state restoration and Web round trips; see the
+[loop compatibility verification](docs/loop_repeat_20261101.md). See
 [TODO](docs/issues/TODO.md) for remaining work.
 
 ## VAB in the plugin editor
@@ -504,6 +507,9 @@ python3 scripts/install_au.py --rollback build/au-backups/au-update-REPLACE/mani
 
 The [Software audio record](docs/software_audio_20261101.md) contains the
 current installed manifest, backup report and GarageBand restoration result.
+The later [loop compatibility fix](docs/loop_repeat_20261101.md) was tested by
+loading the new build bundles directly; the local installed AU remains the
+Software audio version until an explicit update using the manifest above.
 
 The destination is `~/Library/Audio/Plug-Ins/Components/TetoricaSPU.component`.
 This is an explicit test installation; the normal build still does not deploy.

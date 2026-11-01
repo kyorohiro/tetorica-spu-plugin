@@ -608,4 +608,14 @@
 - 開始TODO `b306c56` の後、SDK `95cf71a` へ固定。repeat先のflag2を必須にしていた制限を解除し、元ADPCM bytes・END /marker /metadata検証を保持した。
 - VAB /Rawのmarker4・markerless0（nonzero repeat/filter2）を、従来flag6/2のPCMと先頭〜loop後まで比較。beforeはflag0/4が無音、afterは同一PCMで継続しENDXも保持する。
 - offline/macOS/ASan+UBSan各24/24、実AU48k /VST3 44.1/48/96k full、公式validator47/0、Python18件成功。state9 /元bytes /Web保存 /Noise /PMON /Morph /長Software2banksを回帰検証。
-- SDK CI12検証成功。Plugin CIとknown-manifest付きinstalled AU更新、Web Synth /PlaygroundのWASM・配布source /ZIP整合検証は続行中。version/tag /release公開は行わない。
+- この時点ではSDK CI12検証成功、Plugin CIと親Web側検証は続行中だった。最終結果とinstalled AUを更新しない判断は下段を参照。version/tag /release公開は行わない。
+
+## 2026-11-01 JST — ADPCM loop互換性の検証・Plugin CI完了
+
+- 実装 `78e0b8358bd9855dbd061b421656213b2fb34041`、SDK `95cf71a`。
+  [Plugin CI 41276718988](https://github.com/kyorohiro/tetorica-spu-plugin/actions/runs/41276718988)はexact SHAでworkflow1件 /job2件全成功。Native CIも12検証成功。
+- 最終offline24/24（6.49s）、macOS APP/AU/VST3 buildと24/24（6.67s）、ASan/UBSan24/24（128.26s、LeakSanitizer対象外）、Python18件、公式validator47/0。
+- 実AU48k /VST3 44.1/48/96k fullでVAB /Rawのflag4-onlyとmarkerless0を検査。元bytes /26params /state9保持、first blockとloop後PCMのflag6/2対照一致、Web保存復元、Noise/PMON/Morphからの2bank復帰が成功した。
+- 手元のinstalled AUは更新していない。[Software audio manifest](software_audio_20261101.json)全5filesとread-only一致（binary `b46c3150…`）。新build AUを直接読む実host検査とは区別し、今回GarageBandやprojectも操作していない。
+- [操作・検証・未確認範囲](loop_repeat_20261101.md) /[hash・CI metadata](loop_repeat_20261101.json)。親Web Synth /Playgroundの反映と配布整合性は[親TODO](https://github.com/kyorohiro/hello_ymfm_wasm/blob/main/docs/issues/todo_ps1_loop_compat_20261101.md)へ分ける。
+- **次:** known manifest退避付きのinstalled AU更新を判断し、人が実DAW独自UIでloop素材を読み、保存再起動・実聴・長時間使用を確認する。既存のProgram/Tone dirty・automation録音・release判断も未確認として維持する。

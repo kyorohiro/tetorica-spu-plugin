@@ -1,0 +1,636 @@
+{
+  "schema": 1,
+  "date_jst": "2026-11-01",
+  "recorded_at_utc": "2026-11-01T05:34:26.169346+00:00",
+  "source_commit": "78e0b8358bd9855dbd061b421656213b2fb34041",
+  "todo_commit": "b306c5661ba4500764a753ea20ecf78ec3d2bc5d",
+  "native_commit": "95cf71a857b15d0ea932ebf97d5fde80b5e80a95",
+  "parent_todo": {
+    "repository": "kyorohiro/hello_ymfm_wasm",
+    "checkpoint": "b164a303",
+    "path": "docs/issues/todo_ps1_loop_compat_20261101.md",
+    "url": "https://github.com/kyorohiro/hello_ymfm_wasm/blob/main/docs/issues/todo_ps1_loop_compat_20261101.md"
+  },
+  "scope": {
+    "loop_start_flag4_without_repeat_bit": true,
+    "markerless_explicit_repeat_address": true,
+    "original_adpcm_bytes_retained": true,
+    "end_repeat_and_one_shot_distinction_retained": true,
+    "state_schema": 9,
+    "parameter_count": 26,
+    "new_api_or_parameter_ids": false,
+    "plugin_ui_changed": false,
+    "version_tag_release_changed": false
+  },
+  "before_after_native_probe": {
+    "fixture": "4 nonzero ADPCM packets; explicit repeat address 0x1010; final packet flags3; target flags0/2/4/6; last512 of1024 rendered frames; read ENDX",
+    "before": [
+      "repeat_target_flags=0 tail_peak=0 ENDX=0x1",
+      "repeat_target_flags=2 tail_peak=0.0170888007 ENDX=0x1",
+      "repeat_target_flags=4 tail_peak=0 ENDX=0x1",
+      "repeat_target_flags=6 tail_peak=0.0170888007 ENDX=0x1"
+    ],
+    "after": [
+      "repeat_target_flags=0 tail_peak=0.0170888007 ENDX=0x1",
+      "repeat_target_flags=2 tail_peak=0.0170888007 ENDX=0x1",
+      "repeat_target_flags=4 tail_peak=0.0170888007 ENDX=0x1",
+      "repeat_target_flags=6 tail_peak=0.0170888007 ENDX=0x1"
+    ],
+    "scope": "Public Native API measurement. Exact nontrivial-predictor PCM comparisons are separate tests below."
+  },
+  "verification": {
+    "offline": {
+      "passed": 24,
+      "total": 24,
+      "seconds": 6.49
+    },
+    "macos": {
+      "build_formats": [
+        "Standalone",
+        "AUv2",
+        "VST3"
+      ],
+      "passed": 24,
+      "total": 24,
+      "seconds": 6.67
+    },
+    "asan_ubsan": {
+      "passed": 24,
+      "total": 24,
+      "seconds": 128.26,
+      "asan_options": "detect_leaks=0:halt_on_error=1",
+      "ubsan_options": "halt_on_error=1",
+      "leak_sanitizer_checked": false
+    },
+    "python": {
+      "installer": 11,
+      "garageband_inspector": 7,
+      "total_passed": 18
+    },
+    "actual_au": {
+      "rates": [
+        48000
+      ],
+      "full_previous_and_new_suites": true,
+      "bundle_direct_load": true,
+      "installed_au_used": false
+    },
+    "actual_vst3": {
+      "rates": [
+        44100,
+        48000,
+        96000
+      ],
+      "full_previous_and_new_suites": true
+    },
+    "vst3_validator": {
+      "passed": 47,
+      "failed": 0
+    },
+    "loop_regression": {
+      "source_cases": [
+        "VAB markerless target0",
+        "Raw markerless nonzero target0",
+        "VAB marker4 nonzero target",
+        "Raw marker4 nonzero target"
+      ],
+      "reference": "Same sample data with only target Repeat bit2 added (flags2/6)",
+      "first_block_and_after_many_loops_pcm_exact": true,
+      "both_stereo_channels_compared": true,
+      "original_bytes_and_metadata_roundtrip": true,
+      "all_26_parameters_retained": true,
+      "embedded_reopen_without_external_source": true,
+      "web_export_import_original_flags": true,
+      "noise_pmon_morph_host_bank_return": true,
+      "full_ram_long_sample_and_rate_partition": true,
+      "callback_cpp_new_delete": 0,
+      "malformed_duplicate_markers_keep_active_and_pending": true
+    },
+    "diff_check": true
+  },
+  "build_binaries": {
+    "build/macos/out/TetoricaSPU.app/Contents/MacOS/TetoricaSPU": {
+      "bytes": 2394248,
+      "sha256": "f661f406b348bce9c7f8edb46bc67c3b7a04e4ca1c596f3b962f9c120993396e"
+    },
+    "build/macos/out/TetoricaSPU.component/Contents/MacOS/TetoricaSPU": {
+      "bytes": 1850680,
+      "sha256": "60a6c1967f4fb56bb54f89a24f33769920b331f28ad8024969c9c861b805c368"
+    },
+    "build/macos/out/TetoricaSPU.vst3/Contents/MacOS/TetoricaSPU": {
+      "bytes": 2150632,
+      "sha256": "73a4143368e27ce4e145edfb3479d1ff1c0adae5bf7b400569b2acf73e9f2a6f"
+    }
+  },
+  "ci": {
+    "id": 41276718988,
+    "name": "Verify SPU Plugin",
+    "head_sha": "78e0b8358bd9855dbd061b421656213b2fb34041",
+    "path": ".github/workflows/verify.yml",
+    "event": "push",
+    "status": "completed",
+    "conclusion": "success",
+    "html_url": "https://github.com/kyorohiro/tetorica-spu-plugin/actions/runs/41276718988",
+    "created_at": "2026-11-01T05:22:43Z",
+    "run_started_at": "2026-11-01T05:22:43Z",
+    "updated_at": "2026-11-01T05:26:50Z",
+    "workflow_count_for_exact_source": 1,
+    "jobs": [
+      {
+        "id": 124760263971,
+        "name": "macos",
+        "status": "completed",
+        "conclusion": "success",
+        "html_url": "https://github.com/kyorohiro/tetorica-spu-plugin/actions/runs/41276718988/job/124760263971",
+        "started_at": "2026-11-01T05:22:47Z",
+        "completed_at": "2026-11-01T05:26:49Z",
+        "steps": [
+          {
+            "number": 1,
+            "name": "Set up job",
+            "status": "completed",
+            "conclusion": "success",
+            "started_at": "2026-11-01T05:22:47Z",
+            "completed_at": "2026-11-01T05:22:48Z"
+          },
+          {
+            "number": 2,
+            "name": "Run actions/checkout@v4",
+            "status": "completed",
+            "conclusion": "success",
+            "started_at": "2026-11-01T05:22:48Z",
+            "completed_at": "2026-11-01T05:22:49Z"
+          },
+          {
+            "number": 3,
+            "name": "Verify safe AU installer in temporary directories",
+            "status": "completed",
+            "conclusion": "success",
+            "started_at": "2026-11-01T05:22:49Z",
+            "completed_at": "2026-11-01T05:22:50Z"
+          },
+          {
+            "number": 4,
+            "name": "Verify bounded GarageBand state inspection",
+            "status": "completed",
+            "conclusion": "success",
+            "started_at": "2026-11-01T05:22:50Z",
+            "completed_at": "2026-11-01T05:22:51Z"
+          },
+          {
+            "number": 5,
+            "name": "Initialize and verify pinned dependencies",
+            "status": "completed",
+            "conclusion": "success",
+            "started_at": "2026-11-01T05:22:51Z",
+            "completed_at": "2026-11-01T05:23:07Z"
+          },
+          {
+            "number": 6,
+            "name": "Run python3 scripts/bootstrap.py --check",
+            "status": "completed",
+            "conclusion": "success",
+            "started_at": "2026-11-01T05:23:07Z",
+            "completed_at": "2026-11-01T05:23:07Z"
+          },
+          {
+            "number": 7,
+            "name": "Run cmake --preset macos",
+            "status": "completed",
+            "conclusion": "success",
+            "started_at": "2026-11-01T05:23:07Z",
+            "completed_at": "2026-11-01T05:23:13Z"
+          },
+          {
+            "number": 8,
+            "name": "Run cmake --build --preset macos --parallel 4",
+            "status": "completed",
+            "conclusion": "success",
+            "started_at": "2026-11-01T05:23:13Z",
+            "completed_at": "2026-11-01T05:25:32Z"
+          },
+          {
+            "number": 9,
+            "name": "Run ctest --preset macos",
+            "status": "completed",
+            "conclusion": "success",
+            "started_at": "2026-11-01T05:25:32Z",
+            "completed_at": "2026-11-01T05:25:41Z"
+          },
+          {
+            "number": 10,
+            "name": "Install and validate the user AU",
+            "status": "completed",
+            "conclusion": "success",
+            "started_at": "2026-11-01T05:25:41Z",
+            "completed_at": "2026-11-01T05:25:47Z"
+          },
+          {
+            "number": 11,
+            "name": "Validate VST3",
+            "status": "completed",
+            "conclusion": "success",
+            "started_at": "2026-11-01T05:25:47Z",
+            "completed_at": "2026-11-01T05:26:15Z"
+          },
+          {
+            "number": 12,
+            "name": "Render and restore the actual VST3",
+            "status": "completed",
+            "conclusion": "success",
+            "started_at": "2026-11-01T05:26:15Z",
+            "completed_at": "2026-11-01T05:26:41Z"
+          },
+          {
+            "number": 13,
+            "name": "Restore embedded state in the actual AU",
+            "status": "completed",
+            "conclusion": "success",
+            "started_at": "2026-11-01T05:26:41Z",
+            "completed_at": "2026-11-01T05:26:44Z"
+          },
+          {
+            "number": 14,
+            "name": "Run actions/upload-artifact@v4",
+            "status": "completed",
+            "conclusion": "success",
+            "started_at": "2026-11-01T05:26:44Z",
+            "completed_at": "2026-11-01T05:26:46Z"
+          },
+          {
+            "number": 28,
+            "name": "Post Run actions/checkout@v4",
+            "status": "completed",
+            "conclusion": "success",
+            "started_at": "2026-11-01T05:26:46Z",
+            "completed_at": "2026-11-01T05:26:47Z"
+          },
+          {
+            "number": 29,
+            "name": "Complete job",
+            "status": "completed",
+            "conclusion": "success",
+            "started_at": "2026-11-01T05:26:47Z",
+            "completed_at": "2026-11-01T05:26:47Z"
+          }
+        ]
+      },
+      {
+        "id": 124760264106,
+        "name": "offline",
+        "status": "completed",
+        "conclusion": "success",
+        "html_url": "https://github.com/kyorohiro/tetorica-spu-plugin/actions/runs/41276718988/job/124760264106",
+        "started_at": "2026-11-01T05:22:46Z",
+        "completed_at": "2026-11-01T05:24:02Z",
+        "steps": [
+          {
+            "number": 1,
+            "name": "Set up job",
+            "status": "completed",
+            "conclusion": "success",
+            "started_at": "2026-11-01T05:22:47Z",
+            "completed_at": "2026-11-01T05:22:47Z"
+          },
+          {
+            "number": 2,
+            "name": "Run actions/checkout@v4",
+            "status": "completed",
+            "conclusion": "success",
+            "started_at": "2026-11-01T05:22:47Z",
+            "completed_at": "2026-11-01T05:22:48Z"
+          },
+          {
+            "number": 3,
+            "name": "Verify safe AU installer in temporary directories",
+            "status": "completed",
+            "conclusion": "success",
+            "started_at": "2026-11-01T05:22:48Z",
+            "completed_at": "2026-11-01T05:22:49Z"
+          },
+          {
+            "number": 4,
+            "name": "Verify bounded GarageBand state inspection",
+            "status": "completed",
+            "conclusion": "success",
+            "started_at": "2026-11-01T05:22:49Z",
+            "completed_at": "2026-11-01T05:22:50Z"
+          },
+          {
+            "number": 5,
+            "name": "Initialize pinned native SDK and JSON header",
+            "status": "completed",
+            "conclusion": "success",
+            "started_at": "2026-11-01T05:22:50Z",
+            "completed_at": "2026-11-01T05:22:53Z"
+          },
+          {
+            "number": 6,
+            "name": "Run cmake --preset offline",
+            "status": "completed",
+            "conclusion": "success",
+            "started_at": "2026-11-01T05:22:53Z",
+            "completed_at": "2026-11-01T05:22:56Z"
+          },
+          {
+            "number": 7,
+            "name": "Run cmake --build --preset offline --parallel 4",
+            "status": "completed",
+            "conclusion": "success",
+            "started_at": "2026-11-01T05:22:56Z",
+            "completed_at": "2026-11-01T05:23:50Z"
+          },
+          {
+            "number": 8,
+            "name": "Run ctest --preset offline",
+            "status": "completed",
+            "conclusion": "success",
+            "started_at": "2026-11-01T05:23:50Z",
+            "completed_at": "2026-11-01T05:24:01Z"
+          },
+          {
+            "number": 16,
+            "name": "Post Run actions/checkout@v4",
+            "status": "completed",
+            "conclusion": "success",
+            "started_at": "2026-11-01T05:24:01Z",
+            "completed_at": "2026-11-01T05:24:01Z"
+          },
+          {
+            "number": 17,
+            "name": "Complete job",
+            "status": "completed",
+            "conclusion": "success",
+            "started_at": "2026-11-01T05:24:01Z",
+            "completed_at": "2026-11-01T05:24:01Z"
+          }
+        ]
+      }
+    ],
+    "failed_jobs": 0,
+    "failed_steps": 0,
+    "artifacts": [
+      {
+        "id": 13070604148,
+        "name": "macos-development-bundles",
+        "size_in_bytes": 2662921,
+        "digest": "sha256:9d9ef039a31de23b021f3b4ba28bc95f529a1d18ab3dd598ce383254933b75e1",
+        "expired": false,
+        "created_at": "2026-11-01T05:26:46Z",
+        "updated_at": "2026-11-01T05:26:46Z"
+      }
+    ],
+    "scope": "GitHub API run/job/step/artifact metadata only; successful job logs were not fetched.",
+    "artifact_download_or_execution": false
+  },
+  "installed_au": {
+    "updated_this_task": false,
+    "expected_record": "docs/software_audio_20261101.json",
+    "destination": "/Users/kyorohiro/Library/Audio/Plug-Ins/Components/TetoricaSPU.component",
+    "files_checked": 5,
+    "matches_previous_record": true,
+    "file_sha256": {
+      "Contents/Info.plist": "94a46fcfc638d76a05aca50d5deedaff2a7a934aee55a816d007b6dff9c9bbc4",
+      "Contents/MacOS/TetoricaSPU": "b46c3150a8c1b5a0c22ce41fce78bc04d38b39a8442f99392bf03ed5d585ea7f",
+      "Contents/PkgInfo": "d06a80ba92de0833d0ed03de1b02b7c8913f126d9e8c8931b190765dd5d83b11",
+      "Contents/Resources/Roboto-Regular.ttf": "b2efabca5ea4bc56eea829713706b5cd0788b82aca153bd4adde9b1573933b4f",
+      "Contents/Resources/THIRD_PARTY_NOTICES.txt": "d26ed5d113ec81968e0f1c41560491631e9c77c5bddf6ad6608dbf8697ce5dcf"
+    },
+    "previous_update_manifest": "/Users/kyorohiro/development8/wfm/hello_ymfm/w/tetorica-spu-plugin/build/au-backups/au-update-doadghp0/manifest.json",
+    "scope": "Read-only verification of the previously installed Software audio AU. The new AU was tested by direct bundle host loading only. No GarageBand action or project mutation in this loop task."
+  },
+  "pending_human": [
+    "Update the installed AU only after hosts quit, using the existing Software audio manifest and verified backup/rollback procedure.",
+    "Load original flag4/markerless-loop VAB or Web v1 in the actual DAW custom UI, then save/reopen.",
+    "Physical listening, long realtime playback, loop boundaries and automation recording.",
+    "Existing Program11/Tone-only dirty and editor/picker lifecycle manual checks remain in TODO."
+  ],
+  "log_evidence": {
+    "build/repeat-loop-before.log": {
+      "bytes": 194,
+      "sha256": "896ca1cc1144c6170f843532873851388fc2cc09d1df4021c27715f517aeaec2",
+      "modifiedUtc": "2026-11-01T04:51:32.959204+00:00"
+    },
+    "build/repeat-loop-after.log": {
+      "bytes": 216,
+      "sha256": "9c74e991f784f8cd3c78f9b6103cda9240bbec7a0b85f5a100dc4927a2d32faf",
+      "modifiedUtc": "2026-11-01T05:14:27.516536+00:00"
+    },
+    "build/repeat-offline-configure.log": {
+      "bytes": 171,
+      "sha256": "f3b3584ffc29ce2ab5a9efa55c4df5ae469e7032c156b9c92d57c279308bd2b0",
+      "modifiedUtc": "2026-11-01T05:12:57.860402+00:00"
+    },
+    "build/repeat-offline-build.log": {
+      "bytes": 8755,
+      "sha256": "9bad8c1e79bb3149c61fa4bf67d80b266d32a8871f4a5ea0b25e739dd225dd30",
+      "modifiedUtc": "2026-11-01T05:13:54.868815+00:00"
+    },
+    "build/repeat-offline-ctest.log": {
+      "bytes": 2698,
+      "sha256": "5d1e8bf77c71048e70f45ee59d5ad37401505efe063ade7c72792f0a87cc0b88",
+      "modifiedUtc": "2026-11-01T05:20:31.371235+00:00",
+      "all24Passed": true,
+      "elapsedSeconds": 6.49
+    },
+    "build/repeat-macos-configure.log": {
+      "bytes": 772,
+      "sha256": "c1b7b7a8159ff374d09bc394649bd413670796afb8dfc4988d4122897473bca0",
+      "modifiedUtc": "2026-11-01T05:14:01.757270+00:00"
+    },
+    "build/repeat-macos-build.log": {
+      "bytes": 11358,
+      "sha256": "46d76ff72a995edd34ecb2f639da165483c72a53541421285172d0aa70d8cc12",
+      "modifiedUtc": "2026-11-01T05:14:54.429994+00:00"
+    },
+    "build/repeat-macos-ctest.log": {
+      "bytes": 2696,
+      "sha256": "22f45f05dd4f44f96147864364f497c06a1236b680f5cfe29aaa45026f9fde6d",
+      "modifiedUtc": "2026-11-01T05:20:31.558296+00:00",
+      "all24Passed": true,
+      "elapsedSeconds": 6.67
+    },
+    "build/repeat-asan-configure.log": {
+      "bytes": 177,
+      "sha256": "84bab2db851bf1e24a68ce90f2859277449f20efd3ce854f7a4f75abe0714744",
+      "modifiedUtc": "2026-11-01T05:13:24.753682+00:00"
+    },
+    "build/repeat-asan-build.log": {
+      "bytes": 8470,
+      "sha256": "7b5968cff0406f0c0ddae08b7a2de6c2bc36068a8a9105c929373c959d55ca12",
+      "modifiedUtc": "2026-11-01T05:13:59.681564+00:00"
+    },
+    "build/repeat-asan-ctest.log": {
+      "bytes": 2704,
+      "sha256": "1269f8e41e059e8f81a711c3c018f5ff8f1aef0922d6c47bfee6e6b112d78003",
+      "modifiedUtc": "2026-11-01T05:20:13.194659+00:00",
+      "all24Passed": true,
+      "elapsedSeconds": 128.26
+    },
+    "build/repeat-au-host-check.log": {
+      "bytes": 4100,
+      "sha256": "310f1e4bfd019e7dad0b0c33be6ec9f32cf6b042c86d6ec11096e10e36dba42c",
+      "modifiedUtc": "2026-11-01T05:18:26.884986+00:00"
+    },
+    "build/repeat-vst3-host-check.log": {
+      "bytes": 14034,
+      "sha256": "5a9824255b4bc3bcc412afd815d7d1c0fe8fb95b9e0ee70bd98f5d1fdff5976f",
+      "modifiedUtc": "2026-11-01T05:16:44.269814+00:00"
+    },
+    "build/repeat-vst3-validator.log": {
+      "bytes": 252137,
+      "sha256": "5f7187d4ce2fb3ddc28bfd406e0fa8a4bede5a26c597d9b4d704e212452759b2",
+      "modifiedUtc": "2026-11-01T05:16:40.306339+00:00"
+    },
+    "build/repeat-python-tests.log": {
+      "bytes": 2681,
+      "sha256": "5a13cea6b27bd9753a84d444cdec2441037fec88c50a398eebcdd8df9711211d",
+      "modifiedUtc": "2026-11-01T05:17:36.426186+00:00"
+    }
+  },
+  "local_summary": {
+    "path": "build/repeat-plugin-validation.json",
+    "bytes": 24077,
+    "sha256": "c307c6f44816de28f45806dd1262c72401d4d08059752b8e36c0f65e3924f428",
+    "source_at_execution": "Uncommitted implementation tree based on b306c56, subsequently committed as78e0b83."
+  },
+  "ci_summary": {
+    "path": "/private/tmp/spu-loop-plugin-ci.json",
+    "bytes": 12084,
+    "sha256": "418024d6cdd4937e82aaeaaae2145594c5a44984e1d6915f83ef00f67afe4ef4"
+  },
+  "web_scope": "Parent Web Synth/Playground WASM, browser and package validation are recorded by the parent repository; this record covers the native plugin.",
+  "native_ci": {
+    "id": 41275704074,
+    "name": "Verify SDK",
+    "head_sha": "95cf71a857b15d0ea932ebf97d5fde80b5e80a95",
+    "status": "completed",
+    "conclusion": "success",
+    "html_url": "https://github.com/kyorohiro/tetorica-soundchip-native/actions/runs/41275704074",
+    "created_at": "2026-11-01T05:07:46Z",
+    "run_started_at": "2026-11-01T05:07:46Z",
+    "updated_at": "2026-11-01T05:12:38Z",
+    "successful_verification_jobs": 12,
+    "skipped_release_jobs": 1,
+    "jobs": [
+      {
+        "id": 124757334094,
+        "name": "Native / windows-x86_64",
+        "status": "completed",
+        "conclusion": "success",
+        "html_url": "https://github.com/kyorohiro/tetorica-soundchip-native/actions/runs/41275704074/job/124757334094",
+        "started_at": "2026-11-01T05:07:51Z",
+        "completed_at": "2026-11-01T05:11:19Z"
+      },
+      {
+        "id": 124757334109,
+        "name": "Native / macos-x86_64",
+        "status": "completed",
+        "conclusion": "success",
+        "html_url": "https://github.com/kyorohiro/tetorica-soundchip-native/actions/runs/41275704074/job/124757334109",
+        "started_at": "2026-11-01T05:07:51Z",
+        "completed_at": "2026-11-01T05:12:37Z"
+      },
+      {
+        "id": 124757334118,
+        "name": "Native / macos-arm64",
+        "status": "completed",
+        "conclusion": "success",
+        "html_url": "https://github.com/kyorohiro/tetorica-soundchip-native/actions/runs/41275704074/job/124757334118",
+        "started_at": "2026-11-01T05:07:50Z",
+        "completed_at": "2026-11-01T05:09:01Z"
+      },
+      {
+        "id": 124757334121,
+        "name": "Native / linux-x86_64",
+        "status": "completed",
+        "conclusion": "success",
+        "html_url": "https://github.com/kyorohiro/tetorica-soundchip-native/actions/runs/41275704074/job/124757334121",
+        "started_at": "2026-11-01T05:07:49Z",
+        "completed_at": "2026-11-01T05:09:22Z"
+      },
+      {
+        "id": 124757334141,
+        "name": "Native / linux-arm64",
+        "status": "completed",
+        "conclusion": "success",
+        "html_url": "https://github.com/kyorohiro/tetorica-soundchip-native/actions/runs/41275704074/job/124757334141",
+        "started_at": "2026-11-01T05:07:52Z",
+        "completed_at": "2026-11-01T05:09:14Z"
+      },
+      {
+        "id": 124757334472,
+        "name": "WASM / ym2612",
+        "status": "completed",
+        "conclusion": "success",
+        "html_url": "https://github.com/kyorohiro/tetorica-soundchip-native/actions/runs/41275704074/job/124757334472",
+        "started_at": "2026-11-01T05:07:50Z",
+        "completed_at": "2026-11-01T05:08:57Z"
+      },
+      {
+        "id": 124757334475,
+        "name": "WASM / cdda",
+        "status": "completed",
+        "conclusion": "success",
+        "html_url": "https://github.com/kyorohiro/tetorica-soundchip-native/actions/runs/41275704074/job/124757334475",
+        "started_at": "2026-11-01T05:07:50Z",
+        "completed_at": "2026-11-01T05:08:42Z"
+      },
+      {
+        "id": 124757334478,
+        "name": "WASM / ps1_spu",
+        "status": "completed",
+        "conclusion": "success",
+        "html_url": "https://github.com/kyorohiro/tetorica-soundchip-native/actions/runs/41275704074/job/124757334478",
+        "started_at": "2026-11-01T05:07:50Z",
+        "completed_at": "2026-11-01T05:08:56Z"
+      },
+      {
+        "id": 124757334479,
+        "name": "WASM / msm5205",
+        "status": "completed",
+        "conclusion": "success",
+        "html_url": "https://github.com/kyorohiro/tetorica-soundchip-native/actions/runs/41275704074/job/124757334479",
+        "started_at": "2026-11-01T05:07:50Z",
+        "completed_at": "2026-11-01T05:08:37Z"
+      },
+      {
+        "id": 124757334494,
+        "name": "WASM / scsp",
+        "status": "completed",
+        "conclusion": "success",
+        "html_url": "https://github.com/kyorohiro/tetorica-soundchip-native/actions/runs/41275704074/job/124757334494",
+        "started_at": "2026-11-01T05:07:50Z",
+        "completed_at": "2026-11-01T05:08:43Z"
+      },
+      {
+        "id": 124757334534,
+        "name": "WASM / wonderswan",
+        "status": "completed",
+        "conclusion": "success",
+        "html_url": "https://github.com/kyorohiro/tetorica-soundchip-native/actions/runs/41275704074/job/124757334534",
+        "started_at": "2026-11-01T05:07:51Z",
+        "completed_at": "2026-11-01T05:08:31Z"
+      },
+      {
+        "id": 124757334597,
+        "name": "WASM / pokey",
+        "status": "completed",
+        "conclusion": "success",
+        "html_url": "https://github.com/kyorohiro/tetorica-soundchip-native/actions/runs/41275704074/job/124757334597",
+        "started_at": "2026-11-01T05:07:50Z",
+        "completed_at": "2026-11-01T05:08:50Z"
+      },
+      {
+        "id": 124758297543,
+        "name": "Publish GitHub Release",
+        "status": "completed",
+        "conclusion": "skipped",
+        "html_url": "https://github.com/kyorohiro/tetorica-soundchip-native/actions/runs/41275704074/job/124758297543",
+        "started_at": "2026-11-01T05:12:37Z",
+        "completed_at": "2026-11-01T05:12:37Z"
+      }
+    ],
+    "scope": "Metadata from SDK agent evidence; Native5 platform jobs and WASM7 jobs succeeded, Publish GitHub Release skipped. No tag/release added."
+  }
+}

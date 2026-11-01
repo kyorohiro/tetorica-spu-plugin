@@ -34,17 +34,22 @@ Web音色v1の[import](../web_instrument_import_20261101.md)と[export](../web_i
 WAV素材の読み込み・Root / Playback編集も完了した。[操作・検証記録](../wav_import_20261101.md)を参照。
 長いAudio /Software PCMとWeb v2を実装し、実AU/VST3・Web実interop・両repo CI成功済み。
 [操作・検証記録](../software_audio_20261101.md)と[current installed AU manifest](../software_audio_20261101.json)を参照。
+flag4-only /markerless repeatの互換性も修正し、元bytesのまま実AU/VST3・CIで検証した。
+[今回の記録](../loop_repeat_20261101.md)を参照。installed AUは今回更新せず、上のSoftware audio版を維持している。
 
-### ADPCMループ互換性の今回の区切り（2026-11-01、実装前）
+### ADPCMループ互換性の今回の区切り（2026-11-01、完了）
 
-- [ ] 元ADPCMのflag4-only LOOP START /markerless repeat registerの再現fixtureで、Nativeの開始packet flag2必須制限を確認し、SDKで修正する。END側REPEAT・one-shotの区別を維持する。
-- [ ] validateToneの今回の制限だけを解除し、VAB /raw ADPCM /Web v1 /state9・旧schemaの元bytes /root /loop /FXを保持する。
-- [ ] worker /program初期Tone探索 /Web loader /Python inspectorのunsupported期待と説明を更新し、元bytes /PCM持続 /loop位置 /不正入力atomicの回帰を加える。
-- [ ] 既存flag6 /markerless /Gaussian /long Software2banks /RT new-delete0と、実AU /VST3 /sanitizer /CIを検証し、公開SDK commitへsubmodule /lockを固定する。
-- [ ] README /検証記録 /再開TODOを更新してcommit /pushする。既存installed AU更新が必要な場合はknown hash退避付きで行い、実DAW独自操作・実聴は区別する。
+- [x] 元ADPCMのflag4-only LOOP START /markerless repeat registerの再現fixtureで、Nativeの開始packet flag2必須制限を確認し、SDKで修正する。END側REPEAT・one-shotの区別を維持する。
+- [x] validateToneの今回の制限だけを解除し、VAB /raw ADPCM /Web v1 /state9・旧schemaの元bytes /root /loop /FXを保持する。
+- [x] worker /program初期Tone探索 /Web loader /Python inspectorのunsupported期待と説明を更新し、元bytes /PCM持続 /loop位置 /不正入力atomicの回帰を加える。
+- [x] 既存flag6 /markerless /Gaussian /long Software2banks /RT new-delete0と、実AU /VST3 /sanitizer /CIを検証し、公開SDK commitへsubmodule /lockを固定する。
+- [x] README /検証記録 /再開TODOを更新してcommit /pushする。今回はinstalled AUを更新せず、Software audio版5filesの一致をread-onlyで確認した。
+- [ ] 次にinstalled AUを更新するときは既知Software audio manifestの照合・退避・rollback手順を使う。実DAW独自UIでloop素材の読込・保存再起動、人の実聴と長時間使用は別に確認する。
 
 開始Plugin `6ddd13b`、SDK `997256e`。親Web Synth /Playgroundへの反映もユーザー了承済み。
-全体TODO: 親repo `docs/issues/todo_ps1_loop_compat_20261101.md`。分割VH/VB UI・Gain smoothing・version/tag /release公開は今回の範囲外。
+実装 `78e0b83`、SDK `95cf71a`。offline/macOS/ASan各24件、実AU48k /VST3全3rate、validator47/0、Python18成功。
+[Plugin CI全job成功](https://github.com/kyorohiro/tetorica-spu-plugin/actions/runs/41276718988)。[記録](../loop_repeat_20261101.md) /[hash・CI metadata](../loop_repeat_20261101.json)。
+全体TODO: [親repo](https://github.com/kyorohiro/hello_ymfm_wasm/blob/main/docs/issues/todo_ps1_loop_compat_20261101.md)（開始`b164a303`）。分割VH/VB UI・Gain smoothing・version/tag /release公開は今回の範囲外。
 
 ### 長いAudio / Software PCMの今回の区切り（2026-11-01、完了）
 
@@ -115,10 +120,10 @@ installed AUを退避更新し、auval26paramsとGarageBand旧schema8 P3/T0/Gain
 
 - [x] Web `.spu.json` version1の通常ADPCM / 112 PCM / Morph音色を読み込む。JSONの構文・schema・全値・sampleとwaveform/Morphの整合性を、現在音源やparameterを変更する前に検証する。この区切り時点のversion2は明示エラーとした。現在は上段の長いAudio対応でbounded v2 import/exportを実装済み。
 - [x] 任意ADPCMを保持するimmutable source kindを追加し、元bytes・baseFrequencyHz・loopStart・signed左右volume・source ADSR・reverb sendと任意の元PCMを保存する。Webのpreset.pitchはinspector値として保持し、keyboard音程はWebと同じroot基準にする。
-- [x] parserはサイズ・深さ・配列長を制限し、duplicate / unknown keys・非finite・不正Unicode・不正ADPCMを拒否する。既知のNative repeat flag制限は明示エラーを保ち、黙ってloopやbytesを書き換えない。
+- [x] parserはサイズ・深さ・配列長を制限し、duplicate / unknown keys・非finite・不正Unicode・不正ADPCMを拒否する。この時点のNative repeat flag制限は明示エラーとしたが、現在は[loop互換性修正](../loop_repeat_20261101.md)で元bytesのまま対応済み。
 - [x] Reverb / Noise / PMON / Morphを既存26parameterとA/B定義へ対応させる。Webにないplugin Gainは読み込み時の値を保持する。WebとpluginのMorph Off / ADPCM・16bit carrierの違いを説明し、bit完全一致は約束しない。
 - [x] workerでfile読込・parse・engine準備を行い、全設定と元sampleをtransactionで採用する。失敗や古い完了・host restore後の完了は現音源・全parameter・正常pendingを壊さない。採用時は保持音と残響を停止し、次のNoteから再生する。
-- [x] 既存ID0〜25とsource kind0〜2を維持し、state schema8で新sourceを保存する。旧1〜7 / Gain-onlyを読み、不正state・未対応loop時のatomic failureと元fileなし復元を検証する。
+- [x] 既存ID0〜25とsource kind0〜2を維持し、state schema8で新sourceを保存する。旧1〜7 / Gain-onlyを読み、不正state・当時の未対応loop時のatomic failureと元fileなし復元を検証した。現在のloop修正では正常loop成功と不正marker時保持へ回帰を更新した。
 - [x] 共通file操作から`.vab`と`.spu.json`を読み込めるようにし、import名・状態・エラーを表示する。Source / ADSR / Reverbと720×620を保ち、file dialog/editor closeやpending中の世代管理を検証する。
 - [x] Webの実writerで作るreference fixtureとC++ parser/coreの対応、実AU/VST3のstate・first block・MIDI / FX回帰、sanitizer / validator / CI、Standalone読込UIを検証し、記録をcommit / pushする。
 - [x] Web向け書き出し・往復は[次の区切り](../web_instrument_export_20261101.md)で完了した。Morph Onの現在blend保存・元source保持、Noise+PMONのraw flag差を整理し、実Web readerと両browserで検証した。長いAudio / PSF抽出 / VH+VB UIは後続。
@@ -408,7 +413,7 @@ complete `.vab`を最初の対象とする。分割VH/VBの複数file dialogは�
 - [ ] VAB/Toneのみの変更でDAWがprojectを変更済みと扱うことを確認する。VST3はoptional setDirty、AUはpublic PresentPreset通知を使用中。
 - [ ] editorを開いたままのhost restoreと、file dialog / Program・Tone popup中のeditor close/reopenを実DAWで追試する。
 - [ ] 分割VH/VBのファイル選択を追加する（parserとoffline APIは対応済み）。
-- [ ] Native SDKのrepeat先packetにflag 2がないloopを別途修正・検証する。現在のengineは明示的に拒否、parserは元bytesを保持する。
+- [x] Native SDKのrepeat先packetにflag 2がないloopを修正・検証した。flag4-only /markerless0の元bytesを保ち、実AU/VST3・sanitizer・CIで確認済み（[記録](../loop_repeat_20261101.md)）。installed AU更新と人の確認は今回節に残す。
 - [x] ADSRをhost parameter / state / graph編集へ公開する（[実AU/VST3・GUI検証](../adsr_editing_20261031.md)）。
 - [x] SPU Reverbをpreset / Enable / Return / sendとstateへ公開する（[検証記録](../reverb_20261031.md)）。
 - [x] PCMの波形選択・描画、Noise、PMONを順に公開する。
