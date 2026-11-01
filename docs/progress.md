@@ -673,3 +673,11 @@
 - ユーザーの続行指示で、作業前TODOを保存。開始`faa8922`、SDK `95cf71a`。
 - MIDI CC120は対象channelのvoice /PMON pairをmuteし、他channelと共有Reverb historyを保持する。UIの全停止は別global経路で維持する。
 - unit /実AU・VST3 /sanitizer /CIを検証し、state /parameterは維持する。今回installed AUやGarageBandは変更しない。
+- 追加レビューで、UI stopを別atomic flagにするとframework MIDI queueのdrain直後に古いNoteOnが残るraceを確認。UI MIDIとglobal stopを同じbounded SPSC command FIFOへまとめ、同offsetの入力順を保証する方式に変更する。
+
+## 2026-11-01 JST — CC120のローカル検証成功
+
+- 対象channelのheld/deferred/releaseをvol0/KOFFし、PMONの両physical voiceを停止。他channel、controllers、共有wet/rate履歴とallocatorを保持した。state9 /26parameter /SDK pinは維持。
+- 7source×3rateのcore検査、UI SPSC 1024件 /snapshot後追加 /overflow /wrap /2thread10万件順序・RT new/delete0を追加。通常 /macOS /ASan+UBSan各27件成功、UI queueのTSanも成功。
+- 実AU48k /実VST3全3rateで16channel CC120、survivor PCM、held/deferred/release、offset/split/future/fresh、12組nonzero PMON停止再利用、shared Reverb tail保持を確認。既存Gain/MIDI/音源/state回帰も成功、VST3 validator47/0。
+- CIはこれから確認。installed AUは前回Gain版のままで、GarageBandを操作していない。実DAW独自All sound off buttonの操作・実聴・長時間確認は別に残す。

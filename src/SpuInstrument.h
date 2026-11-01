@@ -61,6 +61,10 @@ public:
   void setSustain(bool down, int channel = 0) noexcept;
   void resetControllers(int channel = -1) noexcept; // Neutral bend; release pedal only.
   void allNotesOff(int channel = -1) noexcept;      // Key releases, respecting pedal.
+  // CC120: mute this channel's held/deferred/releasing dry voices, including
+  // both physical voices of PMON notes. Controllers, shared wet history and
+  // causal rate-adapter history remain intact. Invalid channels are ignored.
+  void allSoundOff(int channel) noexcept;
   void panic() noexcept; // Immediate mute; controllers retained until reset/prepare.
   // The original Tone values never change. Current authored ADSR survives
   // prepare/panic and applies to future Note On, including retriggered voices.

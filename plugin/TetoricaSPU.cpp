@@ -56,6 +56,7 @@ TetoricaSPU::~TetoricaSPU()
 #if IPLUG_DSP
 void TetoricaSPU::OnReset()
 {
+  mUiMidi.discardPending();
   mMidiCount = 0;
   mMidiOverflow = false;
   resetControllerCache();
@@ -69,12 +70,45 @@ void TetoricaSPU::OnActivate(bool active)
 {
   if (!active)
   {
+    mUiMidi.discardPending();
     mMidiCount = 0;
     mMidiOverflow = false;
     resetControllerCache();
     mEngines.instrument().panic();
     mEngines.instrument().resetControllers();
     mGainNeedsReset = true;
+  }
+}
+
+void TetoricaSPU::SendMidiMsgFromUI(const iplug::IMidiMsg& msg)
+{
+  mUiMidi.push({false, msg.mOffset, msg.mStatus, msg.mData1, msg.mData2});
+  // Keep delegate forwarding without also entering the framework's separate
+  // MIDI FIFO: that would destroy the ordering with our global-stop command.
+  EDITOR_DELEGATE_CLASS::SendMidiMsgFromUI(msg);
+}
+
+void TetoricaSPU::drainUiMidi() noexcept
+{
+  if (mUiMidi.takeOverflow())
+  {
+    mUiMidi.discardPending();
+    mMidiOverflow = true;
+    return;
+  }
+  const auto count = mUiMidi.pending(); // Fixed snapshot; no unbounded UI drain.
+  tetorica::UiMidiCommand command;
+  for (std::size_t i = 0; i < count && mUiMidi.pop(command); ++i)
+  {
+    if (command.globalPanic)
+    {
+      mEngines.instrument().panic();
+      // Notes before the stop, including undrained UI NoteOns and future host
+      // notes, cannot replay. Commands later in this FIFO may play normally.
+      discardQueuedNotes(false);
+    }
+    else
+      ProcessMidiMsg(iplug::IMidiMsg(command.offset, command.status, command.data1, command.data2));
   }
 }
 
@@ -134,7 +168,7 @@ void TetoricaSPU::applyMidi(const iplug::IMidiMsg& msg)
         mEngines.instrument().setSustain(mSustain[channel], msg.Channel());
       }
       else if (msg.mData1 == 120)
-        mEngines.instrument().panic();
+        mEngines.instrument().allSoundOff(msg.Channel());
       else if (msg.mData1 == 121)
       {
         mBend[channel] = 0;
@@ -213,11 +247,11 @@ void TetoricaSPU::discardCarriedMidi() noexcept
   mMidiCount = kept;
 }
 
-void TetoricaSPU::discardCarriedNotes() noexcept
+void TetoricaSPU::discardQueuedNotes(bool carriedOnly) noexcept
 {
   std::size_t kept = 0;
   for (std::size_t event = 0; event < mMidiCount; ++event)
-    if (!mMidi[event].carried ||
+    if ((carriedOnly && !mMidi[event].carried) ||
         mMidi[event].message.StatusMsg() == iplug::IMidiMsg::kControlChange ||
         mMidi[event].message.StatusMsg() == iplug::IMidiMsg::kPitchWheel)
       mMidi[kept++] = mMidi[event];
@@ -265,7 +299,7 @@ void TetoricaSPU::applySourceParameters() noexcept
       previousMorph != instrument.effectiveMorphEnabled())
     // The old source's future NoteOns must not restart after the mode panic.
     // Current-block host events and carried wheel/pedal still belong to input.
-    discardCarriedNotes();
+    discardQueuedNotes(true);
 }
 
 void TetoricaSPU::applyReverbParameters() noexcept
@@ -305,7 +339,7 @@ void TetoricaSPU::renderRange(iplug::sample** outputs, int offset, int nFrames)
   }
 }
 
-void TetoricaSPU::ProcessBlock(iplug::sample**, iplug::sample** outputs, int nFrames)
+void TetoricaSPU::recoverMidiOverflow() noexcept
 {
   if (mMidiOverflow)
   {
@@ -317,6 +351,11 @@ void TetoricaSPU::ProcessBlock(iplug::sample**, iplug::sample** outputs, int nFr
     mMidiCount = 0;
     mMidiOverflow = false;
   }
+}
+
+void TetoricaSPU::ProcessBlock(iplug::sample**, iplug::sample** outputs, int nFrames)
+{
+  recoverMidiOverflow();
   if (nFrames <= 0)
     return;
   if (mEngines.beginBlock(GetSampleRate()))
@@ -334,9 +373,11 @@ void TetoricaSPU::ProcessBlock(iplug::sample**, iplug::sample** outputs, int nFr
     // especially a pedal-up at the block boundary, and discard old note events.
     // Successful host restore has already discarded all carried MIDI. Fresh
     // events for this block (including first post-restore NoteOn) stay ordered.
-    discardCarriedNotes();
+    discardQueuedNotes(true);
     mReady = true;
   }
+  drainUiMidi();
+  recoverMidiOverflow();
   if (!mReady)
   {
     std::fill_n(outputs[0], nFrames, iplug::sample{});

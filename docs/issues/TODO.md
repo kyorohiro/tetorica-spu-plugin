@@ -41,14 +41,15 @@ Gain smoothingも実装し、unit /実AU・VST3 /sanitizer /CIを確認した。
 Gain版installed AUへの退避更新・旧VABの保存再起動も完了した。
 [現在のAU更新・復元記録](../au_gain_update_20261101.md)と[current installed AU manifest](../au_gain_update_20261101.json)を参照。
 
-### CC120チャンネル別停止の今回の区切り（2026-11-01、実装前）
+### CC120チャンネル別停止の今回の区切り（2026-11-01、CI確認中）
 
 開始Plugin `faa8922`、Native SDK `95cf71a`。ユーザーの続行指示で、作業前TODOを保存する。
 
-- [ ] 対象MIDI channelのheld /pedal-held /release voiceを即時muteするcore APIを追加し、PMONのcarrier/modulator両方を停止する。不正channelは無変更とする。
-- [ ] CC120をそのAPIへ接続し、他channelのvoice /bend /pedal /allocator /resampler phaseを保持する。共有Reverb historyは消さず減衰を継続する。通常のrate変換に保持済みの短いmixed sample historyは維持する。
-- [ ] UIのAll sound offは独立したthread-safe global panic要求へ接続し、全channel・共有残響停止を維持する。reset /host restore /deactivate /bypass /overflowの既存global cleanupを維持する。
-- [ ] unitと実AU /VST3でchannel0 /15、held /sustain /release、PMON /Noise /Morph /Software PCM、他channelのPCM連続性、同offset順序 /future offset /分割、controller保持 /state不変を検証する。新処理のRT確保・lockを避ける。
+- [x] 対象MIDI channelのheld /pedal-held /release voiceを即時muteするcore APIを追加し、PMONのcarrier/modulator両方を停止する。不正channelは無変更とする。
+- [x] CC120をそのAPIへ接続し、他channelのvoice /bend /pedal /allocator /resampler phaseを保持する。共有Reverb historyは消さず減衰を継続する。通常のrate変換に保持済みの短いmixed sample historyは維持する。
+- [x] UIのAll sound offは独立したthread-safe global panic要求へ接続し、全channel・共有残響停止を維持する。reset /host restore /deactivate /bypass /overflowの既存global cleanupを維持する。
+  UIのNoteOnと全停止を同じ固定容量SPSC FIFOに載せる。別atomic flagではframework queueのdrain直後に古いNoteOnが遅れて届くraceがあるため、順序付きcommandとして渡す。
+- [x] unitと実AU /VST3でchannel0 /15、held /sustain /release、PMON /Noise /Morph /Software PCM、他channelのPCM連続性、同offset順序 /future offset /分割、controller保持 /state不変を検証する。新処理のRT確保・lockを避ける（全27件×3構成、UI queueのTSan、実AU48k /VST3全3rate成功）。
 - [ ] build /CTest /sanitizer /validator /CIを確認し、仕様・制限・source /binary /log記録と再開TODOをcommit /pushする。
 
 既存parameter ID0〜25 /state schema9 /Gain範囲を維持する。
@@ -469,7 +470,7 @@ complete `.vab`を最初の対象とする。分割VH/VBの複数file dialogは�
 - [ ] 内蔵112標本Sineは約1,575HzでSPU PITCH上限。MIDI92以降も演奏できる波形構成を用意する。
 - [ ] sample rate変換の品質・遅延報告を検討する。44.1kHz未満のanti-alias filterは未実装。
 - [x] Pitch Bend / Sustainを追加する（[検証記録](../midi_expression_20261031.md)）。
-- [ ] CC120をチャンネル別の即時停止にする（現状はglobal panic、CC123はchannel release）。
+- [x] CC120をチャンネル別の即時停止にする。CC123はpedalを尊重するchannel release、UI All sound offは全停止として区別する。
 - [x] Gain変更を約5msで滑らかにする。sampleごとの出力補間と、既存block単位targetの違いを説明する。
 - [ ] 通常parameter automationの各pointをsample offsetで処理する拡張を検討する（現在のGain smoothingはblock targetからの補間）。
 - [ ] AUでrender thread以外から届くMIDIのbounded ingressを検証・対応する。現状のhost MIDI / lifecycle操作は単一consumerとして直列化される前提。

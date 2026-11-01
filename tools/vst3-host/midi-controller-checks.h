@@ -49,6 +49,11 @@ template<class A,class B> void equalBlocks(A& a,B& b,int count,const char* messa
 // AU MusicDeviceMIDIEvent), never a production testing entry point.
 template<class Factory> void checkControllers(Factory create,double rate,const char* format) {
   const int releaseBlocks=static_cast<int>(2*rate/256)+2;
+  // Selective muting retains the shared causal rate adapter: its two mixed
+  // samples may still contain the stopped voice until their native time has
+  // passed. Native44.1kHz output itself must stop at the exact MIDI offset.
+  const auto muteSettle=rate==44100?std::size_t{0}:
+    static_cast<std::size_t>(std::ceil(2*rate/44100.))+2;
   for(int raw:{0,8192,16383}) {
     auto instance=create();
     instance->renderMidi({bend(raw,15),on(15)});
@@ -137,19 +142,20 @@ template<class Factory> void checkControllers(Factory create,double rate,const c
     equalBlocks(*reset,*reference,releaseBlocks,"CC121 changed held/release PCM ordering");
     check(maximum(reset->renderMidi({}))>1e-4,"CC121 stopped a physically held key");
   }
-  // Panic silences globally while preserving live controllers. Live values are
-  // excluded from project data. Lifecycle reset and successful state restore
-  // instead return bend/pedal to their initial values.
+  // CC120 mutes only its channel, including pedal-held notes, while preserving
+  // live controllers. Lifecycle reset and successful state restore instead
+  // return bend/pedal to their initial values. Live values are never saved.
   {
     auto panic=create();const auto original=panic->savedBytes();
     panic->renderMidi({bend(12288,15),cc(64,127,15),on(15)});
-    blocks(*panic,16);panic->renderMidi({cc(120,0,0,19)});
-    check(maximum(blocks(*panic,8))<1e-12,"CC120 did not globally silence another channel");
+    blocks(*panic,16);panic->renderMidi({off(15)});
+    blocks(*panic,4);panic->renderMidi({cc(120,0,15,19)});
+    check(maximum(blocks(*panic,8))<1e-12,"CC120 did not silence its pedal-held channel");
     panic->renderMidi({on(15)});
-    check(std::abs(frequency(blocks(*panic,64),rate)-277.18263)<1.,"Panic reset live bend");
+    check(std::abs(frequency(blocks(*panic,64),rate)-277.18263)<1.,"CC120 reset live bend");
     panic->renderMidi({off(15)});
     blocks(*panic,releaseBlocks);
-    check(maximum(panic->renderMidi({}))>1e-4,"Panic reset the sustain pedal");
+    check(maximum(panic->renderMidi({}))>1e-4,"CC120 reset the sustain pedal");
     check(panic->savedBytes()==original,"Live MIDI controllers leaked into preset state");
     panic->resetForMidiTest();
     check(maximum(blocks(*panic,4))<1e-12,"Lifecycle reset retained a sustained note");
@@ -166,6 +172,66 @@ template<class Factory> void checkControllers(Factory create,double rate,const c
     equalBlocks(*panic,*fresh,16,"Host restore controller reset PCM differs from fresh instance");
     panic->renderMidi({off(15)});fresh->renderMidi({off(15)});
     equalBlocks(*panic,*fresh,releaseBlocks,"Host restore retained a sustain pedal");
+  }
+  // Every mapped MIDI channel must stop its own held voice at the requested
+  // offset. This runs unchanged through both ordinary and paired PMON engines.
+  for(int channel=0;channel<16;++channel) {
+    auto stopped=create(),held=create();
+    stopped->renderMidi({on(channel)});held->renderMidi({on(channel)});
+    equalBlocks(*stopped,*held,8,"Channel-stop warmup diverged");
+    const auto a=stopped->renderMidi({cc(120,0,channel,73)}),b=held->renderMidi({});
+    check(maximum(b)>.005,"Channel-stop fixture did not contain a held voice");
+    check(delta({a.begin(),a.begin()+73},{b.begin(),b.begin()+73})<1e-7,
+      "CC120 changed PCM before its sample offset");
+    check(maximum({a.begin()+73+muteSettle,a.end()})<1e-12,
+      "CC120 left held audio beyond the bounded rate-adapter history");
+    check(maximum(blocks(*stopped,2))<1e-12,"CC120 left a later held/releasing voice");
+  }
+  // Put the survivor in the same physical slot in all references. The target
+  // channel must disappear while the survivor keeps its phase and envelope;
+  // resetting global interpolation history would fail this exact PCM oracle.
+  for(int target:{0,15}) {
+    const int survivor=15-target;
+    auto stopped=create(),held=create(),solo=create(),split=create();
+    const auto both=std::vector<Midi>{bend(12288,survivor),cc(64,127,survivor),on(survivor,60),on(target,67)};
+    stopped->renderMidi(both);held->renderMidi(both);split->renderMidi(both);
+    solo->renderMidi({bend(12288,survivor),cc(64,127,survivor),on(survivor,60)});
+    for(int n=0;n<12;++n) {
+      const auto a=stopped->renderMidi({}),b=held->renderMidi({}),c=split->renderMidi({});
+      solo->renderMidi({});
+      check(delta(a,b)<1e-7&&delta(a,c)<1e-7,"Selective-stop warmup diverged");
+    }
+    const auto a=stopped->renderMidi({cc(120,0,target,73)}),b=held->renderMidi({}),c=solo->renderMidi({});
+    auto partitioned=split->renderMidi({},73);
+    concat(partitioned,split->renderMidi({cc(120,0,target)},183));
+    check(delta(a,partitioned)<1e-7,"CC120 offset changed with host block partitioning");
+    check(delta({a.begin(),a.begin()+73},{b.begin(),b.begin()+73})<1e-7,
+      "Selective CC120 changed pre-offset mixed PCM");
+    check(delta({a.begin()+73+muteSettle,a.end()},{c.begin()+73+muteSettle,c.end()})<1e-7,
+      "CC120 changed the other channel's held phase/envelope");
+    equalBlocks(*stopped,*solo,12,"CC120 interrupted the surviving channel");
+    check(delta(stopped->renderMidi({off(survivor,60,37)}),solo->renderMidi({off(survivor,60,37)}))<1e-7,
+      "CC120 reset another channel's sustain pedal");
+    equalBlocks(*stopped,*solo,static_cast<int>(std::ceil(rate*.15/256)),
+      "CC120 changed the surviving channel's bend/pedal state");
+    check(maximum(stopped->renderMidi({}))>1e-4,"CC120 globally stopped another channel or reset its pedal");
+  }
+  // A future CC120 and a fresh NoteOn at its exact offset must both survive
+  // across multiple blocks. CC120 precedes NoteOn in both actual host APIs.
+  {
+    auto future=create(),reference=create();
+    const auto both=std::vector<Midi>{on(0,60),on(15,67)};
+    future->renderMidi(both);reference->renderMidi(both);
+    equalBlocks(*future,*reference,8,"Deferred channel-stop warmup diverged");
+    check(delta(future->renderMidi({cc(120,0,15,513),on(15,72,513)}),reference->renderMidi({}))<1e-7,
+      "Future CC120/NoteOn changed the first block early");
+    equalBlocks(*future,*reference,1,"Future CC120/NoteOn changed the second block early");
+    check(delta(future->renderMidi({}),reference->renderMidi({cc(120,0,15,1),on(15,72,1)}))<1e-7,
+      "Carried CC120 lost its offset or swallowed the same-offset fresh NoteOn");
+    equalBlocks(*future,*reference,8,"Carried CC120/fresh-note timeline diverged");
+    check(delta(future->renderMidi({cc(120,0,0,19)}),reference->renderMidi({cc(120,0,0,19)}))<1e-7,
+      "Stopping the other channel changed the fresh-note reference");
+    check(maximum(blocks(*future,8))>1e-4,"CC120 removed a same-offset fresh NoteOn");
   }
   {
     auto overflow=create();overflow->renderMidi({bend(16383,15),cc(64,127,15),on(15)});
@@ -223,11 +289,16 @@ template<class Factory> void checkControllers(Factory create,double rate,const c
     const auto after=blocks(*tail,64);
     check(std::abs(frequency(after,rate)/frequency(before,rate)-std::pow(2.,1./12))<.003,
       "Bend failed to retune a released voice");
+    const auto stopped=tail->renderMidi({cc(120,0,15,73)});
+    check(maximum({stopped.begin()+73+muteSettle,stopped.end()})<1e-12&&
+      maximum(blocks(*tail,4))<1e-12,"CC120 did not immediately stop a released tail");
   }
   std::cout<<"PASS "<<format<<" controllers sampleRate="<<rate
     <<" bend14Endpoints=true multiPointOffsets=true splitBlocks=true noRetrigger=true"
     <<" sustain64_63=true channel15Isolation=true CC123Pedal=true CC121HeldDeferred=true"
-    <<" panicPreservesControllers=true resetRestoreOverflowClear=true liveStateExcluded=true"
+    <<" CC120Channel16=true CC120PreservesControllers=true CC120SurvivorPCM=true"
+    <<" CC120OffsetSplitCarryFresh=true CC120HeldDeferredRelease=true"
+    <<" resetRestoreOverflowClear=true liveStateExcluded=true"
     <<" deferredController=true reactivateReset=true releaseTailRetunedNoKON=true"
     <<" restoreDiscardsFutureControllers=true\n";
 }

@@ -22,6 +22,7 @@
 #include "software-audio-checks.h"
 #include "loop-repeat-checks.h"
 #include "gain-smoothing-checks.h"
+#include "cc120-checks.h"
 #include "pluginterfaces/vst/ivstmidicontrollers.h"
 
 #include <algorithm>
@@ -829,6 +830,9 @@ int main(int argc, char** argv) {
             instance->start();return instance;
           },rate,"VST3 state/events",originalBank());
           tetorica::test::checkControllers([&] {
+            auto instance=std::make_unique<Instance>(factory,info,rate);instance->start();return instance;
+          },rate,"VST3 IMidiMapping");
+          tetorica::test::checkChannelStopsPmon([&] {
             auto instance=std::make_unique<Instance>(factory,info,rate);instance->start();return instance;
           },rate,"VST3 IMidiMapping");
         }

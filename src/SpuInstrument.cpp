@@ -417,6 +417,31 @@ void SpuInstrument::allNotesOff(int channel) noexcept {
     }
   }
 }
+void SpuInstrument::allSoundOff(int channel) noexcept {
+  if (!validChannel(channel)) return;
+  unsigned mask = 0;
+  const unsigned limit = mPmon.enabled ? kVoiceCount / 2 : kVoiceCount;
+  for (unsigned slot = 0; slot < limit; ++slot) {
+    auto& voice = mVoices[slot];
+    // Released notes keep their identity until reuse. Empty slots have a
+    // default channel0 and must not be mistaken for sounding PMON pairs.
+    if (voice.note < 0 || voice.channel != channel) continue;
+    const unsigned carrier = carrierFor(slot);
+    const unsigned first = mPmon.enabled ? carrier - 1 : carrier;
+    for (unsigned physical = first; physical <= carrier; ++physical) {
+      write(physical * 16, 0); write(physical * 16 + 2, 0);
+      mask |= 1u << physical;
+      // A future NoteOn must freshly latch this now-muted source, rather than
+      // fading/restarting the released note that occupied the slot.
+      mFreshSource[physical] = true;
+    }
+    voice = Voice{};
+  }
+  // Raw KOFF cancels pending audition restarts; volume0 supplies immediate
+  // dry mute instead of waiting for ADSR release. No shared history is reset.
+  if (mask & 0xffffu) write(0x18c, mask & 0xffffu);
+  if (mask >> 16) write(0x18e, mask >> 16);
+}
 void SpuInstrument::panic() noexcept {
   write(0x18c, 0xffff); write(0x18e, 0x00ff);
   for (unsigned i=0; i<kVoiceCount; ++i) {

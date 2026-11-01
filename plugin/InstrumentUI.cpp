@@ -338,7 +338,7 @@ void TetoricaSPU::initializeInstrumentUI()
     graphics->AttachControl(new IVKnobControl(IRECT(576, 28, 696, 152),
       kParamGain, "Gain"));
     graphics->AttachControl(new IVButtonControl(IRECT(24, 154, 154, 189),
-      [this](IControl*) { SendMidiMsgFromUI(IMidiMsg(0, 0xb0, 120, 0)); },
+      [this](IControl*) { mUiMidi.push({true}); },
       "All sound off"));
     graphics->AttachControl(new IMultiLineTextControl(IRECT(166, 150, 478, 199),
       mInstrumentUI->status.c_str(), IText(13).WithAlign(EAlign::Near).WithVAlign(EVAlign::Top)),

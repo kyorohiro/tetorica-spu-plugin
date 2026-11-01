@@ -13,6 +13,7 @@
 #include "vst3-host/software-audio-checks.h"
 #include "vst3-host/loop-repeat-checks.h"
 #include "vst3-host/gain-smoothing-checks.h"
+#include "vst3-host/cc120-checks.h"
 #include <AudioToolbox/AudioToolbox.h>
 #include <CoreFoundation/CoreFoundation.h>
 #include <algorithm>
@@ -323,6 +324,7 @@ int main(int argc, char** argv)
       decoded.gainPercent == 17., "Legacy AU state did not migrate to a builtin definition");
     tetorica::test::checkGainSmoothing([&] { return std::make_unique<Instance>(component); },48000,"AU parameters/MIDIEvent");
     tetorica::test::checkControllers([&] { return std::make_unique<Instance>(component); },48000,"AU MIDIEvent");
+    tetorica::test::checkChannelStopsPmon([&] { return std::make_unique<Instance>(component); },48000,"AU MIDIEvent");
     tetorica::test::checkEnvelopes([&] { return std::make_unique<Instance>(component); },48000,"AU parameters",bank);
     tetorica::test::checkReverbs([&] { return std::make_unique<Instance>(component); },48000,"AU parameters",bank);
     tetorica::test::checkPcmCycles([&] { return std::make_unique<Instance>(component); },48000,"AU state/MIDIEvent");

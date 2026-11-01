@@ -76,8 +76,18 @@ CC64 values 64–127 hold released keys; values 0–63 release only those deferr
 notes, leaving physically held keys playing. Sustain postpones Note Off rather
 than extending a one-shot sample or overriding its authored ADSR.
 CC123 acts as releasing the channel's keys and respects Sustain. CC121 returns
-the channel's bend to center and releases Sustain. CC120 currently silences all
-channels, as does the editor's **All sound off** button.
+the channel's bend to center and releases Sustain. **CC120 mutes only the
+addressed MIDI channel**, including pedal-held notes and release tails, and
+stops both voices of each PMON pair. Bend/pedal settings, other channels and the
+shared Reverb tail are retained. The causal rate adapter retains its existing
+mixed-sample history for up to about two native sample intervals.
+
+The editor's **All sound off** button still stops every channel and clears the
+shared Reverb tail. Editor notes and this global stop share one bounded FIFO,
+so older UI NoteOns cannot arrive after their stop. Pending notes before the
+stop are discarded; subsequent UI NoteOns can play. Queue overflow safely stops
+all voices and resets controllers. This UI path has one editor producer and
+one audio consumer; host MIDI retains its existing serialized-ingress contract.
 
 MIDI offsets are honored inside blocks, including multiple controller points
 in a VST3 block. The plugin supplies a bounded adapter for mapped VST3 MIDI CCs
@@ -549,9 +559,8 @@ still need a direct user check; the verified host-preset route is separate.
   VAB is limited to 1 MiB, ADPCM to 520192 bytes and Software PCM to 32 MiB. Key zones, layers and game-driver performance state are
   not reconstructed. Held notes, release tails, decoder caches and host rate
   are not saved.
-- Configurable Pitch Bend range and per-channel CC120 remain TODO.
+- Configurable Pitch Bend range remains TODO.
 - Sample-accurate ordinary parameter automation remains TODO; Gain output smoothing is sample-based after each block target is received.
-  Currently CC120 immediately stops all channels; CC123 releases its own channel.
 - Prepared-engine changes start with no held notes and cut the previous tail.
   Carried MIDI from previous blocks is removed; new current-block host MIDI is
   retained. Tail crossfades and universal non-render-thread AU MIDI ingress are

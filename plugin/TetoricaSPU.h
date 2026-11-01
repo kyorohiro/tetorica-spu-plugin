@@ -13,6 +13,7 @@
 #include "WebInstrumentExporter.h"
 #include "AudioFileLoader.h"
 #include "GainSmoother.h"
+#include "UiMidiQueue.h"
 #include <array>
 #include <atomic>
 #include <cstddef>
@@ -135,6 +136,7 @@ public:
 #if IPLUG_DSP
   void ProcessBlock(iplug::sample** inputs, iplug::sample** outputs, int nFrames) override;
   void ProcessMidiMsg(const iplug::IMidiMsg& msg) override;
+  void SendMidiMsgFromUI(const iplug::IMidiMsg& msg) override;
   void OnReset() override;
   void OnActivate(bool active) override;
 
@@ -190,7 +192,9 @@ private:
   tetorica::SavedInstrumentState captureSavedStateLocked() const;
   void applyImportedParameters(const tetorica::SavedInstrumentState& state) noexcept;
   void discardCarriedMidi() noexcept;
-  void discardCarriedNotes() noexcept;
+  void discardQueuedNotes(bool carriedOnly) noexcept;
+  void drainUiMidi() noexcept;
+  void recoverMidiOverflow() noexcept;
   void renderRange(iplug::sample** outputs, int offset, int nFrames);
 
   // All MIDI and render storage is allocated with the instance, never while
@@ -219,6 +223,9 @@ private:
   std::size_t mMidiCount = 0;
   bool mMidiOverflow = false;
   bool mReady = false;
+  // Local editor MIDI and global stop share one FIFO so an undrained old UI
+  // NoteOn cannot arrive after its stop. UI produces; audio/lifecycle consumes.
+  tetorica::UiMidiQueue mUiMidi;
   // Output-only live state: only the authored target is serialized. Lifecycle
   // restore/reset snaps on the first render; ordinary source swaps retain it.
   tetorica::AudioGainSmoother mGain;

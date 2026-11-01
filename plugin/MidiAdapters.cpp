@@ -105,6 +105,7 @@ Steinberg::tresult PLUGIN_API TetoricaSPU::process(Steinberg::Vst::ProcessData& 
     // be replayed/sorted against later blocks when processing resumes.
     mMidiCount=0;
     mMidiOverflow=false;
+    mUiMidi.discardPending();
     resetControllerCache();
     mEngines.instrument().panic();
     mEngines.instrument().resetControllers();

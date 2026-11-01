@@ -195,6 +195,7 @@ int TetoricaSPU::UnserializeState(const iplug::IByteChunk& chunk, int startPos)
     resetControllerCache();
     discardCarriedMidi();
     mMidiOverflow = false;
+    mUiMidi.discardPending();
     // This trusted complete parameter chunk was fully validated and allocated
     // above. The framework sets all 26 values and calls OnParamReset.
     UnserializeParams(params, 0);

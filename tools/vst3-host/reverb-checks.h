@@ -90,17 +90,33 @@ template<class Factory> void checkReverbs(Factory make,double rate,const char* h
     envelope_detail::envelopePeak(leftTail.left,settle)>1e-6&&envelope_detail::envelopePeak(rightTail.right,settle)>1e-6,
     "Reverb did not retain a nonzero tail after dry release ended");
 
-  auto roomVoice=make(),echoVoice=make();auto echo=room;echo.preset=ReverbPreset::SpaceEcho;
-  author(*roomVoice,room);author(*echoVoice,echo);roomVoice->renderMidi(on);echoVoice->renderMidi(on);
+  auto roomVoice=make(),echoVoice=make(),echoReference=make();auto echo=room;echo.preset=ReverbPreset::SpaceEcho;
+  author(*roomVoice,room);author(*echoVoice,echo);author(*echoReference,echo);
+  roomVoice->renderMidi(on);echoVoice->renderMidi(on);echoReference->renderMidi(on);
   const auto roomPCM=reverbBlocks(*roomVoice,heldBlocks),echoPCM=reverbBlocks(*echoVoice,heldBlocks);
+  const auto echoReferencePCM=reverbBlocks(*echoReference,heldBlocks);
+  requireReverb(echoPCM.left==echoReferencePCM.left&&echoPCM.right==echoReferencePCM.right,
+    "CC120 Reverb reference warmup diverged");
   requireReverb(delta(roomPCM.left,echoPCM.left)>1e-5,"Distinct Reverb presets produced identical PCM");
-  // Disable mutes wet immediately and lets processing decay silently. Panic
-  // and Off discard all history, so re-enabling cannot resurrect an old tail.
+  // Disable mutes wet immediately and lets processing decay silently. A MIDI
+  // channel's CC120 must retain the shared effect and interpolation history;
+  // the explicit Off preset still discards all history.
   roomVoice->renderMidi(off);roomVoice->plainParameterForTest(13,0);
   const auto muted=reverbBlocks(*roomVoice,tailBlocks);
   requireReverb(envelope_detail::envelopePeak(muted.left,settle)==0,"Enable-off leaked wet output");
-  echoVoice->renderMidi({cc(120,0)});
-  requireReverb(envelope_detail::envelopePeak(reverbBlocks(*echoVoice,tailBlocks).left)==0,"All Sound Off retained a Reverb tail");
+  exact(*echoVoice,*echoReference,off,"CC120 Reverb release references diverged");
+  // After0.1s the Builtin dry release has ended; nonzero output is previously
+  // accumulated wet history. Stopping its MIDI channel cannot erase that bus.
+  for(int n=0;n<static_cast<int>(std::ceil(rate*.1/256));++n)
+    exact(*echoVoice,*echoReference,{},"CC120 Reverb tail preparation diverged");
+  const auto stoppedTail=echoVoice->renderMidi({cc(120,0,0,73)});
+  const auto retainedTail=echoReference->renderMidi({});
+  requireReverb(stoppedTail==retainedTail&&echoVoice->right()==echoReference->right(),
+    "CC120 cleared or interrupted the shared Reverb/rate-adapter history");
+  const auto remaining=reverbBlocks(*echoVoice,tailBlocks),remainingReference=reverbBlocks(*echoReference,tailBlocks);
+  requireReverb(remaining.left==remainingReference.left&&remaining.right==remainingReference.right&&
+    envelope_detail::envelopePeak(remaining.left)>1e-6,
+    "CC120 did not preserve a nonzero shared Reverb tail");
   roomVoice->plainParameterForTest(12,0);roomVoice->renderMidi({});
   author(*roomVoice,room);
   requireReverb(envelope_detail::envelopePeak(reverbBlocks(*roomVoice,tailBlocks).left)==0,"Off preset did not clear Reverb history");
@@ -158,7 +174,7 @@ template<class Factory> void checkReverbs(Factory make,double rate,const char* h
     snapshot.definition->kind()==InstrumentDefinition::Kind::Builtin&&snapshot.gainPercent==17,"Legacy migration retained Reverb settings");
   std::cout<<"PASS "<<host<<" Reverb sampleRate="<<rate
     <<" full17Params=true firstWetRestore=true sourceSend=true presetAutomationIndependent=true presetsDiffer=true"
-    <<" disabledDry=true zeroReturnDry=true stereoReturns=true releasedTail=true panicClears=true offClears=true"
+    <<" disabledDry=true zeroReturnDry=true stereoReturns=true releasedTail=true CC120TailRetained=true offClears=true"
     <<" restoreClearsHistory=true malformedAtomic=true schema1Schema2Schema3Legacy=true\n";
 }
 } // namespace tetorica::test
