@@ -634,3 +634,9 @@
 - 既知VAB projectを新copyに複製し、GarageBandで保存・完全終了・再起動後のP3/T0/Gain99 /Embedded VAB /Project sound restoredを画面で確認した。schema9 payload4768bytesとVAB3744bytesは完全一致、原本11filesと複製元7filesは不変。
 - 開始時の別の既知検証copyは全file退避後に保存した。project /UI /autosaveは変わったがpayloadは一致。新trialを再生・録音停止、AU editor表示状態で残している。
 - [検証・戻し方](au_loop_update_20261101.md) /[current installed manifest・hash](au_loop_update_20261101.json)。実聴・長時間動作・新loop/WAV/Web v2の実DAW独自Load・automation録音等は未確認としてTODOに維持した。今回コード・version/tag /公開releaseは変更していない。次のコード候補はGain smoothing。
+
+## 2026-11-01 JST — Gain smoothing開始
+
+- ユーザーの続行指示で、作業前TODOを保存。開始`65ff2fe`、SDK `95cf71a`。
+- SPU後段のlive Gain変更へ約5msのsample rampを加え、初回 /成功restoreは保存値へ同期する方針。既存parameter /state形式と通常automationのblock単位処理を維持する。
+- コード・unit /実AU・VST3回帰・CIを検証する。開いているGarageBandやinstalled AUは今回のbuildでは置換しない。
