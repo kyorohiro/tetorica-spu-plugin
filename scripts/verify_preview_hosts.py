@@ -51,15 +51,15 @@ def main():
     elif platform == 'macos':
         if sys.platform != 'darwin':
             raise SystemExit('Run macOS host checks on macOS')
-        run('sh', 'scripts/check_vst3_audio.sh', stage / 'TetoricaSPU.vst3')
-        run('sh', 'scripts/validate_vst3.sh', stage / 'TetoricaSPU.vst3')
-        run('sh', 'scripts/check_au_state.sh', stage / 'TetoricaSPU.component')
         if args.ci_auval:
             if os.environ.get('GITHUB_ACTIONS') != 'true':
                 raise SystemExit('AU installation is restricted to ephemeral GitHub runners')
             run(sys.executable, 'scripts/install_au.py', '--install',
                 '--source', stage / 'TetoricaSPU.component')
             run(sys.executable, 'scripts/validate_au.py', '--refresh-ci-registry')
+        run('sh', 'scripts/check_vst3_audio.sh', stage / 'TetoricaSPU.vst3')
+        run('sh', 'scripts/validate_vst3.sh', stage / 'TetoricaSPU.vst3')
+        run('sh', 'scripts/check_au_state.sh', stage / 'TetoricaSPU.component')
     else:
         raise SystemExit('Unknown preview platform')
     print('PASS packaged candidate host checks: ' + platform)
