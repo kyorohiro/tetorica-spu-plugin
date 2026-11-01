@@ -140,7 +140,9 @@ std::string noteLabel(int note)
 
 std::string rootLabel(const tetorica::RawAdpcmSample& sample)
 {
-  const double note = 69. + 12. * std::log2(sample.baseFrequencyHz / 440.);
+  // Valid imported tuning can be any positive finite double. Divide after
+  // taking logarithms so subnormal Hz cannot underflow to zero before log2.
+  const double note = 69. + 12. * (std::log2(sample.baseFrequencyHz) - std::log2(440.));
   const auto rounded = static_cast<int>(std::round(note));
   if (rounded >= 0 && rounded <= 127 && std::abs(note - rounded) < 1.e-7)
     return "Root: " + noteLabel(rounded);
