@@ -552,3 +552,14 @@
 - Standaloneで単一canvas・A/B描画・Apply/Revert・Amount2か所の相互同期・draft保持を確認した。AUをmanifest照合・退避付きで更新し、GarageBand旧schema6のP3/T0/Gain99とMorph Offを復元。saved payload / VABは不変、原本11files不変。
 - 操作・rollback・source hash・installed AU manifestは[Morph記録](morph_20261101.md)と[JSON](morph_20261101.json)。現在のAU manifestはこちらを使う。
 - 人による実聴・長時間使用・実DAW独自Morph UIとautomation録音はTODOへ残す。Web/Tauriとversion/tag/releaseは今回変更していない。
+
+## 2026-11-01 JST — Web音色ファイルv1 import完了
+
+- 開始TODO `fd9ec5b` を実装前にcommit / pushし、実装を `81eb78b` に保存した。
+- Load soundからcomplete VAB / Web `.spu.json` v1を選択できる。通常ADPCM・PCM・MorphとADSR/Reverb/Noise/PMONを読み、元sample / tuning / loop / signed volume / raw ADSR/send / nameをschema8へ保存する。旧1〜7 / legacyと26parameter IDを維持した。
+- file / parse / engine準備はworkerのstagingで行う。失敗は正常pendingも保持し、元sourceと全parameterは同じblock境界で採用する。保存前後のepoch確認で、別sourceのpublicationとimportの26値適用が重なる際の混在tupleを避けた。
+- Web writer/reader生成8fixtures、Offline14/14、最終macOS14/14、ASan全14と最終loader/exchange再検証2/2、strict、実AU48k / VST3 44.1・48・96k、公式validator47/0、auval26params成功。初期Sine WAV hashも不変。
+- [CI41255456421](https://github.com/kyorohiro/tetorica-spu-plugin/actions/runs/41255456421)はproduction commitで両job・全step成功。新JSON headerは既存pinned iPlug2内のnlohmann3.12.0 MITを使い、offline CIにも必要なsubmodule initとbundle noticeを追加した。
+- StandaloneでMorph/PMON/Reverb反映・単一canvas・v2エラー時の元音保持、最終buildでNoise clock8を確認。AUを退避更新してGarageBand旧schema7 P3/T0/Gain99とLoad soundを復元した。saved payload / VABは不変、原本11files不変。
+- [操作・制限・rollback](web_instrument_import_20261101.md) / [source hash・現在のinstalled AU manifest・CI metadata](web_instrument_import_20261101.json)。実聴・長時間使用・実DAW独自Web file操作とautomation録音は未確認。
+- 次の区切りはWeb向け書き出しと往復仕様の整理。長いAudio v2 / VH+VB UI / PSF抽出は後続。Native SDK・Web/Tauri配布とversion/tag/releaseは変更していない。

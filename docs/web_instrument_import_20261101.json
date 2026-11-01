@@ -1,0 +1,504 @@
+{
+  "started_on": "2026-11-01",
+  "completed_on": "2026-11-01",
+  "timezone": "Asia/Tokyo",
+  "start_todo_commit": "fd9ec5b",
+  "production_commit": "81eb78b947d9397f68ca0db70147b9bafebb4409",
+  "native_sdk_commit": "d0e0324a56d0b2fe92c4367e69ddee11971a7892",
+  "features": {
+    "import": "tetorica-spu-synth.instrument version1",
+    "parameter_count": 26,
+    "existing_parameter_ids_preserved": [
+      0,
+      25
+    ],
+    "source_kind_added": {
+      "AdpcmSample": 3
+    },
+    "retained": [
+      "original ADPCM",
+      "rootFrequencyHz",
+      "loopStartSamples",
+      "signed L/R volume",
+      "raw source ADSR",
+      "source reverb send",
+      "inspector pitch metadata",
+      "UTF8 name",
+      "optional authored112Float32 PCM",
+      "Morph A/B"
+    ],
+    "keyboard_tuning": "root based; inspector pitch retained but not used for performance, matching Web",
+    "gain": "preserve current plugin value at successful UI publication",
+    "reverb": "preset!=Off enables shared effect; use original voice send",
+    "morph_defaults": "Web amplitude0.65 Sine/Saw; plugin new-source defaults unchanged",
+    "morph_off": "returns to the imported saved base sample; Web Morph-On files contain the current blend, not the pre-Morph source",
+    "exact_web_output_pcm_claimed": false,
+    "bounds": {
+      "json_bytes": 8388608,
+      "depth": 16,
+      "nodes": 530000,
+      "sample_bytes": 520192,
+      "name_utf16_units": 80
+    },
+    "validation": [
+      "duplicate/unknown keys",
+      "strict UTF8 and surrogate pairs",
+      "finite/range checks",
+      "ADPCM packet/END/loop",
+      "canonical/legacy waveform ADPCM consistency",
+      "enabled Morph blend consistency"
+    ],
+    "native_repeat_flag_limit": "structurally valid loop whose repeat packet lacks flag2 is explicitly rejected during preparation",
+    "worker_staging": "file/parse/prepare without changing exchange generation; failure retains valid pending",
+    "adoption": "engine and full26parameter tuple together at block boundary; old notes/tails stop; MIDI controller cache retained",
+    "save_pending": "immutable accepted source and complete import tuple saved together before adoption",
+    "save_race_guard": "odd/even import parameter epoch; normal tuple capture retries up to16 times and fails before writing if unstable",
+    "cancellation": [
+      "newer source generation",
+      "host restore revision",
+      "editor close"
+    ],
+    "state_schema_written": 8,
+    "state_schema_read": [
+      1,
+      2,
+      3,
+      4,
+      5,
+      6,
+      7,
+      8,
+      "legacy-gain-only"
+    ],
+    "outer_fixed_state_bytes": 1024,
+    "raw_payload_header_bytes": 64,
+    "raw_payload_header_offsets": {
+      "version1": 0,
+      "flags": 4,
+      "adpcmBytes": 8,
+      "nameBytes": 12,
+      "root_f64": 16,
+      "left_f64": 24,
+      "right_f64": 32,
+      "loopSample": 40,
+      "packedADSR": 44,
+      "inspectorPitch": 48,
+      "reserved_zero": [
+        52,
+        56,
+        60
+      ]
+    },
+    "excluded": [
+      "version2 long Software audio",
+      "Web preset export",
+      "PSF extraction",
+      "VH/VB file picker",
+      "Morph LFO",
+      "external-input Reverb"
+    ]
+  },
+  "production_source_sha256": {
+    ".github/workflows/verify.yml": "cd09dbe0b3e6fe56725162b72f55ebc9a7bfd60033127bef6f7446bdace56c40",
+    "CMakeLists.txt": "16272114a513949d29da35515fbd37f043cd691b1510ab01efca24098d673a1e",
+    "CMakePresets.json": "2d5a07fb599db0d0c695c0e371a1dbbed5c047de33534ab52c62512c191a51d8",
+    "plugin/InstrumentState.cpp": "90670175098d9b4da4c58a27f52229c4c2cfc7b57b5830d8e15ad3deed96b77e",
+    "plugin/InstrumentUI.cpp": "e55dcdaa73de31afaec043d299d790181e567ccb7b1f82ce64af0b5c84a0f421",
+    "plugin/TetoricaSPU.cpp": "e4826a295abd436feeaefd69edb51b56b8b23f20592b339a2e5876c085814f90",
+    "plugin/TetoricaSPU.h": "db918ef8c8b610e068a40904440d5bf9769643fb6c968fd6b0f68d99c667998d",
+    "plugin/UPSTREAM.md": "e815e83a74953f859a29d0163fa564f3b9168b952bf24c9245228cacabb16667",
+    "plugin/resources/THIRD_PARTY_NOTICES.txt": "d26ed5d113ec81968e0f1c41560491631e9c77c5bddf6ad6608dbf8697ce5dcf",
+    "scripts/check_garageband_vab_state.py": "78dc86ced7429cf4588e5fb9cfbebf2c317a855681b4f5b1ecf9615cbd1f978b",
+    "scripts/generate_web_instrument_fixtures.mjs": "4288ca3c1d4e9e4321e1e5c06920385b8b806cbdf19512a162697a11901007d4",
+    "src/InstrumentState.cpp": "5e520ce8dfe8ad6fe81ccf1506930a9c15ec1a4ee195bcb97d2e8815a6372a6c",
+    "src/InstrumentState.h": "f72a64af389d7d45f8ee019d99a20032c09490775445f577ce34807119ac7ff9",
+    "src/SpuAdpcm.cpp": "d0313f729e81fd4479faa5c872b0e5c769b5d3e07aa07bdba8b5c7c9a7cea7a5",
+    "src/SpuAdpcm.h": "2794053de7602225f40bba9f12650020d298563a63713d0b46f845ad4c64867b",
+    "src/SpuEngineExchange.cpp": "fd37ab3b5c3c7458cb93df8803805c14ffec7c2be720bcc9957e5c14c0c853ac",
+    "src/SpuEngineExchange.h": "2267a858fed26aab5b9199e9cb95af7e93f8c64282c9e324d5a70682a565fbcd",
+    "src/SpuInstrument.cpp": "d38f4b69deab0299213160fe9185c295e44ae626919d4fe84f458e4ad1c7d3c1",
+    "src/SpuInstrument.h": "32321d680a90771484e2a622d05f65b531a3812ebaa87a117a81231eaa60230c",
+    "src/SpuWaveform.cpp": "d1fdff233a79fac415a196e2c8e12f7a83eb2e9ae30e323294fca397ac5b7f96",
+    "src/SpuWaveform.h": "899769ed0fc4aa7cec882459e116d73b0d42230e6ab133c390eb093b360616cf",
+    "src/WebInstrument.cpp": "59f7881d9498d9c0e08393d847d801025cb7347422f209dc5c6a3e43c84bb83c",
+    "src/WebInstrument.h": "a84afceb93217d4ddb3991d78a7e81fd1d3c1d844e6b9d85f0b142befd1ddf74",
+    "src/WebInstrumentLoader.cpp": "f3c3cf23c67d79ec5286f7ed1a6898c0b92464fdb7b8ed91f2542a17cd802030",
+    "src/WebInstrumentLoader.h": "91034dfccd178026d0407ca50cdc72de0a91339f04076f95b51c1877919d6a77",
+    "tests/fixtures/web/reference.json": "c0242856f7dcb03145418119ce67bef31d196afb8177b29d1d25556cd350943b",
+    "tests/fixtures/web/v1-arbitrary.spu.json": "092f33a672f17b5ccc8191395c38fee66c987c0c6ae40934a07eab658f706f38",
+    "tests/fixtures/web/v1-defaults.spu.json": "5cb927ded874fe421b09fe53f4780534a5cc43c3fb799cf1c2cf490a5deb4757",
+    "tests/fixtures/web/v1-loop-flag4.spu.json": "8556d0811925f7d6198694182e9c6f5d1369364ff67f84b6bce346b6b4de6aab",
+    "tests/fixtures/web/v1-morph.spu.json": "1d0e0cedd6e740b829f3fe88b16c03469d00ea44ab453f64a9e86ef713b962c2",
+    "tests/fixtures/web/v1-noise.spu.json": "1242f22d161bacb90362145120a0609a83c5a71ec7616b466c907d9213305917",
+    "tests/fixtures/web/v1-waveform-legacy.spu.json": "cee8004592ddeae8ce8a82b9a906969ea311faa12f756c5905bba55ed0fcc92b",
+    "tests/fixtures/web/v1-waveform.spu.json": "ad4493f4cbd30df45032e6dc932545de300f863022722d3db68447b705165539",
+    "tests/fixtures/web/v2-long-audio.spu.json": "202f06f75bb42bf5c6e38c5555308779c0bce78e206bf14d71dc0f61e4a0efec",
+    "tests/instrument_state_test.cpp": "bce67a116cca273ebd0dca2959eabf39850c03fb509ca7f77f18656fd5a80190",
+    "tests/spu_adpcm_test.cpp": "bcd3e8575b9ede84190755ab67da3f3d737bbd20f4bc1060e095f9d7babf294b",
+    "tests/spu_engine_exchange_test.cpp": "8919c9045c329dda40291f66b91ee6ff688d7e28e098f92d932ace3017cfa0ab",
+    "tests/web_instrument_loader_test.cpp": "ffa9fcf39fca5840ab7e6e9c8d0f29c3d14a286f5f185f37cdcde056a943387e",
+    "tests/web_instrument_test.cpp": "2c0e5d0585b62ad67b2db8fb04193a437312642cad6b051ef00f2eb07fa47ac7",
+    "tools/au-state-check.cpp": "a7895e9baeb0df53b1a47fb86d4f61bdbefb92e56bc74f2e8ab9ad50fbc3dda0",
+    "tools/vst3-host/CMakeLists.txt": "f27a40340e5a05d2d6d1d152f6d867003f0df64d4e7f65c3d01dc618724c7c4f",
+    "tools/vst3-host/envelope-checks.h": "c8ddac1222ec2674f17736d67ca830885275b7b13c9cff811339f0ae7716e3a7",
+    "tools/vst3-host/main.cpp": "cb62ffc2e39ce412eee11a76c99e243326cad793a2dc4ec9a1be49e22294c0a0",
+    "tools/vst3-host/morph-checks.h": "5df419c1dfd7572d69bad120d718f35eaf585c8df19facdbb094363e38a94b71",
+    "tools/vst3-host/noise-checks.h": "9b0f22675c6c999950f7d9ca6385bd59b54b3226ae2e276b0ede84eec950b9cc",
+    "tools/vst3-host/pmon-checks.h": "e5352830e00dc68978eef58e7d055c46dd6f9c43d4d7878dc491bfc23fdd8a6c",
+    "tools/vst3-host/web-instrument-checks.h": "7b94c6f1cd2fcc83b3160cd17a92b150e0eb0e28f3c16b806223a69f1597ec51"
+  },
+  "dependency_lock": {
+    "path": "dependencies.lock.json",
+    "bytes": 1096,
+    "sha256": "3a326880d35bdf3108628b43bef254c22c910e4658c305c484314ad6f02d5569"
+  },
+  "web_reference": {
+    "path": "tests/fixtures/web/reference.json",
+    "bytes": 78760,
+    "sha256": "c0242856f7dcb03145418119ce67bef31d196afb8177b29d1d25556cd350943b"
+  },
+  "local_verification": {
+    "offline_initial": {
+      "passed": 14,
+      "failed": 0,
+      "seconds": 6.96,
+      "log": {
+        "path": "build/offline/Testing/Temporary/LastTest.log",
+        "bytes": 12123,
+        "sha256": "7867ac1ae70c397da96a9ea4b9016632dbc84d02beb26bf505c750d57105cf32"
+      }
+    },
+    "macos_final": {
+      "passed": 14,
+      "failed": 0,
+      "seconds": 6.99,
+      "log": {
+        "path": "build/web-import-ctest-macos.log",
+        "bytes": 1610,
+        "sha256": "f8401f926d46f65aedf4539d973ddeb1e507c6dd934fab636f8e2e4cf7beec67"
+      }
+    },
+    "asan": {
+      "full_suite_observed_passed": 14,
+      "full_suite_seconds": 55.12,
+      "final_changed_loader_exchange_passed": 2,
+      "final_rerun_seconds": 3.49,
+      "last_log_contains_final_two_only": true,
+      "log": {
+        "path": "build/web-import-asan-final-tests.log",
+        "bytes": 379,
+        "sha256": "d3187634ee0558a5f207f168dd31c652a7e91385df77bbb477df93c9566e085c"
+      }
+    },
+    "core_compatibility": {
+      "path": "build/web-core/verification/raw_state8_compatibility.log",
+      "bytes": 1135,
+      "sha256": "74f74b8de1ca449e8b25980d8ef1ae03e5c0c29291ed0dff952a442cca289f0f"
+    },
+    "strict_cpp": {
+      "passed": true,
+      "log": {
+        "path": "build/web-core/verification/strict_compile.log",
+        "bytes": 230,
+        "sha256": "7c3f99b52d92b9841c249ca8bccb07e532389320c4e5b146c7281ae9861ad56b"
+      },
+      "loader_command": "clang++ -std=c++17 -Wall -Wextra -Wpedantic -Werror -Isrc -fsyntax-only src/WebInstrumentLoader.cpp"
+    },
+    "actual_au": {
+      "passed": true,
+      "rates": [
+        48000
+      ],
+      "log": {
+        "path": "build/web-import-au-state-final.log",
+        "bytes": 4107,
+        "sha256": "633c7eb89a745faa3fcf7b762d6fcd4f2c7c0d0fbd17a55204df3472d6818484"
+      }
+    },
+    "actual_vst3": {
+      "passed": true,
+      "rates": [
+        44100,
+        48000,
+        96000
+      ],
+      "log": {
+        "path": "build/web-import-vst3-audio-final.log",
+        "bytes": 12176,
+        "sha256": "e6d9fa092451925e1d231846d1a3f48183d4288de74ec62a474f82f0075fe206"
+      }
+    },
+    "actual_host_scope": [
+      "6 actual Web fixtures",
+      "first render block",
+      "full26params",
+      "original raw metadata and bytes",
+      "signed stereo polarity",
+      "root tuning",
+      "source ADSR/send",
+      "malformed pending/active atomicity",
+      "MIDI and separate-instance behavior",
+      "schema7 migration",
+      "all prior ADSR/Reverb/PCM/Noise/PMON/Morph suites"
+    ],
+    "initial_oracle_failures": [
+      "AU signed polarity tolerance1e-6 was below native scaled PCM16 rounding; observed7.62939e-6=1/(32768*4), corrected to2scaledLSB; production sign handling unchanged.",
+      "VST3 malformed unknown schema used literal8, now valid; changed to kStateSchemaVersion+1; production state decoder unchanged."
+    ],
+    "vst3_validator": {
+      "passed": 47,
+      "failed": 0,
+      "log": {
+        "path": "build/web-import-vst3-validator-final.log",
+        "bytes": 252137,
+        "sha256": "cb2c8f0ca4c67c8b71ce02f3fef34e37e903c473e2df1ac64760ee6583b60c04"
+      }
+    },
+    "auval": {
+      "passed": true,
+      "params": 26,
+      "known_warning": "preset name",
+      "log": {
+        "path": "build/web-import-auval.log",
+        "bytes": 9427,
+        "sha256": "c65de506699ef56b75c728e3bfa60f36262af12093510be65a59db61f3ce84f6"
+      }
+    },
+    "default_sine_wav": {
+      "path": "/private/tmp/tetorica-spu-adpcm-demo.wav",
+      "bytes": 576044,
+      "sha256": "7a61b56d356ac198c35808b503cf0b61b55a9547b21770eb2a67c97d0cc4aef3"
+    }
+  },
+  "standalone_ui": {
+    "verified": [
+      "Load sound native file picker accepts .spu.json",
+      "Morph fixture Loaded status and name",
+      "Studio Small enabled with returns33/27",
+      "PMON Triangle ratio1.5 depth0.25 Hold",
+      "Morph Amount0.375 displayed38%",
+      "Edit carrier returns to one A/B/Result canvas with applied endpoints",
+      "version2 error leaves current Morph and waveform/amount unchanged",
+      "final build Noise fixture Loaded with clock8 and disabled keyboard Morph",
+      "Gain100% retained in observed imports"
+    ],
+    "final_state": "quit",
+    "physical_hearing_verified": false
+  },
+  "bundles": {
+    "standalone": {
+      "path": "build/macos/out/TetoricaSPU.app",
+      "file_sha256": {
+        "Contents/Info.plist": "1fec046b5560e89705ce207b4372e154e72e7e97951f2e0c4a23789827cf58c6",
+        "Contents/MacOS/TetoricaSPU": "afbce0ad5ae062976be10ea6edfc7d169682394b36fa8294b7605d56fed3f8ad",
+        "Contents/PkgInfo": "82502191c9484b04d685374f9879a0066069c49b8acae7a04b01d38d07e8eca0",
+        "Contents/Resources/Roboto-Regular.ttf": "b2efabca5ea4bc56eea829713706b5cd0788b82aca153bd4adde9b1573933b4f",
+        "Contents/Resources/THIRD_PARTY_NOTICES.txt": "d26ed5d113ec81968e0f1c41560491631e9c77c5bddf6ad6608dbf8697ce5dcf",
+        "Contents/Resources/TetoricaSPU-macOS-MainMenu.nib": "7ba57e13c5fdbc1f77eaf801fd49f7762dfbef93a2ce6526e547901f66d4719e"
+      }
+    },
+    "au": {
+      "path": "build/macos/out/TetoricaSPU.component",
+      "file_sha256": {
+        "Contents/Info.plist": "94a46fcfc638d76a05aca50d5deedaff2a7a934aee55a816d007b6dff9c9bbc4",
+        "Contents/MacOS/TetoricaSPU": "9ce3c1efba6a7fafc2121f699d14dc5bbf2c2692bd933296842c6f5ffeaa9088",
+        "Contents/PkgInfo": "d06a80ba92de0833d0ed03de1b02b7c8913f126d9e8c8931b190765dd5d83b11",
+        "Contents/Resources/Roboto-Regular.ttf": "b2efabca5ea4bc56eea829713706b5cd0788b82aca153bd4adde9b1573933b4f",
+        "Contents/Resources/THIRD_PARTY_NOTICES.txt": "d26ed5d113ec81968e0f1c41560491631e9c77c5bddf6ad6608dbf8697ce5dcf"
+      }
+    },
+    "vst3": {
+      "path": "build/macos/out/TetoricaSPU.vst3",
+      "file_sha256": {
+        "Contents/Info.plist": "0fe9965eadefafb0be705d9e3bba5a6df3c6e2561b608bdbf267d7f831e5d644",
+        "Contents/MacOS/TetoricaSPU": "10a71524e2925816edeb963f30d2c0f180cdebc286b5ea0abd2fda54742985fa",
+        "Contents/PkgInfo": "d06a80ba92de0833d0ed03de1b02b7c8913f126d9e8c8931b190765dd5d83b11",
+        "Contents/Resources/Roboto-Regular.ttf": "b2efabca5ea4bc56eea829713706b5cd0788b82aca153bd4adde9b1573933b4f",
+        "Contents/Resources/THIRD_PARTY_NOTICES.txt": "d26ed5d113ec81968e0f1c41560491631e9c77c5bddf6ad6608dbf8697ce5dcf"
+      }
+    }
+  },
+  "au": {
+    "installed_path": "/Users/kyorohiro/Library/Audio/Plug-Ins/Components/TetoricaSPU.component",
+    "file_sha256": {
+      "Contents/Info.plist": "94a46fcfc638d76a05aca50d5deedaff2a7a934aee55a816d007b6dff9c9bbc4",
+      "Contents/MacOS/TetoricaSPU": "9ce3c1efba6a7fafc2121f699d14dc5bbf2c2692bd933296842c6f5ffeaa9088",
+      "Contents/PkgInfo": "d06a80ba92de0833d0ed03de1b02b7c8913f126d9e8c8931b190765dd5d83b11",
+      "Contents/Resources/Roboto-Regular.ttf": "b2efabca5ea4bc56eea829713706b5cd0788b82aca153bd4adde9b1573933b4f",
+      "Contents/Resources/THIRD_PARTY_NOTICES.txt": "d26ed5d113ec81968e0f1c41560491631e9c77c5bddf6ad6608dbf8697ce5dcf"
+    },
+    "update_journal": "build/au-backups/au-update-bccipufg/manifest.json",
+    "update": {
+      "schema": 1,
+      "operation": "au-update",
+      "state": "installed",
+      "created_utc": "2026-11-01T00:09:20.474078+00:00",
+      "source": "/Users/kyorohiro/development8/wfm/hello_ymfm/w/tetorica-spu-plugin/build/macos/out/TetoricaSPU.component",
+      "destination": "/Users/kyorohiro/Library/Audio/Plug-Ins/Components/TetoricaSPU.component",
+      "backup_directory": "/Users/kyorohiro/development8/wfm/hello_ymfm/w/tetorica-spu-plugin/build/au-backups/au-update-bccipufg",
+      "backup_component": "/Users/kyorohiro/development8/wfm/hello_ymfm/w/tetorica-spu-plugin/build/au-backups/au-update-bccipufg/previous.component",
+      "staged_component": "/Users/kyorohiro/development8/wfm/hello_ymfm/w/tetorica-spu-plugin/build/au-backups/au-update-bccipufg/staged.component",
+      "old_archive": "/Users/kyorohiro/development8/wfm/hello_ymfm/w/tetorica-spu-plugin/build/au-backups/au-update-bccipufg/original.component",
+      "component": {
+        "type": "aumu",
+        "subtype": "Tspu",
+        "manufacturer": "Tetr",
+        "version": 256
+      },
+      "old_sha256": {
+        "Contents/Info.plist": "94a46fcfc638d76a05aca50d5deedaff2a7a934aee55a816d007b6dff9c9bbc4",
+        "Contents/MacOS/TetoricaSPU": "2ceab9a60a3db3fd45efc9a502979764c3197a353cc96a96e0ec324e709f8ebb",
+        "Contents/PkgInfo": "d06a80ba92de0833d0ed03de1b02b7c8913f126d9e8c8931b190765dd5d83b11",
+        "Contents/Resources/Roboto-Regular.ttf": "b2efabca5ea4bc56eea829713706b5cd0788b82aca153bd4adde9b1573933b4f",
+        "Contents/Resources/THIRD_PARTY_NOTICES.txt": "d0686ed57334f5bc617481e976e6d220822dba8fc93b8dd51246455bb818db6e"
+      },
+      "new_sha256": {
+        "Contents/Info.plist": "94a46fcfc638d76a05aca50d5deedaff2a7a934aee55a816d007b6dff9c9bbc4",
+        "Contents/MacOS/TetoricaSPU": "9ce3c1efba6a7fafc2121f699d14dc5bbf2c2692bd933296842c6f5ffeaa9088",
+        "Contents/PkgInfo": "d06a80ba92de0833d0ed03de1b02b7c8913f126d9e8c8931b190765dd5d83b11",
+        "Contents/Resources/Roboto-Regular.ttf": "b2efabca5ea4bc56eea829713706b5cd0788b82aca153bd4adde9b1573933b4f",
+        "Contents/Resources/THIRD_PARTY_NOTICES.txt": "d26ed5d113ec81968e0f1c41560491631e9c77c5bddf6ad6608dbf8697ce5dcf"
+      }
+    },
+    "source_installed_all_five_match": true,
+    "both_old_backups_all_five_match": true,
+    "rollback_executed": false,
+    "local_registrar_force_terminated": false
+  },
+  "garageband": {
+    "verification_project": "build/spu-vab-check.band",
+    "backup": {
+      "backup": "build/web-import-update-project-7mhm7feh",
+      "files": 7,
+      "file_sha256": {
+        "Alternatives/000/DisplayState.plist": "516672f7eab12793ae054c3de388ab03cebda48f958ad535d9b421cace44dc87",
+        "Alternatives/000/DisplayStateArchive": "8328b50c260aa1678999315f8165e5ea8b12e368809920e2ecb8a7bcf5c4bfc7",
+        "Alternatives/000/MetaData.plist": "e828be6d50e93a28908aba862e511f1e3c736fe8ed01b1923e3250282c6ad4fb",
+        "Alternatives/000/ProjectData": "1cad87d529f8745070942c4077cf52accb5e63ce112449aa806daf68bcdb70b4",
+        "Alternatives/000/WindowImage.jpg": "eecce30c7d14cae7a35a0ad6623f3b569ea9f3ea76d09a2515aa9bfc99b92912",
+        "Resources/ProjectInformation.plist": "078f82c873d78abb6a1c7acb7fadf0b877ba605a40a84c52929db0fedc430b15",
+        "projectData": "b8abb99c1c6e208293ced2a8246573331794a31a4ee0dbdbd8e313ba8f3eae66"
+      },
+      "saved_schema": 7,
+      "payload_bytes": 4768,
+      "payload_sha256": "22485a18acb3cded2ec6929fa97cb3c7acea42f31977f4ab0dbf2bdee8a68a5f",
+      "bank_sha256": "71a7de205c0ebe1b8743288d90cd3b0204da9bd81aed9159af31f404d7cf2be6",
+      "installed_au_all_five_match": true,
+      "original_project_all_eleven_unchanged": true
+    },
+    "before": {
+      "path": "build/web-import-au-project-before.json",
+      "bytes": 3272,
+      "sha256": "63009e56b7e453cce61aebd1f927a024407bd03ec4d5f11df9d985203133b3cf"
+    },
+    "after": {
+      "path": "build/web-import-au-project-after.json",
+      "bytes": 3004,
+      "sha256": "1ce65e69142dff80abf135391cc627af4f1e2caef7c9deb1164833f8509d406c"
+    },
+    "saved_schema": 7,
+    "payload_bytes": 4768,
+    "payload_sha256": "22485a18acb3cded2ec6929fa97cb3c7acea42f31977f4ab0dbf2bdee8a68a5f",
+    "bank_bytes": 3744,
+    "bank_sha256": "71a7de205c0ebe1b8743288d90cd3b0204da9bd81aed9159af31f404d7cf2be6",
+    "saved_payload_and_bank_unchanged": true,
+    "gui_reopen": {
+      "embedded_vab": true,
+      "program": 3,
+      "tone": 0,
+      "gain_percent": 99,
+      "status": "Project sound restored.",
+      "reverb_enabled": false,
+      "returns_percent": [
+        25,
+        25
+      ],
+      "keyboard_morph": "Off",
+      "load_sound_button": true
+    },
+    "playback": false,
+    "recording": false,
+    "saved_after_update": false,
+    "left_editor_open": true,
+    "original_project": "build/spu-au-check.band",
+    "original_file_sha256": {
+      "Alternatives/000/Autosave/.dummy": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+      "Alternatives/000/Autosave/2026-10-31 10:12:23Z.displayData": "c2b29c82b187b6da04daaf17dbef530296859a95f39bac812a3261fe6c70d7ed",
+      "Alternatives/000/Autosave/2026-10-31 10:12:23Z.eventData": "0c7d3cd92b56d8c216b0b9663c58ef3692eee4ea739e19d1d9d20f0cfb98f63d",
+      "Alternatives/000/Autosave/2026-10-31 10:12:23Z.songData": "fc19d5172a5a19db59c790fb8bc06e922a5b157b44f99798d77dc7f9cc6e4515",
+      "Alternatives/000/DisplayState.plist": "fe2af1ddf457b06a4d47e4f34e17773d62963bdc54926a3f8dbd4777a5a56ed1",
+      "Alternatives/000/DisplayStateArchive": "cc3008d309493456ddac4c78d0597ce13d554f0a35d815edaa14d255db6144f3",
+      "Alternatives/000/MetaData.plist": "e828be6d50e93a28908aba862e511f1e3c736fe8ed01b1923e3250282c6ad4fb",
+      "Alternatives/000/ProjectData": "95061279acf172082d2f37e03f5ad9d64067f940c5c2c9abc99adda613e76931",
+      "Alternatives/000/WindowImage.jpg": "6176a5b9e9790b722392e0d80622fa9e4c4fa9087bf99c255cbc6a46159b3bcd",
+      "Resources/ProjectInformation.plist": "2dd01b478b456764e72ddeaaf05479c1f41bf9ab370f2b85bbe0c575430515ab",
+      "projectData": "b8abb99c1c6e208293ced2a8246573331794a31a4ee0dbdbd8e313ba8f3eae66"
+    },
+    "original_all_eleven_unchanged": true,
+    "scope": "Saved AU bytes inspected separately from GUI active instrument reopen. Custom Web file loading in GarageBand was not performed."
+  },
+  "ci": {
+    "metadata": {
+      "path": "build/web-import-ci-summary.json",
+      "bytes": 8307,
+      "sha256": "307e9405a8d5af38ecd508916a96d3ad0d8009d02f285bd53978c53edca5cdb9"
+    },
+    "run": {
+      "conclusion": "success",
+      "created_at": "2026-11-01T00:08:58Z",
+      "head_sha": "81eb78b947d9397f68ca0db70147b9bafebb4409",
+      "html_url": "https://github.com/kyorohiro/tetorica-spu-plugin/actions/runs/41255456421",
+      "id": 41255456421,
+      "run_attempt": 1,
+      "run_started_at": "2026-11-01T00:08:58Z",
+      "status": "completed",
+      "updated_at": "2026-11-01T00:13:04Z"
+    },
+    "jobs": [
+      {
+        "id": 124697558975,
+        "name": "macos",
+        "conclusion": "success",
+        "started_at": "2026-11-01T00:09:02Z",
+        "completed_at": "2026-11-01T00:13:03Z"
+      },
+      {
+        "id": 124697559149,
+        "name": "offline",
+        "conclusion": "success",
+        "started_at": "2026-11-01T00:09:01Z",
+        "completed_at": "2026-11-01T00:09:49Z"
+      }
+    ],
+    "artifacts": [
+      {
+        "created_at": "2026-11-01T00:13:00Z",
+        "digest": "sha256:32fbeed4207e2201ef9568ce9778ed3e4194539e55f5a5ae4b2a1e17f6ca0402",
+        "expired": false,
+        "expires_at": "2027-01-30T00:08:58Z",
+        "id": 13063245994,
+        "name": "macos-development-bundles",
+        "size_in_bytes": 2449480,
+        "updated_at": "2026-11-01T00:13:00Z"
+      }
+    ],
+    "failed_steps": 0,
+    "scope": "Run/job/step/artifact metadata; no job logs or artifact archives downloaded."
+  },
+  "not_verified": [
+    "physical hearing",
+    "long real-time use",
+    "GarageBand custom Web file picker operation",
+    "real DAW automation recording",
+    "Windows plugin",
+    "CI artifact execution elsewhere"
+  ],
+  "publication": {
+    "source_pushed": true,
+    "sdk_changed": false,
+    "web_tauri_changed": false,
+    "version_changed": false,
+    "tag_created": false,
+    "release_published": false
+  }
+}

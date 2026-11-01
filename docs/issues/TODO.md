@@ -31,7 +31,7 @@ PCMの4波形・自由描画・Apply / Revertも実装し、実AU/VST3とStandal
 [PMONの記録](../pmon_20261031.md)を参照。Software Morphも実装・検証・AU更新・旧state復元・両repo CI成功済み。
 [Morphの記録](../morph_20261101.md)と[保存・更新記録](../morph_20261101.json)を参照。
 
-### Web音色ファイル読み込みの今回の区切り（2026-11-01、実装前）
+### Web音色ファイル読み込みの今回の区切り（2026-11-01、完了）
 
 - [x] Web `.spu.json` version1の通常ADPCM / 112 PCM / Morph音色を読み込む。JSONの構文・schema・全値・sampleとwaveform/Morphの整合性を、現在音源やparameterを変更する前に検証する。version2の長いSoftware audioは明示エラーにする。
 - [x] 任意ADPCMを保持するimmutable source kindを追加し、元bytes・baseFrequencyHz・loopStart・signed左右volume・source ADSR・reverb sendと任意の元PCMを保存する。Webのpreset.pitchはinspector値として保持し、keyboard音程はWebと同じroot基準にする。
@@ -40,11 +40,14 @@ PCMの4波形・自由描画・Apply / Revertも実装し、実AU/VST3とStandal
 - [x] workerでfile読込・parse・engine準備を行い、全設定と元sampleをtransactionで採用する。失敗や古い完了・host restore後の完了は現音源・全parameter・正常pendingを壊さない。採用時は保持音と残響を停止し、次のNoteから再生する。
 - [x] 既存ID0〜25とsource kind0〜2を維持し、state schema8で新sourceを保存する。旧1〜7 / Gain-onlyを読み、不正state・未対応loop時のatomic failureと元fileなし復元を検証する。
 - [x] 共通file操作から`.vab`と`.spu.json`を読み込めるようにし、import名・状態・エラーを表示する。Source / ADSR / Reverbと720×620を保ち、file dialog/editor closeやpending中の世代管理を検証する。
-- [ ] Webの実writerで作るreference fixtureとC++ parser/coreの対応、実AU/VST3のstate・first block・MIDI / FX回帰、sanitizer / validator / CI、Standalone読込UIを検証し、記録をcommit / pushする。
+- [x] Webの実writerで作るreference fixtureとC++ parser/coreの対応、実AU/VST3のstate・first block・MIDI / FX回帰、sanitizer / validator / CI、Standalone読込UIを検証し、記録をcommit / pushする。
 - [ ] Web向け書き出し・往復は次の区切りで扱う。Morph OnでWebが現在blendをsampleとして保存する仕様と、pluginの元source保持仕様、Noise+PMONのraw flag差を先に整理する。長いAudio / PSF抽出 / VH+VB UIは今回追加しない。
 
 開始は`883c3d7`、main / origin同期・clean tree。更新前installed AU manifestは[Morph記録](../morph_20261101.json)。
 まずv1読み込みを完成させる。Web / Tauri配布物、Morph LFO、外部入力Reverb、version / tag / release公開は変更しない。
+実装`81eb78b`、[CI全job成功](https://github.com/kyorohiro/tetorica-spu-plugin/actions/runs/41255456421)。
+installed AUをknown hash照合・退避付きで更新し、auval26paramsとGarageBand旧schema7のP3/T0/Gain99・Load sound表示を確認した。saved payload4768bytesとVABは不変、原本11files不変。
+操作・制限・rollbackは[import記録](../web_instrument_import_20261101.md)、現在のAU manifest・source hash・CI metadataは[JSON](../web_instrument_import_20261101.json)。
 
 ### Software Morphの今回の区切り（2026-11-01、完了）
 
@@ -333,6 +336,8 @@ complete `.vab`を最初の対象とする。分割VH/VBの複数file dialogは�
 - [ ] 実DAWでADSR automation録音・graph drag中のeditor close / host restoreを追試する。headless PCMとStandalone操作の検証とは分ける。
 - [x] Software MorphをSPU実機機能と区別して公開する（[検証記録](../morph_20261101.md)）。
 - [ ] 実DAWでSoftware Morphの独自UI操作とautomation録音を追試する。Standalone操作・headless PCM・旧project復元の検証とは分ける。
+- [x] Web `.spu.json` v1の通常ADPCM / PCM / Morphと設定をimportし、元fileなしのDAW stateへ保存する（[記録](../web_instrument_import_20261101.md)）。
+- [ ] 実DAWの独自Load soundからWeb音色を読み込み、編集・保存・再起動・automation録音を追試する。Standaloneでのfile操作、実AU/VST3 state検査、GarageBand旧state復元とは区別する。
 
 ## 人による最終確認
 

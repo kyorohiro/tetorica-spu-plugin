@@ -1,7 +1,8 @@
 # Web SPU instrument import — 2026-11-01
 
 開始は`883c3d7`、実装前TODOを`fd9ec5b`へcommit / pushした。
-この記録は検証中。完了した範囲と未確認範囲を追記する。
+実装は`81eb78b947d9397f68ca0db70147b9bafebb4409`へ保存・push済み。
+source / bundle / ログ / installed AU manifestは[検証JSON](web_instrument_import_20261101.json)。
 
 ## 操作と対応範囲
 
@@ -67,8 +68,29 @@ inspector pitch@48、reserved0@52/56/60。
 - 左右極性oracleの初回は厳しすぎる1e-6で失敗し、実測差7.62939e-6がheadroom4のPCM16 1LSBと一致した。根拠付き2LSB以下へ変更し成功。productionの符号処理は変更していない。
 - VST3 malformed試験の未知versionに8の直書きが残り、新対応schema8を不正と誤判定した。current schema+1へ修正し成功。旧state互換の退行ではない。
 - importの26parameter書込をepochで囲み、後続source publicationと保存が重なっても途中tupleを保存しない。immutable pending tupleはそのまま保存でき、通常parameter captureは16回まで安定epochで再試行する。audioは待機せず、再試行上限なら保存を失敗として返す。独立reviewでも報告した競合経路の解消を確認した。
-- 公式VST3 validator47成功、0失敗。最終bundleのUI確認・CIは継続中。
+- 公式VST3 validator47成功、0失敗。最終StandaloneでNoise fixtureのLoaded / Noise clock8 / Gain100%保持を確認し、検証後終了した。
+- [CI](https://github.com/kyorohiro/tetorica-spu-plugin/actions/runs/41255456421)はproduction commitのmacOS / offline両job・全step成功。run / job / step / artifact metadataを保存し、artifact自体はdownload・別環境実行していない。
+- installed AUをknown hash照合・退避付きで更新し、auval成功、26parameterを確認した。既知のpreset-name warningは残る。
+- GarageBand旧schema7を開き、Embedded VAB / Program 3 / Tone 0 / Gain99% / Project sound restored / Load sound表示とReverb Off / Return各25% / Morph Offを確認した。再生・録音は停止、更新後再保存はしていない。
+- saved payload4768bytesのSHA256 `22485a18acb3cded2ec6929fa97cb3c7acea42f31977f4ab0dbf2bdee8a68a5f`、VAB3744bytesは更新前と同一。原本11filesも不変。
 - 実聴・長時間使用・実DAWでの独自Load sound操作とautomation録音は未確認。
 
-更新前installed AUのknown manifestは[Morph記録](morph_20261101.json)。
-この時点ではinstalled AUの更新・version / tag / release公開はまだ実施していない。
+## AU更新と再開
+
+更新前installed AUのknown manifestは[Morph記録](morph_20261101.json)。旧AUで検証用copyを保存・終了し、
+project全7filesを`build/web-import-update-project-7mhm7feh/spu-vab-check.band`へ退避してhash照合した。
+現在のinstalled AU manifestは[検証JSONのau.file_sha256](web_instrument_import_20261101.json)。
+binary SHA256は`9ce3c1efba6a7fafc2121f699d14dc5bbf2c2692bd933296842c6f5ffeaa9088`。
+source / installed全5filesはnew manifest、previous / original退避はold manifestと一致する。
+更新journalは`build/au-backups/au-update-bccipufg/manifest.json`。
+
+rollbackが必要な場合は全audio hostを終了し、現在のAUがnew manifestと一致する状態で実行する。
+今回rollbackとローカルregistrarの強制終了は行っていない。
+
+```sh
+python3 scripts/install_au.py --rollback build/au-backups/au-update-bccipufg/manifest.json
+```
+
+実聴・長時間・DAW独自file操作 / automationはTODOへ残す。Web向けexportは、
+Morphの元sourceと現在blend、Noise+PMON raw flagsなどの形式差を設計してから進める。
+Native SDK / Web / Tauri、version / tag / release公開は今回変更していない。
