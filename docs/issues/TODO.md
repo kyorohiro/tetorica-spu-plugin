@@ -41,6 +41,21 @@ Gain smoothingも実装し、unit /実AU・VST3 /sanitizer /CIを確認した。
 Gain版installed AUへの退避更新・旧VABの保存再起動も完了した。
 [現在のAU更新・復元記録](../au_gain_update_20261101.md)と[current installed AU manifest](../au_gain_update_20261101.json)を参照。
 
+### CC120チャンネル別停止の今回の区切り（2026-11-01、実装前）
+
+開始Plugin `faa8922`、Native SDK `95cf71a`。ユーザーの続行指示で、作業前TODOを保存する。
+
+- [ ] 対象MIDI channelのheld /pedal-held /release voiceを即時muteするcore APIを追加し、PMONのcarrier/modulator両方を停止する。不正channelは無変更とする。
+- [ ] CC120をそのAPIへ接続し、他channelのvoice /bend /pedal /allocator /resampler phaseを保持する。共有Reverb historyは消さず減衰を継続する。通常のrate変換に保持済みの短いmixed sample historyは維持する。
+- [ ] UIのAll sound offは独立したthread-safe global panic要求へ接続し、全channel・共有残響停止を維持する。reset /host restore /deactivate /bypass /overflowの既存global cleanupを維持する。
+- [ ] unitと実AU /VST3でchannel0 /15、held /sustain /release、PMON /Noise /Morph /Software PCM、他channelのPCM連続性、同offset順序 /future offset /分割、controller保持 /state不変を検証する。新処理のRT確保・lockを避ける。
+- [ ] build /CTest /sanitizer /validator /CIを確認し、仕様・制限・source /binary /log記録と再開TODOをcommit /pushする。
+
+既存parameter ID0〜25 /state schema9 /Gain範囲を維持する。
+installed AUとGarageBandはこの実装buildでは変更しない。次の配置更新には
+`docs/au_gain_update_20261101.json`のknown manifest照合・host保存終了・退避手順を使う。
+AU preset-name warning・分割VH/VB UI・version /tag /release・Web /Tauri /npm配布は今回追加しない。
+
 ### Gain smoothing版AU更新・GarageBand復元の今回の区切り（2026-11-01、完了）
 
 開始Plugin `fcb2848`、実装`3ec6049`、Native SDK `95cf71a`。

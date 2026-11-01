@@ -667,3 +667,9 @@
 - 新しいGarageBand copyを保存・完全終了・再起動し、実AU画面のEmbedded VAB /P3/T0/Gain99 /Project sound restoredを確認。schema9 payload4768bytes /VAB3744bytesは完全一致、原本11filesとknown7filesも不変。
 - [操作・戻し方](au_gain_update_20261101.md) /[current installed manifest・証跡](au_gain_update_20261101.json)。開始時copyは全file退避して意図的に保存し、payloadを保持した。新copyのeditorを表示、再生・録音停止で残している。
 - 今回はsource /version/tag /公開releaseを変更していない。実聴・長時間・実DAW automationと独自Load sound /editor lifecycle等の人確認はTODOに維持した。
+
+## 2026-11-01 JST — CC120チャンネル別停止開始
+
+- ユーザーの続行指示で、作業前TODOを保存。開始`faa8922`、SDK `95cf71a`。
+- MIDI CC120は対象channelのvoice /PMON pairをmuteし、他channelと共有Reverb historyを保持する。UIの全停止は別global経路で維持する。
+- unit /実AU・VST3 /sanitizer /CIを検証し、state /parameterは維持する。今回installed AUやGarageBandは変更しない。
