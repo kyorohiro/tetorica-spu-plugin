@@ -23,3 +23,10 @@ Tetorica's BSD-3-Clause Web `docs/js/ps1_adpcm_encoder.js`. Its original test
 vectors retain the reference source hash and can be regenerated from a local
 copy using `tests/fixtures/waveform/generate_web_vectors.mjs`. This prepare-side
 encoder does not modify the pinned Native SPU decoder or its interpolation.
+
+The bounded Web instrument importer uses JSON for Modern C++ 3.12.0 from
+`vendor/iPlug2OOS/iPlug2/Dependencies/Extras/nlohmann/json.hpp`, at the same
+pinned iPlug2 revision above. It adds no fetched dependency or framework patch.
+Copyright 2013–2026 Niels Lohmann, MIT; the bundle notice includes its license.
+The Web format validators and reference fixtures follow Tetorica's BSD-3-Clause
+`docs/synth-spu/spu_synth_instrument.js` and related Morph/Noise/PMON modules.

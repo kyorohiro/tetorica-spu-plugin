@@ -75,6 +75,49 @@ def project_files(project):
     return list(unique.values())
 
 
+def decode_raw_sample(source):
+    if len(source) < 64:
+        raise ValueError('Raw ADPCM source header is truncated')
+    version, flags, count, name_bytes = struct.unpack_from('<4I', source)
+    root, left, right = struct.unpack_from('<3d', source, 16)
+    loop, packed, pitch, reserved1, reserved2, reserved3 = struct.unpack_from('<6I', source, 40)
+    if version != 1 or flags & ~7 or reserved1 or reserved2 or reserved3 or not count or count % 16 or count > 520192 or name_bytes > 320 or pitch > 16383 or (not flags & 1 and loop) or len(source) != 64 + count + name_bytes + (448 if flags & 4 else 0):
+        raise ValueError('Invalid Raw ADPCM header, flags, metadata or lengths')
+    if not math.isfinite(root) or root <= 0 or any(not math.isfinite(value) or not -1 <= value <= 1 for value in (left, right)):
+        raise ValueError('Invalid Raw ADPCM tuning or signed source volume')
+    adpcm = source[64:64 + count]
+    try:
+        name = source[64 + count:64 + count + name_bytes].decode('utf-8', errors='strict')
+    except UnicodeDecodeError as error:
+        raise ValueError('Raw ADPCM name is not valid UTF-8') from error
+    if '\0' in name:
+        raise ValueError('Raw ADPCM name contains NUL')
+    marker = None
+    for at in range(0, count, 16):
+        header, packet_flags = adpcm[at], adpcm[at + 1]
+        if header >> 4 > 4 or header & 15 > 12 or packet_flags & ~7 or bool(packet_flags & 1) != (at + 16 == count):
+            raise ValueError('Invalid Raw ADPCM packet header, flags or END position')
+        if packet_flags & 4:
+            if marker is not None:
+                raise ValueError('Raw ADPCM has multiple loop markers')
+            marker = at // 16 * 28
+    looping = bool(flags & 1)
+    if bool(adpcm[-15] & 2) != looping or (not looping and marker is not None) or (looping and (loop % 28 or loop >= count // 16 * 28)) or (marker is not None and marker != loop):
+        raise ValueError('Raw ADPCM loop metadata disagrees with its packets')
+    waveform = source[64 + count + name_bytes:] if flags & 4 else None
+    if waveform is not None:
+        if root != 44100 / 112 or not looping or loop != 0 or count != 64 or any(not math.isfinite(value) or not -1 <= value <= 1 for value in struct.unpack('<112f', waveform)):
+            raise ValueError('Invalid Raw ADPCM authored waveform metadata')
+    return {'name': name, 'name_bytes': name_bytes, 'adpcm_bytes': count, 'adpcm_sha256': sha(adpcm),
+            'base_frequency_hz': root, 'volume_left': left, 'volume_right': right,
+            'adsr1': packed & 65535, 'adsr2': packed >> 16, 'inspector_pitch': pitch,
+            'reverb_send': bool(flags & 2), 'loop_start_samples': loop if looping else None,
+            'native_loop_supported': not looping or bool(adpcm[loop // 28 * 16 + 1] & 2),
+            'waveform_samples': 112 if waveform is not None else None,
+            'waveform_sha256': sha(waveform) if waveform is not None else None,
+            'waveform_consistency_checked': False if waveform is not None else None}
+
+
 def decode_payload(payload):
     if not isinstance(payload, bytes):
         raise ValueError('AU data is not a byte string')
@@ -97,9 +140,9 @@ def decode_payload(payload):
     if len(payload) < 40 or payload[:8] != b'TSPUST01':
         raise ValueError('Expected complete TSPUST01 custom state or legacy Gain')
     schema, total, kind, program, tone, size = struct.unpack_from('<6I', payload, 8)
-    if schema not in (1, 2, 3, 4, 5, 6, 7) or total != len(payload) or size > MAX_BANK or total != {1: 40, 2: 48, 3: 72, 4: 72, 5: 80, 6: 112, 7: 1024}[schema] + size:
+    if schema not in (1, 2, 3, 4, 5, 6, 7, 8) or total != len(payload) or size > MAX_BANK or total != {1: 40, 2: 48, 3: 72, 4: 72, 5: 80, 6: 112, 7: 1024, 8: 1024}[schema] + size:
         raise ValueError('Invalid state schema, total or bank length')
-    if kind not in ((0, 1, 2) if schema >= 4 else (0, 1)) or program > 127 or tone > 15:
+    if kind not in ((0, 1, 2, 3) if schema >= 8 else (0, 1, 2) if schema >= 4 else (0, 1)) or program > 127 or tone > 15:
         raise ValueError('Invalid state kind or sparse selection')
     if kind == 0 and (size or program or tone):
         raise ValueError('Builtin state has an unexpected bank or selection')
@@ -107,6 +150,8 @@ def decode_payload(payload):
         raise ValueError('VAB state has no embedded bank')
     if kind == 2 and (size != 448 or program or tone):
         raise ValueError('PCM cycle must contain 112 samples and no VAB selection')
+    if kind == 3 and (size < 64 or program or tone):
+        raise ValueError('Raw ADPCM source has an invalid length or VAB selection')
     gain, = struct.unpack_from('<d', payload, 32 + size)
     if not math.isfinite(gain) or not 0 <= gain <= 100:
         raise ValueError('Invalid custom-state Gain')
@@ -135,7 +180,8 @@ def decode_payload(payload):
     bank = payload[32:32 + size]
     if kind == 2 and any(not math.isfinite(value) or not -1 <= value <= 1 for value in struct.unpack('<112f', bank)):
         raise ValueError('PCM cycle samples must be finite in [-1, 1]')
-    return dict(result, schema=schema, kind={0: 'Builtin', 1: 'VAB', 2: 'PcmCycle'}[kind],
+    raw = decode_raw_sample(bank) if kind == 3 else None
+    return dict(result, schema=schema, kind={0: 'Builtin', 1: 'VAB', 2: 'PcmCycle', 3: 'AdpcmSample'}[kind],
                 program=program, tone=tone, gain_percent=gain,
                 envelope={'enabled': bool(flags & 1), 'live': bool(flags & 2),
                           'adsr1': packed & 65535, 'adsr2': packed >> 16},
@@ -144,6 +190,7 @@ def decode_payload(payload):
                 noise={'enabled': bool(generator & 1), 'clock': clock},
                 pmon={'enabled': bool(pflags & 1), 'waveform': waveform, 'ratio': ratio, 'depth': depth, 'decay_ms': decay},
                 morph=morph,
+                adpcm_sample=raw,
                 bank_bytes=size if kind == 1 else 0, bank_sha256=sha(bank) if kind == 1 else None,
                 pcm_samples=112 if kind == 2 else None, pcm_sha256=sha(bank) if kind == 2 else None), bank if kind == 1 else b''
 
@@ -222,7 +269,7 @@ def main():
                            'program': args.program, 'tone': args.tone, 'gain_percent': args.gain} if expected is not None else None,
               'expected_candidate_indices': matches, 'conflicting_candidate_indices': conflicts,
               'passed': passed, 'active_selection_proven': False,
-              'scope': 'Observed AU XML fragments and exact embedded bytes only; not a GarageBand container decoder or active-track binding. Multiple/history candidates are reported, never silently selected. GUI reopen and audio export verify the active instrument separately.'}
+              'scope': 'Observed AU XML fragments and exact embedded bytes only; not a GarageBand container decoder or active-track binding. Raw ADPCM packet structure and metadata are checked; optional PCM is not re-encoded to verify its ADPCM consistency. Multiple/history candidates are reported, never silently selected. GUI reopen and audio export verify the active instrument separately.'}
     print(json.dumps(report, indent=2))
     return 0 if passed else 1
 

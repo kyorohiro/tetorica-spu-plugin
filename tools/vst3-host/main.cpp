@@ -17,6 +17,7 @@
 #include "reverb-checks.h"
 #include "pcm-cycle-checks.h"
 #include "morph-checks.h"
+#include "web-instrument-checks.h"
 #include "pluginterfaces/vst/ivstmidicontrollers.h"
 
 #include <algorithm>
@@ -698,7 +699,7 @@ void checkStateFailures(const PluginFactory& factory,const ClassInfo& info) {
   const auto on=note(true,0);sameStereo(target,reference,{on});
   std::vector<StateBytes> invalid;
   auto mutate=[&](std::size_t offset,std::uint32_t value){auto state=valid;put32(state,offset,value);invalid.push_back(std::move(state));};
-  mutate(0,0);mutate(8,8);mutate(12,1);mutate(16,9);mutate(20,127);mutate(24,99);mutate(28,0xffffffff);
+  mutate(0,0);mutate(8,tetorica::kStateSchemaVersion+1);mutate(12,1);mutate(16,9);mutate(20,127);mutate(24,99);mutate(28,0xffffffff);
   for(const auto length:{std::size_t(0),std::size_t(1),std::size_t(7),std::size_t(8),std::size_t(12),
       std::size_t(31),std::size_t(39),valid.size()-5,valid.size()-1})
     invalid.emplace_back(valid.begin(),valid.begin()+length);
@@ -785,6 +786,10 @@ int main(int argc, char** argv) {
             auto instance=std::make_unique<Instance>(factory,info,rate);instance->allowAsymmetric();
             instance->start();return instance;
           },rate,"VST3 parameters/events",originalBank());
+          tetorica::test::checkWebInstruments([&] {
+            auto instance=std::make_unique<Instance>(factory,info,rate);instance->allowAsymmetric();
+            instance->start();return instance;
+          },rate,"VST3 state/events",originalBank());
           tetorica::test::checkControllers([&] {
             auto instance=std::make_unique<Instance>(factory,info,rate);instance->start();return instance;
           },rate,"VST3 IMidiMapping");

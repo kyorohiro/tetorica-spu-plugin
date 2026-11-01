@@ -3,6 +3,7 @@
 #include "SpuEngineExchange.h"
 #include <limits>
 #include <stdexcept>
+#include <type_traits>
 #include <utility>
 
 namespace tetorica {
@@ -11,10 +12,11 @@ struct SpuEngineExchange::Node {
   Generation generation;
   std::unique_ptr<SpuInstrument> engine;
   std::shared_ptr<const InstrumentDefinition> definition;
+  std::optional<SavedInstrumentState> importedState;
 };
 
 SpuEngineExchange::SpuEngineExchange()
-  : mActive(new Node{0,std::make_unique<SpuInstrument>(),InstrumentDefinition::builtin()}) {
+  : mActive(new Node{0,std::make_unique<SpuInstrument>(),InstrumentDefinition::builtin(),std::nullopt}) {
   static_assert(std::atomic<Generation>::is_always_lock_free,
                 "Audio generation counters must be lock-free");
   static_assert(std::atomic<Node*>::is_always_lock_free,
@@ -49,11 +51,12 @@ bool SpuEngineExchange::publish(Generation generation,std::unique_ptr<SpuInstrum
   if(!generation || generation!=mLatest.load(std::memory_order_acquire) ||
      generation<=mAdopted.load(std::memory_order_acquire) ||
      !prepared || !prepared->healthy())return false;
-  auto next=std::make_unique<Node>(Node{generation,std::move(prepared),std::move(definition)});
+  auto next=std::make_unique<Node>(Node{generation,std::move(prepared),std::move(definition),std::nullopt});
   // The same producer mutex covers admission, publication and beginRequest.
   // A slow old producer cannot overwrite a newer pending generation here.
   mAcceptedGeneration=generation;
   mAcceptedDefinition=next->definition;
+  mAcceptedImportedState.reset();
   delete mPending.exchange(next.release(),std::memory_order_acq_rel);
   return true;
 }
@@ -62,7 +65,7 @@ SpuEngineExchange::Generation SpuEngineExchange::commitPrepared(
     std::unique_ptr<SpuInstrument> prepared,std::shared_ptr<const InstrumentDefinition> definition) {
   if(!prepared||!prepared->healthy()||!definition)
     throw std::invalid_argument("SPU state: missing healthy prepared engine or definition");
-  auto next=std::make_unique<Node>(Node{0,std::move(prepared),std::move(definition)});
+  auto next=std::make_unique<Node>(Node{0,std::move(prepared),std::move(definition),std::nullopt});
   std::lock_guard<std::mutex> lock(mProducerMutex);
   const auto previous=mLatest.load(std::memory_order_relaxed);
   if(previous==std::numeric_limits<Generation>::max())
@@ -74,22 +77,57 @@ SpuEngineExchange::Generation SpuEngineExchange::commitPrepared(
   // cannot cancel another valid pending load or change its authoring snapshot.
   mAcceptedGeneration=generation;
   mAcceptedDefinition=next->definition;
+  mAcceptedImportedState.reset();
   mLatest.store(generation,std::memory_order_release);
   delete mPending.exchange(next.release(),std::memory_order_acq_rel);
   return generation;
 }
 
-std::shared_ptr<const InstrumentDefinition> SpuEngineExchange::snapshotDefinition() const {
+SpuEngineExchange::Generation SpuEngineExchange::commitPreparedImport(
+    std::unique_ptr<SpuInstrument> prepared,SavedInstrumentState state) {
+  if(!prepared||!prepared->healthy()||!state.definition)
+    throw std::invalid_argument("SPU import: missing healthy prepared engine or definition");
+  // This public producer entry point also rejects malformed scalar tuples.
+  // Complete bounded validation/allocation precedes any pending-generation
+  // mutation, even when the normal caller already validated its JSON input.
+  (void)encodeState(state.definition,state.gainPercent,state.envelope,state.reverb,
+                    state.noise,state.pmon,state.morph);
+  auto next=std::make_unique<Node>(Node{0,std::move(prepared),state.definition,std::move(state)});
+  std::lock_guard<std::mutex> lock(mProducerMutex);
+  const auto previous=mLatest.load(std::memory_order_relaxed);
+  if(previous==std::numeric_limits<Generation>::max())
+    throw std::overflow_error("SPU preparation generation exhausted");
+  collectRetiredLocked();
+  const auto generation=previous+1;
+  next->generation=generation;
+  // SavedInstrumentState owns only shared immutable definition + plain fields;
+  // these copies cannot allocate or throw after the generation commit starts.
+  static_assert(std::is_nothrow_copy_constructible<SavedInstrumentState>::value,
+                "Import snapshot copying must not allocate or throw");
+  mAcceptedGeneration=generation;
+  mAcceptedDefinition=next->definition;
+  mAcceptedImportedState=next->importedState;
+  mLatest.store(generation,std::memory_order_release);
+  delete mPending.exchange(next.release(),std::memory_order_acq_rel);
+  return generation;
+}
+
+SpuEngineExchange::AuthoringSnapshot SpuEngineExchange::snapshotAuthoring() const {
   std::lock_guard<std::mutex> lock(mProducerMutex);
   // Keep the accepted definition observable while audio has taken pending but
   // is still preparing/adopting it. This shared_ptr is never touched by audio.
   if(mAcceptedGeneration==mLatest.load(std::memory_order_acquire)&&
      mAcceptedGeneration>mAdopted.load(std::memory_order_acquire)&&
-     mAcceptedGeneration!=mRejected.load(std::memory_order_acquire))return mAcceptedDefinition;
+     mAcceptedGeneration!=mRejected.load(std::memory_order_acquire))
+    return {mAcceptedGeneration,mAcceptedDefinition,mAcceptedImportedState};
   // Audio only moves nodes to active/retired ownership. Destruction takes this
   // same mutex, so the observed node stays alive while its definition is copied.
   const Node* active=mObservableActive.load(std::memory_order_acquire);
-  return active?active->definition:nullptr;
+  return active?AuthoringSnapshot{active->generation,active->definition,active->importedState}:AuthoringSnapshot{};
+}
+
+std::shared_ptr<const InstrumentDefinition> SpuEngineExchange::snapshotDefinition() const {
+  return snapshotAuthoring().definition;
 }
 
 bool SpuEngineExchange::canRetire() const noexcept {
@@ -128,6 +166,10 @@ bool SpuEngineExchange::beginBlock(double hostRate) noexcept {
 
 SpuInstrument& SpuEngineExchange::instrument() noexcept { return *mActive->engine; }
 
+const SavedInstrumentState* SpuEngineExchange::adoptedImportState() const noexcept {
+  return mActive->importedState?&*mActive->importedState:nullptr;
+}
+
 void SpuEngineExchange::collectRetiredLocked() {
   auto read=mRetiredRead.load(std::memory_order_relaxed);
   const auto write=mRetiredWrite.load(std::memory_order_acquire);
@@ -148,6 +190,7 @@ std::unique_ptr<SpuInstrument> prepareDefinition(const InstrumentDefinition& def
   std::unique_ptr<SpuInstrument> prepared;
   if(definition.kind()==InstrumentDefinition::Kind::Builtin)prepared=std::make_unique<SpuInstrument>();
   else if(definition.kind()==InstrumentDefinition::Kind::PcmCycle)prepared=std::make_unique<SpuInstrument>(definition.pcmCycle());
+  else if(definition.kind()==InstrumentDefinition::Kind::AdpcmSample)prepared=std::make_unique<SpuInstrument>(definition.rawAdpcmSample());
   else {
     const auto& bytes=definition.bankBytes();
     const auto bank=vab::parse({bytes.data(),bytes.size()});

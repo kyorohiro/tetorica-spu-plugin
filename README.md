@@ -299,7 +299,7 @@ flags are silently rewritten. See [TODO](docs/issues/TODO.md) for remaining work
 
 ## VAB in the plugin editor
 
-Choose **Load VAB** and open a standard v6/v7 complete `.vab` file (up to 1 MiB).
+Choose **Load sound...** and open a standard v6/v7 complete `.vab` file (up to 1 MiB).
 Reading, parsing and sample-cache preparation run on a worker. Initial loading
 selects the first playable Tone. **Program** chooses the first playable Tone
 within that Program; **Tone** chooses an exact entry. Both menus use the bank's
@@ -321,6 +321,30 @@ worker. Old engines return through a bounded retirement queue; a full queue
 defers the switch. This layer does not make the entire host/framework callback
 lock-free. Each plugin instance owns its loader and joins it before destroying
 the engine exchange.
+
+## Import a Web SPU sound
+
+Save an instrument as `.spu.json` in the Web SPU Synth, then choose
+**Load sound...** in the plugin. Version 1 supports original ADPCM samples,
+authored 112-sample PCM cycles, Morph A/B, ADSR, shared Reverb, Noise and PMON.
+The instrument name appears in the editor. Program/Tone menus apply to VAB banks.
+The plugin keeps its current Gain, since Web sound files contain no master Gain.
+
+The original sample bytes, tuning, loop, signed stereo volumes, ADSR and send
+are embedded in the DAW project. A prepared import adopts its sound and all
+settings together at an audio-block boundary, stopping previous notes and tails.
+Invalid files preserve the current sound and valid pending work. Closing the
+editor or restoring a project cancels unfinished import preparation.
+
+The import is bounded to 8 MiB JSON and 520192 ADPCM bytes. The existing Native
+repeat-packet flag restriction still applies. Version 2 long Software audio,
+Web preset export and PSF extraction are follow-up work.
+
+Web saves the current Morph blend as the base sample; turning Morph Off after
+import returns to that saved sample. It cannot recover a pre-Morph VAB absent
+from the file. The plugin uses its existing voice-level calibration and private
+16-bit Morph carrier, so Web/plugin output PCM is not promised bit-identical.
+See the [import verification record](docs/web_instrument_import_20261101.md).
 
 ## Embedded DAW state
 
@@ -346,6 +370,10 @@ Noise and PMON use Noise during playback.
 Schema 7 appends Morph Enabled/Amount and two exact 112-sample Float32 endpoints,
 while retaining the original source kind and bytes. Schema 1–6 and legacy state
 restore with Morph Off, Amount 0 and the default A/B pair.
+Schema 8 adds an original ADPCM sample source, including exact sample bytes and
+its tuning, loop, signed volumes, raw ADSR/send, name and optional authored PCM.
+The 1024-byte fixed layout and previous source payloads are retained; schemas
+1–7 remain readable without requiring the original `.spu.json` file.
 
 The actual AU and VST3 have been tested for embedded-bank round-trip, separate
 instances, immediate first-render MIDI/PCM and malformed-state rejection. VST3
@@ -408,8 +436,9 @@ still need a direct user check; the verified host-preset route is separate.
   MIDI notes 92 and above clamp. Full-range multisampling is follow-up work.
 - Host rate conversion uses continuous linear interpolation. Anti-alias filtering
   below 44.1 kHz and improved conversion quality remain follow-up work.
-- State schema 7 stores a built-in instrument, one selected VAB Tone or one
-  authored 112-sample PCM cycle, with a 1 MiB bank limit. Key zones, layers and game-driver performance state are
+- State schema 8 stores a built-in instrument, one selected VAB Tone, one
+  authored 112-sample PCM cycle or one imported ADPCM sample, with a 1 MiB bank limit
+  and 520192-byte sample limit. Key zones, layers and game-driver performance state are
   not reconstructed. Held notes, release tails, decoder caches and host rate
   are not saved.
 - Configurable Pitch Bend range, smooth Gain changes and per-channel CC120 remain TODO.

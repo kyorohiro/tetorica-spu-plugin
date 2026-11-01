@@ -318,6 +318,11 @@ void TetoricaSPU::ProcessBlock(iplug::sample**, iplug::sample** outputs, int nFr
     return;
   if (mEngines.beginBlock(GetSampleRate()))
   {
+    if(const auto* imported=mEngines.adoptedImportState())
+    {
+      applyImportedParameters(*imported);
+      mImportAppliedGeneration.store(mEngines.adoptedGeneration(),std::memory_order_release);
+    }
     applyControllerCache();
     mEnvelopeApplied = false;
     // A UI replacement starts with no held notes, but physical wheel/pedal

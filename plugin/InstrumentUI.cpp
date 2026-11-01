@@ -13,6 +13,7 @@
 #include <algorithm>
 #include <array>
 #include <cmath>
+#include <cctype>
 #include <cstdio>
 #include <cstring>
 #include <functional>
@@ -137,6 +138,8 @@ bool sameBaseDefinition(const std::shared_ptr<const tetorica::InstrumentDefiniti
       a->program() != b->program() || a->tone() != b->tone()) return false;
   if (a->kind() == tetorica::InstrumentDefinition::Kind::PcmCycle)
     return a->pcmCycle() == b->pcmCycle();
+  if (a->kind() == tetorica::InstrumentDefinition::Kind::AdpcmSample)
+    return tetorica::sameRawAdpcmSample(a->rawAdpcmSample(), b->rawAdpcmSample());
   return a->bankBytes() == b->bankBytes();
 }
 
@@ -145,6 +148,16 @@ bool sameDefinition(const std::shared_ptr<const tetorica::InstrumentDefinition>&
 {
   return sameBaseDefinition(a, b) && (!a ||
     tetorica::sameMorphEndpoints(a->morphEndpoints(), b->morphEndpoints()));
+}
+const tetorica::PcmCycle* authoredCycle(
+  const std::shared_ptr<const tetorica::InstrumentDefinition>& definition)
+{
+  if(!definition)return nullptr;
+  if(definition->kind()==tetorica::InstrumentDefinition::Kind::PcmCycle)
+    return &definition->pcmCycle();
+  if(definition->kind()==tetorica::InstrumentDefinition::Kind::AdpcmSample&&
+     definition->rawAdpcmSample().waveform)return &*definition->rawAdpcmSample().waveform;
+  return nullptr;
 }
 } // namespace
 
@@ -160,6 +173,9 @@ struct TetoricaSPU::InstrumentUIState
   std::shared_ptr<const tetorica::InstrumentDefinition> notificationBaseline;
   std::optional<tetorica::vab::Bank> bank;
   tetorica::SpuEngineExchange::Generation requested = 0;
+  tetorica::WebInstrumentLoader::Ticket webTicket = 0;
+  tetorica::SpuEngineExchange::Generation webBaseGeneration = 0, webCommitted = 0;
+  std::uint64_t webRevision = 0;
   std::uint64_t revision = 0;
   bool baselineInitialized = false;
   bool pickerOpen = false;
@@ -186,7 +202,7 @@ void TetoricaSPU::initializeInstrumentUI()
     graphics->AttachControl(new ITextControl(IRECT(24, 18, 550, 58),
       "Tetorica SPU", IText(30, IColor(255, 27, 62, 73))));
     graphics->AttachControl(new IVButtonControl(IRECT(24, 64, 154, 99),
-      [this](IControl*) { promptForVab(); }, "Load VAB..."), kCtrlLoadVab);
+      [this](IControl*) { promptForVab(); }, "Load sound..."), kCtrlLoadVab);
     graphics->AttachControl(new IVButtonControl(IRECT(166, 64, 296, 99),
       [this](IControl*) { requestBuiltinFromUI(); }, "Builtin Sine"), kCtrlBuiltin);
     graphics->AttachControl(new ITextControl(IRECT(306, 64, 550, 99),
@@ -459,6 +475,12 @@ void TetoricaSPU::OnUIOpen()
 
 void TetoricaSPU::closeInstrumentUI() noexcept
 {
+  mWebLoader.cancel();
+  if (mInstrumentUI)
+  {
+    if(mInstrumentUI->webTicket)mInstrumentUI->status="Import cancelled when the editor closed. Previous sound kept.";
+    mInstrumentUI->webTicket = 0;
+  }
   if (auto* graphics = GetUI())
   {
     if (auto* graph = graphics->GetControlWithTag(kCtrlEnvelopeGraph))
@@ -493,7 +515,7 @@ void TetoricaSPU::promptForVab()
   const auto revision = mInstrumentUIRevision.load(std::memory_order_acquire);
   const auto generation = mEngines.latestGeneration();
   WDL_String fileName, path;
-  GetUI()->PromptForFile(fileName, path, EFileAction::Open, "vab",
+  GetUI()->PromptForFile(fileName, path, EFileAction::Open, "vab json",
     [lifetime, revision, generation](const WDL_String& file, const WDL_String&) {
       const auto live = lifetime.lock();
       if (!live) return;
@@ -512,8 +534,23 @@ void TetoricaSPU::promptForVab()
           if (owner->mInstrumentUIRevision.load(std::memory_order_acquire) == revision &&
               owner->mEngines.latestGeneration() == generation)
           {
-            ui.requested = owner->mLoader.requestFile(std::string(file.Get()));
-            ui.status = "Loading VAB. Previous sound remains until ready.";
+            std::string path(file.Get());
+            auto extension=path.substr(path.find_last_of('.')==std::string::npos ? path.size() : path.find_last_of('.'));
+            std::transform(extension.begin(),extension.end(),extension.begin(),
+              [](unsigned char c){return static_cast<char>(std::tolower(c));});
+            if(extension==".json")
+            {
+              ui.webTicket=owner->mWebLoader.requestFile(std::move(path));
+              ui.webBaseGeneration=generation;ui.webRevision=revision;
+              ui.requested=0;ui.webCommitted=0;
+              ui.status="Loading Web instrument. Previous sound remains until ready.";
+            }
+            else
+            {
+              owner->mWebLoader.cancel();ui.webTicket=0;ui.webCommitted=0;
+              ui.requested = owner->mLoader.requestFile(std::move(path));
+              ui.status = "Loading VAB. Previous sound remains until ready.";
+            }
           }
         }
         catch (const std::exception& error) { ui.status = std::string("Load failed: ") + error.what(); }
@@ -527,6 +564,7 @@ void TetoricaSPU::requestBuiltinFromUI()
   try
   {
     std::lock_guard<std::mutex> lock(mStateMutex);
+    mWebLoader.cancel();mInstrumentUI->webTicket=0;mInstrumentUI->webCommitted=0;
     mInstrumentUI->requested = mLoader.requestBuiltin();
     mInstrumentUI->status = "Preparing Builtin Sine.";
   }
@@ -547,6 +585,7 @@ void TetoricaSPU::requestSelectionFromUI(
         mEngines.snapshotDefinition() != source)
       return;
     if (source->program() == program && source->tone() == tone) return;
+    mWebLoader.cancel();mInstrumentUI->webTicket=0;mInstrumentUI->webCommitted=0;
     mInstrumentUI->requested = mLoader.requestSelection(std::move(source), program, tone);
     mInstrumentUI->status = "Preparing tone. Previous sound remains until ready.";
   }
@@ -568,6 +607,7 @@ void TetoricaSPU::requestProgramFromUI(
       return;
     // The worker finds a genuinely playable tone within this Program, including
     // native SDK loop restrictions. Metadata alone cannot determine support.
+    mWebLoader.cancel();mInstrumentUI->webTicket=0;mInstrumentUI->webCommitted=0;
     mInstrumentUI->requested = mLoader.requestProgram(std::move(source), program);
     mInstrumentUI->status = "Preparing program. Previous sound remains until ready.";
   }
@@ -582,6 +622,7 @@ void TetoricaSPU::OnIdle()
   std::shared_ptr<const tetorica::InstrumentDefinition> definition;
   bool notify = false;
   bool restored = false;
+  bool importedParameters = false;
   std::uint64_t revision = 0;
   {
     std::lock_guard<std::mutex> lock(mStateMutex);
@@ -591,7 +632,53 @@ void TetoricaSPU::OnIdle()
     {
       ui.revision = revision;
       ui.requested = 0;
+      mWebLoader.cancel();ui.webTicket=0;ui.webCommitted=0;
       ui.status = "Project sound restored.";
+    }
+    if(ui.webTicket)
+    {
+      if(ui.webRevision!=revision||ui.webBaseGeneration!=mEngines.latestGeneration())
+      {
+        mWebLoader.cancel();ui.webTicket=0;
+      }
+      else
+      {
+        const auto web=mWebLoader.status();
+        if(web.ticket==ui.webTicket&&web.state==tetorica::WebInstrumentLoader::State::Failed)
+        {
+          ui.status="Load failed: "+web.error+". Previous sound kept.";
+          ui.webTicket=0;
+        }
+        else if(auto ready=mWebLoader.takeReady(ui.webTicket))
+        {
+          // All JSON, sample and native preparation has succeeded on worker.
+          // Only now issue a source generation. Failed imports never cancel
+          // valid pending source changes, nor modify a single host parameter.
+          ready->imported.state.gainPercent=GetParam(kParamGain)->Value();
+          try
+          {
+            if(!std::isfinite(ready->imported.state.gainPercent)||
+               ready->imported.state.gainPercent<0||ready->imported.state.gainPercent>100)
+              throw std::invalid_argument("Current Gain must be finite 0-100 percent");
+            ui.webCommitted=mEngines.commitPreparedImport(std::move(ready->engine),
+              std::move(ready->imported.state));
+            notify=true;
+            ui.requested=0;ui.webTicket=0;
+            ui.status="Ready. Waiting for an audio block.";
+          }
+          catch(const std::exception& error)
+          { ui.webTicket=0;ui.status=std::string("Load failed: ")+error.what()+". Previous sound kept."; }
+        }
+      }
+    }
+    if(ui.webCommitted)
+    {
+      if(ui.webCommitted!=mEngines.latestGeneration())ui.webCommitted=0;
+      else if(mImportAppliedGeneration.load(std::memory_order_acquire)==ui.webCommitted)
+      {
+        ui.status="Loaded Web instrument. Play MIDI or the keyboard.";
+        importedParameters=true;ui.webCommitted=0;
+      }
     }
     const auto status = mLoader.status();
     const auto latest = mEngines.latestGeneration();
@@ -612,7 +699,7 @@ void TetoricaSPU::OnIdle()
     // job status. An adopted successful load still changed state when a newer
     // request fails before the UI had a chance to observe that success.
     if (ui.baselineInitialized && !restored)
-      notify = !sameDefinition(ui.notificationBaseline, definition);
+      notify = notify || !sameDefinition(ui.notificationBaseline, definition);
     ui.notificationBaseline = definition;
     ui.baselineInitialized = true;
   }
@@ -634,8 +721,7 @@ void TetoricaSPU::OnIdle()
           ui.bank = tetorica::vab::parse({definition->bankBytes().data(), definition->bankBytes().size()});
       }
       else ui.bank.reset();
-      const auto* acceptedCycle = definition &&
-        definition->kind() == tetorica::InstrumentDefinition::Kind::PcmCycle ? &definition->pcmCycle() : nullptr;
+      const auto* acceptedCycle = authoredCycle(definition);
       // Applying endpoint edits replaces the immutable definition, but must
       // not discard an unrelated, unapplied draft of the original PCM source.
       if (restored || !sameBaseDefinition(ui.definition, definition))
@@ -652,6 +738,16 @@ void TetoricaSPU::OnIdle()
     }
   }
   updateInstrumentControls();
+  if(importedParameters)
+    for(int parameter=0;parameter<kNumParams;++parameter)
+    {
+      if(mInstrumentUIRevision.load(std::memory_order_acquire)!=revision)break;
+      const double value=GetParam(parameter)->GetNormalized();
+      BeginInformHostOfParamChangeFromUI(parameter);
+      InformHostOfParamChange(parameter,value);
+      SendParameterValueFromDelegate(parameter,value,true);
+      EndInformHostOfParamChangeFromUI(parameter);
+    }
   // Never call host callbacks with a state/loader mutex held: hosts may save
   // synchronously in response. Do not mark a superseding host restore dirty.
   if (notify && mInstrumentUIRevision.load(std::memory_order_acquire) == revision)
@@ -691,6 +787,14 @@ void TetoricaSPU::updateInstrumentControls()
       ui.definition && ui.definition->kind() == tetorica::InstrumentDefinition::Kind::PcmCycle ?
         (noise ? "PCM cycle / Noise" : pmon ? "PCM cycle / PMON" : "Embedded PCM cycle") :
         (noise ? "Builtin Sine / Noise" : pmon ? "Builtin Sine / PMON" : "Builtin Sine");
+    if(ui.definition&&ui.definition->kind()==tetorica::InstrumentDefinition::Kind::AdpcmSample)
+    {
+      label=ui.definition->rawAdpcmSample().name;
+      for(auto& character:label)
+        if(static_cast<unsigned char>(character)<32||character==127)character=' ';
+      if(label.empty())label="Web instrument";
+      if(noise)label+=" / Noise";else if(pmon)label+=" / PMON";
+    }
     if (morph && !noise) label += " / Morph";
     static_cast<ITextControl*>(control)->SetStr(label.c_str());
   }
@@ -804,9 +908,9 @@ void TetoricaSPU::updateInstrumentControls()
       auto* button = static_cast<IVButtonControl*>(control);
       if (std::strcmp(button->GetLabelStr(), label)) button->SetLabelStr(label);
     }
-  const bool appliedPcm = ui.definition &&
-    ui.definition->kind() == tetorica::InstrumentDefinition::Kind::PcmCycle;
-  const bool draftApplied = appliedPcm && ui.definition->pcmCycle() == ui.pcmDraft.cycle();
+  const auto* appliedCycle=authoredCycle(ui.definition);
+  const bool appliedPcm=appliedCycle!=nullptr;
+  const bool draftApplied=appliedCycle&&*appliedCycle==ui.pcmDraft.cycle();
   const bool endpointsApplied = ui.definition && tetorica::sameMorphEndpoints(
     ui.definition->morphEndpoints(), ui.morphDraft.endpoints());
   const double rawAmount = GetParam(kParamMorphAmount)->Value();
@@ -875,6 +979,8 @@ void TetoricaSPU::updateInstrumentControls()
       "Applied PCM cycle. The project saves this source PCM and its sound settings." :
       appliedPcm ? "Draft changed. Apply PCM to hear it and save it with the project." :
       vab ? "VAB sound kept. This independent draft replaces it only when you Apply PCM." :
+      ui.definition&&ui.definition->kind()==tetorica::InstrumentDefinition::Kind::AdpcmSample ?
+      "Web sample kept. This independent draft replaces it only when you Apply PCM." :
       "Builtin Sine kept. Apply PCM creates an editable sound. Unapplied drafts are not saved.";
     auto* text = static_cast<ITextControl*>(control);
     if (std::strcmp(text->GetStr(), message)) text->SetStr(message);
@@ -889,6 +995,8 @@ void TetoricaSPU::updateInstrumentControls()
   if (auto* control = graphics->GetControlWithTag(kCtrlReverbStatus))
   {
     bool sourceSend = false;
+    if(ui.definition&&ui.definition->kind()==tetorica::InstrumentDefinition::Kind::AdpcmSample)
+      sourceSend=ui.definition->rawAdpcmSample().reverb;
     if (vab)
       for (const auto& tone : ui.bank->tones)
         if (tone.program == ui.definition->program() && tone.index == ui.definition->tone())
@@ -966,8 +1074,11 @@ void TetoricaSPU::revertPcmDraftFromUI()
     mInstrumentUI->morphDraft.set(definition ? definition->morphEndpoints() : tetorica::MorphEndpoints{});
     updateInstrumentControls();
   }
-  else setPcmDraftFromUI(definition && definition->kind() == tetorica::InstrumentDefinition::Kind::PcmCycle ?
-    definition->pcmCycle() : tetorica::makePcmCycle(tetorica::WaveformShape::Sine));
+  else
+  {
+    const auto* cycle=authoredCycle(definition);
+    setPcmDraftFromUI(cycle ? *cycle : tetorica::makePcmCycle(tetorica::WaveformShape::Sine));
+  }
 }
 
 void TetoricaSPU::applyPcmDraftFromUI()
@@ -982,6 +1093,7 @@ void TetoricaSPU::applyPcmDraftFromUI()
     // A host restore can land before the next UI timer refresh. A click on
     // the old draft must not supersede that newly restored project sound.
     if (ui.revision != mInstrumentUIRevision.load(std::memory_order_acquire)) return;
+    mWebLoader.cancel();ui.webTicket=0;ui.webCommitted=0;
     if (GetParam(kParamMorphEnabled)->Bool())
     {
       // Capture the latest accepted base, including an earlier Apply that the
@@ -994,8 +1106,8 @@ void TetoricaSPU::applyPcmDraftFromUI()
     }
     else
     {
-      if (ui.definition && ui.definition->kind() == tetorica::InstrumentDefinition::Kind::PcmCycle &&
-          ui.definition->pcmCycle() == ui.pcmDraft.cycle()) return;
+      const auto* cycle=authoredCycle(ui.definition);
+      if(cycle&&*cycle==ui.pcmDraft.cycle())return;
       ui.requested = mLoader.requestPcmCycle(ui.pcmDraft.cycle());
       ui.pcmDraft.requested(ui.requested);
       ui.status = "Preparing PCM. Notes and reverb tails stop when the sound is replaced.";
@@ -1020,6 +1132,8 @@ void TetoricaSPU::copyToneEnvelopeFromUI()
   // request an engine replacement merely to copy envelope parameters.
   tetorica::EnvelopeRegisters envelope;
   const auto& ui = *mInstrumentUI;
+  if(ui.definition&&ui.definition->kind()==tetorica::InstrumentDefinition::Kind::AdpcmSample)
+    envelope=ui.definition->rawAdpcmSample().envelope;
   if (ui.definition && ui.bank)
     for (const auto& tone : ui.bank->tones)
       if (tone.program == ui.definition->program() && tone.index == ui.definition->tone())

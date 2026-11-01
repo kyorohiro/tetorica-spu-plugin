@@ -9,6 +9,7 @@
 #include "SpuReverb.h"
 #include "SpuWaveform.h"
 #include "VabLoader.h"
+#include "WebInstrumentLoader.h"
 #include <array>
 #include <atomic>
 #include <cstddef>
@@ -175,6 +176,7 @@ private:
   void applyEnvelopeParameters() noexcept;
   void applyReverbParameters() noexcept;
   void applySourceParameters() noexcept;
+  void applyImportedParameters(const tetorica::SavedInstrumentState& state) noexcept;
   void discardCarriedMidi() noexcept;
   void discardCarriedNotes() noexcept;
   void renderRange(iplug::sample** outputs, int offset, int nFrames, double gain);
@@ -189,6 +191,11 @@ private:
   mutable std::mutex mStateMutex;
   // Destruction joins the non-RT worker before destroying the exchange.
   tetorica::VabLoader mLoader{mEngines};
+  tetorica::WebInstrumentLoader mWebLoader;
+  // The render thread installs a prepared import tuple together with its
+  // engine. Serialization uses the accepted tuple until this release marker.
+  std::atomic<tetorica::SpuEngineExchange::Generation> mImportAppliedGeneration{0};
+  std::atomic<std::uint64_t> mImportParameterEpoch{0};
   struct QueuedMidi
   {
     iplug::IMidiMsg message;

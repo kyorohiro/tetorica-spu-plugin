@@ -7,6 +7,7 @@
 #include <cstring>
 #include <limits>
 #include <stdexcept>
+#include <thread>
 
 namespace {
 using Parameters=std::array<double,kNumParams>;
@@ -86,29 +87,66 @@ Parameters stateParameters(const tetorica::SavedInstrumentState& state)
 }
 }
 
+void TetoricaSPU::applyImportedParameters(const tetorica::SavedInstrumentState& state) noexcept
+{
+#if IPLUG_DSP
+  const auto values=stateParameters(state);
+  mImportParameterEpoch.fetch_add(1,std::memory_order_acq_rel);
+  // IParam::Set stores one constrained atomic value. No framework callback,
+  // chunk allocation, host notification or UI operation occurs on render.
+  for(int parameter=0;parameter<kNumParams;++parameter)
+    GetParam(parameter)->Set(values[parameter]);
+  mImportParameterEpoch.fetch_add(1,std::memory_order_release);
+#endif
+}
+
 bool TetoricaSPU::SerializeState(iplug::IByteChunk& chunk) const
 {
 #if IPLUG_DSP
   std::lock_guard<std::mutex> lock(mStateMutex);
   try
   {
-    // Capture regular parameters once through the framework API, then encode
-    // them with the immutable authoring definition. No live SPU reads occur.
-    iplug::IByteChunk params;
-    if (!SerializeParams(params) || params.Size() != kNumParams*sizeof(double))
-      return false;
-    Parameters values{};int position=0;
-    for(auto& value:values) {
-      const int next=params.Get(&value,position);
-      if(next!=position+sizeof(double))return false;
-      position=next;
+    for(unsigned attempt=0;attempt<16;++attempt)
+    {
+      const auto epoch=mImportParameterEpoch.load(std::memory_order_acquire);
+      const auto snapshot=mEngines.snapshotAuthoring();
+      // A prepared file import is saved with its full tuple even before audio
+      // adopts it. Do not pair the new definition with the previous parameters.
+      if(snapshot.importedState && snapshot.generation>
+         mImportAppliedGeneration.load(std::memory_order_acquire))
+      {
+        const auto& state=*snapshot.importedState;
+        const auto bytes=tetorica::encodeState(snapshot.definition,state.gainPercent,
+          state.envelope,state.reverb,state.noise,state.pmon,state.morph);
+        if(chunk.Size()<0||bytes.size()>static_cast<std::size_t>(
+            std::numeric_limits<int>::max()-chunk.Size()))return false;
+        return chunk.PutBytes(bytes.data(),static_cast<int>(bytes.size()))>0;
+      }
+      if(epoch&1u){std::this_thread::yield();continue;}
+      // Capture regular parameters once through the framework API, then encode
+      // them with the immutable authoring definition. No live SPU reads occur.
+      iplug::IByteChunk params;
+      if (!SerializeParams(params) || params.Size() != kNumParams*sizeof(double))
+        return false;
+      Parameters values{};int position=0;
+      for(auto& value:values) {
+        const int next=params.Get(&value,position);
+        if(next!=position+sizeof(double))return false;
+        position=next;
+      }
+      const auto definition = snapshot.definition;
+      const auto bytes = tetorica::encodeState(definition, values[kParamGain], envelope(values), reverb(values), noise(values), pmon(values), morph(values));
+      // A normal source can supersede a just-adopted import while render is
+      // installing its 26 values. Retry instead of saving a mixed parameter tuple
+      // with that newer source. Audio never waits for this non-RT serializer.
+      if(epoch!=mImportParameterEpoch.load(std::memory_order_acquire))
+      {std::this_thread::yield();continue;}
+      if (chunk.Size() < 0 || bytes.size() > static_cast<std::size_t>(
+            std::numeric_limits<int>::max() - chunk.Size()))
+        return false;
+      return chunk.PutBytes(bytes.data(), static_cast<int>(bytes.size())) > 0;
     }
-    const auto definition = mEngines.snapshotDefinition();
-    const auto bytes = tetorica::encodeState(definition, values[kParamGain], envelope(values), reverb(values), noise(values), pmon(values), morph(values));
-    if (chunk.Size() < 0 || bytes.size() > static_cast<std::size_t>(
-          std::numeric_limits<int>::max() - chunk.Size()))
-      return false;
-    return chunk.PutBytes(bytes.data(), static_cast<int>(bytes.size())) > 0;
+    return false;
   }
   catch (...)
   {

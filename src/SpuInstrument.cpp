@@ -2,6 +2,7 @@
 // Copyright (c) 2026 kyorohiro
 #include "SpuInstrument.h"
 #include "VabBank.h"
+#include "SpuAdpcm.h"
 #include <tetorica/ps1_spu.h>
 #include <algorithm>
 #include <cmath>
@@ -165,6 +166,9 @@ SpuInstrument::SpuInstrument(const vab::PreparedTone& tone) {
   catch (...) { ps1_spu_destroy(mChip); mChip=nullptr; throw; }
 }
 SpuInstrument::SpuInstrument(const PcmCycle& pcm) : SpuInstrument(cycleTone(pcm)) {}
+SpuInstrument::SpuInstrument(const RawAdpcmSample& sample) : SpuInstrument(prepareRawAdpcmSample(sample)) {
+  mInvertLeft=std::signbit(sample.volumeLeft);mInvertRight=std::signbit(sample.volumeRight);
+}
 SpuInstrument::~SpuInstrument() { ps1_spu_destroy(mChip); }
 
 bool SpuInstrument::write(unsigned offset, unsigned value) noexcept {
@@ -316,7 +320,8 @@ void SpuInstrument::noteOn(int note, int velocity, int channel) noexcept {
     write(modBase+8,0x000f);write(modBase+10,modulatorAdsr2(mPmon.decayMs,mEnvelope.adsr2));
     keyOn(mod);
   }
-  write(base, volumeLeft); write(base+2, volumeRight); write(base+4, pitch);
+  write(base,mInvertLeft?((0u-volumeLeft)&0x7fff):volumeLeft);
+  write(base+2,mInvertRight?((0u-volumeRight)&0x7fff):volumeRight);write(base+4,pitch);
   write(base+8,mEnvelope.adsr1); write(base+10,mEnvelope.adsr2);
   if (mReverbSend) {
     const unsigned reg=0x198+(carrier>=16?2:0);

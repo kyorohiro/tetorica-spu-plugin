@@ -41,7 +41,7 @@ Gainは現在0〜100%。WebのMaster 200%とは異なる。
 | 実装済み：Noise | Noise clock、Sample切替 | 共有Clock0〜63のlive変更、元音源・draft保持、19params/state5と旧形式互換。実AU/VST3とStandaloneを検証。実DAW独自操作等は残る。 |
 | 実装済み：PMON | 変調波形・Ratio・Depth・Decay | 隣接voiceの12組、4変調波形、live Ratio / Depth、次NoteのDecay、24params / state6を追加した。元音源保持・Noise優先・旧state互換をcore / 実AU・VST3で検証。Standalone操作・installed AU更新・CIも完了。実聴・実DAW automation録音等は残る。 |
 | 実装済み：Software Morph | A/B/Resultを同じcanvasへ表示し、編集対象を切替。保持音を再発音せずblend変更 | 元sourceとA/B原本を保つ26params / state7を実装。endpointはdraft / Apply、Amountだけlive。初期Off、A=Sine / B=Saw（振幅0.8）、Amount0。Offは元sourceへ戻す。PMON併用・Noise優先・実AU/VST3・Standalone・旧state復元・CIを検証。実聴・実DAW独自UIとautomation録音は残る。 |
-| 音色・素材の入力 | `.spu.json`、audio、PSF1/MiniPSFからの静的VAB抽出、VH+VB | 分割VH/VBとpreset互換から始め、sample stateを設計してAudio・PSF抽出へ広げる。C++の明示VH/VB parserは既にあるが、file pickerはcomplete VABのみ。既知のNative loop flag制限も別途修正・検証する。 |
+| 音色・素材の入力 | `.spu.json`、audio、PSF1/MiniPSFからの静的VAB抽出、VH+VB | `.spu.json` v1の通常ADPCM / PCM / Morphと設定をimportし、schema8で元bytesを保持する。共通Load soundからcomplete VABも選択可能。書き出し・長いAudio v2・PSF抽出・VH/VB file pickerは後続。既知のNative loop flag制限は明示rejectを維持。 |
 | monitor・演奏UI | Envelope/Waveform/Spectrum、Guitar/Bass/Ukulele、Octave、Pitch/Morph wheel、Master 200% | Morph AmountはSourceとkeyboard横へ実装済み。残るmonitor・Pitch wheel・Octave等はDAWの代替機能とStandaloneの利便性を考慮して追加する。 |
 
 各段階で、音の変化だけでなく、演奏中の編集・保存直後の復元・不正入力時の現音源保持を確認する。
@@ -81,8 +81,9 @@ SPUのGaussian / ADSR / PMON / Reverbを通す。元4bit ADPCMとのbit一致は
 この区別はpluginの画面と説明にも引き継ぐ。
 
 WebのAudio入力は短い録音をSPU ADPCMへ変換し、長い録音をSoftware audioへ切り替える。
-pluginのschema7はBuiltin/VAB/PCM cycleの3種類を保ち、bank上限1 MiB、state上限1 MiB+1024 bytes。
-Noise / PMON / Morphは元音源と独立した共有parameterとして保存する。旧schema1〜6も読み込む。
+pluginのschema8はBuiltin/VAB/PCM cycle/AdpcmSampleの4種類で、bank上限1 MiB、state上限1 MiB+1024 bytes。
+AdpcmSampleはWeb v1の元ADPCMとroot/loop/signed volume/ADSR/send/name/任意PCMを保持する。
+Noise / PMON / Morphは元音源と独立した共有parameterとして保存する。旧schema1〜7も読み込む。
 各Enabledが同時Onのhost tupleは保持し、実効modeはNoise優先にする。SampleではMorphとPMONを併用できる。
 PCM cycleは112 Float32、448bytesの元波形を保持し、prepared ADPCMは保存しない。
 MorphはA/B各112 Float32の原本とEnabled / Amountを保存する。旧stateはMorph Off / Amount0 / default A/Bへ移行する。

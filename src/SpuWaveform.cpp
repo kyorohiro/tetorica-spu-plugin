@@ -116,5 +116,8 @@ std::array<std::uint8_t,64> encodePcmCycle(const PcmCycle& pcm) {
   if(!base)throw std::runtime_error("SPU waveform: independent encoding exceeded int16 range");
   return candidate&&*candidate<*base?predicted:independent;
 }
+bool matchesPcmCycleAdpcm(const PcmCycle& pcm,const std::array<std::uint8_t,64>& adpcm) {
+  return encodePcmCycle(pcm)==adpcm||encode(pcm,std::nullopt)==adpcm;
+}
 
 } // namespace tetorica

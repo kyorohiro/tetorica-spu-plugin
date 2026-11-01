@@ -13,6 +13,7 @@
 
 namespace tetorica {
 namespace vab { struct PreparedTone; }
+struct RawAdpcmSample;
 
 // One exclusive-owner SPU instance. Construct/destruct away from the audio
 // callback: construction loads an immutable sample and primes its ADPCM caches.
@@ -35,6 +36,7 @@ public:
   // Encode and prime a112-point periodic PCM cycle away from audio. The four
   // ADPCM packets use the ordinary SPU RAM/ADSR/Gaussian/PMON/reverb path.
   explicit SpuInstrument(const PcmCycle& pcm);
+  explicit SpuInstrument(const RawAdpcmSample& sample);
   ~SpuInstrument();
   SpuInstrument(const SpuInstrument&) = delete;
   SpuInstrument& operator=(const SpuInstrument&) = delete;
@@ -137,6 +139,7 @@ private:
   double mHostRate = kNativeSampleRate;
   double mRootFrequencyHz = kNativeSampleRate / 112.0;
   unsigned mVolumeLeft = 0x0c00, mVolumeRight = 0x0c00;
+  bool mInvertLeft=false,mInvertRight=false;
   bool mReverbSend = false;
   bool mSourceReverbSend = false;
   bool mReverbMayHaveTail = false;

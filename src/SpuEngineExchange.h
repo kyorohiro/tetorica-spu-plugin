@@ -10,6 +10,7 @@
 #include <cstdint>
 #include <memory>
 #include <mutex>
+#include <optional>
 
 namespace tetorica {
 
@@ -38,6 +39,18 @@ public:
   // Definition/engine pairing is a trusted internal prepareDefinition contract.
   Generation commitPrepared(std::unique_ptr<SpuInstrument> prepared,
                             std::shared_ptr<const InstrumentDefinition> definition);
+  // Non-RT import commit. The fully validated state travels with its prepared
+  // engine; the audio consumer applies its scalar parameters on adoption.
+  Generation commitPreparedImport(std::unique_ptr<SpuInstrument> prepared,
+                                  SavedInstrumentState state);
+  struct AuthoringSnapshot {
+    Generation generation=0;
+    std::shared_ptr<const InstrumentDefinition> definition;
+    std::optional<SavedInstrumentState> importedState;
+  };
+  // One producer-locked snapshot keeps pending engine/definition/parameters
+  // coherent, including the pending->active handoff gap.
+  AuthoringSnapshot snapshotAuthoring() const;
   // Non-RT snapshot, preferring a current pending definition to the active one.
   // A null result represents an explicitly unsaveable raw-tone publication.
   std::shared_ptr<const InstrumentDefinition> snapshotDefinition() const;
@@ -51,6 +64,9 @@ public:
   // Live controller carry/reset policy belongs to the consumer wrapper.
   bool beginBlock(double hostRate) noexcept;
   SpuInstrument& instrument() noexcept;
+  // Audio-exclusive borrowed pointer, valid until the next successful
+  // beginBlock. Reading it does not copy/destroy any shared ownership.
+  const SavedInstrumentState* adoptedImportState() const noexcept;
 
   Generation latestGeneration() const noexcept { return mLatest.load(std::memory_order_acquire); }
   Generation adoptedGeneration() const noexcept { return mAdopted.load(std::memory_order_acquire); }
@@ -72,6 +88,7 @@ private:
   // Non-RT-only logical publication survives the pending->active pointer gap.
   Generation mAcceptedGeneration=0;
   std::shared_ptr<const InstrumentDefinition> mAcceptedDefinition;
+  std::optional<SavedInstrumentState> mAcceptedImportedState;
   std::array<Node*, kRingSize> mRetired{};
   std::atomic<std::size_t> mRetiredRead{0};  // Producer/collector-owned index.
   std::atomic<std::size_t> mRetiredWrite{0}; // Audio-owned index.

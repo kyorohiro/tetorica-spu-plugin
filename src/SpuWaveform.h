@@ -20,5 +20,8 @@ void validatePcmCycle(const PcmCycle& pcm);
 // handle, RAM upload, interpolation, normalization or render work occurs here.
 // Throws std::invalid_argument for invalid PCM. Call away from audio callbacks.
 std::array<std::uint8_t,64> encodePcmCycle(const PcmCycle& pcm);
+// Web .spu.json may retain either the cyclic encoder or its earlier independent
+// first-packet history. Comparison never rewrites the authored ADPCM bytes.
+bool matchesPcmCycleAdpcm(const PcmCycle& pcm,const std::array<std::uint8_t,64>& adpcm);
 
 } // namespace tetorica

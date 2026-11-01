@@ -19,21 +19,38 @@ target_include_directories(tetorica_vab PUBLIC src)
 
 find_package(Threads REQUIRED)
 add_library(tetorica_spu_instrument STATIC
-  src/SpuInstrument.cpp src/SpuWaveform.cpp src/SpuMorph.cpp src/SpuEngineExchange.cpp src/VabLoader.cpp src/InstrumentState.cpp)
+  src/SpuInstrument.cpp src/SpuWaveform.cpp src/SpuMorph.cpp src/SpuAdpcm.cpp
+  src/SpuEngineExchange.cpp src/VabLoader.cpp src/InstrumentState.cpp
+  src/WebInstrument.cpp src/WebInstrumentLoader.cpp)
 target_include_directories(tetorica_spu_instrument PUBLIC src)
+target_include_directories(tetorica_spu_instrument SYSTEM PRIVATE
+  vendor/iPlug2OOS/iPlug2/Dependencies/Extras)
 target_link_libraries(tetorica_spu_instrument PUBLIC tetorica::ps1_spu tetorica_vab Threads::Threads)
 # Keep cyclic encoder scoring and Morph blending equivalent to the Web's
 # separate IEEE754 operations on supported toolchains.
 if(MSVC)
-  set_source_files_properties(src/SpuWaveform.cpp src/SpuMorph.cpp PROPERTIES COMPILE_OPTIONS "/fp:strict")
+  set_source_files_properties(src/SpuWaveform.cpp src/SpuMorph.cpp src/WebInstrument.cpp PROPERTIES COMPILE_OPTIONS "/fp:strict")
 elseif(CMAKE_CXX_COMPILER_ID MATCHES "GNU|Clang")
-  set_source_files_properties(src/SpuWaveform.cpp src/SpuMorph.cpp PROPERTIES COMPILE_OPTIONS "-ffp-contract=off")
+  set_source_files_properties(src/SpuWaveform.cpp src/SpuMorph.cpp src/WebInstrument.cpp PROPERTIES COMPILE_OPTIONS "-ffp-contract=off")
 endif()
 
 add_executable(spu_vab_render tools/spu-vab-render.cpp)
 target_link_libraries(spu_vab_render PRIVATE tetorica_spu_instrument)
 
 if(BUILD_TESTING)
+  add_executable(web_instrument_loader_test tests/web_instrument_loader_test.cpp)
+  target_link_libraries(web_instrument_loader_test PRIVATE tetorica_spu_instrument)
+  target_compile_definitions(web_instrument_loader_test PRIVATE WEB_FIXTURE_DIR="${CMAKE_CURRENT_SOURCE_DIR}/tests/fixtures/web")
+  add_test(NAME spu.web.loader COMMAND web_instrument_loader_test)
+  set_tests_properties(spu.web.loader PROPERTIES TIMEOUT 45)
+  add_executable(web_instrument_test tests/web_instrument_test.cpp)
+  target_link_libraries(web_instrument_test PRIVATE tetorica_spu_instrument)
+  target_include_directories(web_instrument_test SYSTEM PRIVATE vendor/iPlug2OOS/iPlug2/Dependencies/Extras)
+  target_compile_definitions(web_instrument_test PRIVATE WEB_FIXTURE_DIR="${CMAKE_CURRENT_SOURCE_DIR}/tests/fixtures/web")
+  add_test(NAME spu.web.instrument COMMAND web_instrument_test)
+  add_executable(spu_adpcm_test tests/spu_adpcm_test.cpp)
+  target_link_libraries(spu_adpcm_test PRIVATE tetorica_spu_instrument)
+  add_test(NAME spu.adpcm COMMAND spu_adpcm_test)
   add_executable(spu_morph_test tests/spu_morph_test.cpp)
   target_link_libraries(spu_morph_test PRIVATE tetorica_spu_instrument)
   target_compile_definitions(spu_morph_test PRIVATE VAB_FIXTURE_DIR="${CMAKE_CURRENT_SOURCE_DIR}/tests/fixtures/vab")
@@ -88,6 +105,7 @@ if(APPLE)
   target_link_libraries(tetorica_au_state_check PRIVATE tetorica_spu_instrument
     "-framework AudioToolbox" "-framework CoreFoundation" "-framework AudioUnit")
   target_compile_definitions(tetorica_au_state_check PRIVATE VAB_FIXTURE_DIR="${CMAKE_CURRENT_SOURCE_DIR}/tests/fixtures/vab")
+  target_compile_definitions(tetorica_au_state_check PRIVATE WEB_FIXTURE_DIR="${CMAKE_CURRENT_SOURCE_DIR}/tests/fixtures/web")
 endif()
 
 if(APPLE OR WIN32)

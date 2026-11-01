@@ -15,8 +15,10 @@ jobs:
       - uses: actions/checkout@v4
       - name: Verify safe AU installer in temporary directories
         run: python3 -m unittest discover -s tests -p 'test_install_au.py' -v
-      - name: Initialize pinned native SDK
-        run: git submodule update --init vendor/tetorica-soundchip-native
+      - name: Initialize pinned native SDK and JSON header
+        run: |
+          git submodule update --init vendor/tetorica-soundchip-native vendor/iPlug2OOS
+          git -C vendor/iPlug2OOS submodule update --init --depth 1 iPlug2
       - run: cmake --preset offline
       - run: cmake --build --preset offline --parallel 4
       - run: ctest --preset offline

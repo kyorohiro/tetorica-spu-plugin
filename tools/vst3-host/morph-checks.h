@@ -138,7 +138,7 @@ template<class Factory> void checkMorph(Factory make,double rate,const char* hos
     auto bad=wire;envelope_detail::word(bad,field+448+111*4,bits);invalid.push_back(bad);
   }
   auto bad=wire;bad.pop_back();invalid.push_back(bad);
-  bad=wire;envelope_detail::word(bad,8,8);invalid.push_back(bad);
+  bad=wire;envelope_detail::word(bad,8,kStateSchemaVersion+1);invalid.push_back(bad);
   for(const auto& bytes:invalid)requireMorph(!state->tryStateRestoreForTest(bytes)&&state->stateBodyForTest()==wire,
     "Malformed Morph state changed pending source/endpoints/parameters");
   reverb_detail::exact(*state,*reference,events,"Malformed Morph state changed the first restored note");

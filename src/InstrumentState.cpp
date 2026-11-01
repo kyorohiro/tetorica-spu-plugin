@@ -74,11 +74,48 @@ void putGain(std::uint8_t* bytes,double value) {
   std::uint64_t bits;std::memcpy(&bits,&value,sizeof bits);
   for(unsigned i=0;i<8;++i)bytes[i]=static_cast<std::uint8_t>(bits>>(i*8));
 }
+constexpr std::size_t kRawHeaderBytes=64;
+std::size_t rawPayloadSize(const RawAdpcmSample& sample){
+  validateRawAdpcmSample(sample);
+  return kRawHeaderBytes+sample.adpcm.size()+sample.name.size()+(sample.waveform?448:0);
+}
+void putRaw(std::uint8_t* out,const RawAdpcmSample& sample){
+  putWord(out,1);putWord(out+4,(sample.loopStartSamples?1u:0u)|(sample.reverb?2u:0u)|(sample.waveform?4u:0u));
+  putWord(out+8,static_cast<std::uint32_t>(sample.adpcm.size()));putWord(out+12,static_cast<std::uint32_t>(sample.name.size()));
+  putGain(out+16,sample.baseFrequencyHz);putGain(out+24,sample.volumeLeft);putGain(out+32,sample.volumeRight);
+  putWord(out+40,sample.loopStartSamples.value_or(0));putWord(out+44,std::uint32_t(sample.envelope.adsr1)|(std::uint32_t(sample.envelope.adsr2)<<16));
+  putWord(out+48,sample.inspectorPitch);putWord(out+52,0);putWord(out+56,0);putWord(out+60,0);
+  std::copy(sample.adpcm.begin(),sample.adpcm.end(),out+kRawHeaderBytes);
+  std::copy(sample.name.begin(),sample.name.end(),out+kRawHeaderBytes+sample.adpcm.size());
+  if(sample.waveform)for(unsigned i=0;i<112;++i)putSample(out+kRawHeaderBytes+sample.adpcm.size()+sample.name.size()+i*4,(*sample.waveform)[i]);
+}
+RawAdpcmSample readRaw(vab::BytesView bytes){
+  if(bytes.size<kRawHeaderBytes||word(bytes.data)!=1)fail("SPU state: invalid raw source version/header");
+  const auto flags=word(bytes.data+4),count=word(bytes.data+8),nameBytes=word(bytes.data+12);
+  const auto loop=word(bytes.data+40),packed=word(bytes.data+44),pitch=word(bytes.data+48);
+  if(flags&~7u||word(bytes.data+52)||word(bytes.data+56)||word(bytes.data+60)||
+      !count||count%16||count>vab::kMaxSampleBytes||nameBytes>kMaxRawAdpcmNameBytes||pitch>0x3fff||
+      (!(flags&1)&&loop)||std::uint64_t(kRawHeaderBytes)+count+nameBytes+((flags&4)?448:0)!=bytes.size)
+    fail("SPU state: invalid raw source flags, lengths or metadata");
+  RawAdpcmSample sample;sample.baseFrequencyHz=readGain(bytes.data+16);
+  sample.volumeLeft=readGain(bytes.data+24);sample.volumeRight=readGain(bytes.data+32);
+  if(!std::isfinite(sample.baseFrequencyHz)||sample.baseFrequencyHz<=0||
+      !std::isfinite(sample.volumeLeft)||sample.volumeLeft< -1||sample.volumeLeft>1||
+      !std::isfinite(sample.volumeRight)||sample.volumeRight< -1||sample.volumeRight>1)
+    fail("SPU state: invalid raw source tuning/volume");
+  if(flags&1)sample.loopStartSamples=loop;sample.reverb=(flags&2)!=0;
+  sample.envelope={static_cast<std::uint16_t>(packed),static_cast<std::uint16_t>(packed>>16)};
+  sample.inspectorPitch=static_cast<std::uint16_t>(pitch);
+  sample.name.assign(reinterpret_cast<const char*>(bytes.data+kRawHeaderBytes+count),nameBytes);
+  if(flags&4){PcmCycle cycle{};for(unsigned i=0;i<112;++i)cycle[i]=readSample(bytes.data+kRawHeaderBytes+count+nameBytes+i*4);sample.waveform=cycle;}
+  sample.adpcm.assign(bytes.data+kRawHeaderBytes,bytes.data+kRawHeaderBytes+count);
+  validateRawAdpcmSample(sample);return sample;
+}
 }
 
 InstrumentDefinition::InstrumentDefinition(Kind kind,std::vector<std::uint8_t> bank,
-                                           std::uint32_t program,std::uint32_t tone,PcmCycle cycle,MorphEndpoints endpoints)
-  :mKind(kind),mBank(std::move(bank)),mProgram(program),mTone(tone),mPcmCycle(cycle),mMorphEndpoints(endpoints) {}
+                                           std::uint32_t program,std::uint32_t tone,PcmCycle cycle,MorphEndpoints endpoints,RawAdpcmSample raw)
+  :mKind(kind),mBank(std::move(bank)),mProgram(program),mTone(tone),mPcmCycle(cycle),mMorphEndpoints(endpoints),mRawAdpcm(std::move(raw)) {}
 
 std::shared_ptr<const InstrumentDefinition> InstrumentDefinition::builtin() {
   static const std::shared_ptr<const InstrumentDefinition> definition(
@@ -114,6 +151,10 @@ std::shared_ptr<const InstrumentDefinition> InstrumentDefinition::fromPcmCycle(c
   validatePcmCycle(cycle);
   return std::shared_ptr<const InstrumentDefinition>(new InstrumentDefinition(Kind::PcmCycle,{},0,0,cycle));
 }
+std::shared_ptr<const InstrumentDefinition> InstrumentDefinition::fromAdpcmSample(const RawAdpcmSample& sample) {
+  validateRawAdpcmSample(sample);
+  return std::shared_ptr<const InstrumentDefinition>(new InstrumentDefinition(Kind::AdpcmSample,{},0,0,{}, {},sample));
+}
 std::shared_ptr<const InstrumentDefinition> InstrumentDefinition::withMorphEndpoints(
     const std::shared_ptr<const InstrumentDefinition>& source,const MorphEndpoints& endpoints) {
   if(!source)throw std::invalid_argument("SPU state: missing Morph source definition");
@@ -123,7 +164,7 @@ std::shared_ptr<const InstrumentDefinition> InstrumentDefinition::withMorphEndpo
   if(!std::memcmp(source->morphEndpoints().a.data(),endpoints.a.data(),sizeof(float)*endpoints.a.size())&&
      !std::memcmp(source->morphEndpoints().b.data(),endpoints.b.data(),sizeof(float)*endpoints.b.size()))return source;
   return std::shared_ptr<const InstrumentDefinition>(new InstrumentDefinition(source->kind(),
-    source->bankBytes(),source->program(),source->tone(),source->pcmCycle(),endpoints));
+    source->bankBytes(),source->program(),source->tone(),source->pcmCycle(),endpoints,source->rawAdpcmSample()));
 }
 
 std::vector<std::uint8_t> encodeState(const InstrumentDefinition& definition,double gainPercent,
@@ -137,7 +178,8 @@ std::vector<std::uint8_t> encodeState(const InstrumentDefinition& definition,dou
   const auto& bank=definition.bankBytes();
   if(bank.size()>vab::kMaxFileBytes)fail("SPU state: VAB exceeds 1 MiB");
   const bool pcm=definition.kind()==InstrumentDefinition::Kind::PcmCycle;
-  const auto size=pcm?definition.pcmCycle().size()*4:bank.size();
+  const bool raw=definition.kind()==InstrumentDefinition::Kind::AdpcmSample;
+  const auto size=raw?rawPayloadSize(definition.rawAdpcmSample()):pcm?definition.pcmCycle().size()*4:bank.size();
   std::vector<std::uint8_t> bytes(kStateFixedBytes+size);
   std::copy(kStateMagic.begin(),kStateMagic.end(),bytes.begin());
   putWord(bytes.data()+8,kStateSchemaVersion);
@@ -145,7 +187,8 @@ std::vector<std::uint8_t> encodeState(const InstrumentDefinition& definition,dou
   putWord(bytes.data()+16,static_cast<std::uint32_t>(definition.kind()));
   putWord(bytes.data()+20,definition.program());putWord(bytes.data()+24,definition.tone());
   putWord(bytes.data()+28,static_cast<std::uint32_t>(size));
-  if(pcm)for(std::size_t i=0;i<definition.pcmCycle().size();++i)
+  if(raw)putRaw(bytes.data()+kStateHeaderBytes,definition.rawAdpcmSample());
+  else if(pcm)for(std::size_t i=0;i<definition.pcmCycle().size();++i)
     putSample(bytes.data()+kStateHeaderBytes+i*4,definition.pcmCycle()[i]);
   else std::copy(bank.begin(),bank.end(),bytes.begin()+kStateHeaderBytes);
   putGain(bytes.data()+kStateHeaderBytes+size,gainPercent);
@@ -190,10 +233,11 @@ SavedInstrumentState decodeState(vab::BytesView bytes) {
   const auto kind=word(bytes.data+16),program=word(bytes.data+20),tone=word(bytes.data+24),n=word(bytes.data+28);
   const auto fixed=version==1?40:version==2?48:version<=4?72:version==5?80:version==6?112:kStateFixedBytes;
   if(n>vab::kMaxFileBytes||std::uint64_t(n)+fixed!=bytes.size)fail("SPU state: invalid bank length");
-  if(kind>(version>=4?2u:1u))fail("SPU state: unsupported instrument kind");
+  if(kind>(version>=8?3u:version>=4?2u:1u))fail("SPU state: unsupported instrument kind");
   if(kind==0&&(n||program||tone))fail("SPU state: builtin must not contain a bank or selection");
   if(kind==1&&(!n||program>127||tone>15))fail("SPU state: invalid VAB selection");
   if(kind==2&&(n!=sizeof(float)*PcmCycle{}.size()||program||tone))fail("SPU state: invalid PCM cycle length or selection");
+  if(kind==3&&(n<kRawHeaderBytes||program||tone))fail("SPU state: invalid raw source length or selection");
   const auto gainPercent=readGain(bytes.data+32+n);gain(gainPercent);
   EnvelopeSettings settings;
   if(version>=2) {
@@ -244,6 +288,7 @@ SavedInstrumentState decodeState(vab::BytesView bytes) {
     for(std::size_t i=0;i<cycle.size();++i)cycle[i]=readSample(bytes.data+kStateHeaderBytes+i*4);
     return {InstrumentDefinition::withMorphEndpoints(InstrumentDefinition::fromPcmCycle(cycle),endpoints),gainPercent,settings,effects,generator,modulation,blend};
   }
+  if(kind==3)return {InstrumentDefinition::withMorphEndpoints(InstrumentDefinition::fromAdpcmSample(readRaw({bytes.data+kStateHeaderBytes,n})),endpoints),gainPercent,settings,effects,generator,modulation,blend};
   std::vector<std::uint8_t> bank(bytes.data+kStateHeaderBytes,bytes.data+kStateHeaderBytes+n);
   return {InstrumentDefinition::withMorphEndpoints(InstrumentDefinition::fromVab(std::move(bank),program,tone),endpoints),gainPercent,settings,effects,generator,modulation,blend};
 }

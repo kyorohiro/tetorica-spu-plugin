@@ -9,6 +9,7 @@
 #include "SpuNoise.h"
 #include "SpuPmon.h"
 #include "SpuMorph.h"
+#include "SpuAdpcm.h"
 #include <array>
 #include <cstddef>
 #include <cstdint>
@@ -19,7 +20,7 @@ namespace tetorica {
 
 inline constexpr std::size_t kStateHeaderBytes=32;
 inline constexpr std::array<std::uint8_t,8> kStateMagic{{'T','S','P','U','S','T','0','1'}};
-inline constexpr std::uint32_t kStateSchemaVersion=7;
+inline constexpr std::uint32_t kStateSchemaVersion=8;
 inline constexpr std::size_t kStateFixedBytes=1024;
 inline constexpr std::size_t kMaxStateBytes=vab::kMaxFileBytes+kStateFixedBytes;
 
@@ -27,13 +28,14 @@ inline constexpr std::size_t kMaxStateBytes=vab::kMaxFileBytes+kStateFixedBytes;
 // Full bank bytes are owned so saved projects never require the original path.
 class InstrumentDefinition final {
 public:
-  enum class Kind : std::uint32_t { Builtin=0,Vab=1,PcmCycle=2 };
+  enum class Kind : std::uint32_t { Builtin=0,Vab=1,PcmCycle=2,AdpcmSample=3 };
   static std::shared_ptr<const InstrumentDefinition> builtin();
   static std::shared_ptr<const InstrumentDefinition> fromVab(
       std::vector<std::uint8_t> bytes,std::uint32_t sparseProgram,std::uint32_t toneIndex);
   static std::shared_ptr<const InstrumentDefinition> fromVabFlatIndex(
       std::vector<std::uint8_t> bytes,std::size_t flatIndex);
   static std::shared_ptr<const InstrumentDefinition> fromPcmCycle(const PcmCycle& cycle);
+  static std::shared_ptr<const InstrumentDefinition> fromAdpcmSample(const RawAdpcmSample& sample);
   static std::shared_ptr<const InstrumentDefinition> withMorphEndpoints(
       const std::shared_ptr<const InstrumentDefinition>& source,const MorphEndpoints& endpoints);
 
@@ -49,15 +51,17 @@ public:
   // Valid authoring data for Kind::PcmCycle; zero-initialized for other kinds.
   const PcmCycle& pcmCycle() const noexcept { return mPcmCycle; }
   const MorphEndpoints& morphEndpoints() const noexcept { return mMorphEndpoints; }
+  const RawAdpcmSample& rawAdpcmSample() const noexcept { return mRawAdpcm; }
 
 private:
   InstrumentDefinition(Kind kind,std::vector<std::uint8_t> bank,
-                       std::uint32_t program,std::uint32_t tone,PcmCycle cycle={},MorphEndpoints endpoints={});
+                       std::uint32_t program,std::uint32_t tone,PcmCycle cycle={},MorphEndpoints endpoints={},RawAdpcmSample raw={});
   const Kind mKind;
   const std::vector<std::uint8_t> mBank;
   const std::uint32_t mProgram,mTone;
   const PcmCycle mPcmCycle;
   const MorphEndpoints mMorphEndpoints;
+  const RawAdpcmSample mRawAdpcm;
 };
 
 struct SavedInstrumentState {

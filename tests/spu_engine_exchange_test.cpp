@@ -670,6 +670,100 @@ void workerMorphEndpoints(const std::vector<std::uint8_t>& bytes) {
   }
 }
 
+void importedParameterPublication(const std::vector<std::uint8_t>&) {
+  using Definition=tetorica::InstrumentDefinition;
+  using State=tetorica::SavedInstrumentState;
+  const auto encoded=[](const State& s) {
+    return tetorica::encodeState(s.definition,s.gainPercent,s.envelope,s.reverb,s.noise,s.pmon,s.morph);
+  };
+  State first;
+  first.definition=Definition::fromPcmCycle(tetorica::makePcmCycle(tetorica::WaveformShape::Triangle));
+  first.gainPercent=37;first.envelope={{0xa937,0xd7bb},false,false};
+  first.reverb={tetorica::ReverbPreset::Room,false,true,.375,.625};
+  first.noise={false,37};first.pmon={true,tetorica::WaveformShape::Saw,2.5,.375,1250};
+  first.morph={true,.375};
+  auto second=first;second.gainPercent=19;second.morph.amount=.75;
+  second.definition=Definition::fromPcmCycle(tetorica::makePcmCycle(tetorica::WaveformShape::Square));
+  const auto firstBytes=encoded(first),secondBytes=encoded(second);
+  Exchange exchange;
+  CHECK(!exchange.adoptedImportState());
+  const auto initial=exchange.snapshotAuthoring();
+  CHECK(initial.generation==0&&initial.definition->kind()==Definition::Kind::Builtin&&!initial.importedState);
+  const auto* original=&exchange.instrument();
+  {RtProbe probe;exchange.instrument().noteOn(60,127);}
+  const auto generation=exchange.commitPreparedImport(tetorica::prepareDefinition(*first.definition),first);
+  const auto pending=exchange.snapshotAuthoring();
+  CHECK(pending.generation==generation&&pending.definition==first.definition&&pending.importedState);
+  CHECK(encoded(*pending.importedState)==firstBytes);
+  CHECK(&exchange.instrument()==original&&exchange.instrument().activeVoiceCount()==1&&!exchange.adoptedImportState());
+  // Invalid commits cannot cancel the already prepared first import.
+  bool rejected=false;
+  try{exchange.commitPreparedImport(nullptr,second);}catch(const std::invalid_argument&){rejected=true;}
+  CHECK(rejected&&exchange.latestGeneration()==generation);
+  auto missing=second;missing.definition.reset();rejected=false;
+  try{exchange.commitPreparedImport(tetorica::prepareDefinition(*second.definition),missing);}catch(const std::invalid_argument&){rejected=true;}
+  CHECK(rejected&&exchange.latestGeneration()==generation&&encoded(*exchange.snapshotAuthoring().importedState)==firstBytes);
+  for(unsigned field=0;field<6;++field) {
+    auto invalid=second;
+    if(field==0)invalid.gainPercent=std::numeric_limits<double>::quiet_NaN();
+    if(field==1)invalid.pmon.depth=std::numeric_limits<double>::quiet_NaN();
+    if(field==2)invalid.reverb.volumeLeft=std::numeric_limits<double>::quiet_NaN();
+    if(field==3)invalid.morph.amount=std::numeric_limits<double>::infinity();
+    if(field==4)invalid.noise.clock=64;
+    if(field==5)invalid.envelope.custom.adsr2|=0x2000;
+    rejected=false;
+    try{exchange.commitPreparedImport(tetorica::prepareDefinition(*second.definition),invalid);}
+    catch(const std::exception&){rejected=true;}
+    CHECK(rejected&&exchange.latestGeneration()==generation&&&exchange.instrument()==original);
+    CHECK(exchange.instrument().activeVoiceCount()==1&&encoded(*exchange.snapshotAuthoring().importedState)==firstBytes);
+  }
+  {
+    RtProbe probe;CHECK(exchange.beginBlock(96000));
+    const auto* adopted=exchange.adoptedImportState();
+    CHECK(adopted&&adopted->definition==first.definition&&adopted->gainPercent==37);
+    CHECK(adopted->envelope.custom.adsr1==0xa937&&adopted->envelope.custom.adsr2==0xd7bb);
+    CHECK(adopted->reverb.volumeLeft==.375&&adopted->reverb.volumeRight==.625&&adopted->reverb.useToneSend);
+    CHECK(adopted->noise.clock==37&&adopted->pmon.ratio==2.5&&adopted->pmon.depth==.375&&adopted->pmon.decayMs==1250);
+    CHECK(adopted->morph.enabled&&adopted->morph.amount==.375);
+    CHECK(exchange.instrument().activeVoiceCount()==0&&exchange.instrument().sampleRate()==96000);
+    CHECK(!exchange.beginBlock(96000)&&exchange.adoptedImportState()==adopted);
+  }
+  CHECK(encoded(*exchange.snapshotAuthoring().importedState)==firstBytes);
+
+  // A later import carries its own entire tuple, never the previous Gain or
+  // source. Both a pending snapshot and the first adopted block see that pair.
+  const auto replaced=exchange.commitPreparedImport(tetorica::prepareDefinition(*first.definition),first);
+  const auto latest=exchange.commitPreparedImport(tetorica::prepareDefinition(*second.definition),second);
+  CHECK(latest>replaced&&encoded(*exchange.snapshotAuthoring().importedState)==secondBytes);
+  {RtProbe probe;CHECK(exchange.beginBlock(48000));CHECK(exchange.adoptedImportState()->gainPercent==19);
+    CHECK(exchange.adoptedImportState()->definition==second.definition);}
+  // A rejected candidate falls back to the surviving imported active tuple.
+  exchange.commitPreparedImport(tetorica::prepareDefinition(*first.definition),first);
+  CHECK(!begin(exchange,-1));
+  const auto fallback=exchange.snapshotAuthoring();
+  CHECK(fallback.generation==latest&&encoded(*fallback.importedState)==secondBytes);
+
+  // Normal source publications and host-state commits remove import overrides
+  // in their authoring snapshot, but leave active borrowed state alive until
+  // the actual audio boundary. Every resulting Node is retired off audio.
+  const auto normal=exchange.beginRequest();
+  CHECK(exchange.publish(normal,tetorica::prepareDefinition(*first.definition),first.definition));
+  CHECK(!exchange.snapshotAuthoring().importedState&&exchange.adoptedImportState());
+  {RtProbe probe;CHECK(exchange.beginBlock(48000));CHECK(!exchange.adoptedImportState());}
+  exchange.commitPreparedImport(tetorica::prepareDefinition(*first.definition),first);CHECK(begin(exchange));
+  exchange.commitPrepared(tetorica::prepareDefinition(*second.definition),second.definition);
+  CHECK(!exchange.snapshotAuthoring().importedState);
+  {RtProbe probe;CHECK(exchange.beginBlock(48000));CHECK(!exchange.adoptedImportState());}
+  for(unsigned n=0;n<8;++n) {
+    auto state=n%2?first:second;
+    const auto next=exchange.commitPreparedImport(tetorica::prepareDefinition(*state.definition),state);
+    CHECK(exchange.snapshotAuthoring().generation==next);
+    {RtProbe probe;CHECK(exchange.beginBlock(48000));CHECK(exchange.adoptedImportState()->gainPercent==state.gainPercent);
+      Pcm out;exchange.instrument().noteOn(60,127);render(exchange.instrument(),out);}
+  }
+  exchange.collectRetired();
+}
+
 void concurrentPublication(const std::vector<std::uint8_t>& bytes) {
   Exchange exchange;const auto left=sideTone(bytes,false),right=sideTone(bytes,true);
   std::mutex mutex;std::condition_variable wake;int requested=0,completed=0;
@@ -752,6 +846,7 @@ int main() {
   run("PCM worker shapes/owned input/invalid pending/selection",workerPcmCycles,bytes);
   run("PCM latest request/host restore supersession",pcmCycleSupersession,bytes);
   run("Morph immutable endpoints/retained sources/latest/restore",workerMorphEndpoints,bytes);
+  run("atomic imported source/parameter snapshot and RT ownership",importedParameterPublication,bytes);
   run("concurrent producer/audio publication",concurrentPublication,bytes);
   run("pending/retired/in-flight shutdown ownership",shutdownOwnership,bytes);
   CHECK(liveCount()==0&&engineAllocations==engineFrees&&engineRtFrees==0);
