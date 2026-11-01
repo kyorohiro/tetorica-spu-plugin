@@ -136,7 +136,6 @@ template<class Factory> void checkWebInstruments(Factory make,double rate,const 
   {auto bad=valid;bad.at(96)=0xf0;invalid.push_back(std::move(bad));}
   {auto bad=valid;bad.at(96+cycle.adpcm.size()-15)=0;invalid.push_back(std::move(bad));}
   {auto bad=valid;bad.pop_back();invalid.push_back(std::move(bad));}
-  invalid.push_back(wire(fixture("v1-loop-flag4.spu.json").state));
   for(const auto& bad:invalid)
     requireWeb(!active->tryStateRestoreForTest(bad)&&active->stateBodyForTest()==valid,
       "Invalid Web raw state changed pending source or any of26 parameters");

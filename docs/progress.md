@@ -602,3 +602,10 @@
 - Standaloneで20MiB WAV・Root/Loop・Save Web v2の元PCM一致、実Web reader /Chromium/WebKitでsmall/20MiBの往復一致も確認。
 - [今回の操作記録](software_audio_20261101.md) / [machine record・current AU manifest](software_audio_20261101.json)。
 - **次:** 人のGarageBand Load sound直接操作・保存再起動・実聴/長時間/automation録音。AU内file panelへのAI入力は確認できず、最後の新しい検証copyはVABのまま、再生/録音停止・editor閉。Preview releaseはこれらの後に判断する。
+
+## 2026-11-01 JST — ADPCM loop-start互換性の実装チェックポイント
+
+- 開始TODO `b306c56` の後、SDK `95cf71a` へ固定。repeat先のflag2を必須にしていた制限を解除し、元ADPCM bytes・END /marker /metadata検証を保持した。
+- VAB /Rawのmarker4・markerless0（nonzero repeat/filter2）を、従来flag6/2のPCMと先頭〜loop後まで比較。beforeはflag0/4が無音、afterは同一PCMで継続しENDXも保持する。
+- offline/macOS/ASan+UBSan各24/24、実AU48k /VST3 44.1/48/96k full、公式validator47/0、Python18件成功。state9 /元bytes /Web保存 /Noise /PMON /Morph /長Software2banksを回帰検証。
+- SDK CI12検証成功。Plugin CIとknown-manifest付きinstalled AU更新、Web Synth /PlaygroundのWASM・配布source /ZIP整合検証は続行中。version/tag /release公開は行わない。

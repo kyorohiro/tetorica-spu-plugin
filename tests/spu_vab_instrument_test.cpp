@@ -172,21 +172,26 @@ float rawLoopTail(unsigned flag){
   ps1_spu_destroy(chip);return peak(out.left,512);
 }
 void loopFlagCompatibility(){
-  CHECK(rawLoopTail(4)==0);CHECK(rawLoopTail(6)>.01f);
-  auto flags=sine();flags.adpcm[1]=0;flags.adpcm[17]=4;flags.loopStartSamples=28;
-  const auto original=flags.adpcm;
-  rejects([&]{SpuInstrument s(flags);},"repeat flag 2");CHECK(flags.adpcm==original);
-  flags.adpcm[17]=6;SpuInstrument supported(flags);supported.noteOn(69,127);
-  Stereo out(8192);render(supported,out);CHECK(peak(out.left,4096)>.005f);
-  auto markerless=sine();markerless.adpcm[1]=0;
-  rejects([&]{SpuInstrument s(markerless);},"repeat flag 2");
-  markerless.adpcm[1]=2;SpuInstrument fallback(markerless);fallback.noteOn(69,127);
-  render(fallback,out);CHECK(peak(out.left,4096)>.02f);
+  CHECK(rawLoopTail(0)==rawLoopTail(2)&&rawLoopTail(0)>.01f);
+  CHECK(rawLoopTail(4)==rawLoopTail(6)&&rawLoopTail(4)>.01f);
+  for(const unsigned flags:{0u,4u})for(const unsigned loopBlock:{0u,1u}) {
+    auto tone=sine(4,loopBlock);tone.adpcm[loopBlock*16+1]=flags;
+    const auto original=tone.adpcm;auto canonical=tone;canonical.adpcm[loopBlock*16+1]=flags|2;
+    SpuInstrument a(tone),b(canonical);CHECK(tone.adpcm==original);
+    for(double rate:{44100.,48000.,96000.}){
+      CHECK(a.prepare(rate)&&b.prepare(rate));a.noteOn(69,127);b.noteOn(69,127);
+      Stereo actual(8193),expected(8193);render(a,actual);render(b,expected,7);
+      CHECK(actual.left==expected.left&&actual.right==expected.right&&peak(actual.left,4096)>.005f);
+      a.panic();b.panic();
+    }
+  }
 }
 void longSampleAndCallbackAllocations(){
   auto longTone=sine(4096,4092); //65536bytes,2.60s; END lies beyond old1024frameprime.
+  longTone.adpcm[4092*16+1]=4;
   const auto original=longTone.adpcm;
-  SpuInstrument synth(longTone),reference(longTone);
+  auto flag6=longTone;flag6.adpcm[4092*16+1]=6;
+  SpuInstrument synth(longTone),reference(flag6);
   CHECK(longTone.adpcm==original);
   CHECK(synth.prepare(48000)&&reference.prepare(48000));
   Stereo a(160013),b(160013);
@@ -222,5 +227,5 @@ void longSampleAndCallbackAllocations(){
 int main(){
   defaultByteIdentity();demoBank();metadataAndIsolation();validation();
   loopFlagCompatibility();longSampleAndCallbackAllocations();
-  std::puts("PASS: VAB Tone/native PCM, tuning, ADSR, pan, one-shot/long-loop, isolation, bounds, full RAM; zero callback C++ new/delete after long cache prime; pinned SDK repeat-flag limit explicitly rejected");
+  std::puts("PASS: VAB Tone/native PCM, tuning, ADSR, pan, one-shot/long-loop, isolation, bounds, full RAM; flag4/markerless0 repeat PCM exact to flag6/2; original bytes; zero callback C++ new/delete after long cache prime");
 }

@@ -36,7 +36,7 @@ int main() {
     auto pending=exchange.commitPrepared(prepareDefinition(*original),original);
     WebInstrumentLoader loader;
     const auto text=fixture("v1-arbitrary.spu.json");
-    for(const auto& invalid:{std::string("{broken"),fixture("v1-loop-flag4.spu.json")}) {
+    for(const auto& invalid:{std::string("{broken"),std::string("{}")}) {
       const auto ticket=loader.requestText(invalid);
       const auto status=finished(loader,ticket);
       check(status.state==WebInstrumentLoader::State::Failed&&!status.error.empty(),"invalid import accepted");
@@ -44,6 +44,17 @@ int main() {
       check(exchange.latestGeneration()==pending&&exchange.snapshotDefinition()==original,"failed import cancelled pending");
     }
     check(exchange.beginBlock(48000),"valid pending after failures not adopted");
+    const auto loopText=fixture("v1-loop-flag4.spu.json");
+    auto loopTicket=loader.requestText(loopText);
+    check(finished(loader,loopTicket).state==WebInstrumentLoader::State::Ready,"flag4 loop preparation failed");
+    auto loop=loader.takeReady(loopTicket);
+    const auto expectedLoop=readWebInstrument(loopText);
+    check(loop&&sameRawAdpcmSample(loop->imported.state.definition->rawAdpcmSample(),
+      expectedLoop.state.definition->rawAdpcmSample()),"Web flag4 source bytes changed during preparation");
+    loop->engine->noteOn(60,127);std::vector<float> loopLeft(8192),loopRight(8192);
+    loop->engine->render(loopLeft.data(),loopRight.data(),loopLeft.size());
+    check(loop->engine->healthy(),"Web flag4 loop rendering failed");
+    check(exchange.latestGeneration()==pending,"staging flag4 loop modified exchange");
     auto ticket=loader.requestText(text);
     check(finished(loader,ticket).state==WebInstrumentLoader::State::Ready,"valid import preparation failed");
     check(exchange.latestGeneration()==pending&&exchange.snapshotDefinition()==original,"staging mutated exchange");

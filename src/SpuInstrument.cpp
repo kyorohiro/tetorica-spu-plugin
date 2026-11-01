@@ -135,11 +135,6 @@ void validateTone(const vab::PreparedTone& tone) {
   const bool loop=(bytes[bytes.size()-15]&2)!=0;
   if (loop!=tone.loopStartSamples.has_value() || (marker && marker!=tone.loopStartSamples))
     throw std::invalid_argument("VAB Tone: incoherent repeat metadata");
-  // The pinned SDK's repeat-address fallback requires flag2 on that packet.
-  // A flag4-only loop start is structurally valid in the JS importer, but its
-  // native playback stops at END. Reject that subset, never rewrite its bytes.
-  if (loop && !(bytes[(*tone.loopStartSamples/28)*16+1]&2))
-    throw std::invalid_argument("VAB Tone: pinned SPU SDK requires repeat flag 2 at the loop start (flag 4 alone is unsupported)");
 }
 }
 

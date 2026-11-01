@@ -292,10 +292,10 @@ Imported reverb send is retained; shared Reverb starts Off and can be edited in 
 
 This is selected-Tone audition, not song playback or automatic key-zone/layer
 reconstruction. Sample 0 (unassigned), sample 255 (Noise), malformed ADPCM and
-selected payloads beyond usable SPU RAM are rejected. The pinned Native SDK
-also requires the repeat-address packet to carry flag 2; structurally valid
-loops without it, including flag 4 alone, are rejected for playback. No sample
-flags are silently rewritten. See [TODO](docs/issues/TODO.md) for remaining work.
+selected payloads beyond usable SPU RAM are rejected. Loop playback follows the END packet's Repeat flag and the original loop-start
+marker or explicit repeat address. A loop-start packet does not need Repeat
+flag 2. Original ADPCM flags and bytes are preserved. See
+[TODO](docs/issues/TODO.md) for remaining work.
 
 ## VAB in the plugin editor
 
@@ -336,8 +336,7 @@ settings together at an audio-block boundary, stopping previous notes and tails.
 Invalid files preserve the current sound and valid pending work. Closing the
 editor or restoring a project cancels unfinished import preparation.
 
-Version 1 remains bounded to 8 MiB JSON and 520192 ADPCM bytes, including the
-existing Native repeat-packet flag restriction. Version 2 reads mono PCM16LE
+Version 1 remains bounded to 8 MiB JSON and 520192 ADPCM bytes, and retains original packet flags. Version 2 reads mono PCM16LE
 base64, tuning and one-shot / whole-sample loop, up to 32 MiB decoded PCM and
 48 MiB JSON. This is a bounded subset of the Web format: larger Web recordings
 are rejected. PSF extraction remains follow-up work. Web export is available below.

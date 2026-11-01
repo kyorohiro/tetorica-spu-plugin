@@ -57,6 +57,22 @@ def change(payload, offset, value, fmt='<I'):
 
 
 class GarageBandStateTests(unittest.TestCase):
+    def test_raw_repeat_target_without_repeat_bit_is_supported(self):
+        for packet_flags in (0, 4):
+            with self.subTest(repeat_target_flags=packet_flags):
+                adpcm = bytearray(48)
+                for offset in (0, 16, 32):
+                    adpcm[offset] = 12
+                adpcm[17], adpcm[33] = packet_flags, 3
+                header = bytearray(source_header(48, b'Raw', flags=1))
+                struct.pack_into('<I', header, 40, 28)
+                payload = state(kind=3, source=bytes(header) + adpcm + b'Raw')
+                fields, _ = INSPECT.decode_payload(payload)
+                sample = fields['adpcm_sample']
+                self.assertTrue(sample['native_loop_supported'])
+                self.assertEqual(sample['loop_start_samples'], 28)
+                self.assertEqual(sample['adpcm_sha256'], hashlib.sha256(adpcm).hexdigest())
+
     def test_schema9_all_five_kinds_and_old_schema_migration(self):
         raw = source_header(16, b'Raw') + b'\0\1' + bytes(14) + b'Raw'
         cases = [(0, b'', 'Builtin'), (1, b'pBAVfixture', 'VAB'),

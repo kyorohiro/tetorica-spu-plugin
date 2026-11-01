@@ -359,9 +359,9 @@ void loaderSuccessFailureAndLatest(const std::vector<std::uint8_t>& bytes) {
   CHECK(!waitStatus(loader,invalidSelection,Loader::State::Failed).error.empty());
   CHECK(!begin(exchange)&&&exchange.instrument()==imported);
   matchContinuation(exchange,importedReference);
-  auto flag4=bytes;flag4[3616+16+1]&=static_cast<std::uint8_t>(~4);flag4[3616+16+17]|=4;
-  const auto unsupportedLoop=loader.request(flag4,0);
-  CHECK(!waitStatus(loader,unsupportedLoop,Loader::State::Failed).error.empty());
+  auto duplicateMarkers=bytes;duplicateMarkers[3616+16+17]|=4; // Retain original first marker too.
+  const auto invalidLoop=loader.request(duplicateMarkers,0);
+  CHECK(!waitStatus(loader,invalidLoop,Loader::State::Failed).error.empty());
   CHECK(!begin(exchange)&&&exchange.instrument()==imported);
   matchContinuation(exchange,importedReference);
   const auto oversized=loader.request(std::vector<std::uint8_t>(tetorica::vab::kMaxFileBytes+1),0);
@@ -461,13 +461,14 @@ void workerFilesAndSelections(const std::vector<std::uint8_t>& bytes) {
   CHECK(waitStatus(loader,gen,Loader::State::Failed).error.find("No playable Tone")!=std::string::npos);
   CHECK(!begin(exchange)&&exchange.snapshotDefinition()==playable);
   auto flag4=bytes;flag4[3616+16+1]=4;
-  gen=loader.requestFile(files.write("unsupported-loop-first.vab",flag4));
+  gen=loader.requestFile(files.write("flag4-loop-first.vab",flag4));
   waitStatus(loader,gen,Loader::State::Ready);CHECK(begin(exchange));
-  CHECK(exchange.snapshotDefinition()->program()==11&&exchange.snapshotDefinition()->tone()==0);
-  Engine oneShot(tone(flag4,2));CHECK(oneShot.prepare(48000));Pcm actual,expected;float firstPeak=0;
-  {RtProbe probe;exchange.instrument().noteOn(69,127);oneShot.noteOn(69,127);
-   for(int i=0;i<8;++i){render(exchange.instrument(),actual);render(oneShot,expected);same(actual,expected);firstPeak=std::max(firstPeak,peak(actual.left));}}
-  CHECK(firstPeak>0&&peak(actual.left)==0);
+  CHECK(exchange.snapshotDefinition()->program()==3&&exchange.snapshotDefinition()->tone()==0);
+  CHECK(exchange.snapshotDefinition()->bankBytes()==flag4);
+  Engine loop(tone(flag4,0));CHECK(loop.prepare(48000));Pcm actual,expected;float firstPeak=0;
+  {RtProbe probe;exchange.instrument().noteOn(69,127);loop.noteOn(69,127);
+   for(int i=0;i<8;++i){render(exchange.instrument(),actual);render(loop,expected);same(actual,expected);firstPeak=std::max(firstPeak,peak(actual.left));}}
+  CHECK(firstPeak>0&&peak(actual.left)>0);
 
   auto programBytes=bytes;programBytes[0x820+22]=255;programBytes[0x840+22]=2;
   auto programSource=tetorica::InstrumentDefinition::fromVab(programBytes,11,0);

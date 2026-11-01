@@ -93,8 +93,8 @@ SavedInstrumentState decodeState(vab::BytesView bytes);
 
 class SpuInstrument;
 // Non-RT synchronous preparation, implemented with the exchange/native layer,
-// deliberately not in InstrumentState.cpp. Native unsupported-loop checks run
-// here after the pure codec's structural/selected ADPCM validation succeeds.
+// deliberately not in InstrumentState.cpp. Native preparation runs here after
+// the pure codec's structural/selected ADPCM validation succeeds.
 std::unique_ptr<SpuInstrument> prepareDefinition(const InstrumentDefinition& definition);
 
 } // namespace tetorica

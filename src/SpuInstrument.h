@@ -31,7 +31,7 @@ public:
 
   SpuInstrument();
   // Prepare a validated immutable VAB Tone away from the audio thread. Throws
-  // on invalid metadata or SDK-unsupported repeat flags; retains original bytes.
+  // on invalid metadata; retains original packet flags and sample bytes.
   // Imported reverb send is retained, with shared reverb still Off initially.
   explicit SpuInstrument(const vab::PreparedTone& tone);
   // Encode and prime a112-point periodic PCM cycle away from audio. The four

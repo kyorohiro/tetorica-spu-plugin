@@ -379,8 +379,10 @@ void rawSources(){
   }
   SpuEngineExchange exchange;const auto generation=exchange.commitPrepared(prepareDefinition(*def),def);
   CHECK(exchange.beginBlock(48000)&&exchange.adoptedGeneration()==generation);Stereo out(8192);exchange.instrument().noteOn(69,127);render(exchange.instrument(),out);CHECK(peak(out)>.005f);
-  auto unsupported=original;unsupported.waveform.reset();unsupported.adpcm[1]=0;unsupported.adpcm[17]=4;unsupported.loopStartSamples=28;
-  const auto badDef=Def::fromAdpcmSample(unsupported);const auto oldGeneration=exchange.latestGeneration();rejects([&]{prepareDefinition(*badDef);});
+  auto flag4=original;flag4.waveform.reset();flag4.adpcm[1]=0;flag4.adpcm[17]=4;flag4.loopStartSamples=28;
+  const auto loopDef=Def::fromAdpcmSample(flag4);const auto oldGeneration=exchange.latestGeneration();
+  auto preparedLoop=prepareDefinition(*loopDef);CHECK(preparedLoop->healthy());
+  const auto loopWire=encodeState(loopDef,37);CHECK(sameRawAdpcmSample(flag4,decode(loopWire).definition->rawAdpcmSample()));
   CHECK(exchange.latestGeneration()==oldGeneration&&exchange.snapshotDefinition()==def);
   auto maximum=original;maximum.waveform.reset();maximum.adpcm.resize(vab::kMaxSampleBytes,0);maximum.adpcm[49]=0;maximum.adpcm[maximum.adpcm.size()-15]=3;maximum.name=std::string(kMaxRawAdpcmNameBytes,'x');
   const auto maxDef=Def::fromAdpcmSample(maximum);const auto maxWire=encodeState(maxDef,100);CHECK(maxWire.size()<kMaxStateBytes&&sameRawAdpcmSample(maximum,decode(maxWire).definition->rawAdpcmSample()));
@@ -430,13 +432,16 @@ void snapshotsAndAtomicFailure(){
   CHECK(exchange.snapshotDefinition()==fine);
   CHECK(!exchange.beginBlock(std::numeric_limits<double>::quiet_NaN()));
   CHECK(exchange.snapshotDefinition()==plain); //Rejectedhostrate cannot persist the candidate.
-  //Native-specific unsupported flag pattern passes pure codec but fails full
-  //preparation; because no commit happened it cannot cancel an existing load.
-  auto invalidBytes=fixture();invalidBytes[0xe20+17]=4;
-  auto unsupported=Def::fromVab(std::move(invalidBytes),3,0);
+  //A genuinely malformed duplicate marker must not cancel an already prepared
+  //load. A flag4-only repeat target is valid and is covered by positive cases.
+  const auto waiting=exchange.beginRequest();
+  CHECK(exchange.publish(waiting,prepareDefinition(*fine),fine));
+  auto invalidBytes=fixture();invalidBytes[0xe20+16+17]|=4;
   const auto before=exchange.latestGeneration();
-  rejects([&]{prepareDefinition(*unsupported);});
-  CHECK(exchange.latestGeneration()==before&&exchange.snapshotDefinition()==plain);
+  rejects([&]{const auto invalid=Def::fromVab(invalidBytes,3,0);prepareDefinition(*invalid);});
+  CHECK(exchange.latestGeneration()==before&&exchange.snapshotDefinition()==fine);
+  CHECK(exchange.beginBlock(44100)&&exchange.adoptedGeneration()==waiting);
+  exchange.collectRetired();
   auto raw=exchange.beginRequest();CHECK(exchange.publish(raw,std::make_unique<SpuInstrument>()));
   CHECK(!exchange.snapshotDefinition());CHECK(exchange.beginBlock(44100));CHECK(!exchange.snapshotDefinition());
 }

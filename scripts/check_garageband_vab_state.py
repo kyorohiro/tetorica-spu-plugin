@@ -116,7 +116,7 @@ def decode_raw_sample(source):
             'base_frequency_hz': root, 'volume_left': left, 'volume_right': right,
             'adsr1': packed & 65535, 'adsr2': packed >> 16, 'inspector_pitch': pitch,
             'reverb_send': bool(flags & 2), 'loop_start_samples': loop if looping else None,
-            'native_loop_supported': not looping or bool(adpcm[loop // 28 * 16 + 1] & 2),
+            'native_loop_supported': True,  # Current SDK supports marker4 and markerless repeat addresses.
             'waveform_samples': 112 if waveform is not None else None,
             'waveform_sha256': sha(waveform) if waveform is not None else None,
             'waveform_consistency_checked': False if waveform is not None else None}

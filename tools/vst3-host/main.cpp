@@ -20,6 +20,7 @@
 #include "web-instrument-checks.h"
 #include "wav-import-checks.h"
 #include "software-audio-checks.h"
+#include "loop-repeat-checks.h"
 #include "pluginterfaces/vst/ivstmidicontrollers.h"
 
 #include <algorithm>
@@ -711,8 +712,7 @@ void checkStateFailures(const PluginFactory& factory,const ClassInfo& info) {
   auto oversized=valid;oversized.resize(tetorica::kMaxStateBytes+5);invalid.push_back(std::move(oversized));
   auto trailing=valid;trailing.push_back(0);invalid.push_back(std::move(trailing));
   auto badSample=valid;badSample[32+3616+16]=0x50;invalid.push_back(std::move(badSample));
-  auto unsupported=valid;unsupported[32+3616+16+1]&=static_cast<std::uint8_t>(~4);
-  unsupported[32+3616+16+17]|=4;invalid.push_back(std::move(unsupported));
+  auto duplicateMarkers=valid;duplicateMarkers[32+3616+16+17]|=4;invalid.push_back(std::move(duplicateMarkers));
   StateBytes badLegacy(12);putDouble(badLegacy,0,std::numeric_limits<double>::quiet_NaN());invalid.push_back(std::move(badLegacy));
   for(std::size_t n=0;n<invalid.size();++n) {
     const auto before=target.savedBytes();const auto gain=target.gain();
@@ -804,6 +804,10 @@ int main(int argc, char** argv) {
             instance->start();return instance;
           },rate,"VST3 state/events");
           tetorica::test::checkSoftwareAudio([&] {
+            auto instance=std::make_unique<Instance>(factory,info,rate);instance->allowAsymmetric();
+            instance->start();return instance;
+          },rate,"VST3 state/events",originalBank());
+          tetorica::test::checkLoopRepeats([&] {
             auto instance=std::make_unique<Instance>(factory,info,rate);instance->allowAsymmetric();
             instance->start();return instance;
           },rate,"VST3 state/events",originalBank());

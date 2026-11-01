@@ -848,7 +848,7 @@ void TetoricaSPU::requestProgramFromUI(
         mEngines.snapshotDefinition() != source || source->program() == program)
       return;
     // The worker finds a genuinely playable tone within this Program, including
-    // native SDK loop restrictions. Metadata alone cannot determine support.
+    // native sample preparation. Metadata alone cannot determine support.
     mWebLoader.cancel();mInstrumentUI->webTicket=0;mInstrumentUI->webCommitted=0;
     mAudioLoader.cancel();mInstrumentUI->audioTicket=0;mInstrumentUI->audioCommitted=0;
     mInstrumentUI->requested = mLoader.requestProgram(std::move(source), program);

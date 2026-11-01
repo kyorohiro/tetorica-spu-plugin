@@ -23,7 +23,7 @@ struct RawAdpcmSample {
 };
 // Pure structural validation matching Web preparePs1ADPCM. Optional authored
 // PCM must match either retained Web encoder. Throws invalid_argument; no SPU.
-// The Native SDK's stricter repeat-flag limit is checked during engine prepare.
+// Native preparation retains original repeat flags and the explicit loop position.
 void validateRawAdpcmSample(const RawAdpcmSample& sample);
 bool sameRawAdpcmSample(const RawAdpcmSample& a,const RawAdpcmSample& b) noexcept;
 // Validated owned ADPCM/tuning/envelope/send with absolute volume magnitudes.

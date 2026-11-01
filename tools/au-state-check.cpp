@@ -11,6 +11,7 @@
 #include "vst3-host/web-instrument-checks.h"
 #include "vst3-host/wav-import-checks.h"
 #include "vst3-host/software-audio-checks.h"
+#include "vst3-host/loop-repeat-checks.h"
 #include <AudioToolbox/AudioToolbox.h>
 #include <CoreFoundation/CoreFoundation.h>
 #include <algorithm>
@@ -319,6 +320,7 @@ int main(int argc, char** argv)
     tetorica::test::checkWebInstruments([&] { return std::make_unique<Instance>(component); },48000,"AU state/MIDIEvent",bank);
     tetorica::test::checkWavImports([&] { return std::make_unique<Instance>(component); },48000,"AU state/MIDIEvent");
     tetorica::test::checkSoftwareAudio([&] { return std::make_unique<Instance>(component); },48000,"AU state/MIDIEvent",bank);
+    tetorica::test::checkLoopRepeats([&] { return std::make_unique<Instance>(component); },48000,"AU state/MIDIEvent",bank);
     std::cout << "PASS: local AU embedded VAB/Gain round-trip, first-render MIDI/PCM, separate instance, "
       "malformed CF/state rejection with pending/active preservation, legacy AU migration; no audio device/editor/install\n";
   }

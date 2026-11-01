@@ -92,8 +92,8 @@ void rawExactCopy() {
   constexpr std::array<std::uint8_t,64> legacy{{0,6,0,17,33,34,51,67,68,85,85,101,102,102,102,102,36,0,231,32,32,1,2,32,31,16,31,15,240,240,240,255,38,0,189,172,172,171,154,155,169,169,168,153,154,154,170,186,38,3,170,188,188,205,221,253,13,254,241,17,17,35,66,67}};
   raw.adpcm.assign(legacy.begin(),legacy.end());
   CHECK(sameRawAdpcmSample(raw,extractAdpcmSource(*Def::fromAdpcmSample(raw))));
-  // Pure extraction preserves structurally valid raw metadata, including the
-  // native SDK's unsupported flag4-only repeat subset, without silently fixing it.
+  // Pure extraction preserves flag4-only repeat markers without rewriting the
+  // original sample now that Native playback also supports that flag pattern.
   raw.waveform.reset();raw.adpcm.assign(kBuiltinSineAdpcm.begin(),kBuiltinSineAdpcm.end());
   raw.adpcm[1]=0;raw.adpcm[17]=4;raw.loopStartSamples=28;
   CHECK(sameRawAdpcmSample(raw,extractAdpcmSource(*Def::fromAdpcmSample(raw))));

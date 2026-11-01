@@ -38,9 +38,11 @@ void validation(){
   auto bad=good;bad.inspectorPitch=16384;rejects([&]{validateRawAdpcmSample(bad);});
   auto shot=good;shot.adpcm[1]=0;shot.adpcm[49]=1;shot.loopStartSamples.reset();validateRawAdpcmSample(shot);
   bad=shot;bad.adpcm[1]=4;rejects([&]{validateRawAdpcmSample(bad);});
-  auto unsupported=good;unsupported.adpcm[1]=0;unsupported.adpcm[17]=4;unsupported.loopStartSamples=28;
-  validateRawAdpcmSample(unsupported);rejects([&]{SpuInstrument core(unsupported);});
-  unsupported.adpcm[17]=6;SpuInstrument allowed(unsupported);allowed.noteOn(69,127);Stereo out(8192);render(allowed,out);CHECK(peak(out.l)>.005f);
+  auto flag4=good;flag4.adpcm[1]=0;flag4.adpcm[17]=4;flag4.loopStartSamples=28;
+  validateRawAdpcmSample(flag4);const auto original=flag4.adpcm;SpuInstrument allowed(flag4);
+  auto flag6=flag4;flag6.adpcm[17]=6;SpuInstrument reference(flag6);
+  allowed.noteOn(69,127);reference.noteOn(69,127);Stereo out(8192),expected(8192);render(allowed,out);render(reference,expected,7);
+  CHECK(flag4.adpcm==original&&out.l==expected.l&&out.r==expected.r&&peak(out.l)>.005f);
   auto changed=good;changed.inspectorPitch=0;CHECK(!sameRawAdpcmSample(good,changed));changed=good;changed.volumeLeft=-0.;auto zero=changed;zero.volumeLeft=0.;CHECK(!sameRawAdpcmSample(changed,zero));
 }
 void authoredWaveforms(){
@@ -67,7 +69,7 @@ void signedVelocityAndMetadata(){
   for(double root:{std::numeric_limits<double>::denorm_min(),std::numeric_limits<double>::max()}){auto edge=sine();edge.baseFrequencyHz=root;SpuInstrument core(edge);core.noteOn(127,127);render(core,a);CHECK(core.healthy());}
 }
 void fullRamAndCallbackMemory(){
-  auto source=sine();source.volumeLeft=-.75;source.volumeRight=-.25;source.adpcm[1]=0;source.adpcm[17]=6;source.loopStartSamples=28;
+  auto source=sine();source.volumeLeft=-.75;source.volumeRight=-.25;source.adpcm[1]=0;source.adpcm[17]=4;source.loopStartSamples=28;
   for(double rate:{8000.,44100.,48000.,96000.}){
     SpuInstrument a(source),b(source);Stereo whole(1031),parts(1031);allocations=frees=0;tracking=true;bool ok=a.prepare(rate)&&b.prepare(rate);
     for(unsigned stage=0;stage<64;++stage){for(auto* core:{&a,&b}){

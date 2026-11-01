@@ -39,7 +39,7 @@ template<class F> void rejects(F fn){bool rejected=false;try{fn();}catch(const s
 PmonSettings hold(){PmonSettings s;s.enabled=true;s.decayMs=0;s.waveform=WaveformShape::Square;return s;}
 vab::PreparedTone markerless(){
   const auto bytes=encodePcmCycle(makePcmCycle(WaveformShape::Sine));vab::PreparedTone tone;
-  tone.adpcm.assign(bytes.begin(),bytes.end());tone.adpcm[1]=2;tone.decodedFrames=112;tone.loopStartSamples=0;
+  tone.adpcm.assign(bytes.begin(),bytes.end());tone.adpcm[1]=0;tone.decodedFrames=112;tone.loopStartSamples=0;
   tone.rootFrequencyHz=110;tone.adsr1=0x000f;tone.adsr2=0x1fdf;
   tone.volumeLeft=.25;tone.volumeRight=.75;tone.reverb=true;return tone;
 }
