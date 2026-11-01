@@ -40,6 +40,20 @@ flag4-only /markerless repeatの互換性も修正し、元bytesのまま実AU/V
 Gain smoothingも実装し、unit /実AU・VST3 /sanitizer /CIを確認した。[検証記録](../gain_smoothing_20261101.md)。
 この新buildはまだinstalled AUへ配置しておらず、開いているGarageBandと上のmanifestを維持している。
 
+### Gain smoothing版AU更新・GarageBand復元の今回の区切り（2026-11-01、開始前）
+
+開始Plugin `fcb2848`、実装`3ec6049`、Native SDK `95cf71a`。
+ユーザーの続行指示で、作業前にこのTODOを保存する。
+
+- [ ] installed全5filesを`docs/au_loop_update_20261101.json`へ、新build全5filesを`docs/gain_smoothing_20261101.json`へ照合する。
+- [ ] GarageBandの現在のdocument /再生・録音 /未保存状態を確認し、既知検証copyを保存前に退避する。原本は保持し、hostを保存・終了する。
+- [ ] known manifest一致時だけGain版AUへ退避更新し、journal /旧新hash /rollback手順を保存する。
+- [ ] installed版のauvalと実AU host検証（Gainの5ms /reset /restore /bypassを含む）を確認する。
+- [ ] 新しいGarageBand検証copyでP3/T0/Gain99 /embedded VABの復元、保存・完全終了・再起動・editor再表示を確認し、payload /VAB /保護原本を照合する。
+- [ ] current installed manifest /検証記録 /再開TODOを更新してcommit /pushする。実聴・長時間・実DAW automation録音・独自Load操作は成功していないものを未確認として残す。
+
+Gainのsourceやparameter /state形式、version /tag /公開release、Web /Tauri /npm配布は変更しない。
+
 ### Gain smoothingの今回の区切り（2026-11-01、完了）
 
 開始Plugin `65ff2fe`、Native SDK `95cf71a`。ユーザーの続行指示で音量変更時の段差を抑える。

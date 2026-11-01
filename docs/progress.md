@@ -653,3 +653,9 @@
 - 実装`3ec6049` exact headの[CI 41291073473](https://github.com/kyorohiro/tetorica-spu-plugin/actions/runs/41291073473)でoffline /macOS全2job成功。全stepに失敗なし。CI側AU install/auval、VST3 validator /実host、AU実hostも成功した。
 - [仕様・検証記録](gain_smoothing_20261101.md) /[source・binary・log hash /CI metadata](gain_smoothing_20261101.json)を保存。artifactはmetadataだけ確認し、download /実行 /release公開はしていない。
 - 手元installed AUはloopfix版の全5filesが前回manifestと一致。Gain版への配置とGarageBand旧copyの確認は次の工程。実聴・長時間・automation録音と既存独自UI確認TODOも維持した。
+
+## 2026-11-01 JST — Gain版installed AU更新の開始
+
+- ユーザーの続行指示で、最新版AUへの退避更新とGarageBand旧project保存再起動を進める。開始`fcb2848`、実装`3ec6049`、SDK `95cf71a`。
+- 作業前TODOを先に保存する。installed /buildの既知hashとhost状態を確認し、原本と保存前copyを保護してから更新する。
+- 今回は配置と検証・記録のみ。実聴 /長時間 /実DAW automation録音や独自Load UIの未確認範囲を区別する。
