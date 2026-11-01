@@ -24,6 +24,7 @@ exports keys, changes the default keychain, or grants all applications access.
 import argparse
 import base64
 import binascii
+import hashlib
 import json
 import os
 from pathlib import Path
@@ -45,6 +46,10 @@ KEYCHAIN_NAME = 'signing.keychain-db'
 STATE_NAME = 'ownership.json'
 P12_NAME = 'certificate.p12'
 MAX_P12_BYTES = 1024 * 1024
+KEYCHAIN_LOCK_NAMES = {
+    '.fl' + hashlib.sha1(name.encode('ascii')).hexdigest()[:8].upper()
+    for name in (KEYCHAIN_NAME, KEYCHAIN_NAME.removesuffix('-db'))
+}
 
 
 class SigningError(Exception):
@@ -141,9 +146,7 @@ class Executor:
         return result.stdout
 
 
-def remove_search_entry(keychain, run):
-    # create-keychain may add itself to the user search list. Remove only our
-    # exact path, preserving every pre-existing or concurrently added entry.
+def search_entries(run):
     output = run(['/usr/bin/security', 'list-keychains', '-d', 'user'], 'Read keychain search list')
     try:
         entries = shlex.split(output)
@@ -151,6 +154,22 @@ def remove_search_entry(keychain, run):
         raise SigningError('Cannot parse keychain search list') from None
     if any(not Path(item).is_absolute() for item in entries):
         raise SigningError('Cannot parse keychain search list')
+    return entries
+
+
+def ensure_search_entry(keychain, run):
+    # codesign(1): --keychain narrows identity selection, but the supplied file
+    # must also be in the user search list for certificate-chain construction.
+    # Preserve every existing entry and append only our isolated keychain.
+    entries = search_entries(run)
+    if str(keychain) not in entries:
+        run(['/usr/bin/security', 'list-keychains', '-d', 'user', '-s', *entries, str(keychain)],
+            'Add temporary keychain to search list')
+
+
+def remove_search_entry(keychain, run):
+    # Remove only our exact path, preserving pre-existing/concurrent entries.
+    entries = search_entries(run)
     kept = [item for item in entries if item != str(keychain)]
     if kept != entries:
         run(['/usr/bin/security', 'list-keychains', '-d', 'user', '-s', *kept],
@@ -172,6 +191,16 @@ def select_identity(output, team):
     return identities[0]
 
 
+def credential_filename(name):
+    known = {STATE_NAME, P12_NAME, KEYCHAIN_NAME, KEYCHAIN_NAME + '-wal', KEYCHAIN_NAME + '-shm'}
+    # Apple Security's AtomicFile hashes the keychain basename to a .flXXXXXXXX
+    # lock name; its atomic-write API can also leave keychain .sb-* siblings.
+    # Source: apple-oss-distributions/Security, OSX/libsecurity_filedb/lib/AtomicFile.cpp.
+    return (name in known or name in KEYCHAIN_LOCK_NAMES or
+            re.fullmatch(r'ownership\.json\.[a-f0-9]{32}\.tmp', name) is not None or
+            re.fullmatch(r'signing\.keychain(?:-db)?\.sb-[A-Za-z0-9_-]{1,128}', name) is not None)
+
+
 def owned_state(report, root, run_identity):
     directory = Path(report.get('state', '')).parent
     if (directory.parent != root or not DIRECTORY_PATTERN.fullmatch(directory.name) or
@@ -188,9 +217,8 @@ def owned_state(report, root, run_identity):
             state.get('ownership_id') != report.get('ownership_id') or
             state.get('keychain_path') != report.get('keychain_path')):
         raise SigningError('Credential ownership journal does not match this Actions run')
-    allowed = {STATE_NAME, P12_NAME, KEYCHAIN_NAME, KEYCHAIN_NAME + '-wal', KEYCHAIN_NAME + '-shm'}
     for child in directory.iterdir():
-        if child.name not in allowed and not re.fullmatch(r'ownership\.json\.[a-f0-9]{32}\.tmp', child.name):
+        if not credential_filename(child.name):
             raise SigningError('Refusing an unexpected file in the credential directory')
         # Keychain permissions are set by security, but never accept links.
         info = child.lstat()
@@ -226,12 +254,19 @@ def cleanup(report_path, *, environ=None, run=None):
         except Exception:
             # An owned file can still be unlinked if securityd is unavailable.
             pass
-    for name in (P12_NAME, KEYCHAIN_NAME, KEYCHAIN_NAME + '-wal', KEYCHAIN_NAME + '-shm'):
-        candidate = directory / name
-        if candidate.exists():
-            candidate.unlink()
-    for candidate in directory.glob('ownership.json.*.tmp'):
+    companions = []
+    for candidate in directory.iterdir():
+        if candidate.name == STATE_NAME:
+            continue
+        # Recheck after securityd deletes/rewrites its files. Never follow links.
+        info = candidate.lstat()
+        if (not credential_filename(candidate.name) or not stat.S_ISREG(info.st_mode) or
+                info.st_uid != os.getuid() or info.st_nlink != 1):
+            raise SigningError('Refusing an unowned, linked, or unexpected credential companion')
+        if candidate.name not in (P12_NAME, KEYCHAIN_NAME):
+            companions.append(candidate.name)
         candidate.unlink()
+    report['removed_keychain_companions'] = sorted(companions)
     report['status'] = 'cleanup_failed' if failed else 'cleaned'
     write_json(path, report)
     if failed:
@@ -313,7 +348,10 @@ def prepare(report_path, *, environ=None, run=None):
                  '--apple-id', environ['APPLE_ID'], '--team-id', team,
                  '--password', environ['APPLE_APP_SPECIFIC_PASSWORD'], '--keychain', str(keychain)],
                 'Store notary credentials', timeout=180)
-        remove_search_entry(keychain, execute)
+        ensure_search_entry(keychain, execute)
+        report['keychain_companions'] = sorted(
+            child.name for child in directory.iterdir()
+            if credential_filename(child.name) and child.name not in (STATE_NAME, KEYCHAIN_NAME, P12_NAME))
         report.update(status='prepared', identity_sha1=fingerprint, signing_identity=identity)
         write_json(path, report)
         return report

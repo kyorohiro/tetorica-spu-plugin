@@ -29,6 +29,7 @@ class FakeApple:
         self.login = root / 'existing-login.keychain-db'
         self.login.write_bytes(b'leave existing user keychain alone')
         self.search = [str(self.login)]
+        self.auto_add_keychain = False
         self.identities = f'  1) {FINGERPRINT} "{IDENTITY}"\n     1 valid identities found\n'
         self.fail_command = None
         self.failure_kind = 'exit'
@@ -43,7 +44,11 @@ class FakeApple:
             path = Path(arguments[-1])
             path.write_bytes(b'fake private keychain bytes')
             path.chmod(0o600)
-            self.search.append(str(path))
+            lock = path.parent / '.flD3051040'
+            lock.write_bytes(b'fake Apple AtomicFile lock')
+            lock.chmod(0o600)
+            if self.auto_add_keychain:
+                self.search.append(str(path))
         if self.fail_command == self_command and not self.failed:
             self.failed = True
             if self.failure_kind == 'timeout':
@@ -110,7 +115,8 @@ class SigningTests(unittest.TestCase):
         self.assertEqual(json.loads(self.report.read_text()), report)
         self.assertEqual(self.apple.import_permissions, (0o600, 0o700))
         self.assertFalse((keychain.parent / signing.P12_NAME).exists())
-        self.assertEqual(self.apple.search, [str(self.apple.login)])
+        self.assertEqual(self.apple.search, [str(self.apple.login), str(keychain)])
+        self.assertEqual(report['keychain_companions'], ['.flD3051040'])
         journal = Path(report['state'])
         self.assertEqual(stat.S_IMODE(journal.stat().st_mode), 0o600)
         self.assertEqual(stat.S_IMODE(self.report.stat().st_mode), 0o600)
@@ -150,6 +156,52 @@ class SigningTests(unittest.TestCase):
         with self.assertRaisesRegex(signing.SigningError, 'not valid base64'):
             self.prepare()
         self.assertFalse(self.owned_directories())
+
+    def test_prepare_preserves_search_list_and_does_not_duplicate_an_auto_added_keychain(self):
+        self.apple.auto_add_keychain = True
+        report = self.prepare()
+        self.assertEqual(self.apple.search,
+                         [str(self.apple.login), report['keychain_path']])
+        self.assertFalse(any('-s' in command and 'list-keychains' in command
+                             for command, _ in self.apple.calls))
+        self.cleanup()
+
+    def test_cleanup_accepts_only_owned_apple_lock_and_atomic_write_companions(self):
+        self.assertEqual(signing.KEYCHAIN_LOCK_NAMES, {'.flD3051040', '.fl25C0AF36'})
+        report = self.prepare()
+        directory = Path(report['state']).parent
+        names = ('.fl25C0AF36', 'signing.keychain-db.sb-ABCDEFGH',
+                 'signing.keychain.sb-abcdef12', 'signing.keychain-db-wal',
+                 'signing.keychain-db-shm')
+        for name in names:
+            (directory / name).write_bytes(b'fake Apple companion bytes')
+        cleaned = self.cleanup()
+        self.assertEqual(set(cleaned['removed_keychain_companions']), set(names) | {'.flD3051040'})
+        self.assertFalse(directory.exists())
+        self.assertTrue(self.apple.login.is_file())
+
+    def test_cleanup_refuses_unknown_lock_names_and_linked_known_companions(self):
+        report = self.prepare()
+        directory = Path(report['state']).parent
+        unknown = directory / '.flFFFFFFFF'
+        unknown.write_bytes(b'unrecognized lock')
+        before = len(self.apple.calls)
+        with self.assertRaisesRegex(signing.SigningError, 'unexpected file'):
+            self.cleanup()
+        self.assertEqual(len(self.apple.calls), before)
+        unknown.unlink()
+        lock = directory / '.fl25C0AF36'
+        lock.symlink_to(self.apple.login)
+        with self.assertRaisesRegex(signing.SigningError, 'linked credential'):
+            self.cleanup()
+        self.assertEqual(len(self.apple.calls), before)
+        lock.unlink()
+        os.link(self.apple.login, lock)
+        with self.assertRaisesRegex(signing.SigningError, 'linked credential'):
+            self.cleanup()
+        self.assertEqual(len(self.apple.calls), before)
+        lock.unlink()
+        self.cleanup()
 
     def test_cleanup_is_idempotent_without_secrets_and_preserves_other_keychains(self):
         report = self.prepare()

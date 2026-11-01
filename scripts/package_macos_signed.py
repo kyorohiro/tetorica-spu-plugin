@@ -30,6 +30,79 @@ SECRET_NAMES = ('BUILD_CERTIFICATE_BASE64', 'P12_PASSWORD', 'APPLE_ID',
                 'APPLE_TEAM_ID', 'APPLE_APP_SPECIFIC_PASSWORD')
 
 
+class CommandFailure(ValueError):
+    """A fixed-vocabulary public diagnostic, never captured tool output."""
+
+    def __init__(self, diagnostic):
+        self.diagnostic = diagnostic
+        categories = ', '.join(diagnostic['categories'])
+        super().__init__(f"codesign {diagnostic['operation']} failed "
+                         f"(exit {diagnostic['exit_code']}; {categories}); raw output withheld")
+
+
+def codesign_diagnostic(arguments, returncode, stdout='', stderr=''):
+    """Classify bounded output using literal known errors; retain no raw text.
+
+    Tool output can contain certificate subjects, paths, or arbitrary payload
+    bytes. Even apparent error lines must never be copied into public reports.
+    The only data derived from that output is membership in this fixed list.
+    """
+    limits = 16384
+    sample = '\n'.join(str(value)[:limits] + str(value)[-limits:]
+                       for value in (stdout, stderr)).casefold()
+    known = (
+        ('keychain-item-not-found',
+         ('the specified item could not be found in the keychain',
+          'errsecitemnotfound', 'no identity found', 'identity not found'),
+         'Check that the temporary keychain is unlocked and available in the signing search list.'),
+        ('key-access-interaction-required',
+         ('user interaction is not allowed', 'errsecinteractionnotallowed',
+          'cssmerr_csp_no_user_interaction', 'user canceled the operation',
+          'user cancelled the operation'),
+         'Check temporary-keychain unlock state and private-key partition access for codesign.'),
+        ('certificate-chain-incomplete',
+         ('unable to build chain to self-signed root', 'cssmerr_tp_not_trusted',
+          'errsecnottrusted', 'a certificate chain could not be built'),
+         'Check the Developer ID certificate chain and intermediate availability in the signing search list.'),
+        ('certificate-expired-or-invalid',
+         ('cssmerr_tp_cert_expired', 'errseccertificateexpired', 'certificate has expired',
+          'cssmerr_tp_cert_not_valid_yet', 'errseccertificatenotvalidyet'),
+         'Check Developer ID certificate validity and the runner clock.'),
+        ('invalid-bundle-version',
+         ('cfbundleversion', 'bundle version must be', 'bundle version is invalid'),
+         'Check that CFBundleVersion is a valid nonzero Apple build version.'),
+        ('invalid-bundle-layout',
+         ('bundle format unrecognized, invalid, or unsuitable', 'bundle format is ambiguous',
+          'unsealed contents present in the bundle root'),
+         'Check the staged bundle structure and Info.plist before signing.'),
+        ('resource-metadata-forbidden',
+         ('resource fork, finder information, or similar detritus not allowed',),
+         'Check staged bundle extended attributes for forbidden resource-fork or Finder metadata.'),
+        ('timestamp-service-unavailable',
+         ('timestamp service is not available', 'timestamp server could not be reached',
+          'timestamping service is not available'),
+         'Check timestamp-service network availability; retain secure timestamp signing.'),
+        ('security-internal-component', ('errsecinternalcomponent',),
+         'Check keychain lookup, private-key access and certificate-chain diagnostics together.'),
+    )
+    categories, advice = [], []
+    for category, needles, message in known:
+        if any(needle in sample for needle in needles):
+            categories.append(category)
+            advice.append(message)
+    if not categories:
+        categories = ['unclassified']
+        advice = ['Review public signing context; arbitrary raw tool output remains withheld.']
+    operation = ('sign' if '--sign' in arguments else 'verify' if '--verify' in arguments
+                 else 'display' if '-d' in arguments or '--display' in arguments else 'other')
+    target = Path(str(arguments[-1])).name if arguments else ''
+    kind = {'.app': 'app', '.component': 'au', '.vst3': 'vst3', '.dmg': 'disk-image'}.get(
+        Path(target).suffix, 'mach-o' if target == 'TetoricaSPU' else 'other')
+    return {'tool': 'codesign', 'operation': operation, 'target_kind': kind,
+            'exit_code': int(returncode), 'categories': categories, 'advice': advice,
+            'raw_output': 'withheld'}
+
+
 def run_command(arguments, *, timeout=120):
     """Keep raw failing tool output and inherited credential values out of logs."""
     environment = {key: value for key, value in os.environ.items() if key not in SECRET_NAMES}
@@ -39,6 +112,9 @@ def run_command(arguments, *, timeout=120):
     except (OSError, subprocess.TimeoutExpired):
         raise ValueError(f'{Path(arguments[0]).name} could not complete; raw output withheld') from None
     if result.returncode:
+        if Path(arguments[0]).name == 'codesign':
+            raise CommandFailure(codesign_diagnostic(arguments, result.returncode,
+                                                     result.stdout, result.stderr)) from None
         raise ValueError(f'{Path(arguments[0]).name} failed; raw output withheld')
     return result.stdout + result.stderr
 
@@ -216,9 +292,20 @@ def verify_dmg(image, team_id, commit, run):
 
 
 def inspect_signed(directory, team_id, project_root, run):
-    inspection = inspect_bundles(directory, project_root=project_root, run=run,
+    command_failures = []
+
+    def checked_run(arguments, **kwargs):
+        try:
+            return run(arguments, **kwargs)
+        except CommandFailure as error:
+            command_failures.append(error)
+            raise
+
+    inspection = inspect_bundles(directory, project_root=project_root, run=checked_run,
                                  expected_team_id=team_id)
     if not inspection.get('ok'):
+        if command_failures:
+            raise command_failures[0]
         raise ValueError('Developer ID bundle inspection failed')
     return inspection
 
@@ -227,6 +314,8 @@ def public_failure(report, path, error):
     report['ok'] = False
     report.setdefault('errors', []).append(str(error) if isinstance(error, ValueError)
                                          else 'Packaging operation failed; raw details withheld')
+    if isinstance(error, CommandFailure):
+        report['tool_failure'] = error.diagnostic
     write_report(path, report)
 
 
@@ -445,13 +534,17 @@ def build(args, *, run=run_command, environ=None, project_root=ROOT):
                     with path.open('rb') as binary:
                         magic = binary.read(4)
                     if magic in MACHO_MAGICS:
+                        report['signing_step'] = {'operation': 'sign-mach-o', 'bundle': bundle_name}
                         run(sign + [str(path)])
                 # Nested bundles are signed from the inside out, without --deep.
                 nested = [path for path in bundle.rglob('*') if path.is_dir() and
                           not path.is_symlink() and (path / 'Contents/Info.plist').is_file()]
                 for path in sorted(nested, key=lambda value: len(value.parts), reverse=True):
+                    report['signing_step'] = {'operation': 'sign-nested-bundle', 'bundle': bundle_name}
                     run(sign + [str(path)])
+                report['signing_step'] = {'operation': 'sign-bundle', 'bundle': bundle_name}
                 run(sign + [str(bundle)])
+            report['signing_step'] = {'operation': 'inspect-signed-bundles'}
             report['inspection'] = inspect_signed(stage, args.expected_team_id, project_root, run)
             metadata = {'schema': 1, 'product': PRODUCT, 'version': version,
                         'channel': 'signed-preview', 'source_commit': commit, 'platform': 'macos',
@@ -467,6 +560,7 @@ def build(args, *, run=run_command, environ=None, project_root=ROOT):
             candidate = working / 'candidate.dmg'
             run(['/usr/bin/hdiutil', 'create', '-format', 'UDZO', '-srcfolder', str(image_root),
                  '-volname', 'Tetorica SPU Preview ' + version, '-o', str(candidate)])
+            report['signing_step'] = {'operation': 'sign-disk-image'}
             run(['/usr/bin/codesign', '--sign', prepared['identity_sha1'], '--keychain',
                  prepared['keychain_path'], '--timestamp', '--identifier', dmg_identifier(commit),
                  str(candidate)])

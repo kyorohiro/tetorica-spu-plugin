@@ -473,6 +473,114 @@ class SignedMacPackageTests(unittest.TestCase):
             self.assertEqual(process.call_args.kwargs['stdin'], subprocess.DEVNULL)
             self.assertEqual(process.call_args.kwargs['timeout'], 120)
 
+    def test_codesign_diagnostics_classify_known_errors_without_retaining_tool_text(self):
+        secret = 'fake-private-key-NEVER-PUBLISH'
+        identity = 'Developer ID Application: fake-private-subject@example.invalid (ABCDE12345)'
+        path = '/private/fake-private-directory-NEVER-PUBLISH/TetoricaSPU.app'
+        arguments = ['/usr/bin/codesign', '--sign', identity, path]
+        cases = (
+            ('The specified item could not be found in the keychain.', 'keychain-item-not-found'),
+            ('User interaction is not allowed.', 'key-access-interaction-required'),
+            ('unable to build chain to self-signed root', 'certificate-chain-incomplete'),
+            ('CSSMERR_TP_CERT_EXPIRED', 'certificate-expired-or-invalid'),
+            ('CFBundleVersion must be a valid version', 'invalid-bundle-version'),
+            ('bundle format unrecognized, invalid, or unsuitable', 'invalid-bundle-layout'),
+            ('resource fork, Finder information, or similar detritus not allowed', 'resource-metadata-forbidden'),
+            ('The timestamp service is not available.', 'timestamp-service-unavailable'),
+            ('errSecInternalComponent', 'security-internal-component'),
+            ('arbitrary unrecognized failure', 'unclassified'))
+        for message, category in cases:
+            with self.subTest(category=category):
+                diagnostic = package.codesign_diagnostic(arguments, 1,
+                    stdout=f'-----BEGIN PRIVATE KEY-----{secret}\n{identity}\n',
+                    stderr=f'{path}: {message}\nAPPLE_APP_SPECIFIC_PASSWORD={secret}\n\x1b[31m{secret}')
+                self.assertEqual(set(diagnostic), {'tool', 'operation', 'target_kind', 'exit_code',
+                                                  'categories', 'advice', 'raw_output'})
+                self.assertEqual(diagnostic['tool'], 'codesign')
+                self.assertEqual(diagnostic['operation'], 'sign')
+                self.assertEqual(diagnostic['target_kind'], 'app')
+                self.assertEqual(diagnostic['exit_code'], 1)
+                self.assertEqual(diagnostic['categories'], [category])
+                self.assertEqual(diagnostic['raw_output'], 'withheld')
+                self.assertTrue(diagnostic['advice'])
+                public = json.dumps(diagnostic) + str(package.CommandFailure(diagnostic))
+                for value in (secret, identity, path, message, 'BEGIN PRIVATE KEY', 'APPLE_APP_SPECIFIC_PASSWORD'):
+                    self.assertNotIn(value, public)
+
+    def test_codesign_diagnostics_are_bounded_and_report_only_fixed_operation_and_target_kinds(self):
+        message = 'errSecInternalComponent'
+        output = 'x' * 17000 + message + 'y' * 17000
+        diagnostic = package.codesign_diagnostic(['/usr/bin/codesign', '--sign', 'secret-identity',
+                                                 '/secret/path/TetoricaSPU'], 2, stderr=output)
+        self.assertEqual(diagnostic['categories'], ['unclassified'])
+        mixed = package.codesign_diagnostic(['/usr/bin/codesign', '--verify', '/secret/image.dmg'],
+            3, stdout='unable to build chain to self-signed root', stderr=message.upper())
+        self.assertEqual(mixed['categories'], ['certificate-chain-incomplete', 'security-internal-component'])
+        for option, target, operation, kind in (
+                ('--verify', '/secret/a.component', 'verify', 'au'),
+                ('-d', '/secret/a.vst3', 'display', 'vst3'),
+                ('--display', '/secret/a.dmg', 'display', 'disk-image'),
+                ('--sign', '/secret/TetoricaSPU', 'sign', 'mach-o'),
+                ('--unknown-secret-option', '/secret/fake-private-path', 'other', 'other')):
+            with self.subTest(option=option, target=target):
+                diagnostic = package.codesign_diagnostic(['/usr/bin/codesign', option, target], 1)
+                self.assertEqual(diagnostic['operation'], operation)
+                self.assertEqual(diagnostic['target_kind'], kind)
+                self.assertNotIn('secret', json.dumps(diagnostic))
+
+    def test_codesign_failure_becomes_a_structured_public_report_without_argv_or_output(self):
+        secret = 'fake-credential-NEVER-PUBLISH'
+        identity = 'fake-secret-certificate-subject@example.invalid'
+        target = '/private/fake-secret-target/TetoricaSPU.component'
+        arguments = ['/usr/bin/codesign', '--sign', identity, target]
+        failure = subprocess.CompletedProcess(arguments, 1, secret,
+                                              f'{target}: errSecInternalComponent; {secret}')
+        with mock.patch.object(package.subprocess, 'run', return_value=failure):
+            with self.assertRaises(package.CommandFailure) as error:
+                package.run_command(arguments)
+        report = {'schema': 1, 'ok': True, 'errors': []}
+        report_path = self.root / 'public-command-failure.json'
+        package.public_failure(report, report_path, error.exception)
+        public = report_path.read_text()
+        self.assertEqual(json.loads(public), report)
+        self.assertFalse(report['ok'])
+        self.assertEqual(report['tool_failure'], error.exception.diagnostic)
+        self.assertEqual(report['tool_failure']['categories'], ['security-internal-component'])
+        self.assertEqual(len(report['errors']), 1)
+        for value in (secret, identity, target, 'fake-secret-target'):
+            self.assertNotIn(value, public)
+
+    def test_codesign_timeout_and_oserror_keep_arbitrary_details_out_of_reports(self):
+        secret = 'fake-exception-detail-NEVER-PUBLISH'
+        arguments = ['/usr/bin/codesign', '--sign', secret, '/private/' + secret + '/TetoricaSPU']
+        for failure in (OSError(secret), subprocess.TimeoutExpired(arguments, 120, output=secret, stderr=secret)):
+            with self.subTest(failure=type(failure).__name__), \
+                    mock.patch.object(package.subprocess, 'run', side_effect=failure):
+                with self.assertRaises(ValueError) as error:
+                    package.run_command(arguments)
+                self.assertNotIsInstance(error.exception, package.CommandFailure)
+                report = {'ok': True, 'errors': []}
+                package.public_failure(report, None, error.exception)
+                self.assertNotIn(secret, json.dumps(report))
+                self.assertNotIn('tool_failure', report)
+
+    def test_inspector_cannot_swallow_a_structured_codesign_failure(self):
+        diagnostic = package.codesign_diagnostic(['/usr/bin/codesign', '--verify', '/private/secret/TetoricaSPU'],
+                                                 3, stderr='errSecInternalComponent')
+        failure = package.CommandFailure(diagnostic)
+
+        def inspector(directory, *, run, **kwargs):
+            try:
+                run(['/usr/bin/codesign', '--verify', str(directory)])
+            except ValueError:
+                return {'ok': False, 'errors': ['inspection captured a signature failure']}
+            self.fail('Injected signature error was not raised')
+
+        with mock.patch.object(package, 'inspect_bundles', side_effect=inspector):
+            with self.assertRaises(package.CommandFailure) as error:
+                package.inspect_signed(self.payload, TEAM, self.project, mock.Mock(side_effect=failure))
+        self.assertIs(error.exception, failure)
+
 
 if __name__ == '__main__':
     unittest.main()

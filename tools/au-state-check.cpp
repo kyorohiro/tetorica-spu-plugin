@@ -495,7 +495,7 @@ int main(int argc, char** argv)
     // This registers the already-loaded factory in this process only. Never
     // copy a plugin into a user's global/per-user Components directory.
     const auto component = AudioComponentRegister(&description, CFSTR("Tetorica: Offline state test"),
-      0x00000100, factory);
+      0x00000000, factory);
     require(component, "Cannot register local AU factory");
 
     const bool softwareOnly=argc==3&&std::string(argv[2])=="--software-audio-only";
