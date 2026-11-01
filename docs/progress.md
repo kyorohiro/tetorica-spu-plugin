@@ -619,3 +619,10 @@
 - 手元のinstalled AUは更新していない。[Software audio manifest](software_audio_20261101.json)全5filesとread-only一致（binary `b46c3150…`）。新build AUを直接読む実host検査とは区別し、今回GarageBandやprojectも操作していない。
 - [操作・検証・未確認範囲](loop_repeat_20261101.md) /[hash・CI metadata](loop_repeat_20261101.json)。親Web Synth /Playgroundの反映と配布整合性は[親TODO](https://github.com/kyorohiro/hello_ymfm_wasm/blob/main/docs/issues/todo_ps1_loop_compat_20261101.md)へ分ける。
 - **次:** known manifest退避付きのinstalled AU更新を判断し、人が実DAW独自UIでloop素材を読み、保存再起動・実聴・長時間使用を確認する。既存のProgram/Tone dirty・automation録音・release判断も未確認として維持する。
+
+
+## 2026-11-01 JST — loopfix版installed AU更新の開始
+
+- ユーザーの続行指示で、loopfix実装78e0b83 /SDK95cf71aのAUをknown manifest退避付きで更新し、旧GarageBand保存データを確認する。
+- 実行前TODOを追加。host状態・installed5files /buildhash /原本projectを確認後、更新と検証を進める。
+- 未保存documentが見つかった場合は破棄せず保護する。公開releaseや別の機能実装はこの区切りへ混ぜない。

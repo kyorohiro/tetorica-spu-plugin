@@ -37,6 +37,21 @@ WAV素材の読み込み・Root / Playback編集も完了した。[操作・検�
 flag4-only /markerless repeatの互換性も修正し、元bytesのまま実AU/VST3・CIで検証した。
 [今回の記録](../loop_repeat_20261101.md)を参照。installed AUは今回更新せず、上のSoftware audio版を維持している。
 
+### loopfix版AU更新・旧GarageBand復元の今回の区切り（2026-11-01、実装前）
+
+ユーザー「では、続きをおねがいします」で、最新版AUへの更新→GarageBand旧project復元確認を開始する。
+開始Plugin `1e81db9`、Native SDK `95cf71a`。この節を先に保存し、既存ファイルを保護して進める。
+
+- [ ] installed AUを `docs/software_audio_20261101.json` の全file hashと照合し、新buildがloopfix版であることを確認する。
+- [ ] GarageBandの現在のdocument /再生 /録音 /未保存状態を確認する。保存対象を保護し、hostを終了してから更新する。
+- [ ] known hash一致時だけ旧AUを退避し、新AUへ更新する。journal /新旧hash /rollback手順を保存する。
+- [ ] auval /登録と、新installed AUを読む実AU hostのPCM・state回帰を確認する。
+- [ ] 旧GarageBand projectの原本は保持し、新しい検証copyでVAB P3/T0/Gain99・保存設定の復元 /再表示 /保存再起動を確認する。保存payload /元VAB /原本11filesを照合する。
+- [ ] 結果 /current installed manifest /人の実聴・独自UI /長時間 /automationの未確認範囲を記録し、commit /pushする。
+
+分割VH/VB UI・Gain smoothing・version/tag /公開release /Web /Tauri /npm配布は今回追加しない。
+新しい音源の実DAW独自Load操作は既存のAI入力制約を見て判断し、成功していない操作を確認済みと扱わない。
+
 ### ADPCMループ互換性の今回の区切り（2026-11-01、完了）
 
 - [x] 元ADPCMのflag4-only LOOP START /markerless repeat registerの再現fixtureで、Nativeの開始packet flag2必須制限を確認し、SDKで修正する。END側REPEAT・one-shotの区別を維持する。
