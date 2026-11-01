@@ -35,6 +35,17 @@ WAV素材の読み込み・Root / Playback編集も完了した。[操作・検�
 長いAudio /Software PCMとWeb v2を実装し、実AU/VST3・Web実interop・両repo CI成功済み。
 [操作・検証記録](../software_audio_20261101.md)と[current installed AU manifest](../software_audio_20261101.json)を参照。
 
+### ADPCMループ互換性の今回の区切り（2026-11-01、実装前）
+
+- [ ] 元ADPCMのflag4-only LOOP START /markerless repeat registerの再現fixtureで、Nativeの開始packet flag2必須制限を確認し、SDKで修正する。END側REPEAT・one-shotの区別を維持する。
+- [ ] validateToneの今回の制限だけを解除し、VAB /raw ADPCM /Web v1 /state9・旧schemaの元bytes /root /loop /FXを保持する。
+- [ ] worker /program初期Tone探索 /Web loader /Python inspectorのunsupported期待と説明を更新し、元bytes /PCM持続 /loop位置 /不正入力atomicの回帰を加える。
+- [ ] 既存flag6 /markerless /Gaussian /long Software2banks /RT new-delete0と、実AU /VST3 /sanitizer /CIを検証し、公開SDK commitへsubmodule /lockを固定する。
+- [ ] README /検証記録 /再開TODOを更新してcommit /pushする。既存installed AU更新が必要な場合はknown hash退避付きで行い、実DAW独自操作・実聴は区別する。
+
+開始Plugin `6ddd13b`、SDK `997256e`。親Web Synth /Playgroundへの反映もユーザー了承済み。
+全体TODO: 親repo `docs/issues/todo_ps1_loop_compat_20261101.md`。分割VH/VB UI・Gain smoothing・version/tag /release公開は今回の範囲外。
+
 ### 長いAudio / Software PCMの今回の区切り（2026-11-01、完了）
 
 - [x] 既存WAVの入力32MiBを維持し、通常SPU ADPCM容量以内は従来bytesを保つ。超過する素材はmono / 44.1kHz / signed PCM16のSoftware audioへ自動切替し、20MiB級WAVを途中切捨てなく演奏できるようにする。
