@@ -204,6 +204,63 @@ class InstallerTests(unittest.TestCase):
                 with self.assertRaisesRegex(SystemExit, 'refusing to overwrite'):
                     installer.main()
 
+    def test_explicit_source_installs_exact_package_without_default_build_source(self):
+        packaged = self.root / 'packaged/TetoricaSPU.component'
+        self.bundle(packaged, b'exact packaged candidate')
+        expected = installer.fingerprint(packaged)
+        fresh = self.root / 'Components/Fresh.component'
+        missing_default = self.root / 'build/macos/out/Missing.component'
+        with mock.patch.multiple(installer, ROOT=self.root, SOURCE=missing_default, DESTINATION=fresh):
+            arguments = ['install_au.py', '--source', str(packaged)]
+            with mock.patch('sys.argv', arguments), contextlib.redirect_stdout(io.StringIO()):
+                installer.main()
+            self.assertFalse(fresh.exists())  # Inspection remains read-only.
+            with mock.patch('sys.argv', arguments + ['--install']), contextlib.redirect_stdout(io.StringIO()):
+                installer.main()
+        self.assertEqual(installer.fingerprint(fresh), expected)
+        self.assertEqual(installer.fingerprint(packaged), expected)
+        self.assertFalse(missing_default.exists())
+        report = json.loads((self.root / 'build/au-install.json').read_text())
+        self.assertEqual(report['source'], str(packaged))
+        self.assertEqual(report['file_sha256'], expected)
+
+    def test_explicit_source_update_uses_selected_package_and_retains_old_backup(self):
+        packaged = self.root / 'packaged/TetoricaSPU.component'
+        self.bundle(packaged, b'distinct packaged update')
+        expected = installer.fingerprint(packaged)
+        arguments = ['install_au.py', '--source', str(packaged), '--update',
+                     '--expected', str(self.expected), '--backup-root', str(self.backups)]
+        with mock.patch.multiple(installer, ROOT=self.root.resolve(), SOURCE=self.source,
+                                 DESTINATION=self.destination, ensure_no_hosts=lambda: None):
+            with mock.patch('sys.argv', arguments), contextlib.redirect_stdout(io.StringIO()):
+                installer.main()
+        self.assertEqual(installer.fingerprint(self.destination), expected)
+        self.assertEqual(installer.fingerprint(self.source), self.new)
+        record = json.loads(self.reports()[0].read_text())
+        self.assertEqual(record['source'], str(packaged.resolve()))
+        self.assertEqual(record['new_sha256'], expected)
+        self.assertEqual(installer.fingerprint(Path(record['backup_component'])), self.old)
+
+    def test_explicit_source_is_rejected_with_rollback_before_any_operation(self):
+        arguments = ['install_au.py', '--source', str(self.source), '--rollback', 'unused.json']
+        with mock.patch.object(installer, 'rollback_bundle') as rollback:
+            with mock.patch('sys.argv', arguments), contextlib.redirect_stderr(io.StringIO()):
+                with self.assertRaises(SystemExit) as error:
+                    installer.main()
+            self.assertEqual(error.exception.code, 2)
+            rollback.assert_not_called()
+        self.assertEqual(installer.fingerprint(self.destination), self.old)
+
+    def test_explicit_install_source_ancestor_cannot_recursively_copy_itself(self):
+        nested = self.source / 'nested.component'
+        with mock.patch.multiple(installer, ROOT=self.root, DESTINATION=nested):
+            with mock.patch('sys.argv', ['install_au.py', '--source', str(self.source), '--install']), \
+                    contextlib.redirect_stdout(io.StringIO()):
+                with self.assertRaisesRegex(SystemExit, 'must not overlap'):
+                    installer.main()
+        self.assertFalse(nested.exists())
+        self.assertEqual(installer.fingerprint(self.source), self.new)
+
 
 if __name__ == '__main__':
     unittest.main()

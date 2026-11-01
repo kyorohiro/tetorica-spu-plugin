@@ -20,6 +20,24 @@ FONT = ROOT / 'plugin/resources/fonts/Roboto-Regular.ttf'
 FONT_NAME = 'Roboto-Regular.ttf'
 FONT_TYPE = 'TTF'
 MAX_PE_BYTES = 512 * 1024 * 1024
+MAX_RESOURCE_NAMES = 256
+
+
+def select_font_resource_name(names):
+    """Match pinned IPlugPaths.cpp LocateResource/EnumResNameProc exactly.
+
+    Its resource-compiler convention includes an extra first/last quote around
+    a name. It strips those characters unconditionally, compares lower case,
+    and forwards the original enumerated name to LoadWinResource. In particular,
+    an unquoted-only name must not pass this check: the UI cannot locate it.
+    """
+    matches = [name for name in names if isinstance(name, str)
+               and name[1:-1].lower() == FONT_NAME.lower()]
+    if len(matches) != 1:
+        raise ValueError('Expected one font resource discoverable by pinned iPlug '
+                         f'LocateResource, found {len(matches)}; {FONT_TYPE} names: '
+                         + json.dumps(names, ensure_ascii=True))
+    return matches[0]
 
 
 def sha256_file(path):
@@ -76,6 +94,12 @@ def inspect_font_resource(path, expected):
     kernel.LoadLibraryExW.restype = wintypes.HMODULE
     kernel.FindResourceW.argtypes = [wintypes.HMODULE, wintypes.LPCWSTR, wintypes.LPCWSTR]
     kernel.FindResourceW.restype = wintypes.HANDLE
+    enum_callback_type = ctypes.WINFUNCTYPE(wintypes.BOOL, wintypes.HMODULE,
+                                          wintypes.LPCWSTR, ctypes.c_void_p,
+                                          ctypes.c_ssize_t)
+    kernel.EnumResourceNamesW.argtypes = [wintypes.HMODULE, wintypes.LPCWSTR,
+                                         enum_callback_type, ctypes.c_ssize_t]
+    kernel.EnumResourceNamesW.restype = wintypes.BOOL
     kernel.SizeofResource.argtypes = [wintypes.HMODULE, wintypes.HANDLE]
     kernel.SizeofResource.restype = wintypes.DWORD
     kernel.LoadResource.argtypes = [wintypes.HMODULE, wintypes.HANDLE]
@@ -91,9 +115,35 @@ def inspect_font_resource(path, expected):
     if not module:
         raise ctypes.WinError(ctypes.get_last_error())
     try:
-        resource = kernel.FindResourceW(module, FONT_NAME, FONT_TYPE)
+        names = []
+        enum_errors = []
+
+        @enum_callback_type
+        def collect_name(_module, _type, name, _parameter):
+            # MAKEINTRESOURCE values share the pointer argument. The framework
+            # skips those IDs; keep them only as diagnostics, never dereference.
+            if len(names) >= MAX_RESOURCE_NAMES:
+                enum_errors.append('Resource-name count exceeds inspection bound')
+                return False
+            try:
+                names.append(int(name or 0) if not name or name <= 0xffff
+                             else ctypes.wstring_at(name))
+            except (ValueError, OSError) as error:
+                enum_errors.append(str(error))
+                return False
+            return True
+
+        if not kernel.EnumResourceNamesW(module, FONT_TYPE, collect_name, 0):
+            error_code = ctypes.get_last_error()
+            raise ValueError(f'Cannot enumerate {FONT_TYPE} resources '
+                             f'(WinError {error_code}); names: {names!r}; '
+                             f'diagnostics: {enum_errors!r}')
+        selected_name = select_font_resource_name(names)
+        resource = kernel.FindResourceW(module, selected_name, FONT_TYPE)
         if not resource:
-            raise ctypes.WinError(ctypes.get_last_error())
+            raise ValueError(f'Enumerated {FONT_TYPE} resource {selected_name!r} '
+                             f'cannot be loaded (WinError {ctypes.get_last_error()}); '
+                             f'names: {names!r}')
         size = kernel.SizeofResource(module, resource)
         if size != len(expected):
             raise ValueError(f'Embedded Roboto size {size} differs from source {len(expected)}')
@@ -106,9 +156,11 @@ def inspect_font_resource(path, expected):
         data = ctypes.string_at(pointer, size)
         if data != expected:
             raise ValueError('Embedded Roboto bytes differ from the unchanged source font')
-        return {'name': FONT_NAME, 'type': FONT_TYPE, 'bytes': size,
+        return {'name': selected_name, 'requested_name': FONT_NAME,
+                'enumerated_names': names, 'type': FONT_TYPE, 'bytes': size,
                 'sha256': hashlib.sha256(data).hexdigest(), 'exact_source_match': True,
-                'inspection': 'LoadLibraryExW AS_DATAFILE|AS_IMAGE_RESOURCE; FindResourceW'}
+                'inspection': 'LoadLibraryExW AS_DATAFILE|AS_IMAGE_RESOURCE; '
+                              'pinned iPlug LocateResource enumeration; FindResourceW'}
     finally:
         if not kernel.FreeLibrary(module):
             raise ctypes.WinError(ctypes.get_last_error())

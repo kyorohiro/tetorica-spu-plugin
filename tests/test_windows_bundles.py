@@ -52,5 +52,21 @@ class PeChecks(unittest.TestCase):
             self.inspect(image(True), False)
 
 
+class FontNameChecks(unittest.TestCase):
+    def test_matches_framework_extra_quotes_and_case_preserving_exact_name(self):
+        for name in ('"Roboto-Regular.ttf"', '"ROBOTO-REGULAR.TTF"'):
+            with self.subTest(name=name):
+                self.assertEqual(CHECK.select_font_resource_name([12, 'unrelated', name]), name)
+
+    def test_rejects_unquoted_names_missing_and_ambiguous_resources(self):
+        # A direct FindResourceW could find these unquoted names, but pinned
+        # LocateResource strips their first/last character and cannot find them.
+        for names in ([], [1], ['Roboto-Regular.ttf'], ['ROBOTO-REGULAR.TTF'],
+                      ['"Roboto-Regular.ttf"', '"ROBOTO-REGULAR.TTF"']):
+            with self.subTest(names=names):
+                with self.assertRaisesRegex(ValueError, 'TTF names:'):
+                    CHECK.select_font_resource_name(names)
+
+
 if __name__ == '__main__':
     unittest.main()

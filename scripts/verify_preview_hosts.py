@@ -4,7 +4,6 @@ import argparse
 import json
 import os
 from pathlib import Path
-import shutil
 import subprocess
 import sys
 
@@ -58,12 +57,8 @@ def main():
         if args.ci_auval:
             if os.environ.get('GITHUB_ACTIONS') != 'true':
                 raise SystemExit('AU installation is restricted to ephemeral GitHub runners')
-            # The installer intentionally has one fixed build source. Populate
-            # it only in this fresh CI job, from the exact packaged candidate.
-            destination = ROOT / 'build/macos/out/TetoricaSPU.component'
-            destination.parent.mkdir(parents=True, exist_ok=True)
-            shutil.copytree(stage / 'TetoricaSPU.component', destination)
-            run(sys.executable, 'scripts/install_au.py', '--install')
+            run(sys.executable, 'scripts/install_au.py', '--install',
+                '--source', stage / 'TetoricaSPU.component')
             run(sys.executable, 'scripts/validate_au.py', '--refresh-ci-registry')
     else:
         raise SystemExit('Unknown preview platform')

@@ -262,28 +262,30 @@ def main():
     actions.add_argument('--install', action='store_true', help='Copy only if destination does not exist')
     actions.add_argument('--update', action='store_true', help='Replace only a hash-identified old AU, retaining a verified backup')
     actions.add_argument('--rollback', type=Path, help='Restore a backup only if the installed new AU still matches its update report')
+    parser.add_argument('--source', type=Path, help='Inspect/install/update this AU bundle (default: build/macos/out/TetoricaSPU.component)')
     parser.add_argument('--expected', type=Path, help='Prior verification JSON with AU file_sha256')
     parser.add_argument('--backup-root', type=Path, help='Workspace backup directory outside Components')
     args = parser.parse_args()
     if args.rollback:
-        if args.expected or args.backup_root:
-            parser.error('--rollback cannot be combined with --expected/--backup-root')
+        if args.expected or args.backup_root or args.source is not None:
+            parser.error('--rollback cannot be combined with --source/--expected/--backup-root')
         path = rollback_bundle(args.rollback, expected_destination=DESTINATION)
         print(f'PASS: restored verified prior AU; backup retained. Record: {path}')
         return
+    source = args.source if args.source is not None else SOURCE
     if args.update:
         if not args.expected or not args.backup_root:
             parser.error('--update requires --expected and --backup-root')
         if ROOT not in args.backup_root.resolve().parents:
             parser.error('--backup-root must be inside this workspace')
-        path = update_bundle(SOURCE, DESTINATION, args.expected, args.backup_root)
+        path = update_bundle(source, DESTINATION, args.expected, args.backup_root)
         print(f'PASS: updated hash-identified AU; verified backup retained. Record: {path}')
         return
     if args.expected or args.backup_root:
         parser.error('--expected/--backup-root require --update')
-    component = source_identity(SOURCE)
-    expected = fingerprint(SOURCE)
-    print(f'Source: {SOURCE}\nDestination: {DESTINATION}')
+    component = source_identity(source)
+    expected = fingerprint(source)
+    print(f'Source: {source}\nDestination: {DESTINATION}')
     if DESTINATION.is_symlink():
         raise SystemExit('Refusing an existing destination symlink')
     if DESTINATION.exists():
@@ -291,12 +293,16 @@ def main():
             raise SystemExit('Destination differs; refusing to overwrite. Review the existing AU first.')
         print('PASS: existing installed AU matches the development build')
     elif args.install:
+        actual_source, actual_destination = source.resolve(), DESTINATION.resolve()
+        if (actual_source == actual_destination or actual_source in actual_destination.parents or
+                actual_destination in actual_source.parents):
+            raise SystemExit('Source and installed AU must not overlap')
         if DESTINATION.parent.is_symlink():
             raise SystemExit('Refusing a Components directory symlink')
         DESTINATION.parent.mkdir(parents=True, exist_ok=True)
         stage = Path(tempfile.mkdtemp(prefix='.tetorica-spu-stage-', dir=DESTINATION.parent))
         staged_bundle = stage / DESTINATION.name
-        shutil.copytree(SOURCE, staged_bundle)
+        shutil.copytree(source, staged_bundle)
         if fingerprint(staged_bundle) != expected:
             raise SystemExit(f'Copy verification failed; staged files retained at {stage}')
         if DESTINATION.exists() or DESTINATION.is_symlink():
@@ -307,7 +313,7 @@ def main():
     else:
         print('Not installed. Re-run with --install to copy this AU for the current user.')
         return
-    report = {'source': str(SOURCE), 'destination': str(DESTINATION),
+    report = {'source': str(source), 'destination': str(DESTINATION),
               'component': {k: component[k] for k in ('type', 'subtype', 'manufacturer', 'version')},
               'file_sha256': expected}
     (ROOT / 'build/au-install.json').write_text(json.dumps(report, indent=2) + '\n')
