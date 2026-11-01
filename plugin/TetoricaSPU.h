@@ -10,6 +10,7 @@
 #include "SpuWaveform.h"
 #include "VabLoader.h"
 #include "WebInstrumentLoader.h"
+#include "WebInstrumentExporter.h"
 #include <array>
 #include <atomic>
 #include <cstddef>
@@ -100,7 +101,8 @@ enum ECtrlTags
   kCtrlPmonInfo,
   kCtrlPmonStatus,
   kCtrlKeyboardMorph,
-  kCtrlKeyboardMorphStatus
+  kCtrlKeyboardMorphStatus,
+  kCtrlSaveWeb
 };
 
 class TetoricaSPU final : public iplug::Plugin
@@ -148,6 +150,8 @@ private:
   void initializeInstrumentUI();
   void closeInstrumentUI() noexcept;
   void promptForVab();
+  void prepareWebExportFromUI();
+  void promptForWebExport();
   void requestBuiltinFromUI();
   void requestProgramFromUI(
     std::shared_ptr<const tetorica::InstrumentDefinition> source,
@@ -192,6 +196,7 @@ private:
   // Destruction joins the non-RT worker before destroying the exchange.
   tetorica::VabLoader mLoader{mEngines};
   tetorica::WebInstrumentLoader mWebLoader;
+  tetorica::WebInstrumentExporter mWebExporter;
   // The render thread installs a prepared import tuple together with its
   // engine. Serialization uses the accepted tuple until this release marker.
   std::atomic<tetorica::SpuEngineExchange::Generation> mImportAppliedGeneration{0};

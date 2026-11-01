@@ -21,7 +21,8 @@ find_package(Threads REQUIRED)
 add_library(tetorica_spu_instrument STATIC
   src/SpuInstrument.cpp src/SpuWaveform.cpp src/SpuMorph.cpp src/SpuAdpcm.cpp
   src/SpuEngineExchange.cpp src/VabLoader.cpp src/InstrumentState.cpp
-  src/WebInstrument.cpp src/WebInstrumentLoader.cpp)
+  src/WebInstrument.cpp src/WebInstrumentLoader.cpp src/SpuExportSource.cpp
+  src/WebInstrumentExport.cpp src/WebInstrumentExporter.cpp)
 target_include_directories(tetorica_spu_instrument PUBLIC src)
 target_include_directories(tetorica_spu_instrument SYSTEM PRIVATE
   vendor/iPlug2OOS/iPlug2/Dependencies/Extras)
@@ -38,6 +39,20 @@ add_executable(spu_vab_render tools/spu-vab-render.cpp)
 target_link_libraries(spu_vab_render PRIVATE tetorica_spu_instrument)
 
 if(BUILD_TESTING)
+  add_executable(spu_export_source_test tests/spu_export_source_test.cpp)
+  target_link_libraries(spu_export_source_test PRIVATE tetorica_spu_instrument)
+  target_compile_definitions(spu_export_source_test PRIVATE VAB_FIXTURE_DIR="${CMAKE_CURRENT_SOURCE_DIR}/tests/fixtures/vab")
+  add_test(NAME spu.web.export.source COMMAND spu_export_source_test)
+  add_executable(web_instrument_export_test tests/web_instrument_export_test.cpp)
+  target_link_libraries(web_instrument_export_test PRIVATE tetorica_spu_instrument)
+  target_include_directories(web_instrument_export_test SYSTEM PRIVATE vendor/iPlug2OOS/iPlug2/Dependencies/Extras)
+  target_compile_definitions(web_instrument_export_test PRIVATE WEB_FIXTURE_DIR="${CMAKE_CURRENT_SOURCE_DIR}/tests/fixtures/web" VAB_FIXTURE_DIR="${CMAKE_CURRENT_SOURCE_DIR}/tests/fixtures/vab")
+  add_test(NAME spu.web.export COMMAND web_instrument_export_test)
+  add_executable(web_instrument_exporter_test tests/web_instrument_exporter_test.cpp)
+  target_link_libraries(web_instrument_exporter_test PRIVATE tetorica_spu_instrument)
+  target_compile_definitions(web_instrument_exporter_test PRIVATE WEB_FIXTURE_DIR="${CMAKE_CURRENT_SOURCE_DIR}/tests/fixtures/web" VAB_FIXTURE_DIR="${CMAKE_CURRENT_SOURCE_DIR}/tests/fixtures/vab")
+  add_test(NAME spu.web.export.worker COMMAND web_instrument_exporter_test)
+  set_tests_properties(spu.web.export.worker PROPERTIES TIMEOUT 45)
   add_executable(web_instrument_loader_test tests/web_instrument_loader_test.cpp)
   target_link_libraries(web_instrument_loader_test PRIVATE tetorica_spu_instrument)
   target_compile_definitions(web_instrument_loader_test PRIVATE WEB_FIXTURE_DIR="${CMAKE_CURRENT_SOURCE_DIR}/tests/fixtures/web")

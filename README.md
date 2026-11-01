@@ -346,6 +346,44 @@ from the file. The plugin uses its existing voice-level calibration and private
 16-bit Morph carrier, so Web/plugin output PCM is not promised bit-identical.
 See the [import verification record](docs/web_instrument_import_20261101.md).
 
+## Save a sound for the Web Synth
+
+Choose **Save Web...** in the common header, then choose a `.spu.json` filename.
+The applied sound at the time you press the button is prepared on a worker and
+saved through the native file dialog. The current instrument and any pending
+sound change keep their state. Cancellation or a failed write preserves an
+existing destination file.
+
+Builtin, the selected VAB Tone, a PCM cycle and imported ADPCM are supported.
+Active Morph exports A/B, Amount and the current blend as a cyclic ADPCM sample.
+Inactive Morph retains the base sample. Unapplied drafts are not exported.
+Web snapshots contain one instrument; they do not contain the original VAB bank
+or all plugin project settings.
+
+Plugin Gain is excluded and is not baked into voice volumes. Adjust the Web
+Master for its different calibration; even a muted plugin can export a sound.
+Custom ADSR and Reverb send are stored as effective voice settings. Disabled
+Reverb exports Off; Noise priority clears masked PMON/Morph enable flags while
+retaining their other settings. The export status tooltip describes these
+format conversions. The DAW project keeps its original state.
+
+Morph/PMON use different sample representations on Web and Native, so exact
+waveforms and output levels are not guaranteed. The Web UI may canonicalize
+legacy PCM encoding when it loads the authored cycle. A fresh Web app also
+reserves editor sample RAM: arbitrary ADPCM exports are limited to 518656 bytes,
+or 518592 with active PMON. Reload the Web app if earlier loads fill its bank.
+See the [export verification record](docs/web_instrument_export_20261101.md).
+
+The interoperability check uses the actual Web source checkout and optional
+headless Chromium/WebKit, with physical audio output muted:
+
+```sh
+build/offline/web_instrument_export_test --write-fixtures build/web-export-cases
+node scripts/check_web_instrument_export.mjs --web-root ../.. \
+  --cases build/web-export-cases --engines chromium,webkit \
+  --out build/web-export-browser-report.json
+```
+
 ## Embedded DAW state
 
 Custom state embeds the complete original VAB or authored PCM cycle, sparse Program/Tone selection,

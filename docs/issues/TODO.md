@@ -33,14 +33,14 @@ PCMの4波形・自由描画・Apply / Revertも実装し、実AU/VST3とStandal
 
 ### Web音色ファイル書き出しの今回の区切り（2026-11-01、実装前）
 
-- [ ] 現在の保存対象音色をWeb `.spu.json` v1へ書き出す。Builtin / 選択中VAB Tone / PCM cycle / import済みADPCMを対象にし、未Apply draft・保持音・decoder状態・Bend / Sustainは出力しない。
-- [ ] 元ADPCM・root・loop・signed左右volumeを保持し、Custom ADSRはsource reserved bit13をmergeした実効word、Reverb sendはAll notes / Tone指定を解決した値を出す。VAB全bankではなく現在選択Toneのsnapshotと説明する。
-- [ ] Morphが実効Onなら現在blendの112PCM・循環ADPCM・A/B・Amountを出力する。Web形式に入らない元sourceはDAW projectへ保持し、Web fileから元VAB等へ戻せるとは約束しない。Noise中はMorphをeffective OffとしてA/B等を保持する。
-- [ ] Noise / PMON両raw OnはNoise優先でPMON EnabledだけOffへ、Reverb bypassはpreset Offへ投影する。変更した表現はexport結果の説明へ出し、pluginの値・現音・pendingは変更しない。
-- [ ] Webにないplugin Gainはvolumeへ焼き込まず、元の音色volumeを保存する。WebのMaster / voice校正との差とGain除外を説明し、波形・出音レベルのbit一致は約束しない。Web presetはDAW state全体のlossless backupとは区別する。
-- [ ] pure writerは全tupleを検証し、元bytesを保った新JSONだけを作る。Web実readerによるreadbackとC++ read/write/read、全kind・Morph / Noise優先 / Reverb / ADSRのmatrixで検証する。
-- [ ] 共通Save Web操作を追加し、既存720×620・3pages・鍵盤を維持する。現在のcoherent saved snapshotを使い、JSON生成とfile I/Oはworkerで実行する。file dialog中のeditor close / host restoreで古いcallbackを使わない。
-- [ ] native Save dialogで選ばれたfileへ、同一filesystemの一時fileからatomic replaceする。キャンセル・不正path・書込失敗で既存fileを壊さず、UTF8 path / 既存file更新 / latest / worker joinを検証する。
+- [x] 現在の保存対象音色をWeb `.spu.json` v1へ書き出す。Builtin / 選択中VAB Tone / PCM cycle / import済みADPCMを対象にし、未Apply draft・保持音・decoder状態・Bend / Sustainは出力しない。
+- [x] 元ADPCM・root・loop・signed左右volumeを保持し、Custom ADSRはsource reserved bit13をmergeした実効word、Reverb sendはAll notes / Tone指定を解決した値を出す。VAB全bankではなく現在選択Toneのsnapshotと説明する。
+- [x] Morphが実効Onなら現在blendの112PCM・循環ADPCM・A/B・Amountを出力する。Web形式に入らない元sourceはDAW projectへ保持し、Web fileから元VAB等へ戻せるとは約束しない。Noise中はMorphをeffective OffとしてA/B等を保持する。
+- [x] Noise / PMON両raw OnはNoise優先でPMON EnabledだけOffへ、Reverb bypassはpreset Offへ投影する。変更した表現はexport結果の説明へ出し、pluginの値・現音・pendingは変更しない。
+- [x] Webにないplugin Gainはvolumeへ焼き込まず、元の音色volumeを保存する。WebのMaster / voice校正との差とGain除外を説明し、波形・出音レベルのbit一致は約束しない。Web presetはDAW state全体のlossless backupとは区別する。
+- [x] pure writerは全tupleを検証し、元bytesを保った新JSONだけを作る。Web実readerによるreadbackとC++ read/write/read、全kind・Morph / Noise優先 / Reverb / ADSRのmatrixで検証する。
+- [x] 共通Save Web操作を追加し、既存720×620・3pages・鍵盤を維持する。現在のcoherent saved snapshotを使い、JSON生成とfile I/Oはworkerで実行する。file dialog中のeditor close / host restoreで古いcallbackを使わない。
+- [x] native Save dialogで選ばれたfileへ、同一filesystemの一時fileからatomic replaceする。キャンセル・不正path・書込失敗で既存fileを壊さず、UTF8 path / 既存file更新 / latest / worker joinを検証する。
 - [ ] Offline / macOS / ASan / 実AU・VST3 / validator / CI、Standalone save dialogと実Web readerでの読み戻しを確認し、既知AU退避更新・旧GarageBand復元・記録をcommit / pushする。
 
 開始は`b8c2e3b`、main / origin同期・clean tree。更新前installed AU manifestは[import記録](../web_instrument_import_20261101.json)。

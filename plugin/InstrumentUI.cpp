@@ -176,6 +176,10 @@ struct TetoricaSPU::InstrumentUIState
   tetorica::WebInstrumentLoader::Ticket webTicket = 0;
   tetorica::SpuEngineExchange::Generation webBaseGeneration = 0, webCommitted = 0;
   std::uint64_t webRevision = 0;
+  std::uint64_t exportTicket = 0, exportRevision = 0;
+  tetorica::SpuEngineExchange::Generation exportGeneration = 0;
+  std::string exportNotes;
+  std::string exportStatus;
   std::uint64_t revision = 0;
   bool baselineInitialized = false;
   bool pickerOpen = false;
@@ -199,8 +203,12 @@ void TetoricaSPU::initializeInstrumentUI()
     // callback retaining a raw graphics pointer beyond editor destruction.
     graphics->AttachPopupMenuControl(IText(15));
     graphics->AttachPanelBackground(IColor(255, 239, 248, 250));
-    graphics->AttachControl(new ITextControl(IRECT(24, 18, 550, 58),
+    graphics->AttachControl(new ITextControl(IRECT(24, 18, 420, 58),
       "Tetorica SPU", IText(30, IColor(255, 27, 62, 73))));
+    auto* saveWeb=new IVButtonControl(IRECT(432, 22, 550, 54),
+      [this](IControl*) { prepareWebExportFromUI(); }, "Save Web...");
+    saveWeb->SetTooltip("Save the applied sound as .spu.json for the Web Synth. Current Tone only; Gain and unapplied drafts stay in the DAW. Morph saves its current blend.");
+    graphics->AttachControl(saveWeb,kCtrlSaveWeb);
     graphics->AttachControl(new IVButtonControl(IRECT(24, 64, 154, 99),
       [this](IControl*) { promptForVab(); }, "Load sound..."), kCtrlLoadVab);
     graphics->AttachControl(new IVButtonControl(IRECT(166, 64, 296, 99),
@@ -476,10 +484,21 @@ void TetoricaSPU::OnUIOpen()
 void TetoricaSPU::closeInstrumentUI() noexcept
 {
   mWebLoader.cancel();
+  const auto exportState=mWebExporter.status();
+  const bool acceptedExport=exportState.state==tetorica::WebInstrumentExporter::State::Writing||
+    (!exportState.path.empty()&&(exportState.state==tetorica::WebInstrumentExporter::State::Saved||
+      exportState.state==tetorica::WebInstrumentExporter::State::Failed));
+  if(!acceptedExport)mWebExporter.cancel();
   if (mInstrumentUI)
   {
     if(mInstrumentUI->webTicket)mInstrumentUI->status="Import cancelled when the editor closed. Previous sound kept.";
     mInstrumentUI->webTicket = 0;
+    if(!acceptedExport)
+    {
+      if(mInstrumentUI->exportTicket)
+        mInstrumentUI->status=mInstrumentUI->exportStatus="Web save preparation cancelled when the editor closed.";
+      mInstrumentUI->exportTicket = 0;
+    }
   }
   if (auto* graphics = GetUI())
   {
@@ -509,6 +528,7 @@ void TetoricaSPU::promptForVab()
 {
   using namespace iplug::igraphics;
   if (!GetUI() || mInstrumentUI->pickerOpen || !mInstrumentUI->lifetime) return;
+  mWebExporter.cancel();mInstrumentUI->exportTicket=0;
   mInstrumentUI->pickerOpen = true;
   updateInstrumentControls();
   const std::weak_ptr<InstrumentUIState::Lifetime> lifetime = mInstrumentUI->lifetime;
@@ -555,6 +575,89 @@ void TetoricaSPU::promptForVab()
         }
         catch (const std::exception& error) { ui.status = std::string("Load failed: ") + error.what(); }
       }
+      owner->updateInstrumentControls();
+    });
+}
+
+void TetoricaSPU::prepareWebExportFromUI()
+{
+  if(!GetUI()||!mInstrumentUI||mInstrumentUI->pickerOpen||!mInstrumentUI->lifetime)return;
+  auto& ui=*mInstrumentUI;
+  try
+  {
+    if(mWebExporter.status().state==tetorica::WebInstrumentExporter::State::Writing)return;
+    mWebExporter.cancel();ui.exportTicket=0;ui.exportNotes.clear();
+    const auto revision=mInstrumentUIRevision.load(std::memory_order_acquire);
+    const auto generation=mEngines.latestGeneration();
+    iplug::IByteChunk bytes;
+    if(!SerializeState(bytes))throw std::runtime_error("Could not capture a stable sound; try Save Web again");
+    auto state=tetorica::decodeState({bytes.GetData(),static_cast<std::size_t>(bytes.Size())});
+    std::string name="Builtin Sine";
+    switch(state.definition->kind())
+    {
+      case tetorica::InstrumentDefinition::Kind::Vab:
+        name="VAB Program "+std::to_string(state.definition->program())+" Tone "+std::to_string(state.definition->tone());break;
+      case tetorica::InstrumentDefinition::Kind::PcmCycle:name="PCM cycle";break;
+      case tetorica::InstrumentDefinition::Kind::AdpcmSample:
+        name=state.definition->rawAdpcmSample().name;
+        if(name.empty())name="Imported sound";
+        break;
+      case tetorica::InstrumentDefinition::Kind::Builtin:break;
+    }
+    std::lock_guard<std::mutex> lock(mStateMutex);
+    if(revision!=mInstrumentUIRevision.load(std::memory_order_acquire)||
+       generation!=mEngines.latestGeneration())
+      throw std::runtime_error("Sound changed during capture; try Save Web again");
+    ui.exportTicket=mWebExporter.prepare(std::move(state),std::move(name));
+    ui.exportRevision=revision;ui.exportGeneration=generation;ui.exportNotes.clear();
+    ui.status=ui.exportStatus="Preparing Web sound snapshot...";
+  }
+  catch(const std::exception& error)
+  { ui.status=ui.exportStatus=std::string("Save failed: ")+error.what(); }
+  updateInstrumentControls();
+}
+
+void TetoricaSPU::promptForWebExport()
+{
+  using namespace iplug::igraphics;
+  if(!GetUI()||!mInstrumentUI||mInstrumentUI->pickerOpen||!mInstrumentUI->lifetime)return;
+  auto& ui=*mInstrumentUI;
+  const auto ticket=ui.exportTicket;
+  const auto revision=ui.exportRevision;
+  const auto generation=ui.exportGeneration;
+  if(!ticket||!mWebExporter.preview(ticket))return;
+  ui.pickerOpen=true;
+  updateInstrumentControls();
+  const std::weak_ptr<InstrumentUIState::Lifetime> lifetime=ui.lifetime;
+  WDL_String fileName("Tetorica-SPU.spu.json"),path;
+  GetUI()->PromptForFile(fileName,path,EFileAction::Save,"json",
+    [lifetime,ticket,revision,generation](const WDL_String& file,const WDL_String&)
+    {
+      const auto live=lifetime.lock();if(!live)return;
+      std::lock_guard<std::mutex> lifetimeLock(live->mutex);
+      auto* owner=live->owner;if(!owner)return;
+      auto& ui=*owner->mInstrumentUI;
+      ui.pickerOpen=false;
+      try
+      {
+        std::lock_guard<std::mutex> stateLock(owner->mStateMutex);
+        if(ui.exportTicket!=ticket||owner->mInstrumentUIRevision.load(std::memory_order_acquire)!=revision||
+           owner->mEngines.latestGeneration()!=generation)
+        {
+          owner->mWebExporter.cancel();ui.exportTicket=0;
+          ui.status=ui.exportStatus="Save cancelled because the sound changed.";
+        }
+        else if(!file.GetLength())
+        {
+          owner->mWebExporter.cancel();ui.exportTicket=0;
+          ui.status=ui.exportStatus="Web save cancelled.";
+        }
+        else if(owner->mWebExporter.requestSave(ticket,std::string(file.Get())))
+          ui.status=ui.exportStatus="Saving Web sound snapshot...";
+        else throw std::runtime_error("Prepared Web snapshot is no longer available");
+      }
+      catch(const std::exception& error)
+      {ui.exportTicket=0;ui.status=ui.exportStatus=std::string("Save failed: ")+error.what();}
       owner->updateInstrumentControls();
     });
 }
@@ -623,6 +726,7 @@ void TetoricaSPU::OnIdle()
   bool notify = false;
   bool restored = false;
   bool importedParameters = false;
+  bool promptExport = false;
   std::uint64_t revision = 0;
   {
     std::lock_guard<std::mutex> lock(mStateMutex);
@@ -633,6 +737,7 @@ void TetoricaSPU::OnIdle()
       ui.revision = revision;
       ui.requested = 0;
       mWebLoader.cancel();ui.webTicket=0;ui.webCommitted=0;
+      mWebExporter.cancel();ui.exportTicket=0;
       ui.status = "Project sound restored.";
     }
     if(ui.webTicket)
@@ -686,11 +791,15 @@ void TetoricaSPU::OnIdle()
     {
       if (status.state == tetorica::VabLoader::State::Ready)
       {
-        ui.status = mEngines.adoptedGeneration() == ui.requested ?
-          "Loaded. Play MIDI or the keyboard." : "Ready. Waiting for an audio block.";
+        if(mEngines.adoptedGeneration()==ui.requested)
+        {ui.status="Loaded. Play MIDI or the keyboard.";ui.requested=0;}
+        else ui.status="Ready. Waiting for an audio block.";
       }
       else if (status.state == tetorica::VabLoader::State::Failed)
+      {
         ui.status = std::string("Load failed: ") + status.error + ". Previous sound kept.";
+        ui.requested=0;
+      }
     }
     else if (ui.requested && ui.requested != latest)
       ui.requested = 0;
@@ -702,6 +811,39 @@ void TetoricaSPU::OnIdle()
       notify = notify || !sameDefinition(ui.notificationBaseline, definition);
     ui.notificationBaseline = definition;
     ui.baselineInitialized = true;
+  }
+  if(ui.exportTicket)
+  {
+    const auto status=mWebExporter.status();
+    const bool acceptedWrite=status.state==tetorica::WebInstrumentExporter::State::Writing||
+      status.state==tetorica::WebInstrumentExporter::State::Saved;
+    if(!acceptedWrite&&(ui.exportRevision!=mInstrumentUIRevision.load(std::memory_order_acquire)||
+       ui.exportGeneration!=mEngines.latestGeneration()))
+    {
+      mWebExporter.cancel();ui.exportTicket=0;
+      ui.status=ui.exportStatus="Save cancelled because the sound changed.";
+    }
+    else if(status.ticket==ui.exportTicket)
+    {
+      if(status.state==tetorica::WebInstrumentExporter::State::Failed)
+      {
+        ui.status=ui.exportStatus="Save failed: "+status.error;ui.exportTicket=0;
+      }
+      else if(status.state==tetorica::WebInstrumentExporter::State::Ready)
+      {
+        ui.exportNotes.clear();
+        for(const auto& note:status.notes)ui.exportNotes+=(ui.exportNotes.empty()?"":"\n")+note;
+        ui.status=ui.exportStatus="Web snapshot ready. Gain excluded; choose a file.";
+        promptExport=!ui.pickerOpen&&GetUI()&&ui.lifetime;
+      }
+      else if(status.state==tetorica::WebInstrumentExporter::State::Saved)
+      {
+        ui.status=ui.exportStatus="Saved Web sound. Gain excluded; details in tooltip.";
+        ui.exportNotes="File: "+status.path+"\n";
+        for(const auto& note:status.notes)ui.exportNotes+=note+"\n";
+        ui.exportTicket=0;
+      }
+    }
   }
   if (definition != ui.definition || restored)
   {
@@ -752,6 +894,8 @@ void TetoricaSPU::OnIdle()
   // synchronously in response. Do not mark a superseding host restore dirty.
   if (notify && mInstrumentUIRevision.load(std::memory_order_acquire) == revision)
     notifyHostOfInstrumentEdit();
+  if(promptExport&&mInstrumentUIRevision.load(std::memory_order_acquire)==revision)
+    promptForWebExport();
 }
 
 void TetoricaSPU::updateInstrumentControls()
@@ -780,6 +924,11 @@ void TetoricaSPU::updateInstrumentControls()
     ui.definition->kind() == tetorica::InstrumentDefinition::Kind::Vab;
   if (auto* control = graphics->GetControlWithTag(kCtrlLoadVab))
     if (control->IsDisabled() != ui.pickerOpen) control->SetDisabled(ui.pickerOpen);
+  if(auto* control=graphics->GetControlWithTag(kCtrlSaveWeb))
+  {
+    const bool disabled=ui.pickerOpen||mWebExporter.status().state==tetorica::WebInstrumentExporter::State::Writing;
+    if(control->IsDisabled()!=disabled)control->SetDisabled(disabled);
+  }
   if (auto* control = graphics->GetControlWithTag(kCtrlBankLabel))
   {
     std::string label = vab ?
@@ -804,7 +953,9 @@ void TetoricaSPU::updateInstrumentControls()
     if (std::strcmp(text->GetStr(), ui.status.c_str()))
     {
       text->SetStr(ui.status.c_str());
-      control->SetTooltip(ui.status.c_str());
+      const auto tooltip=ui.status==ui.exportStatus&&!ui.exportNotes.empty()?
+        ui.status+"\n"+ui.exportNotes:ui.status;
+      control->SetTooltip(tooltip.c_str());
     }
   }
   for (const auto tag : {kCtrlProgram, kCtrlTone})

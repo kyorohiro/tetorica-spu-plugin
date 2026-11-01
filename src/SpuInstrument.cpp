@@ -3,6 +3,7 @@
 #include "SpuInstrument.h"
 #include "VabBank.h"
 #include "SpuAdpcm.h"
+#include "SpuBuiltin.h"
 #include <tetorica/ps1_spu.h>
 #include <algorithm>
 #include <cmath>
@@ -13,16 +14,6 @@ namespace {
 constexpr unsigned kSampleAddress = 0x2000;
 constexpr unsigned kVoiceVolume = 0x0c00;
 
-// Original 0.8 * sin(2*pi*n/112), Float32 PCM, encoded with our BSD-3-Clause
-// encodePs1AdpcmCycle (hello_ymfm/docs/js/ps1_adpcm_encoder.js). Its cyclic
-// history scoring avoids the first-packet flattening of independent encoding.
-// No game recording or sample bank. Raw second-pass SNR: 60.12 dB.
-constexpr std::array<std::uint8_t, 64> kSineAdpcm{{
-  38,6,68,85,85,102,117,118,102,119,119,118,103,103,87,102,
-  38,0,70,70,69,52,36,35,18,17,0,224,224,222,222,220,
-  38,0,188,188,171,171,170,154,154,169,153,169,153,170,169,155,
-  38,3,172,187,204,204,237,221,255,14,240,2,33,34,51,67
-}};
 // Preset register constants by pSXAuthor/R. Belmont, BSD-3-Clause, retained
 // from the pinned SDK's spu_tables.cpp. Its Echo/Delay entries have no effect
 // configuration and are deliberately not exposed. This is the native effect.
@@ -187,7 +178,7 @@ bool SpuInstrument::renderNative(float* left, float* right, unsigned count) noex
 void SpuInstrument::initialize() {
   if (ps1_spu_sample_rate() != kNativeSampleRate ||
       !ps1_spu_set_mix_headroom(mChip, 4) ||
-      !ps1_spu_load_ram(mChip, kSampleAddress, kSineAdpcm.data(), kSineAdpcm.size()))
+      !ps1_spu_load_ram(mChip, kSampleAddress, kBuiltinSineAdpcm.data(), kBuiltinSineAdpcm.size()))
     throw std::runtime_error("Could not prepare Native SPU sine");
   write(0x180, 0x3fff); write(0x182, 0x3fff); write(0x1aa, 0xc000);
   for (unsigned voice = 0; voice < kVoiceCount; ++voice) {

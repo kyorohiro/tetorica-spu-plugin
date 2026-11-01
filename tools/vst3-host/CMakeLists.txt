@@ -20,6 +20,8 @@ add_executable(tetorica_vst3_audio_check
   "${TETORICA_ROOT}/src/SpuMorph.cpp"
   "${TETORICA_ROOT}/src/SpuAdpcm.cpp"
   "${TETORICA_ROOT}/src/WebInstrument.cpp"
+  "${TETORICA_ROOT}/src/SpuExportSource.cpp"
+  "${TETORICA_ROOT}/src/WebInstrumentExport.cpp"
   "${TETORICA_ROOT}/src/VabBank.cpp"
   "${VST3_SDK}/public.sdk/source/common/memorystream.cpp"
   "${VST3_SDK}/public.sdk/source/vst/hosting/plugprovider.cpp")

@@ -41,7 +41,7 @@ Gainは現在0〜100%。WebのMaster 200%とは異なる。
 | 実装済み：Noise | Noise clock、Sample切替 | 共有Clock0〜63のlive変更、元音源・draft保持、19params/state5と旧形式互換。実AU/VST3とStandaloneを検証。実DAW独自操作等は残る。 |
 | 実装済み：PMON | 変調波形・Ratio・Depth・Decay | 隣接voiceの12組、4変調波形、live Ratio / Depth、次NoteのDecay、24params / state6を追加した。元音源保持・Noise優先・旧state互換をcore / 実AU・VST3で検証。Standalone操作・installed AU更新・CIも完了。実聴・実DAW automation録音等は残る。 |
 | 実装済み：Software Morph | A/B/Resultを同じcanvasへ表示し、編集対象を切替。保持音を再発音せずblend変更 | 元sourceとA/B原本を保つ26params / state7を実装。endpointはdraft / Apply、Amountだけlive。初期Off、A=Sine / B=Saw（振幅0.8）、Amount0。Offは元sourceへ戻す。PMON併用・Noise優先・実AU/VST3・Standalone・旧state復元・CIを検証。実聴・実DAW独自UIとautomation録音は残る。 |
-| 音色・素材の入力 | `.spu.json`、audio、PSF1/MiniPSFからの静的VAB抽出、VH+VB | `.spu.json` v1の通常ADPCM / PCM / Morphと設定をimportし、schema8で元bytesを保持する。共通Load soundからcomplete VABも選択可能。書き出し・長いAudio v2・PSF抽出・VH/VB file pickerは後続。既知のNative loop flag制限は明示rejectを維持。 |
+| 音色・素材の入力 | `.spu.json`、audio、PSF1/MiniPSFからの静的VAB抽出、VH+VB | `.spu.json` v1の通常ADPCM / PCM / Morphと設定をimportし、schema8で元bytesを保持する。Save Webは現在音色のv1 snapshotを書き出し、実Web reader / Chromium / WebKitで読み戻しを検証。Gainや全VAB bankは含めず、Morph等の形式差を説明する。長いAudio v2・PSF抽出・VH/VB file pickerと既知Native loop制限は後続。 |
 | monitor・演奏UI | Envelope/Waveform/Spectrum、Guitar/Bass/Ukulele、Octave、Pitch/Morph wheel、Master 200% | Morph AmountはSourceとkeyboard横へ実装済み。残るmonitor・Pitch wheel・Octave等はDAWの代替機能とStandaloneの利便性を考慮して追加する。 |
 
 各段階で、音の変化だけでなく、演奏中の編集・保存直後の復元・不正入力時の現音源保持を確認する。
