@@ -71,6 +71,14 @@ std::vector<std::uint8_t> body(CFPropertyListRef state)
   return {bytes, bytes + size};
 }
 
+CFStringRef stateName(CFPropertyListRef state)
+{
+  require(state && CFGetTypeID(state) == CFDictionaryGetTypeID(), "Named AU state is not a dictionary");
+  const auto name = CFDictionaryGetValue(static_cast<CFDictionaryRef>(state), CFSTR(kAUPresetNameKey));
+  require(name && CFGetTypeID(name) == CFStringGetTypeID(), "Saved AU name is not a CFString");
+  return static_cast<CFStringRef>(name); // Borrowed from the caller-owned state.
+}
+
 class Instance final {
 public:
   explicit Instance(AudioComponent component)
@@ -126,6 +134,32 @@ public:
     // The host is deliberately quiescent: no render or MIDI call is in flight.
     return AudioUnitSetProperty(mUnit, kAudioUnitProperty_ClassInfo, kAudioUnitScope_Global,
       0, &state, sizeof(state));
+  }
+  Cf<CFArrayRef> factoryPresets() const
+  {
+    CFArrayRef presets = nullptr;
+    UInt32 size = sizeof(presets);
+    ok(AudioUnitGetProperty(mUnit, kAudioUnitProperty_FactoryPresets, kAudioUnitScope_Global,
+      0, &presets, &size), "AU factory-presets property rejected");
+    require(presets && size == sizeof(presets) && CFGetTypeID(presets) == CFArrayGetTypeID(),
+      "AU factory-presets property is not an owned CFArray");
+    return Cf<CFArrayRef>(presets);
+  }
+  AUPreset presentPreset() const
+  {
+    AUPreset preset{-1, nullptr};
+    UInt32 size = sizeof(preset);
+    ok(AudioUnitGetProperty(mUnit, kAudioUnitProperty_PresentPreset, kAudioUnitScope_Global,
+      0, &preset, &size), "AU present-preset property rejected");
+    require(size == sizeof(preset) && preset.presetName &&
+      CFGetTypeID(preset.presetName) == CFStringGetTypeID(), "AU present preset lacks its owned name");
+    return preset; // PresentPreset transfers +1 ownership of presetName.
+  }
+  void restoreFactoryPreset(int number)
+  {
+    const AUPreset preset{number, CFSTR("The factory number selects its sound")};
+    ok(AudioUnitSetProperty(mUnit, kAudioUnitProperty_PresentPreset, kAudioUnitScope_Global,
+      0, &preset, sizeof(preset)), "AU factory preset recall rejected");
   }
   float gain() const
   {
@@ -214,6 +248,116 @@ void rejected(Instance& instance, CFPropertyListRef bad, const std::vector<std::
   const auto saved = instance.save();
   require(body(saved.get()) == expected, "Malformed AU state changed the authoring snapshot/pending definition");
 }
+
+void checkPresetNames(AudioComponent component, const std::vector<std::uint8_t>& bank)
+{
+  Instance named(component), reference(component);
+  const auto initial = named.save();
+  const auto defaultBody = body(initial.get());
+  const auto present = named.presentPreset();
+  const Cf<CFStringRef> presentName(present.presetName);
+  const auto factories = named.factoryPresets();
+  require(CFArrayGetCount(factories.get()) == 1, "AU must publish one initialized builtin factory preset");
+  const auto factory = static_cast<const AUPreset*>(CFArrayGetValueAtIndex(factories.get(), 0));
+  require(factory && factory->presetNumber == 0 && factory->presetName &&
+    CFEqual(factory->presetName, CFSTR("TetoricaSPU")) && present.presetNumber == 0 &&
+    CFEqual(presentName.get(), factory->presetName) && CFEqual(stateName(initial.get()), presentName.get()),
+    "AU FactoryPresets/PresentPreset/ClassInfo default names disagree");
+
+  const auto encoded = tetorica::encodeState(tetorica::InstrumentDefinition::fromVab(bank, 3, 1), 37);
+  const Cf<CFStringRef> unicode(CFStringCreateWithCString(kCFAllocatorDefault,
+    "User \xe6\x97\xa5\xe6\x9c\xac\xe8\xaa\x9e \xf0\x9f\x8e\xb9", kCFStringEncodingUTF8));
+  const auto maximumText = std::string(1024, 'x');
+  const Cf<CFStringRef> maximumName(CFStringCreateWithCString(kCFAllocatorDefault,
+    maximumText.c_str(), kCFStringEncodingUTF8));
+  require(unicode.get() && maximumName.get(), "Cannot create AU metadata test names");
+  // A name equal to the factory entry is still descriptive: the embedded VAB
+  // and Gain must win, rather than recalling builtin state by string lookup.
+  for(const auto name : {CFSTR("TetoricaSPU"), unicode.get(), CFSTR(""), maximumName.get()})
+  {
+    const auto state = withData(initial.get(), encoded);
+    CFDictionarySetValue(state.get(), CFSTR(kAUPresetNameKey), name);
+    ok(named.restore(state.get()), "AU rejected a valid bounded ClassInfo name");
+    const auto saved = named.save();
+    require(CFEqual(stateName(saved.get()), name) && body(saved.get()) == encoded && named.gain() == 37.f,
+      "AU failed to retain a ClassInfo name or recalled a preset by name");
+  }
+  const Cf<CFMutableStringRef> mutableName(CFStringCreateMutableCopy(kCFAllocatorDefault, 0, unicode.get()));
+  require(mutableName.get(), "Cannot create mutable AU name");
+  const auto mutableState = withData(initial.get(), encoded);
+  CFDictionarySetValue(mutableState.get(), CFSTR(kAUPresetNameKey), mutableName.get());
+  ok(named.restore(mutableState.get()), "AU rejected mutable ClassInfo metadata");
+  CFStringReplaceAll(mutableName.get(), CFSTR("Host changed its original mutable string"));
+  require(CFEqual(stateName(named.save().get()), unicode.get()), "AU borrowed a mutable host name");
+  const auto referenceState = withData(initial.get(), encoded);
+  CFDictionarySetValue(referenceState.get(), CFSTR(kAUPresetNameKey), CFSTR("Independent instance"));
+  ok(reference.restore(referenceState.get()), "AU reference name restore failed");
+  require(CFEqual(stateName(named.save().get()), unicode.get()), "AU names leaked between instances");
+  // The pinned framework publishes its single factory index even after user
+  // ClassInfo loading. Preserve that existing contract rather than fabricating
+  // a negative user-preset index that its GetProperty/RestorePreset cannot own.
+  const auto afterUser = named.presentPreset();
+  const Cf<CFStringRef> afterUserName(afterUser.presetName);
+  require(afterUser.presetNumber == 0 && CFEqual(afterUserName.get(), CFSTR("TetoricaSPU")) &&
+    CFEqual(stateName(named.save().get()), unicode.get()),
+    "User ClassInfo metadata changed the pinned factory PresentPreset contract");
+
+  const auto badType = withData(initial.get(), encoded);
+  CFDictionarySetValue(badType.get(), CFSTR(kAUPresetNameKey), kCFBooleanTrue);
+  const auto missing = withData(initial.get(), encoded);
+  CFDictionaryRemoveValue(missing.get(), CFSTR(kAUPresetNameKey));
+  const auto oversizedText = std::string(1025, 'x');
+  const Cf<CFStringRef> oversizedName(CFStringCreateWithCString(kCFAllocatorDefault,
+    oversizedText.c_str(), kCFStringEncodingUTF8));
+  require(oversizedName.get(), "Cannot create oversized AU metadata");
+  const auto oversized = withData(initial.get(), encoded);
+  CFDictionarySetValue(oversized.get(), CFSTR(kAUPresetNameKey), oversizedName.get());
+  auto corrupt = encoded;corrupt[0] ^= 0xff;
+  const auto invalidBody = withData(initial.get(), corrupt);
+  // Matching a real factory name must not recall it before rejecting bad data.
+  CFDictionarySetValue(invalidBody.get(), CFSTR(kAUPresetNameKey), CFSTR("TetoricaSPU"));
+  const auto wrongIdentity = withData(initial.get(), encoded);
+  const SInt32 wrong = 0;
+  const Cf<CFNumberRef> wrongNumber(CFNumberCreate(kCFAllocatorDefault, kCFNumberSInt32Type, &wrong));
+  require(wrongNumber.get(), "Cannot create invalid AU identity");
+  CFDictionarySetValue(wrongIdentity.get(), CFSTR(kAUPresetManufacturerKey), wrongNumber.get());
+  CFDictionarySetValue(wrongIdentity.get(), CFSTR(kAUPresetNameKey), CFSTR("Must not commit this identity/name"));
+  const auto assertRejected = [&](CFPropertyListRef bad) {
+    rejected(named, bad, encoded);
+    const auto saved = named.save();
+    require(CFEqual(stateName(saved.get()), unicode.get()), "Rejected AU state changed its descriptive name");
+  };
+  for(const auto bad : {badType.get(), missing.get(), oversized.get(), invalidBody.get(), wrongIdentity.get()})
+    assertRejected(bad); // Pending engine/name remain intact before first audio.
+  require(named.renderMidi({tetorica::test::on(0, 60, 37)}) ==
+    reference.renderMidi({tetorica::test::on(0, 60, 37)}), "Named restore changed first-render source/Gain PCM");
+  for(const auto bad : {badType.get(), missing.get(), oversized.get(), invalidBody.get(), wrongIdentity.get()})
+  {
+    assertRejected(bad);
+    require(named.renderMidi({}) == reference.renderMidi({}) && named.right() == reference.right(),
+      "Rejected AU name/state interrupted active PCM");
+  }
+
+  // Public factory recall must restore its immutable default chunk and name,
+  // replacing the user name without overwriting the factory menu entry.
+  named.restoreFactoryPreset(0);
+  const auto restoredDefault = named.save();
+  require(body(restoredDefault.get()) == defaultBody && named.gain() == 100.f &&
+    CFEqual(stateName(restoredDefault.get()), CFSTR("TetoricaSPU")),
+    "AU PresentPreset recall retained user metadata or failed to restore builtin defaults");
+  const auto recalled = named.presentPreset();
+  const Cf<CFStringRef> recalledName(recalled.presetName);
+  require(recalled.presetNumber == 0 && CFEqual(recalledName.get(), stateName(restoredDefault.get())) &&
+    CFEqual(factory->presetName, CFSTR("TetoricaSPU")), "AU factory name changed after user-state restore");
+  Instance fresh(component);
+  require(named.renderMidi({tetorica::test::on(0, 60, 37)}) ==
+    fresh.renderMidi({tetorica::test::on(0, 60, 37)}) && named.right() == fresh.right(),
+    "AU named factory recall did not restore fresh builtin audio");
+  std::cout << "PASS AU preset names factoryPresentClassInfoConsistent=true userUnicodeEmpty1024=true "
+    "mutableInputCopied=true instanceNamesIndependent=true noRecallByName=true "
+    "userNameKeepsFactoryIndex=true invalidNameIdentityBodyAtomic=true "
+    "pendingActivePCMPreserved=true factoryRecallDefaultPCM=true\n";
+}
 } // namespace
 
 int main(int argc, char** argv)
@@ -254,6 +398,7 @@ int main(int argc, char** argv)
       tetorica::test::checkSoftwareAudio([&]{return std::make_unique<Instance>(component);},48000,"AU state/MIDIEvent",bank);
       return 0;
     }
+    checkPresetNames(component, bank);
     const auto definition = tetorica::InstrumentDefinition::fromVab(bank, 3, 1);
     const auto encoded = tetorica::encodeState(definition, 37);
 

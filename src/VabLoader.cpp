@@ -11,33 +11,37 @@
 
 namespace tetorica {
 namespace {
-std::vector<std::uint8_t> readBoundedFile(const std::string& utf8Path) {
+// Standard VH contains the fixed128-Program table, at most128 packed Tone
+// tables and one sample-size table. The split parser requires this exact size.
+constexpr std::size_t kMaxSplitHeaderBytes=0x820+128*0x200+0x200;
+std::vector<std::uint8_t> readBoundedFile(const std::string& utf8Path,
+    std::size_t maximum=vab::kMaxFileBytes,const char* role="VAB",const char* limit="1 MiB") {
   if(utf8Path.empty()||utf8Path.find('\0')!=std::string::npos)
-    throw std::runtime_error("Choose a VAB file");
+    throw std::runtime_error(std::string("Choose a ")+role+" file");
   const auto path=std::filesystem::u8path(utf8Path);
   std::error_code error;
   if(!std::filesystem::is_regular_file(path,error)||error)
-    throw std::runtime_error("VAB file is missing or is not a regular file");
+    throw std::runtime_error(std::string(role)+" file is missing or is not a regular file");
   // Measure the opened file before allocating its input buffer. Check the
   // exact read and an EOF probe too, so shrink/growth during reading fails.
   std::ifstream input(path,std::ios::binary|std::ios::ate);
-  if(!input)throw std::runtime_error("Could not open VAB file for reading");
+  if(!input)throw std::runtime_error(std::string("Could not open ")+role+" file for reading");
   const auto end=input.tellg();
-  if(end<=0)throw std::runtime_error("VAB file is empty or its size cannot be read");
-  if(end>static_cast<std::streamoff>(vab::kMaxFileBytes))
-    throw std::runtime_error("VAB file exceeds the 1 MiB limit");
+  if(end<=0)throw std::runtime_error(std::string(role)+" file is empty or its size cannot be read");
+  if(end>static_cast<std::streamoff>(maximum))
+    throw std::runtime_error(std::string(role)+" file exceeds the "+limit+" limit");
   const auto count=static_cast<std::size_t>(end);
   std::vector<std::uint8_t> bytes(count);
   input.seekg(0,std::ios::beg);
   if(!input||!input.read(reinterpret_cast<char*>(bytes.data()),static_cast<std::streamsize>(count))||
      input.gcount()!=static_cast<std::streamsize>(count))
-    throw std::runtime_error("VAB file was truncated or could not be read completely");
+    throw std::runtime_error(std::string(role)+" file was truncated or could not be read completely");
   if(input.peek()!=std::char_traits<char>::eof()||input.bad())
-    throw std::runtime_error("VAB file changed or could not be read completely");
+    throw std::runtime_error(std::string(role)+" file changed or could not be read completely");
   // A standard-library file buffer may have prefetched bytes before a shrink,
   // so a successful read alone is insufficient to notice a concurrent change.
   const auto after=std::filesystem::file_size(path,error);
-  if(error||after!=count)throw std::runtime_error("VAB file changed size during reading");
+  if(error||after!=count)throw std::runtime_error(std::string(role)+" file changed size during reading");
   return bytes;
 }
 constexpr const char* kSuperseded="VAB preparation was superseded by a newer instrument state";
@@ -100,6 +104,28 @@ VabLoader::Generation VabLoader::requestFileImpl(std::string path,std::size_t fl
     job.endpoints=endpoints;
     mJob.emplace(std::move(job));
     mStatus={generation,State::Loading,{}};
+  }
+  mWake.notify_one();return generation;
+}
+
+VabLoader::Generation VabLoader::requestSplitFiles(std::string headerPath,std::string bodyPath) {
+  return requestSplitFilesImpl(std::move(headerPath),std::move(bodyPath),0,true);
+}
+VabLoader::Generation VabLoader::requestSplitFiles(
+    std::string headerPath,std::string bodyPath,std::size_t flatTone) {
+  return requestSplitFilesImpl(std::move(headerPath),std::move(bodyPath),flatTone,false);
+}
+VabLoader::Generation VabLoader::requestSplitFilesImpl(
+    std::string headerPath,std::string bodyPath,std::size_t flatTone,bool firstPlayable) {
+  Generation generation;
+  {
+    std::lock_guard<std::mutex> lock(mMutex);
+    const auto endpoints=retainedEndpoints(mExchange);
+    generation=mExchange.beginRequest();
+    Job job;job.generation=generation;job.kind=Job::Kind::SplitFiles;
+    job.path=std::move(headerPath);job.bodyPath=std::move(bodyPath);
+    job.flatTone=flatTone;job.firstPlayable=firstPlayable;job.endpoints=endpoints;
+    mJob.emplace(std::move(job));mStatus={generation,State::Loading,{}};
   }
   mWake.notify_one();return generation;
 }
@@ -214,6 +240,20 @@ void VabLoader::run() {
       std::shared_ptr<const InstrumentDefinition> definition;
       std::unique_ptr<SpuInstrument> prepared;
       if(job->kind==Job::Kind::File)job->bytes=readBoundedFile(job->path);
+      if(job->kind==Job::Kind::SplitFiles) {
+        auto header=readBoundedFile(job->path,kMaxSplitHeaderBytes,"VH header","68,128-byte");
+        if(!current(job->generation)){finish(job->generation,nullptr,kSuperseded);continue;}
+        auto body=readBoundedFile(job->bodyPath,vab::kMaxBodyBytes,"VB sample body","512 KiB");
+        if(header.size()>vab::kMaxFileBytes-body.size())
+          throw std::runtime_error("VH + VB input exceeds the 1 MiB VAB limit");
+        // Validate split boundaries before concatenation: a complete VAB used
+        // as VH must not accidentally pass the ordinary complete-file parser.
+        // Header fields, reserved prefix, sample padding and packet flags are
+        // retained unchanged, rather than normalized or reconstructed.
+        (void)vab::parse({header.data(),header.size()},{body.data(),body.size()});
+        header.insert(header.end(),body.begin(),body.end());
+        job->bytes=std::move(header);
+      }
       if(job->kind==Job::Kind::Program){
         if(!job->source||job->source->kind()!=InstrumentDefinition::Kind::Vab||job->program>127)
           throw std::runtime_error("Choose a loaded VAB Program");

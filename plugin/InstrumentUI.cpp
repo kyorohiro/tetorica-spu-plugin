@@ -185,6 +185,18 @@ bool sameDefinition(const std::shared_ptr<const tetorica::InstrumentDefinition>&
   return sameBaseDefinition(a, b) && (!a ||
     tetorica::sameMorphEndpoints(a->morphEndpoints(), b->morphEndpoints()));
 }
+
+std::string fileExtension(const std::string& path)
+{
+  const auto dot = path.find_last_of('.');
+  const auto slash = path.find_last_of("/\\");
+  if (dot == std::string::npos || (slash != std::string::npos && dot < slash)) return {};
+  auto extension = path.substr(dot);
+  std::transform(extension.begin(), extension.end(), extension.begin(),
+    [](unsigned char c) { return static_cast<char>(std::tolower(c)); });
+  return extension;
+}
+
 const tetorica::PcmCycle* authoredCycle(
   const std::shared_ptr<const tetorica::InstrumentDefinition>& definition)
 {
@@ -223,6 +235,16 @@ struct TetoricaSPU::InstrumentUIState
   std::uint64_t revision = 0;
   bool baselineInitialized = false;
   bool pickerOpen = false;
+  std::uint64_t pickerSerial = 0;
+  struct SplitVabPicker
+  {
+    std::string firstPath;
+    std::uint64_t revision = 0;
+    tetorica::SpuEngineExchange::Generation generation = 0;
+    bool headerFirst = true;
+    bool pendingPrompt = true;
+  };
+  std::optional<SplitVabPicker> splitPicker;
   InstrumentPage page = InstrumentPage::Reverb;
   std::optional<SourceMode> displayedSource;
   std::optional<bool> displayedMorph;
@@ -251,7 +273,7 @@ void TetoricaSPU::initializeInstrumentUI()
     graphics->AttachControl(saveWeb,kCtrlSaveWeb);
     auto* loadSound=new IVButtonControl(IRECT(24, 64, 154, 99),
       [this](IControl*) { promptForVab(); }, "Load sound...");
-    loadSound->SetTooltip("Load complete VAB, Web .spu.json v1/v2, or PCM16 / Float32 mono/stereo WAV (up to32MiB). Short WAV uses SPU ADPCM; longer WAV uses Software PCM outside SPU RAM, starts at C4 / One shot, and selects Sample / Morph Off. Gain, ADSR, Reverb and dormant settings are retained.");
+    loadSound->SetTooltip("Load complete VAB, a VH + VB pair (select either file first, then its matching partner), Web .spu.json v1/v2, or PCM16 / Float32 mono/stereo WAV (up to32MiB). Short WAV uses SPU ADPCM; longer WAV uses Software PCM outside SPU RAM, starts at C4 / One shot, and selects Sample / Morph Off. Gain, ADSR, Reverb and dormant settings are retained.");
     graphics->AttachControl(loadSound,kCtrlLoadVab);
     graphics->AttachControl(new IVButtonControl(IRECT(166, 64, 296, 99),
       [this](IControl*) { requestBuiltinFromUI(); }, "Builtin Sine"), kCtrlBuiltin);
@@ -574,6 +596,11 @@ void TetoricaSPU::closeInstrumentUI() noexcept
   if(!acceptedExport)mWebExporter.cancel();
   if (mInstrumentUI)
   {
+    if(mInstrumentUI->splitPicker)
+      mInstrumentUI->status="Split VAB selection cancelled when the editor closed. Previous sound kept.";
+    mInstrumentUI->splitPicker.reset();
+    mInstrumentUI->pickerOpen=false;
+    ++mInstrumentUI->pickerSerial;
     if(mInstrumentUI->webTicket)mInstrumentUI->status="Import cancelled when the editor closed. Previous sound kept.";
     mInstrumentUI->webTicket = 0;
     if(mInstrumentUI->audioTicket)mInstrumentUI->status="Audio preparation cancelled when the editor closed. Previous sound kept.";
@@ -615,13 +642,15 @@ void TetoricaSPU::promptForVab()
   if (!GetUI() || mInstrumentUI->pickerOpen || !mInstrumentUI->lifetime) return;
   mWebExporter.cancel();mInstrumentUI->exportTicket=0;
   mInstrumentUI->pickerOpen = true;
+  mInstrumentUI->splitPicker.reset();
+  const auto serial = ++mInstrumentUI->pickerSerial;
   updateInstrumentControls();
   const std::weak_ptr<InstrumentUIState::Lifetime> lifetime = mInstrumentUI->lifetime;
   const auto revision = mInstrumentUIRevision.load(std::memory_order_acquire);
   const auto generation = mEngines.latestGeneration();
   WDL_String fileName, path;
-  GetUI()->PromptForFile(fileName, path, EFileAction::Open, "vab json wav",
-    [lifetime, revision, generation](const WDL_String& file, const WDL_String&) {
+  GetUI()->PromptForFile(fileName, path, EFileAction::Open, "vab vh vb json wav",
+    [lifetime, revision, generation, serial](const WDL_String& file, const WDL_String&) {
       const auto live = lifetime.lock();
       if (!live) return;
       // The callback can outlive its editor. The destructor invalidates this
@@ -630,6 +659,7 @@ void TetoricaSPU::promptForVab()
       auto* owner = live->owner;
       if (!owner) return;
       auto& ui = *owner->mInstrumentUI;
+      if(ui.pickerSerial!=serial)return;
       ui.pickerOpen = false;
       if (file.GetLength())
       {
@@ -640,10 +670,18 @@ void TetoricaSPU::promptForVab()
               owner->mEngines.latestGeneration() == generation)
           {
             std::string path(file.Get());
-            auto extension=path.substr(path.find_last_of('.')==std::string::npos ? path.size() : path.find_last_of('.'));
-            std::transform(extension.begin(),extension.end(),extension.begin(),
-              [](unsigned char c){return static_cast<char>(std::tolower(c));});
-            if(extension==".json")
+            const auto extension=fileExtension(path);
+            if(extension==".vh"||extension==".vb")
+            {
+              // Defer the second sheet to OnIdle. Opening it from this sheet's
+              // completion while holding lifetime/state locks can reenter UI.
+              ui.splitPicker=InstrumentUIState::SplitVabPicker{
+                std::move(path),revision,generation,extension==".vh",true};
+              ui.pickerOpen=true;
+              ui.status=extension==".vh"?"VH selected. Choose the matching VB body file.":
+                "VB selected. Choose the matching VH header file.";
+            }
+            else if(extension==".json")
             {
               ui.webTicket=owner->mWebLoader.requestFile(std::move(path));
               owner->mAudioLoader.cancel();ui.audioTicket=0;ui.audioCommitted=0;
@@ -672,6 +710,65 @@ void TetoricaSPU::promptForVab()
         }
         catch (const std::exception& error) { ui.status = std::string("Load failed: ") + error.what(); }
       }
+      else if(owner->mInstrumentUIRevision.load(std::memory_order_acquire)==revision&&
+              owner->mEngines.latestGeneration()==generation)
+        ui.status="Load cancelled. Previous sound kept.";
+      owner->updateInstrumentControls();
+    });
+}
+
+void TetoricaSPU::promptForSplitVabPartner()
+{
+  using namespace iplug::igraphics;
+  if(!GetUI()||!mInstrumentUI||!mInstrumentUI->lifetime||
+     !mInstrumentUI->splitPicker||!mInstrumentUI->splitPicker->pendingPrompt)return;
+  auto& ui=*mInstrumentUI;
+  const auto selection=*ui.splitPicker;
+  if(mInstrumentUIRevision.load(std::memory_order_acquire)!=selection.revision||
+     mEngines.latestGeneration()!=selection.generation)
+  {
+    ui.splitPicker.reset();ui.pickerOpen=false;
+    updateInstrumentControls();return;
+  }
+  ui.splitPicker->pendingPrompt=false;
+  const auto serial=ui.pickerSerial;
+  const std::weak_ptr<InstrumentUIState::Lifetime> lifetime=ui.lifetime;
+  WDL_String fileName,path;
+  const auto slash=selection.firstPath.find_last_of("/\\");
+  if(slash!=std::string::npos)path.Set(selection.firstPath.substr(0,slash+1).c_str());
+  GetUI()->PromptForFile(fileName,path,EFileAction::Open,selection.headerFirst?"vb":"vh",
+    [lifetime,selection,serial](const WDL_String& file,const WDL_String&) {
+      const auto live=lifetime.lock();if(!live)return;
+      std::lock_guard<std::mutex> lifetimeLock(live->mutex);
+      auto* owner=live->owner;if(!owner)return;
+      auto& ui=*owner->mInstrumentUI;
+      if(ui.pickerSerial!=serial||!ui.splitPicker)return;
+      ui.pickerOpen=false;ui.splitPicker.reset();
+      try
+      {
+        std::lock_guard<std::mutex> stateLock(owner->mStateMutex);
+        // Neither a cancelled partner picker nor an obsolete selection issues
+        // a worker request or cancels any already accepted pending sound.
+        if(owner->mInstrumentUIRevision.load(std::memory_order_acquire)==selection.revision&&
+           owner->mEngines.latestGeneration()==selection.generation)
+        {
+          if(!file.GetLength())ui.status="Split VAB load cancelled. Previous sound kept.";
+          else
+          {
+            std::string second(file.Get());
+            if(fileExtension(second)!=(selection.headerFirst?".vb":".vh"))
+              throw std::runtime_error(selection.headerFirst?"Choose a matching .vb body file":"Choose a matching .vh header file");
+            ui.requested=owner->mLoader.requestSplitFiles(
+              selection.headerFirst?selection.firstPath:second,
+              selection.headerFirst?second:selection.firstPath);
+            owner->mWebLoader.cancel();ui.webTicket=0;ui.webCommitted=0;
+            owner->mAudioLoader.cancel();ui.audioTicket=0;ui.audioCommitted=0;
+            ui.status="Loading VH + VB. Previous sound remains until ready.";
+          }
+        }
+      }
+      catch(const std::exception& error)
+      {ui.status=std::string("Load failed: ")+error.what()+". Previous sound kept.";}
       owner->updateInstrumentControls();
     });
 }
@@ -891,6 +988,11 @@ void TetoricaSPU::OnIdle()
     restored = ui.revision != revision;
     if (restored)
     {
+      // A native sheet already on screen still owns pickerOpen until its
+      // stale completion returns. Only a not-yet-opened partner can be dropped
+      // here; otherwise a new load could overlap the existing native sheet.
+      if(ui.splitPicker&&ui.splitPicker->pendingPrompt)
+      {ui.splitPicker.reset();ui.pickerOpen=false;++ui.pickerSerial;}
       ui.revision = revision;
       ui.requested = 0;
       mWebLoader.cancel();ui.webTicket=0;ui.webCommitted=0;
@@ -1101,6 +1203,8 @@ void TetoricaSPU::OnIdle()
     notifyHostOfInstrumentEdit();
   if(promptExport&&mInstrumentUIRevision.load(std::memory_order_acquire)==revision)
     promptForWebExport();
+  if(ui.splitPicker&&ui.splitPicker->pendingPrompt)
+    promptForSplitVabPartner();
 }
 
 void TetoricaSPU::updateInstrumentControls()

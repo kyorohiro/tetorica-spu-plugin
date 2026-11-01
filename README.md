@@ -327,6 +327,14 @@ state restoration and Web round trips; see the
 ## VAB in the plugin editor
 
 Choose **Load sound...** and open a standard v6/v7 complete `.vab` file (up to 1 MiB).
+For split banks, select either the `.vh` header or the `.vb` body first, then
+select its matching partner in the second file dialog. The second dialog starts
+in the first file's directory and filters for the other extension. Cancelling
+either dialog keeps the current sound. No load is submitted until both are chosen.
+The VH limit is 68,128 bytes and the VB limit is 512 KiB. The parser checks their
+declared combined size and sample boundaries; the format has no checksum that
+can identify an unrelated body with the same valid layout.
+
 Reading, parsing and sample-cache preparation run on a worker. Initial loading
 selects the first playable Tone. **Program** chooses the first playable Tone
 within that Program; **Tone** chooses an exact entry. Both menus use the bank's
@@ -337,7 +345,9 @@ The status distinguishes preparation from audio adoption. A prepared instrument
 can wait for the next audio block when processing is stopped. A failed load keeps
 the current sound and selection; cancelling the file dialog keeps them too.
 The editor shows the embedded bank after project restoration without reopening
-the source file. Split `.vh` + `.vb` file selection remains follow-up work.
+the source file. Split input is embedded as the original VH bytes followed by
+the original VB bytes, so both source files can be moved after saving. Program /
+Tone selection and selected-Tone Web export work as with a complete VAB.
 
 The prepared-engine exchange is now connected at plugin block boundaries.
 `src/VabLoader.h` supplies a non-audio-thread API to prepare a complete VAB Tone

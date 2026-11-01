@@ -38,6 +38,12 @@ TetoricaSPU::TetoricaSPU(const iplug::InstanceInfo& info)
   GetParam(kParamMorphEnabled)->InitBool("Enable software morph", false);
   GetParam(kParamMorphAmount)->InitDouble("Software morph A to B", 0., 0., 1., 0.001);
 
+#if IPLUG_DSP
+  // Initialize the published factory entry and its complete default state.
+  // AU PresentPreset and ClassInfo must describe the same named preset.
+  MakeDefaultPreset("TetoricaSPU", 1);
+#endif
+
 #if IPLUG_EDITOR
   mMakeGraphicsFunc = [this]() {
     return iplug::igraphics::MakeGraphics(*this, PLUG_WIDTH, PLUG_HEIGHT, PLUG_FPS);

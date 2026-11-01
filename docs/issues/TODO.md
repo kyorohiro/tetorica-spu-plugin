@@ -48,11 +48,12 @@ CC120のチャンネル別停止も実装・検証・[CI全2job成功](https://g
 
 開始Plugin `56f6403`、Native SDK `95cf71a`。ユーザーの続行指示で、作業前TODOを保存する。
 
-- [ ] AUのfactory /present preset名とClassInfo保存復元の整合を調べ、既知のpreset-name warningを修正する。独自embedded stateの検証前変更や不正restore時の副作用を加えない。
-- [ ] 実AU hostにpreset名のproperty round-trip・不正state保持の回帰を加え、既存parameter /音源 /state互換を保つ。
-- [ ] workerへ分割VH/VB file読込を追加し、既存parserのbytes・容量検証を再利用する。完全VAB相当のembedded bankへ正規化し、元fileなしで保存復元・Web exportできるようにする。
-- [ ] Load soundでVHまたはVBを選び、対応するもう一方を選択できるようにする。取消 /error /古いdialog callback /editor close時に現音源を保ち、file読込と準備をaudio thread外で行う。
-- [ ] split fixtureと不正 /取消 /世代競合 /容量上限 /embedded保存をunitと実AU/VST3、Standalone UIで検証し、必要なsanitizer /validator /CIを確認する。
+- [x] AUのfactory /present preset名とClassInfo保存復元の整合を調べ、既知のpreset-name warningの原因を修正する。独自embedded stateの検証前変更や不正restore時の副作用を加えない。
+- [x] 実AU hostにpreset名のproperty round-trip・不正state保持の回帰を加え、既存parameter /音源 /state互換を保つ（実AU48kHz全16 PASS行）。
+- [x] workerへ分割VH/VB file読込を追加し、既存parserのbytes・容量検証を再利用する。元VH+VBをbyte-exactに連結したembedded bankとし、元fileなしで保存復元・Web exportできるようにする。
+- [x] Load soundでVHまたはVBを選び、対応するもう一方を選択できるようにする。取消 /error /古いdialog callback /editor close時の保全を実装し、file読込と準備をaudio thread外で行う（lifetime /serial /revision /generationを静的レビュー）。
+- [x] split fixtureと不正 /世代競合 /容量上限 /embedded保存をunit、既存実AU/VST3回帰を検証する（CTest各28件×3構成、validator47/0成功）。Standaloneで両選択順・2枚目取消・不正pair保持・再試行を確認した。実DAW独自split panelと途中restore /closeの直接操作は未確認。
+- [ ] 実装headのGitHub Actions全jobとartifact metadataを確認する。
 - [ ] 検証後にknown manifest付きAU退避更新とauval warning消失・GarageBand旧project保存再起動を確認する。実DAW独自file panelへAI入力が届かない範囲は未確認として区別する。
 - [ ] 仕様 /制限 /source・binary・log /配置manifestと再開TODOを記録してcommit /pushする。
 
@@ -513,7 +514,7 @@ complete `.vab`を最初の対象とする。分割VH/VBの複数file dialogは�
 - [x] Gain変更を約5msで滑らかにする。sampleごとの出力補間と、既存block単位targetの違いを説明する。
 - [ ] 通常parameter automationの各pointをsample offsetで処理する拡張を検討する（現在のGain smoothingはblock targetからの補間）。
 - [ ] AUでrender thread以外から届くMIDIのbounded ingressを検証・対応する。現状のhost MIDI / lifecycle操作は単一consumerとして直列化される前提。
-- [ ] AU factory presetの名前を初期化し、auvalのpreset-name warningを解消する。
+- [ ] AU factory preset名の初期化とClassInfo名保持を実装済み。配置更新後にauvalのpreset-name warning消失を確認する。
 - [x] AU更新時は既存bundleと前回配置したhashを照合し、退避・更新できる手順を用意する（explicit update / 条件付きrollback、11 tests、実更新済み）。
 
 ## Phase 3: VAB楽器と音作り
@@ -528,7 +529,7 @@ complete `.vab`を最初の対象とする。分割VH/VBの複数file dialogは�
 - [x] GarageBand標準AUプリセット経由で、VAB embedded stateのproject保存・元fileなし再起動・UI復元・音声PCM一致を確認する。
 - [ ] VAB/Toneのみの変更でDAWがprojectを変更済みと扱うことを確認する。VST3はoptional setDirty、AUはpublic PresentPreset通知を使用中。
 - [ ] editorを開いたままのhost restoreと、file dialog / Program・Tone popup中のeditor close/reopenを実DAWで追試する。
-- [ ] 分割VH/VBのファイル選択を追加する（parserとoffline APIは対応済み）。
+- [x] 分割VH/VBのファイル選択を追加する。両順序 /取消 /不正pair /retryをStandaloneで確認、worker /state /Web exportも検証した。実DAW独自split panelは別途追試する。
 - [x] Native SDKのrepeat先packetにflag 2がないloopを修正・検証した。flag4-only /markerless0の元bytesを保ち、実AU/VST3・sanitizer・CIで確認済み（[記録](../loop_repeat_20261101.md)）。[installed AU更新・旧project復元](../au_loop_update_20261101.md)も完了。新素材の独自UI操作・実聴は未確認。
 - [x] ADSRをhost parameter / state / graph編集へ公開する（[実AU/VST3・GUI検証](../adsr_editing_20261031.md)）。
 - [x] SPU Reverbをpreset / Enable / Return / sendとstateへ公開する（[検証記録](../reverb_20261031.md)）。

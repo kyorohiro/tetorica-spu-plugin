@@ -32,7 +32,7 @@ public:
   VabLoader(const VabLoader&)=delete;
   VabLoader& operator=(const VabLoader&)=delete;
 
-  // Complete VAB bytes only; split files/dialogs/state restoration are separate.
+  // Complete VAB bytes. File dialogs and state restoration are separate.
   // Inputs are owned, never read from a file or decoded on the audio thread.
   // Oversized input starts a new generation then reports Failed, keeping audio.
   Generation request(std::vector<std::uint8_t> complete,std::size_t flatTone);
@@ -40,6 +40,14 @@ public:
   // form chooses the first playable Tone; the explicit index is always exact.
   Generation requestFile(std::string utf8Path);
   Generation requestFile(std::string utf8Path,std::size_t flatTone);
+  // Explicit VH header and VB body, in that order. Both bounded reads, split
+  // validation and byte-exact concatenation run on the worker. The embedded
+  // definition owns a complete VAB; no source path is needed after preparation.
+  // As with requestFile, failure keeps active audio but supersedes older work.
+  // A cancelled second picker must not call this API at all.
+  Generation requestSplitFiles(std::string vhUtf8Path,std::string vbUtf8Path);
+  Generation requestSplitFiles(std::string vhUtf8Path,std::string vbUtf8Path,
+                               std::size_t flatTone);
   // Change selection from the embedded immutable bank, without rereading disk
   // or validating/decoding the selected sample on the UI/audio thread.
   Generation requestSelection(std::shared_ptr<const InstrumentDefinition> source,
@@ -60,12 +68,13 @@ public:
 
 private:
   struct Job {
-    enum class Kind { Bytes,Builtin,File,Selection,Program,PcmCycle,MorphEndpoints };
+    enum class Kind { Bytes,Builtin,File,SplitFiles,Selection,Program,PcmCycle,MorphEndpoints };
     Generation generation=0;
     std::vector<std::uint8_t> bytes;
     std::size_t flatTone=0;
     Kind kind=Kind::Bytes;
     std::string path;
+    std::string bodyPath;
     std::shared_ptr<const InstrumentDefinition> source;
     std::uint32_t program=0,tone=0;
     bool firstPlayable=false;
@@ -73,6 +82,8 @@ private:
     tetorica::MorphEndpoints endpoints{};
   };
   Generation requestFileImpl(std::string path,std::size_t flatTone,bool firstPlayable);
+  Generation requestSplitFilesImpl(std::string headerPath,std::string bodyPath,
+                                   std::size_t flatTone,bool firstPlayable);
   void run();
   bool current(Generation generation) const;
   void finish(Generation generation,std::unique_ptr<SpuInstrument> engine,std::string error);

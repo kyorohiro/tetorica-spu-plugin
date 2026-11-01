@@ -131,6 +131,7 @@ public:
 #if defined(AU_API)
   OSStatus SetState(CFPropertyListRef state) override;
   OSStatus GetState(CFPropertyListRef* state) override;
+  void OnRestoreState() override;
 #endif
 
 #if IPLUG_DSP
@@ -155,6 +156,7 @@ private:
   void initializeInstrumentUI();
   void closeInstrumentUI() noexcept;
   void promptForVab();
+  void promptForSplitVabPartner();
   void prepareWebExportFromUI();
   void promptForWebExport();
   void requestBuiltinFromUI();
@@ -205,6 +207,12 @@ private:
   // Host state operations are non-RT. Audio never takes this mutex or reads
   // the immutable authoring snapshot used by serialization.
   mutable std::mutex mStateMutex;
+#if defined(AU_API)
+  // AU descriptive metadata is separate from the immutable factory preset.
+  // It is owned off the render thread and guarded by mStateMutex.
+  using AuStateName = std::unique_ptr<const struct __CFString, decltype(&CFRelease)>;
+  AuStateName mAuStateName{nullptr, &CFRelease};
+#endif
   // Destruction joins the non-RT worker before destroying the exchange.
   tetorica::VabLoader mLoader{mEngines};
   tetorica::WebInstrumentLoader mWebLoader;

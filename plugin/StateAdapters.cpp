@@ -140,11 +140,19 @@ OSStatus TetoricaSPU::GetState(CFPropertyListRef* output)
   *output = nullptr;
   CFMutableDictionaryRef dictionary = nullptr;
   CFDataRef data = nullptr;
+  AuStateName presetName{nullptr, &CFRelease};
   try
   {
     iplug::IByteChunk chunk;
     if (!SerializeState(chunk) || chunk.Size() <= 0 ||
         static_cast<std::size_t>(chunk.Size()) > tetorica::kMaxStateBytes)
+      return kAudioUnitErr_InvalidPropertyValue;
+    {
+      std::lock_guard<std::mutex> lock(mStateMutex);
+      presetName.reset(mAuStateName ? CFStringCreateCopy(kCFAllocatorDefault, mAuStateName.get()) :
+        CFStringCreateWithCString(kCFAllocatorDefault, GetPresetName(GetCurrentPresetIdx()), kCFStringEncodingUTF8));
+    }
+    if (!presetName)
       return kAudioUnitErr_InvalidPropertyValue;
     dictionary = CFDictionaryCreateMutable(kCFAllocatorDefault, 0,
       &kCFTypeDictionaryKeyCallBacks, &kCFTypeDictionaryValueCallBacks);
@@ -164,7 +172,7 @@ OSStatus TetoricaSPU::GetState(CFPropertyListRef* output)
       CFRelease(dictionary);
       return kAudioUnitErr_InvalidPropertyValue;
     }
-    CFDictionarySetValue(dictionary, CFSTR(kAUPresetNameKey), CFSTR("TetoricaSPU"));
+    CFDictionarySetValue(dictionary, CFSTR(kAUPresetNameKey), presetName.get());
     CFDictionarySetValue(dictionary, CFSTR(kAUPresetDataKey), data);
     CFRelease(data);
     data = nullptr;
@@ -185,6 +193,7 @@ OSStatus TetoricaSPU::SetState(CFPropertyListRef propertyList)
 {
   if (!propertyList || CFGetTypeID(propertyList) != CFDictionaryGetTypeID())
     return kAudioUnitErr_InvalidPropertyValue;
+  AuStateName nextName{nullptr, &CFRelease};
   try
   {
     const auto dictionary = static_cast<CFDictionaryRef>(propertyList);
@@ -204,18 +213,40 @@ OSStatus TetoricaSPU::SetState(CFPropertyListRef propertyList)
     const CFIndex size = CFDataGetLength(dataRef);
     if (size <= 0 || static_cast<std::size_t>(size) > tetorica::kMaxStateBytes)
       return kAudioUnitErr_InvalidPropertyValue;
+    // Copy mutable host strings, and complete all potentially failing name
+    // allocation before the transactional engine/parameter restore.
+    nextName.reset(CFStringCreateCopy(kCFAllocatorDefault, static_cast<CFStringRef>(name)));
+    if (!nextName)
+      return kAudioUnitErr_InvalidPropertyValue;
     iplug::IByteChunk chunk;
     if (chunk.PutBytes(CFDataGetBytePtr(dataRef), static_cast<int>(size)) != size ||
         UnserializeState(chunk, 0) != size)
       return kAudioUnitErr_InvalidPropertyValue;
     // Do not RestorePreset(name): that mutates parameters before validation in
     // the upstream adapter. Name is descriptive metadata, not an instruction.
+    {
+      std::lock_guard<std::mutex> lock(mStateMutex);
+      mAuStateName.swap(nextName); // No allocation after the sound commits.
+    }
   }
   catch (...)
   {
     return kAudioUnitErr_InvalidPropertyValue;
   }
-  try { OnRestoreState(); } catch (...) {}
+  // Qualified notification preserves the freshly committed ClassInfo name.
+  // Factory preset restores use our override below to return to its own name.
+  try { iplug::Plugin::OnRestoreState(); } catch (...) {}
   return noErr;
+}
+
+void TetoricaSPU::OnRestoreState()
+{
+  {
+    std::lock_guard<std::mutex> lock(mStateMutex);
+    mAuStateName.reset();
+  }
+  // Host/editor callbacks can synchronously re-enter ClassInfo serialization.
+  // Do not retain the state mutex while forwarding the framework notification.
+  iplug::Plugin::OnRestoreState();
 }
 #endif

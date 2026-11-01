@@ -707,3 +707,11 @@
 - ユーザーの続行指示で、開始`56f6403` /SDK `95cf71a`から作業前TODOを保存する。
 - AU preset-name warningをproperty検査付きで修正し、続いてworkerとLoad soundへ分割VH/VBを追加する。embedded bank /state /既存音色を保持し、取消・不正・古いcallbackを検証する。
 - build /実host /CI後にmanifest照合付きAU更新とGarageBand旧project復元を進める。実DAW独自file panelのAI入力制約と実聴等の未確認範囲は分ける。
+
+## 2026-11-01 JST — AUプリセット名・分割VH/VBのローカル検証成功
+
+- 単一factory presetを初期化し、ClassInfoの任意名は成功restore時だけowned metadataとして保持する。preset名一致だけで音源をrecallせず、不正state時のname /Gain /pending /active PCMを保つ実AU property回帰が成功した。
+- workerに`requestSplitFiles(vh,vb[,flatTone])`を追加。VH68,128bytes /VB512KiBを測定してから確保し、split parser検証後に元bytesを連結する。元file削除後のstate9 /Web selected-Tone、3Tone×3rateのfull-VAB PCM、Morph保持、file grow/shrinkと世代競合を検証した。
+- Load soundのpartner panelはOnIdleでロック解放後に開き、両選択までworkerへ要求しない。StandaloneでVB→VH /VH→VB、2枚目取消、不正pair保持、再読込の成功を画面確認した。lifetime /serial /restoreガードも静的レビュー済み。
+- Offline/macOS/ASan+UBSanのCTest各28件成功、実AU48kHz16 PASS行 /実VST3全3rate55 PASS行 /validator47/0。初回の新unit Web send期待値とAU harnessのCFString関数名を修正し、最終検査が成功した。production export仕様は変更していない。
+- 次は実装push後のCIとknown manifest付きAU更新。実DAW独自split panel /途中restore-close /実聴等の未確認範囲は残す。
