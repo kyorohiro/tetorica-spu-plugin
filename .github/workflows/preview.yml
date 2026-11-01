@@ -1,0 +1,108 @@
+name: Build Preview Candidates
+
+on:
+  push:
+    branches: [main]
+    paths:
+      - 'src/**'
+      - 'plugin/**'
+      - 'tools/**'
+      - 'scripts/**'
+      - 'tests/**'
+      - 'CMake*'
+      - 'dependencies.lock.json'
+      - 'vendor/**'
+      - '.github/workflows/preview.yml'
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  macos:
+    runs-on: macos-15
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.12'
+      - run: python3 -m unittest discover -s tests -p 'test_*.py' -v
+      - run: python3 scripts/bootstrap.py
+      - run: python3 scripts/bootstrap.py --check
+      - run: cmake --preset macos-release
+      - run: cmake --build --preset macos-release --parallel 4
+      - run: ctest --preset macos-release
+      - name: Package Universal staging copies with ad-hoc signatures
+        run: python3 scripts/package_preview.py build --platform macos --input build/macos-release/out --output release --ad-hoc-sign --report build/macos-preview.json
+      - name: Verify exact packaged AU and VST3
+        run: python3 scripts/verify_preview_hosts.py --report build/macos-preview.json --ci-auval
+      - uses: actions/upload-artifact@v4
+        with:
+          name: preview-macos-universal
+          path: |
+            release/*.zip
+            release/*.sha256
+          if-no-files-found: error
+      - uses: actions/upload-artifact@v4
+        with:
+          name: preview-macos-report
+          path: build/macos-preview.json
+          if-no-files-found: error
+
+  macos-intel:
+    needs: macos
+    runs-on: macos-15-intel
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.12'
+      - run: python3 scripts/bootstrap.py
+      - uses: actions/download-artifact@v4
+        with:
+          name: preview-macos-universal
+          path: build/downloaded-preview
+      - name: Verify and unpack the same Universal candidate on Intel
+        shell: bash
+        run: |
+          for archive in build/downloaded-preview/*.zip; do
+            python3 scripts/package_preview.py verify "$archive" --extract-to build/preview --report build/intel-preview.json
+          done
+      - name: Run packaged Intel AU/VST3 and auval
+        run: python3 scripts/verify_preview_hosts.py --report build/intel-preview.json --ci-auval
+
+  windows:
+    runs-on: windows-2022
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.12'
+      - name: Verify portable Windows tooling
+        working-directory: tests
+        run: python -m unittest -v test_bootstrap test_windows_bundles test_preview_package test_garageband_vab_state
+      - run: python scripts/bootstrap.py
+      - run: python scripts/bootstrap.py --check
+      - run: cmake --preset windows
+      - run: cmake --build --preset windows --parallel 4
+      - run: ctest --preset windows
+      - name: Check built Windows resources (EXE is not distributed)
+        run: python scripts/check_windows_bundles.py --input build/windows/out --include-standalone --output build/windows-inspection.json
+      - name: Package VST3 candidate
+        run: python scripts/package_preview.py build --platform windows --input build/windows/out --output release --report build/windows-preview.json
+      - name: Verify exact packaged VST3
+        run: python scripts/verify_preview_hosts.py --report build/windows-preview.json
+      - uses: actions/upload-artifact@v4
+        with:
+          name: preview-windows-x64-vst3
+          path: |
+            release/*.zip
+            release/*.sha256
+          if-no-files-found: error
+      - uses: actions/upload-artifact@v4
+        with:
+          name: preview-windows-report
+          path: |
+            build/windows-preview.json
+            build/windows-inspection.json
+          if-no-files-found: error

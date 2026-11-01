@@ -23,3 +23,11 @@ iplug_add_plugin(TetoricaSPU
 target_compile_definitions(TetoricaSPU-vst3 PRIVATE
   VST3_NUM_MIDI_IN_CHANS=16
   VST3_NUM_CC_CHANS=16)
+
+if(WIN32)
+  # iPlug2 automatically attaches main.rc to APP only. A VST3 must carry its
+  # own TTF resource too; loose resource files are not searched by IGraphicsWin.
+  target_sources(TetoricaSPU-vst3 PRIVATE resources/fonts.rc)
+  set_source_files_properties(resources/fonts.rc PROPERTIES
+    COMPILE_FLAGS "/I\"${CMAKE_CURRENT_SOURCE_DIR}/resources/fonts\" /I\"${CMAKE_CURRENT_SOURCE_DIR}/resources\"")
+endif()

@@ -1,0 +1,3 @@
+// Font resource shared by the Windows standalone and VST3.
+#include "../config.h"
+ROBOTO_FN TTF ROBOTO_FN

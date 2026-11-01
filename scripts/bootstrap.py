@@ -2,6 +2,7 @@
 """Resume pinned dependency setup; never delete or replace an existing SDK."""
 import argparse
 import json
+import os
 from pathlib import Path
 import subprocess
 
@@ -10,6 +11,56 @@ ROOT = Path(__file__).resolve().parents[1]
 
 def run(*args, cwd=ROOT):
     subprocess.run(args, cwd=cwd, check=True)
+
+
+def _create_windows_junction(link, target):
+    """Create one new directory junction without requiring symlink privileges."""
+    # Expand paths through quoted environment variables instead of interpolating
+    # them into cmd code. Delayed expansion and AutoRun are both disabled, so
+    # spaces, Unicode, &, %, and ! in a checkout name remain literal arguments.
+    env = os.environ.copy()
+    for key, value in (("TETORICA_BOOTSTRAP_LINK", link),
+                       ("TETORICA_BOOTSTRAP_TARGET", target)):
+        text = str(value)
+        if any(char in text for char in ('"', '\r', '\n', '\0')):
+            raise ValueError('Unsupported Windows SDK link path')
+        env[key] = text
+    command_processor = env.get('COMSPEC', 'cmd.exe')
+    if any(char in command_processor for char in ('"', '\r', '\n', '\0')):
+        raise ValueError('Invalid Windows command processor path')
+    command = (f'"{command_processor}" /d /v:off /s /c '
+               '"mklink /J "%TETORICA_BOOTSTRAP_LINK%" '
+               '"%TETORICA_BOOTSTRAP_TARGET%""')
+    subprocess.run(command, check=True, env=env)
+
+
+def _ensure_sdk_link(link, target, *, check=False, windows=False):
+    """Accept only the exact pinned target; never replace existing SDK data."""
+    if not target.is_dir():
+        raise SystemExit(f'Missing pinned SDK directory: {target}')
+    expected = target.resolve(strict=True)
+    # lexists also detects a dangling symlink/junction: do not mistake an old
+    # broken SDK link for permission to overwrite its path.
+    if os.path.lexists(link):
+        try:
+            matches = link.resolve(strict=True) == expected
+        except (OSError, RuntimeError):
+            matches = False
+        if not matches:
+            raise SystemExit(f'Refusing to overwrite existing SDK: {link}')
+        return
+    if check:
+        raise SystemExit(f'Missing/mismatched SDK link: {link}; run bootstrap.py')
+    try:
+        link.symlink_to(target, target_is_directory=True)
+    except OSError as error:
+        # Only ERROR_PRIVILEGE_NOT_HELD permits the junction fallback. Other
+        # errors (including an existing-path race) must remain visible.
+        if not windows or getattr(error, 'winerror', None) != 1314:
+            raise
+        _create_windows_junction(link, target)
+    if not link.is_dir() or link.resolve(strict=True) != expected:
+        raise SystemExit(f'Created SDK link does not match pinned target: {link}')
 
 
 def main():
@@ -35,16 +86,7 @@ def main():
     for name in ('base', 'pluginterfaces', 'public.sdk'):
         link = sdk_dir / name
         target = ROOT / 'vendor/vst3sdk' / name
-        if args.check:
-            if not link.exists() or link.resolve() != target.resolve():
-                raise SystemExit(f'Missing/mismatched SDK link: {link}; run bootstrap.py')
-        elif link.is_symlink() or link.exists():
-            if link.resolve() != target.resolve():
-                raise SystemExit(f'Refusing to overwrite existing SDK: {link}')
-        else:
-            # Windows symlinks need developer mode or elevation; no copying fallback
-            # that silently changes ownership or destroys another installed SDK.
-            link.symlink_to(target, target_is_directory=True)
+        _ensure_sdk_link(link, target, check=args.check, windows=os.name == 'nt')
     print('PASS: fixed dependency revisions and VST3 SDK links')
 
 

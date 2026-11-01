@@ -14,21 +14,230 @@
       "name": "macos",
       "generator": "Unix Makefiles",
       "binaryDir": "${sourceDir}/build/macos",
-      "condition": { "type": "equals", "lhs": "${hostSystemName}", "rhs": "Darwin" },
+      "condition": {
+        "type": "equals",
+        "lhs": "${hostSystemName}",
+        "rhs": "Darwin"
+      },
       "cacheVariables": {
         "CMAKE_BUILD_TYPE": "Release",
         "CMAKE_OSX_DEPLOYMENT_TARGET": "13.0",
         "TETORICA_BUILD_PLUGIN": "ON",
         "IPLUG_DEPLOY_PLUGINS": "OFF"
       }
+    },
+    {
+      "name": "macos-release",
+      "inherits": "macos",
+      "binaryDir": "${sourceDir}/build/macos-release",
+      "cacheVariables": {
+        "CMAKE_OSX_ARCHITECTURES": "arm64;x86_64",
+        "IPLUG2_UNIVERSAL": "ON"
+      }
+    },
+    {
+      "name": "windows",
+      "generator": "Visual Studio 17 2022",
+      "architecture": "x64",
+      "binaryDir": "${sourceDir}/build/windows",
+      "condition": {
+        "type": "equals",
+        "lhs": "${hostSystemName}",
+        "rhs": "Windows"
+      },
+      "cacheVariables": {
+        "TETORICA_BUILD_PLUGIN": "ON",
+        "IPLUG_DEPLOY_PLUGINS": "OFF",
+        "CMAKE_MSVC_RUNTIME_LIBRARY": "MultiThreaded$<$<CONFIG:Debug>:Debug>"
+      }
     }
   ],
   "buildPresets": [
-    { "name": "offline", "configurePreset": "offline", "targets": ["gain_smoother_test", "spu_all_sound_off_test", "ui_midi_queue_test", "software_pcm_state_test", "software_pcm_instrument_test", "software_audio_loader_test", "software_pcm_web_test", "wav_import_test", "adpcm_playback_test", "audio_file_loader_test", "spu_export_source_test", "web_instrument_export_test", "web_instrument_exporter_test", "spu_adpcm_test", "web_instrument_test", "web_instrument_loader_test", "spu_morph_test", "morph_draft_test", "spu_pmon_test", "spu_noise_test", "pcm_draft_test", "spu_waveform_test", "spu_instrument_test", "spu_builtin_wide_test", "vab_bank_test", "spu_vab_instrument_test", "spu_engine_exchange_test", "vab_loader_test", "instrument_state_test", "spu_vab_render"] },
-    { "name": "macos", "configurePreset": "macos", "targets": ["gain_smoother_test", "spu_all_sound_off_test", "ui_midi_queue_test", "software_pcm_state_test", "software_pcm_instrument_test", "software_audio_loader_test", "software_pcm_web_test", "TetoricaSPU-app", "TetoricaSPU-au", "TetoricaSPU-vst3", "wav_import_test", "adpcm_playback_test", "audio_file_loader_test", "spu_export_source_test", "web_instrument_export_test", "web_instrument_exporter_test", "spu_adpcm_test", "web_instrument_test", "web_instrument_loader_test", "spu_morph_test", "morph_draft_test", "spu_pmon_test", "spu_noise_test", "pcm_draft_test", "spu_waveform_test", "spu_instrument_test", "spu_builtin_wide_test", "vab_bank_test", "spu_vab_instrument_test", "spu_engine_exchange_test", "vab_loader_test", "instrument_state_test", "spu_vab_render", "tetorica_au_state_check"] }
+    {
+      "name": "offline",
+      "configurePreset": "offline",
+      "targets": [
+        "gain_smoother_test",
+        "spu_all_sound_off_test",
+        "ui_midi_queue_test",
+        "software_pcm_state_test",
+        "software_pcm_instrument_test",
+        "software_audio_loader_test",
+        "software_pcm_web_test",
+        "wav_import_test",
+        "adpcm_playback_test",
+        "audio_file_loader_test",
+        "spu_export_source_test",
+        "web_instrument_export_test",
+        "web_instrument_exporter_test",
+        "spu_adpcm_test",
+        "web_instrument_test",
+        "web_instrument_loader_test",
+        "spu_morph_test",
+        "morph_draft_test",
+        "spu_pmon_test",
+        "spu_noise_test",
+        "pcm_draft_test",
+        "spu_waveform_test",
+        "spu_instrument_test",
+        "spu_builtin_wide_test",
+        "vab_bank_test",
+        "spu_vab_instrument_test",
+        "spu_engine_exchange_test",
+        "vab_loader_test",
+        "instrument_state_test",
+        "spu_vab_render"
+      ]
+    },
+    {
+      "name": "macos",
+      "configurePreset": "macos",
+      "targets": [
+        "gain_smoother_test",
+        "spu_all_sound_off_test",
+        "ui_midi_queue_test",
+        "software_pcm_state_test",
+        "software_pcm_instrument_test",
+        "software_audio_loader_test",
+        "software_pcm_web_test",
+        "TetoricaSPU-app",
+        "TetoricaSPU-au",
+        "TetoricaSPU-vst3",
+        "wav_import_test",
+        "adpcm_playback_test",
+        "audio_file_loader_test",
+        "spu_export_source_test",
+        "web_instrument_export_test",
+        "web_instrument_exporter_test",
+        "spu_adpcm_test",
+        "web_instrument_test",
+        "web_instrument_loader_test",
+        "spu_morph_test",
+        "morph_draft_test",
+        "spu_pmon_test",
+        "spu_noise_test",
+        "pcm_draft_test",
+        "spu_waveform_test",
+        "spu_instrument_test",
+        "spu_builtin_wide_test",
+        "vab_bank_test",
+        "spu_vab_instrument_test",
+        "spu_engine_exchange_test",
+        "vab_loader_test",
+        "instrument_state_test",
+        "spu_vab_render",
+        "tetorica_au_state_check"
+      ]
+    },
+    {
+      "name": "macos-release",
+      "configurePreset": "macos-release",
+      "targets": [
+        "gain_smoother_test",
+        "spu_all_sound_off_test",
+        "ui_midi_queue_test",
+        "software_pcm_state_test",
+        "software_pcm_instrument_test",
+        "software_audio_loader_test",
+        "software_pcm_web_test",
+        "TetoricaSPU-app",
+        "TetoricaSPU-au",
+        "TetoricaSPU-vst3",
+        "wav_import_test",
+        "adpcm_playback_test",
+        "audio_file_loader_test",
+        "spu_export_source_test",
+        "web_instrument_export_test",
+        "web_instrument_exporter_test",
+        "spu_adpcm_test",
+        "web_instrument_test",
+        "web_instrument_loader_test",
+        "spu_morph_test",
+        "morph_draft_test",
+        "spu_pmon_test",
+        "spu_noise_test",
+        "pcm_draft_test",
+        "spu_waveform_test",
+        "spu_instrument_test",
+        "spu_builtin_wide_test",
+        "vab_bank_test",
+        "spu_vab_instrument_test",
+        "spu_engine_exchange_test",
+        "vab_loader_test",
+        "instrument_state_test",
+        "spu_vab_render",
+        "tetorica_au_state_check"
+      ]
+    },
+    {
+      "name": "windows",
+      "configurePreset": "windows",
+      "configuration": "Release",
+      "targets": [
+        "gain_smoother_test",
+        "spu_all_sound_off_test",
+        "ui_midi_queue_test",
+        "software_pcm_state_test",
+        "software_pcm_instrument_test",
+        "software_audio_loader_test",
+        "software_pcm_web_test",
+        "wav_import_test",
+        "adpcm_playback_test",
+        "audio_file_loader_test",
+        "spu_export_source_test",
+        "web_instrument_export_test",
+        "web_instrument_exporter_test",
+        "spu_adpcm_test",
+        "web_instrument_test",
+        "web_instrument_loader_test",
+        "spu_morph_test",
+        "morph_draft_test",
+        "spu_pmon_test",
+        "spu_noise_test",
+        "pcm_draft_test",
+        "spu_waveform_test",
+        "spu_instrument_test",
+        "spu_builtin_wide_test",
+        "vab_bank_test",
+        "spu_vab_instrument_test",
+        "spu_engine_exchange_test",
+        "vab_loader_test",
+        "instrument_state_test",
+        "spu_vab_render",
+        "TetoricaSPU-app",
+        "TetoricaSPU-vst3"
+      ]
+    }
   ],
   "testPresets": [
-    { "name": "offline", "configurePreset": "offline", "output": { "outputOnFailure": true } },
-    { "name": "macos", "configurePreset": "macos", "output": { "outputOnFailure": true } }
+    {
+      "name": "offline",
+      "configurePreset": "offline",
+      "output": {
+        "outputOnFailure": true
+      }
+    },
+    {
+      "name": "macos",
+      "configurePreset": "macos",
+      "output": {
+        "outputOnFailure": true
+      }
+    },
+    {
+      "name": "macos-release",
+      "configurePreset": "macos-release",
+      "output": {
+        "outputOnFailure": true
+      }
+    },
+    {
+      "name": "windows",
+      "configurePreset": "windows",
+      "configuration": "Release",
+      "output": {
+        "outputOnFailure": true
+      }
+    }
   ]
 }
