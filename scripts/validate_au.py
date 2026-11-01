@@ -7,6 +7,7 @@ import os
 from pathlib import Path
 import plistlib
 import re
+import signal
 import subprocess
 import sys
 import time
@@ -14,6 +15,59 @@ import time
 
 COMPONENTS_RELATIVE = Path('Library/Audio/Plug-Ins/Components')
 COMPONENT_NAME = 'TetoricaSPU.component'
+
+
+def _registrar_pids(uid):
+    """Use full executable names, not platform-dependent pgrep name limits."""
+    result = subprocess.run(['/bin/ps', '-axo', 'pid=,uid=,comm='],
+                            capture_output=True, text=True, timeout=5)
+    if result.returncode:
+        raise SystemExit(f'Cannot enumerate CI registrar processes: {result.stderr.strip()}')
+    pids = set()
+    for line in result.stdout.splitlines():
+        fields = line.split(maxsplit=2)
+        if len(fields) != 3:
+            raise SystemExit(f'Cannot parse CI process identity: {line!r}')
+        try:
+            pid, owner = int(fields[0]), int(fields[1])
+        except ValueError:
+            raise SystemExit(f'Cannot parse CI process identity: {line!r}') from None
+        if pid > 1 and owner == uid and Path(fields[2]).name == 'AudioComponentRegistrar':
+            pids.add(pid)
+    return pids
+
+
+def _restart_ci_registrar():
+    uid = os.getuid()
+    if uid == 0:
+        raise SystemExit('Refusing to restart the root Audio Component service')
+    captured = _registrar_pids(uid)
+    print(f'CI registrar captured uid={uid} pids={sorted(captured)}', flush=True)
+    for pid in sorted(captured):
+        # Recheck ownership and the full executable name immediately before
+        # signaling. Never signal a root daemon, another host, or a newly-spawned
+        # replacement registrar. EnablePressuredExit agents ignore SIGTERM by
+        # default (launchd.plist(5)); SIGTERM success did not restart PID409 in CI.
+        if pid not in _registrar_pids(uid):
+            continue
+        try:
+            os.kill(pid, signal.SIGKILL)
+        except ProcessLookupError:
+            continue
+        except OSError as error:
+            raise SystemExit(f'Cannot stop captured CI registrar PID{pid}: {error}') from error
+        print(f'CI registrar SIGKILL sent to captured PID{pid}', flush=True)
+    deadline = time.monotonic() + 5
+    while True:
+        current = _registrar_pids(uid)
+        remaining = captured & current
+        if not remaining:
+            print(f'PASS: original CI registrar PIDs gone={sorted(captured)}; '
+                  f'current same-user registrar PIDs={sorted(current)}', flush=True)
+            return
+        if time.monotonic() >= deadline:
+            raise SystemExit(f'Captured CI registrar PIDs did not exit within 5 seconds: {sorted(remaining)}')
+        time.sleep(0.1)
 
 
 def refresh_ci_registry():
@@ -25,14 +79,10 @@ def refresh_ci_registry():
     if (components.is_symlink() or not components.is_dir() or bundle.is_symlink()
             or not bundle.is_dir() or not (bundle / 'Contents/Info.plist').is_file()):
         raise SystemExit(f'Cannot refresh CI registry without the installed AU: {bundle}')
-    # The installer has already published the complete, verified bundle. A
-    # successful killall only acknowledges SIGTERM; it does not establish that
-    # the registrar has noticed a newly-created Components directory.
-    result = subprocess.run(['/usr/bin/killall', '-u', getpass.getuser(),
-                             'AudioComponentRegistrar'], capture_output=True, text=True, timeout=5)
-    if result.returncode not in (0, 1):
-        raise SystemExit(f'Cannot refresh CI registrar: {result.stderr.strip()}')
-    print(f'CI registrar refresh exit={result.returncode} (1 may mean not running)', flush=True)
+    # The installer has already published the complete, verified bundle. Restart
+    # only captured processes owned by this disposable runner user, and verify
+    # their exit before auval can connect to a stale registrar again.
+    _restart_ci_registrar()
     before = components.stat().st_mtime_ns
     # Apple's AU installation contract refreshes the registry when a Components
     # directory's modification timestamp changes. Cross a whole-second boundary

@@ -5,6 +5,7 @@ import io
 import os
 from pathlib import Path
 import plistlib
+import signal
 import subprocess
 import tempfile
 import unittest
@@ -31,10 +32,12 @@ class AuDiscoveryTests(unittest.TestCase):
         self.addCleanup(mock.patch.stopall)
         mock.patch.object(validator.Path, 'home', return_value=self.home).start()
         mock.patch.object(validator.getpass, 'getuser', return_value='test-runner').start()
+        mock.patch.object(validator.os, 'getuid', return_value=501).start()
         self.run = mock.patch.object(validator.subprocess, 'run').start()
         self.run.return_value = subprocess.CompletedProcess([], 0, '', '')
         self.sleep = mock.patch.object(validator.time, 'sleep').start()
         self.touch = mock.patch.object(validator.os, 'utime').start()
+        self.kill = mock.patch.object(validator.os, 'kill').start()
         self.output = io.StringIO()
         stdout_context = contextlib.redirect_stdout(self.output)
         stdout_context.__enter__()
@@ -48,6 +51,7 @@ class AuDiscoveryTests(unittest.TestCase):
                 with self.assertRaisesRegex(SystemExit, 'restricted to GitHub Actions'):
                     validator.refresh_ci_registry()
         self.run.assert_not_called()
+        self.kill.assert_not_called()
         self.sleep.assert_not_called()
         self.touch.assert_not_called()
 
@@ -71,21 +75,18 @@ class AuDiscoveryTests(unittest.TestCase):
         self.run.assert_not_called()
         self.touch.assert_not_called()
 
-    def test_ci_refresh_sigterm_then_distinct_mtime_on_only_known_directory(self):
+    def test_ci_refresh_without_registrar_only_touches_known_directory(self):
         events = mock.Mock()
         events.attach_mock(self.run, 'run')
+        events.attach_mock(self.kill, 'kill')
         events.attach_mock(self.sleep, 'sleep')
         events.attach_mock(self.touch, 'touch')
-        for exit_code in (0, 1):
-            with self.subTest(exit_code=exit_code):
-                events.reset_mock()
-                self.run.return_value = subprocess.CompletedProcess([], exit_code, '', '')
-                with mock.patch.dict(os.environ, {'GITHUB_ACTIONS': 'true'}):
-                    validator.refresh_ci_registry()
-                self.assertEqual(events.mock_calls, [
-                    mock.call.run(['/usr/bin/killall', '-u', 'test-runner', 'AudioComponentRegistrar'],
-                                  capture_output=True, text=True, timeout=5),
-                    mock.call.sleep(1.1), mock.call.touch(self.components, None)])
+        with mock.patch.dict(os.environ, {'GITHUB_ACTIONS': 'true'}):
+            validator.refresh_ci_registry()
+        ps_call = mock.call.run(['/bin/ps', '-axo', 'pid=,uid=,comm='],
+                                capture_output=True, text=True, timeout=5)
+        self.assertEqual(events.mock_calls, [ps_call, ps_call,
+                                           mock.call.sleep(1.1), mock.call.touch(self.components, None)])
 
     def test_registrar_failure_is_not_masked_by_touch_or_retry(self):
         self.run.return_value = subprocess.CompletedProcess([], 2, '', 'permission denied')
@@ -93,6 +94,99 @@ class AuDiscoveryTests(unittest.TestCase):
             with self.assertRaisesRegex(SystemExit, 'permission denied'):
                 validator.refresh_ci_registry()
         self.sleep.assert_not_called()
+        self.touch.assert_not_called()
+
+    @staticmethod
+    def process_list(text):
+        return subprocess.CompletedProcess([], 0, text, '')
+
+    def test_exact_current_uid_full_name_capture_and_recheck_excludes_every_other_process(self):
+        own = '409 501 /System/Library/Frameworks/AudioToolbox.framework/AudioComponentRegistrar\n'
+        unrelated = ('12 0 /System/Library/Frameworks/AudioToolbox.framework/AudioComponentRegistrar\n'
+                     '22 502 /System/Library/Frameworks/AudioToolbox.framework/AudioComponentRegistrar\n'
+                     '33 501 /System/Library/Frameworks/AudioToolbox.framework/AudioComponentRegistrarHelper\n'
+                     '44 501 /Applications/AudioUnitHost\n'
+                     '1 501 /System/Library/Frameworks/AudioToolbox.framework/AudioComponentRegistrar\n')
+        replacement = '900 501 /System/Library/Frameworks/AudioToolbox.framework/AudioComponentRegistrar\n'
+        self.run.side_effect = [self.process_list(own + unrelated), self.process_list(own + unrelated),
+                                self.process_list(replacement + unrelated)]
+        events = mock.Mock()
+        events.attach_mock(self.run, 'run')
+        events.attach_mock(self.kill, 'kill')
+        events.attach_mock(self.sleep, 'sleep')
+        events.attach_mock(self.touch, 'touch')
+        with mock.patch.dict(os.environ, {'GITHUB_ACTIONS': 'true'}):
+            validator.refresh_ci_registry()
+        self.kill.assert_called_once_with(409, signal.SIGKILL)
+        self.assertEqual(self.run.call_count, 3)
+        self.assertEqual([call[0] for call in events.mock_calls],
+                         ['run', 'run', 'kill', 'run', 'sleep', 'touch'])
+        self.assertIn('original CI registrar PIDs gone=[409]', self.output.getvalue())
+        self.assertIn('current same-user registrar PIDs=[900]', self.output.getvalue())
+
+    def test_recheck_changed_uid_or_name_does_not_signal_reused_pid(self):
+        own = '409 501 /system/AudioComponentRegistrar\n'
+        for changed in ('409 0 /system/AudioComponentRegistrar\n', '409 501 /system/AudioHost\n', ''):
+            with self.subTest(changed=changed):
+                self.run.side_effect = [self.process_list(own), self.process_list(changed),
+                                        self.process_list(changed)]
+                with mock.patch.dict(os.environ, {'GITHUB_ACTIONS': 'true'}):
+                    validator.refresh_ci_registry()
+        self.kill.assert_not_called()
+
+    def test_registrar_that_will_not_exit_fails_before_touch_or_auval(self):
+        self.run.return_value = self.process_list('409 501 /system/AudioComponentRegistrar\n')
+        with mock.patch.dict(os.environ, {'GITHUB_ACTIONS': 'true'}), \
+                mock.patch.object(validator.time, 'monotonic', side_effect=[0, 6]):
+            with self.assertRaisesRegex(SystemExit, 'did not exit within 5 seconds: \\[409\\]'):
+                validator.refresh_ci_registry()
+        self.kill.assert_called_once_with(409, signal.SIGKILL)
+        self.sleep.assert_not_called()
+        self.touch.assert_not_called()
+        self.assertTrue(all(call.args[0][0] == '/bin/ps' for call in self.run.call_args_list))
+
+    def test_bounded_wait_confirms_original_pid_gone_and_never_kills_replacement(self):
+        own = self.process_list('409 501 /system/AudioComponentRegistrar\n')
+        replacement = self.process_list('900 501 /system/AudioComponentRegistrar\n')
+        self.run.side_effect = [own, own, own, replacement]
+        with mock.patch.dict(os.environ, {'GITHUB_ACTIONS': 'true'}), \
+                mock.patch.object(validator.time, 'monotonic', side_effect=[0, 0.01]):
+            validator.refresh_ci_registry()
+        self.kill.assert_called_once_with(409, signal.SIGKILL)
+        self.assertEqual(self.sleep.call_args_list, [mock.call(0.1), mock.call(1.1)])
+
+    def test_vanished_pid_before_signal_is_harmless_but_permission_denied_is_not(self):
+        own = self.process_list('409 501 /system/AudioComponentRegistrar\n')
+        self.run.side_effect = [own, own, self.process_list('')]
+        self.kill.side_effect = ProcessLookupError('already exited')
+        with mock.patch.dict(os.environ, {'GITHUB_ACTIONS': 'true'}):
+            validator.refresh_ci_registry()
+        self.touch.assert_called_once_with(self.components, None)
+        self.touch.reset_mock()
+        self.sleep.reset_mock()
+        self.run.side_effect = [own, own]
+        self.kill.side_effect = PermissionError('permission denied')
+        with mock.patch.dict(os.environ, {'GITHUB_ACTIONS': 'true'}):
+            with self.assertRaisesRegex(SystemExit, 'Cannot stop captured CI registrar PID409'):
+                validator.refresh_ci_registry()
+        self.touch.assert_not_called()
+        self.sleep.assert_not_called()
+
+    def test_root_is_rejected_without_enumeration_or_signals(self):
+        with mock.patch.dict(os.environ, {'GITHUB_ACTIONS': 'true'}), \
+                mock.patch.object(validator.os, 'getuid', return_value=0):
+            with self.assertRaisesRegex(SystemExit, 'root Audio Component service'):
+                validator.refresh_ci_registry()
+        self.run.assert_not_called()
+        self.kill.assert_not_called()
+        self.touch.assert_not_called()
+
+    def test_unparseable_process_list_fails_closed_without_signals(self):
+        self.run.return_value = self.process_list('unexpected process identity format\n')
+        with mock.patch.dict(os.environ, {'GITHUB_ACTIONS': 'true'}):
+            with self.assertRaisesRegex(SystemExit, 'Cannot parse CI process identity'):
+                validator.refresh_ci_registry()
+        self.kill.assert_not_called()
         self.touch.assert_not_called()
 
     def test_discovery_failure_keeps_final_listing_and_does_not_validate(self):
