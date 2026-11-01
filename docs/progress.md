@@ -573,3 +573,14 @@
 - [CI41260258393](https://github.com/kyorohiro/tetorica-spu-plugin/actions/runs/41260258393)は実装commitで両job・全step成功。Standaloneのnative保存・実Web reader読み戻し・Cancelを確認した。
 - installed AUをknown manifest照合・退避付きで更新し、GarageBand旧schema8 P3/T0/Gain99と新Save Webを復元した。saved payload / VABは一致、原本11files不変。26parameter ID / state schema8 / SDK固定commitは維持した。
 - [操作・制限・rollback](web_instrument_export_20261101.md) / [source hash・現在のinstalled AU manifest・CI metadata](web_instrument_export_20261101.json)。実聴・長時間使用・実DAW独自Save Web操作とautomation録音は未確認としてTODOへ残す。
+
+## 2026-11-01 JST — WAV素材読み込み完了
+
+- 実装前TODOを`39c7276`、実装を`af20bcc`へcommit / pushした。共通Load soundからPCM16 / Float32 mono/stereo WAVを読み込み、softwareでmono / 44.1kHz / SPU ADPCMへ変換する。自動normalizeや容量超過時の無断切捨ては行わない。
+- 初期C4 / One shotで、ADPCM時はProgram/Toneの位置をRoot / Playbackへ切り替える。音声はSample / Morph Offで採用し、Gain / ADSR / Reverbと休止設定・要求時のMorph A/Bは保持する。Root / Loop編集では現在の全設定を保持したままworkerで音源を準備する。
+- 変換後ADPCMとroot / loopを既存kind3 / schema8に埋め込み、元WAVなしで復元できる。26parameter ID・初期Sine WAV・SDK固定commitは不変。長いhost PCM / Web v2は別段階とした。
+- Offline / macOS / ASanは各20/20、strict成功。実AU48k / VST3 44.1・48・96kで4format、元WAVなし復元、root / loop、One shot終了、1packet loop、不正active/pending保持と既存全suiteを検証した。公式validator47/0、auval26paramsも成功。
+- StandaloneでPMON+Morph音色からWAVを読み、C3 / Loopへの編集・Save Web・不正Floatエラー時の元音保持とCancelを確認。保存した音色はChromium / WebKit公開UIでも読込・再保存が一致し、休止設定・Reverb33/27・A/Bを保持した。
+- [初回CI41265269673](https://github.com/kyorohiro/tetorica-spu-plugin/actions/runs/41265269673)・表示境界補正`a6f1a2e`の[最終CI41266519833](https://github.com/kyorohiro/tetorica-spu-plugin/actions/runs/41266519833)は両job・全step成功。最小subnormal等のRoot表示は実source関数のUBSan probeでも確認した。音声 / stateのsourceはWAV実装以降不変。
+- 初回WAV対応AUをknown manifest照合・退避付きで更新し、GarageBand旧schema8 P3/T0/Gain99を復元した。最終AUも再退避更新・auval成功、saved payload / VABと原本11filesは不変。最終editorはCUA clickで開けず、人の再表示確認へ残した。
+- [操作・制限・rollback](wav_import_20261101.md) / [source hash・現在のinstalled AU manifest・CI metadata](wav_import_20261101.json)。実聴・長時間使用・最終AU editor再表示・実DAW独自WAV UIとautomation録音は未確認としてTODOへ残す。Web/Tauri配布とversion/tag/releaseは変更していない。

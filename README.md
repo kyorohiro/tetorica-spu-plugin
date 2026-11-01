@@ -361,8 +361,8 @@ recording, including up to 27 zero padding frames. Recording boundaries can
 produce a loop click. These changes replace the prepared sound and stop held
 notes and reverb tails. Morph uses its own cycle tuning.
 
-A successful WAV load selects Sample with Morph Off so the new material is
-audible. Gain, ADSR, Reverb and dormant Noise/PMON/Morph settings are retained,
+A successful WAV load selects Sample with Morph Off for the new material.
+Gain, ADSR, Reverb and dormant Noise/PMON/Morph settings are retained,
 including the Morph endpoints captured when the file was selected. Root and
 Playback edits retain the current sound settings. The result is embedded in
 the DAW project as ADPCM with its root and loop, so reopening needs no original
@@ -476,12 +476,12 @@ The ordinary `--install` still refuses a different existing bundle.
 ```sh
 python3 -m unittest discover -s tests -p 'test_install_au.py' -v
 python3 scripts/install_au.py --update \
-  --expected docs/web_instrument_export_20261101.json --backup-root build/au-backups
+  --expected docs/wav_import_20261101.json --backup-root build/au-backups
 # Use the printed manifest path to roll back; refuses an altered installation:
 python3 scripts/install_au.py --rollback build/au-backups/au-update-REPLACE/manifest.json
 ```
 
-The [Web instrument export record](docs/web_instrument_export_20261101.md) contains the
+The [WAV import record](docs/wav_import_20261101.md) contains the
 current installed manifest, backup report and GarageBand restoration result.
 
 The destination is `~/Library/Audio/Plug-Ins/Components/TetoricaSPU.component`.

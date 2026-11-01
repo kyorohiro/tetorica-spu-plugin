@@ -31,9 +31,10 @@ PCMの4波形・自由描画・Apply / Revertも実装し、実AU/VST3とStandal
 [PMONの記録](../pmon_20261031.md)を参照。Software Morphも実装・検証・AU更新・旧state復元・両repo CI成功済み。
 [Morphの記録](../morph_20261101.md)と[保存・更新記録](../morph_20261101.json)を参照。
 Web音色v1の[import](../web_instrument_import_20261101.md)と[export](../web_instrument_export_20261101.md)も完了した。
-現在のinstalled AU manifestは[export検証JSON](../web_instrument_export_20261101.json)。
+WAV素材の読み込み・Root / Playback編集も完了した。[操作・検証記録](../wav_import_20261101.md)を参照。
+現在のinstalled AU manifestは[WAV検証JSON](../wav_import_20261101.json)。
 
-### WAV素材読み込みの今回の区切り（2026-11-01、実装前）
+### WAV素材読み込みの今回の区切り（2026-11-01、完了）
 
 - [x] RIFF/WAVEのPCM16 / IEEE Float32、mono / stereoをboundedなpure decoderで読む。未知chunkとpaddingを処理し、不正サイズ・format・NaN/Inf・空音声を変更前に拒否する。入力上限32MiB、出力は既存SPU sample RAM内に限定し、黙って切り捨てない。
 - [x] stereoは左右平均でmono化し、44.1kHzへ変換して通常SPU ADPCMを作る。自動normalizeしない。sample rate変換の品質と終端28-frame paddingを明記する。これはsoftwareによる素材変換であり、長いAudioのhost PCM再生とは区別する。
@@ -42,9 +43,14 @@ Web音色v1の[import](../web_instrument_import_20261101.md)と[export](../web_i
 - [x] WAV読込成功時はSample / Morph Offで素材を演奏できるようにし、Gain / ADSR / ReverbとPMON等の休止設定・Morph A/Bは保持する。root / loopだけの変更では現在の音作り設定を保持する。採用時の保持音・残響停止は既存仕様とする。
 - [x] 既存AdpcmSample kind3 / state8 / 26parameter IDを使い、変換済みsampleをDAWへ埋め込む。元WAVなし復元、Web v1書き出し、root音程・one-shot / loop・MIDI / FX回帰・不正入力のatomic failureを検証する。
 - [x] 共通Load soundへWAVを追加し、既存720×620・Source / ADSR / Reverb・鍵盤を保つ。VAB用Program/Toneの位置をADPCM時はRoot / Playbackへ使い、音声変換と容量超過を明示する。
-- [ ] Offline / macOS / ASan・実AU/VST3・validator・CI、Standaloneのfile読込 / root / loop操作、既知AU退避更新と旧GarageBand復元を確認し、検証記録をcommit / pushする。
+- [x] Offline / macOS / ASan・実AU/VST3・validator・CI、Standaloneのfile読込 / root / loop操作、既知AU退避更新と旧GarageBand復元を確認し、検証記録をcommit / pushする。
+- [ ] 人の実聴・長時間使用、最終AUのeditor再表示、実DAW独自WAV読込 / Root / Playback操作とautomation録音を確認する。Standalone UI・実AU/VST3の自動検査・初回WAV対応AUの旧GarageBand復元とは別に記録する。最終AUのeditorはCUA clickでは開けなかった。
+- [ ] 次の区切りで、長いAudioのhost PCM / Web v2を設計する。元PCMの所有権・容量とDAW state上限・旧互換・Noise/PMON/Morph共存を先に決め、既存RAM上限を増やすだけで対応済みにしない。
 
 開始は`ecd4681`、main / origin同期・clean tree。更新前installed AU manifestは[export記録](../web_instrument_export_20261101.json)。
+WAV実装`af20bcc`、Root表示の境界補正を含む最終`a6f1a2e`、[最終CI両job成功](https://github.com/kyorohiro/tetorica-spu-plugin/actions/runs/41266519833)。Offline / macOS / ASanは各20/20、実AU48k / VST3全3rate・公式validator47/0・auval26params成功。表示補正は実source関数のUBSan極値probeも成功した。
+StandaloneのWAV読込・C3 Root・全体Loop・Save Web・不正Float / Cancel時の元音保持、実Chromium / WebKitの読み込み・再保存を確認した。初回WAV対応AUでGarageBand旧schema8 P3/T0/Gain99を復元し、最終AUも退避更新・auval検証済み。最終editor再表示は人確認へ残す。saved payload / VABと原本11filesは不変。
+操作・制限・rollbackは[WAV記録](../wav_import_20261101.md)、現在のinstalled AU manifest・source hash・CI metadataは[JSON](../wav_import_20261101.json)。
 今回の最小対応はPCM16 / Float32 WAV。AIFF / 圧縮音声 / WAVE extensible / 長いhost PCMとWeb v2は別段階とし、未対応formatを明示する。
 Native SDK・Web/Tauri配布・version/tag/release、Morph LFOと外部入力Reverbは変更しない。
 
@@ -64,7 +70,7 @@ Native SDK・Web/Tauri配布・version/tag/release、Morph LFOと外部入力Rev
 開始は`b8c2e3b`、main / origin同期・clean tree。更新前installed AU manifestは[import記録](../web_instrument_import_20261101.json)。
 実装`fe24f25`、[CI両job成功](https://github.com/kyorohiro/tetorica-spu-plugin/actions/runs/41260258393)。通常 / macOS / ASanは各17/17、実Web Node / Chromium / WebKitは各20件成功。
 installed AUを退避更新し、auval26paramsとGarageBand旧schema8 P3/T0/Gain99・Save Web表示を確認した。saved payload4768bytes / VABと原本11filesは不変。
-操作・制限・rollbackは[export記録](../web_instrument_export_20261101.md)、現在のinstalled AU manifest・source hash・CI metadataは[JSON](../web_instrument_export_20261101.json)。
+操作・制限・rollbackは[export記録](../web_instrument_export_20261101.md)、この区切り終了時のinstalled AU manifest・source hash・CI metadataは[JSON](../web_instrument_export_20261101.json)。
 長いAudio v2・VH+VB UI・PSF抽出・Morph LFO・外部入力Reverb・Web/Tauri配布変更・version/tag/release公開は今回追加しない。
 
 ### Web音色ファイル読み込みの今回の区切り（2026-11-01、完了）
@@ -83,7 +89,7 @@ installed AUを退避更新し、auval26paramsとGarageBand旧schema8 P3/T0/Gain
 まずv1読み込みを完成させる。Web / Tauri配布物、Morph LFO、外部入力Reverb、version / tag / release公開は変更しない。
 実装`81eb78b`、[CI全job成功](https://github.com/kyorohiro/tetorica-spu-plugin/actions/runs/41255456421)。
 installed AUをknown hash照合・退避付きで更新し、auval26paramsとGarageBand旧schema7のP3/T0/Gain99・Load sound表示を確認した。saved payload4768bytesとVABは不変、原本11files不変。
-操作・制限・rollbackは[import記録](../web_instrument_import_20261101.md)、import時点のAU manifest・source hash・CI metadataは[JSON](../web_instrument_import_20261101.json)。現在のinstalled AU manifestは上のexport記録。
+操作・制限・rollbackは[import記録](../web_instrument_import_20261101.md)、import時点のAU manifest・source hash・CI metadataは[JSON](../web_instrument_import_20261101.json)。現在のinstalled AU manifestは上のWAV記録。
 
 ### Software Morphの今回の区切り（2026-11-01、完了）
 
