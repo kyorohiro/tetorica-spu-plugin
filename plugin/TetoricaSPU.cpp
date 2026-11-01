@@ -246,7 +246,7 @@ void TetoricaSPU::applySourceParameters() noexcept
   auto& instrument = mEngines.instrument();
   const bool previousNoise = instrument.noise().enabled;
   const bool previousPmon = instrument.pmon().enabled;
-  const bool previousMorph = instrument.morph().enabled && !previousNoise;
+  const bool previousMorph = instrument.effectiveMorphEnabled();
   const tetorica::NoiseSettings settings{enabled != 0, static_cast<std::uint32_t>(clock)};
   const tetorica::PmonSettings pmon{pmonEnabled != 0 && !settings.enabled,
     static_cast<tetorica::WaveformShape>(static_cast<unsigned>(waveform)), ratio, depth, decay};
@@ -260,7 +260,7 @@ void TetoricaSPU::applySourceParameters() noexcept
   // Keep raw Morph enabled while Noise hides it, so returning restores it.
   instrument.setMorph({morphEnabled != 0, morphAmount});
   if (previousNoise != instrument.noise().enabled || previousPmon != instrument.pmon().enabled ||
-      previousMorph != (instrument.morph().enabled && !instrument.noise().enabled))
+      previousMorph != instrument.effectiveMorphEnabled())
     // The old source's future NoteOns must not restart after the mode panic.
     // Current-block host events and carried wheel/pedal still belong to input.
     discardCarriedNotes();

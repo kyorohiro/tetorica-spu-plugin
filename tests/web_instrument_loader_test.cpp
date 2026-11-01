@@ -36,7 +36,7 @@ int main() {
     auto pending=exchange.commitPrepared(prepareDefinition(*original),original);
     WebInstrumentLoader loader;
     const auto text=fixture("v1-arbitrary.spu.json");
-    for(const auto& invalid:{std::string("{broken"),fixture("v2-long-audio.spu.json"),fixture("v1-loop-flag4.spu.json")}) {
+    for(const auto& invalid:{std::string("{broken"),fixture("v1-loop-flag4.spu.json")}) {
       const auto ticket=loader.requestText(invalid);
       const auto status=finished(loader,ticket);
       check(status.state==WebInstrumentLoader::State::Failed&&!status.error.empty(),"invalid import accepted");

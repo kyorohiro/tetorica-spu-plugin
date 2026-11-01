@@ -138,17 +138,31 @@ std::string noteLabel(int note)
     std::to_string(note / 12 - 1) + " (MIDI " + std::to_string(note) + ")";
 }
 
-std::string rootLabel(const tetorica::RawAdpcmSample& sample)
+std::string rootLabel(double baseFrequencyHz)
 {
   // Valid imported tuning can be any positive finite double. Divide after
   // taking logarithms so subnormal Hz cannot underflow to zero before log2.
-  const double note = 69. + 12. * (std::log2(sample.baseFrequencyHz) - std::log2(440.));
+  const double note = 69. + 12. * (std::log2(baseFrequencyHz) - std::log2(440.));
   const auto rounded = static_cast<int>(std::round(note));
   if (rounded >= 0 && rounded <= 127 && std::abs(note - rounded) < 1.e-7)
     return "Root: " + noteLabel(rounded);
   char label[64];
-  std::snprintf(label, sizeof(label), "Root: %.3f Hz", sample.baseFrequencyHz);
+  std::snprintf(label, sizeof(label), "Root: %.3f Hz", baseFrequencyHz);
   return label;
+}
+
+bool softwareAudio(const std::shared_ptr<const tetorica::InstrumentDefinition>& source)
+{
+  return source&&source->kind()==tetorica::InstrumentDefinition::Kind::SoftwarePcm;
+}
+bool recordedSample(const std::shared_ptr<const tetorica::InstrumentDefinition>& source)
+{
+  return source&&(source->kind()==tetorica::InstrumentDefinition::Kind::AdpcmSample||softwareAudio(source));
+}
+double sampleRoot(const tetorica::InstrumentDefinition& source)
+{
+  return source.kind()==tetorica::InstrumentDefinition::Kind::SoftwarePcm?
+    source.softwarePcmSample().baseFrequencyHz:source.rawAdpcmSample().baseFrequencyHz;
 }
 
 bool sameBaseDefinition(const std::shared_ptr<const tetorica::InstrumentDefinition>& a,
@@ -161,6 +175,7 @@ bool sameBaseDefinition(const std::shared_ptr<const tetorica::InstrumentDefiniti
     return a->pcmCycle() == b->pcmCycle();
   if (a->kind() == tetorica::InstrumentDefinition::Kind::AdpcmSample)
     return tetorica::sameRawAdpcmSample(a->rawAdpcmSample(), b->rawAdpcmSample());
+  if(softwareAudio(a))return tetorica::sameSoftwarePcmSample(a->softwarePcmSample(),b->softwarePcmSample());
   return a->bankBytes() == b->bankBytes();
 }
 
@@ -236,7 +251,7 @@ void TetoricaSPU::initializeInstrumentUI()
     graphics->AttachControl(saveWeb,kCtrlSaveWeb);
     auto* loadSound=new IVButtonControl(IRECT(24, 64, 154, 99),
       [this](IControl*) { promptForVab(); }, "Load sound...");
-    loadSound->SetTooltip("Load complete VAB, Web .spu.json v1, or PCM16 / Float32 mono/stereo WAV. WAV is converted in software to mono SPU ADPCM, starts at C4 / One shot, and selects Sample / Morph Off. Gain, ADSR, Reverb and dormant settings are retained.");
+    loadSound->SetTooltip("Load complete VAB, Web .spu.json v1/v2, or PCM16 / Float32 mono/stereo WAV (up to32MiB). Short WAV uses SPU ADPCM; longer WAV uses Software PCM outside SPU RAM, starts at C4 / One shot, and selects Sample / Morph Off. Gain, ADSR, Reverb and dormant settings are retained.");
     graphics->AttachControl(loadSound,kCtrlLoadVab);
     graphics->AttachControl(new IVButtonControl(IRECT(166, 64, 296, 99),
       [this](IControl*) { requestBuiltinFromUI(); }, "Builtin Sine"), kCtrlBuiltin);
@@ -249,9 +264,9 @@ void TetoricaSPU::initializeInstrumentUI()
         const auto source = ui.definition;
         const auto revision = mInstrumentUIRevision.load(std::memory_order_acquire);
         const auto generation = mEngines.latestGeneration();
-        if (source->kind() == tetorica::InstrumentDefinition::Kind::AdpcmSample)
+        if (recordedSample(source))
         {
-          const auto hz = source->rawAdpcmSample().baseFrequencyHz;
+          const auto hz = sampleRoot(*source);
           for (int first = 0; first < 128; first += 12)
           {
             auto* octave = new IPopupMenu;
@@ -293,11 +308,15 @@ void TetoricaSPU::initializeInstrumentUI()
         const auto source = ui.definition;
         const auto revision = mInstrumentUIRevision.load(std::memory_order_acquire);
         const auto generation = mEngines.latestGeneration();
-        if (source->kind() == tetorica::InstrumentDefinition::Kind::AdpcmSample)
+        if (recordedSample(source))
         {
-          const auto& sample = source->rawAdpcmSample();
-          menu.AddItem(new IPopupMenu::Item("One shot", !sample.loopStartSamples ? IPopupMenu::Item::kChecked : 0, 0));
-          menu.AddItem(new IPopupMenu::Item("Loop entire sample", sample.loopStartSamples && *sample.loopStartSamples == 0 ? IPopupMenu::Item::kChecked : 0, 1));
+          const bool software=softwareAudio(source);
+          const bool loop=software?source->softwarePcmSample().loop:source->rawAdpcmSample().loopStartSamples.has_value();
+          const bool entire=software?loop:loop&&*source->rawAdpcmSample().loopStartSamples==0;
+          menu.AddItem(new IPopupMenu::Item("One shot", !loop ? IPopupMenu::Item::kChecked : 0, 0));
+          int flags=entire?IPopupMenu::Item::kChecked:0;
+          if(software&&source->softwarePcmSample().pcm->samples().size()<4)flags|=IPopupMenu::Item::kDisabled;
+          menu.AddItem(new IPopupMenu::Item("Loop entire sample",flags,1));
           choice = [this, source, revision, generation](int playback) {
             requestAdpcmEditFromUI(source, revision, generation, -1, playback);
           };
@@ -448,6 +467,9 @@ void TetoricaSPU::initializeInstrumentUI()
       EDirection::Horizontal);
     morphAmount->SetTooltip("Live blend of the applied endpoints. A/B draft edits are heard only after Apply Morph.");
     graphics->AttachControl(morphAmount, kCtrlMorphAmount);
+    graphics->AttachControl(new IMultiLineTextControl(IRECT(24, 250, 696, 461),
+      "Software audio - outside physical SPU RAM.",
+      IText(16).WithAlign(EAlign::Near).WithVAlign(EVAlign::Top)),kCtrlSoftwareAudioInfo);
     graphics->AttachControl(new IVToggleControl(IRECT(24, 202, 188, 230),
       kParamEnvelopeEnabled, "", switchStyle, "Tone ADSR", "Custom ADSR"), kCtrlEnvelopeEnabled);
     auto* copyEnvelope = new IVButtonControl(IRECT(200, 202, 336, 230),
@@ -637,7 +659,7 @@ void TetoricaSPU::promptForVab()
               owner->mWebLoader.cancel();ui.webTicket=0;ui.webCommitted=0;
               ui.audioBaseGeneration=generation;ui.audioRevision=revision;
               ui.requested=0;ui.audioCommitted=0;ui.audioDetails.clear();
-              ui.status="Converting WAV to SPU ADPCM. Previous sound remains until ready.";
+              ui.status="Preparing WAV audio. Previous sound remains until ready.";
             }
             else
             {
@@ -664,22 +686,21 @@ void TetoricaSPU::prepareWebExportFromUI()
     mWebExporter.cancel();ui.exportTicket=0;ui.exportNotes.clear();
     const auto revision=mInstrumentUIRevision.load(std::memory_order_acquire);
     const auto generation=mEngines.latestGeneration();
-    iplug::IByteChunk bytes;
-    if(!SerializeState(bytes))throw std::runtime_error("Could not capture a stable sound; try Save Web again");
-    auto state=tetorica::decodeState({bytes.GetData(),static_cast<std::size_t>(bytes.Size())});
+    std::lock_guard<std::mutex> lock(mStateMutex);
+    auto state=captureSavedStateLocked();
     std::string name="Builtin Sine";
     switch(state.definition->kind())
     {
       case tetorica::InstrumentDefinition::Kind::Vab:
         name="VAB Program "+std::to_string(state.definition->program())+" Tone "+std::to_string(state.definition->tone());break;
       case tetorica::InstrumentDefinition::Kind::PcmCycle:name="PCM cycle";break;
+      case tetorica::InstrumentDefinition::Kind::SoftwarePcm:
       case tetorica::InstrumentDefinition::Kind::AdpcmSample:
-        name=state.definition->rawAdpcmSample().name;
+        name=softwareAudio(state.definition)?state.definition->softwarePcmSample().name:state.definition->rawAdpcmSample().name;
         if(name.empty())name="Imported sound";
         break;
       case tetorica::InstrumentDefinition::Kind::Builtin:break;
     }
-    std::lock_guard<std::mutex> lock(mStateMutex);
     if(revision!=mInstrumentUIRevision.load(std::memory_order_acquire)||
        generation!=mEngines.latestGeneration())
       throw std::runtime_error("Sound changed during capture; try Save Web again");
@@ -756,18 +777,30 @@ void TetoricaSPU::requestAdpcmEditFromUI(
   std::uint64_t revision, tetorica::SpuEngineExchange::Generation generation,
   int rootMidiNote, int playback)
 {
-  if(!GetUI()||!source||source->kind()!=tetorica::InstrumentDefinition::Kind::AdpcmSample)return;
+  if(!GetUI()||!recordedSample(source))return;
   try
   {
     std::lock_guard<std::mutex> lock(mStateMutex);
     if(mInstrumentUIRevision.load(std::memory_order_acquire)!=revision||
        mEngines.latestGeneration()!=generation||mEngines.snapshotDefinition()!=source)return;
-    auto sample=source->rawAdpcmSample();
-    if(rootMidiNote>=0)sample=tetorica::withAdpcmRoot(sample,rootMidiNote);
-    if(playback>=0)sample=tetorica::withAdpcmPlayback(sample,playback!=0);
-    if(tetorica::sameRawAdpcmSample(sample,source->rawAdpcmSample()))return;
-    auto definition=tetorica::InstrumentDefinition::withMorphEndpoints(
-      tetorica::InstrumentDefinition::fromAdpcmSample(sample),source->morphEndpoints());
+    std::shared_ptr<const tetorica::InstrumentDefinition> definition;
+    if(softwareAudio(source)) {
+      auto sample=source->softwarePcmSample();
+      if(rootMidiNote>=0) {
+        if(rootMidiNote>127)throw std::invalid_argument("Invalid MIDI root");
+        sample.baseFrequencyHz=440.*std::exp2((rootMidiNote-69.)/12.);
+      }
+      if(playback>=0)sample.loop=playback!=0;
+      if(tetorica::sameSoftwarePcmSample(sample,source->softwarePcmSample()))return;
+      definition=tetorica::InstrumentDefinition::fromSoftwarePcmSample(sample);
+    } else {
+      auto sample=source->rawAdpcmSample();
+      if(rootMidiNote>=0)sample=tetorica::withAdpcmRoot(sample,rootMidiNote);
+      if(playback>=0)sample=tetorica::withAdpcmPlayback(sample,playback!=0);
+      if(tetorica::sameRawAdpcmSample(sample,source->rawAdpcmSample()))return;
+      definition=tetorica::InstrumentDefinition::fromAdpcmSample(sample);
+    }
+    definition=tetorica::InstrumentDefinition::withMorphEndpoints(definition,source->morphEndpoints());
     auto& ui=*mInstrumentUI;
     ui.audioTicket=mAudioLoader.requestDefinition(std::move(definition));
     ui.audioBaseGeneration=generation;ui.audioRevision=revision;
@@ -835,7 +868,7 @@ void TetoricaSPU::OnIdle()
   bool importedParameters = false;
   bool promptExport = false;
   std::uint64_t revision = 0;
-  // SerializeState takes mStateMutex itself. Capture outside the commit lock,
+  // Capture a shared immutable snapshot before the commit lock,
   // then verify source generation/revision below before publishing the result.
   // This retains the complete coherent current settings, including an accepted
   // pending import. Preparation never reads or writes live parameter storage.
@@ -847,9 +880,8 @@ void TetoricaSPU::OnIdle()
     if(status.ticket==ui.audioTicket&&status.state==tetorica::AudioFileLoader::State::Ready)
       try
       {
-        iplug::IByteChunk bytes;
-        if(!SerializeState(bytes))throw std::runtime_error("Could not capture stable settings; load the sound again");
-        audioSnapshot=tetorica::decodeState({bytes.GetData(),static_cast<std::size_t>(bytes.Size())});
+        std::lock_guard<std::mutex> lock(mStateMutex);
+        audioSnapshot=captureSavedStateLocked();
       }
       catch(const std::exception& error){audioSnapshotError=error.what();}
   }
@@ -1079,7 +1111,8 @@ void TetoricaSPU::updateInstrumentControls()
   const auto mode = effectiveSourceMode(*this);
   const bool noise = mode == SourceMode::Noise;
   const bool pmon = mode == SourceMode::Pmon;
-  const bool morph = GetParam(kParamMorphEnabled)->Bool();
+  const bool software = softwareAudio(ui.definition);
+  const bool morph = !software&&GetParam(kParamMorphEnabled)->Bool();
   const bool sourceChanged = !ui.displayedSource || *ui.displayedSource != mode;
   const bool morphChanged = !ui.displayedMorph || *ui.displayedMorph != morph;
   if (sourceChanged || morphChanged)
@@ -1119,6 +1152,11 @@ void TetoricaSPU::updateInstrumentControls()
       if(label.empty())label="Web instrument";
       if(noise)label+=" / Noise";else if(pmon)label+=" / PMON";
     }
+    if(software) {
+      label="Software audio";
+      if(noise)label+=" / Noise";else if(pmon)label+=" / PMON";
+      control->SetTooltip(ui.definition->softwarePcmSample().name.c_str());
+    }
     if (morph && !noise) label += " / Morph";
     static_cast<ITextControl*>(control)->SetStr(label.c_str());
   }
@@ -1138,7 +1176,7 @@ void TetoricaSPU::updateInstrumentControls()
   for (const auto tag : {kCtrlProgram, kCtrlTone})
     if (auto* control = graphics->GetControlWithTag(tag))
     {
-      const bool enabled=vab||raw;
+      const bool enabled=vab||raw||software;
       if (control->IsDisabled() == enabled) control->SetDisabled(!enabled);
       auto label = vab ?
         (tag == kCtrlProgram ? "Program " + std::to_string(ui.definition->program()) :
@@ -1147,12 +1185,20 @@ void TetoricaSPU::updateInstrumentControls()
       if(raw)
       {
         const auto& sample=ui.definition->rawAdpcmSample();
-        label=tag==kCtrlProgram?rootLabel(sample):!sample.loopStartSamples?
+        label=tag==kCtrlProgram?rootLabel(sample.baseFrequencyHz):!sample.loopStartSamples?
           "Playback: One shot":*sample.loopStartSamples==0?
             "Playback: Loop entire sample":"Loop from sample "+std::to_string(*sample.loopStartSamples);
         control->SetTooltip(tag==kCtrlProgram?
           "Base sample root, using C4 = MIDI 60. That key plays the recording at its original speed. Changes replace the prepared sound and stop held notes/tails. Morph uses its own tuning. Authored PCM-cycle metadata is removed when its tuning no longer matches.":
           "Play once or repeat the entire sample, including up to 27 zero padding frames. This replaces the prepared sound and stops held notes/tails. Loop seam clicks can depend on the recording. Turning loop Off removes incompatible authored PCM-cycle metadata.");
+      }
+      else if(software) {
+        const auto& sample=ui.definition->softwarePcmSample();
+        label=tag==kCtrlProgram?rootLabel(sample.baseFrequencyHz):sample.loop?
+          "Playback: Loop entire sample":"Playback: One shot";
+        control->SetTooltip(tag==kCtrlProgram?
+          "Software audio root. That key plays the original recording speed. Replaces the prepared sound and stops notes/tails.":
+          "Repeat the complete PCM recording without ADPCM padding. Loop requires at least4 frames. Replaces the prepared sound and stops notes/tails.");
       }
       else control->SetTooltip(tag==kCtrlProgram?"Select a Program in the embedded VAB bank.":"Select a Tone in the current VAB Program.");
       auto* menu = static_cast<SpuMenuControl*>(control);
@@ -1187,7 +1233,19 @@ void TetoricaSPU::updateInstrumentControls()
   for (int tag = kCtrlReverbHeading; tag <= kCtrlReverbStatus; ++tag)
     if (auto* control = graphics->GetControlWithTag(tag))
       if (control->IsHidden() == reverbPage) control->Hide(!reverbPage);
-  const bool pcmEditor = pcmPage && mode == SourceMode::Sample;
+  const bool pcmEditor = pcmPage && mode == SourceMode::Sample && !software;
+  if(auto* control=graphics->GetControlWithTag(kCtrlSoftwareAudioInfo)) {
+    const bool visible=pcmPage&&mode==SourceMode::Sample&&software;
+    if(control->IsHidden()==visible)control->Hide(!visible);
+    if(visible) {
+      const auto& sample=ui.definition->softwarePcmSample();
+      char message[640];
+      std::snprintf(message,sizeof(message),
+        "Software audio - outside physical SPU RAM.\n\n%.2f seconds / %zu mono PCM16 frames / 44100 Hz\n\nUse Root and Playback above. ADSR, PMON and SPU Reverb are available.\n\nCycle Morph is unavailable for this recording. Your A/B endpoints and Amount are retained.\n\nThe DAW project and Save Web (v2) embed the complete recording.",
+        sample.pcm->samples().size()/44100.,sample.pcm->samples().size());
+      static_cast<ITextControl*>(control)->SetStr(message);
+    }
+  }
   const bool noiseEditor = pcmPage && noise;
   const bool pmonEditor = pcmPage && pmon;
   for (const auto tag : {kCtrlMorphEnabled, kCtrlPcmShape, kCtrlPcmGraph,
@@ -1211,7 +1269,7 @@ void TetoricaSPU::updateInstrumentControls()
   if (auto* control = graphics->GetControlWithTag(kCtrlPcmHeading))
   {
     const char* title = noise ? "SPU Noise" : pmon ? "Pitch Modulation" :
-      morph ? "Morph - Software" : "PCM cycle - Software";
+      software ? "Audio - Software" : morph ? "Morph - Software" : "PCM cycle - Software";
     auto* text = static_cast<ITextControl*>(control);
     if (std::strcmp(text->GetStr(), title)) text->SetStr(title);
   }
@@ -1293,7 +1351,7 @@ void TetoricaSPU::updateInstrumentControls()
   for (const auto tag : {kCtrlMorphEnabled, kCtrlMorphAmount, kCtrlKeyboardMorph})
     if (auto* control = graphics->GetControlWithTag(tag))
     {
-      const bool disabled = noise || (tag != kCtrlMorphEnabled && !morph);
+      const bool disabled = software || noise || (tag != kCtrlMorphEnabled && !morph);
       if (control->IsDisabled() != disabled) control->SetDisabled(disabled);
     }
   if (auto* control = graphics->GetControlWithTag(kCtrlMorphAmountText))
@@ -1306,7 +1364,7 @@ void TetoricaSPU::updateInstrumentControls()
   if (auto* control = graphics->GetControlWithTag(kCtrlKeyboardMorphStatus))
   {
     char message[24];
-    if (noise || !morph) std::snprintf(message, sizeof(message), "%s", noise ? "Noise" : "Off");
+    if (software || noise || !morph) std::snprintf(message, sizeof(message), "%s", software ? "N/A" : noise ? "Noise" : "Off");
     else std::snprintf(message, sizeof(message), "%.0f%%", amount * 100.);
     auto* text = static_cast<ITextControl*>(control);
     if (std::strcmp(text->GetStr(), message)) text->SetStr(message);
@@ -1337,6 +1395,7 @@ void TetoricaSPU::updateInstrumentControls()
     bool sourceSend = false;
     if(ui.definition&&ui.definition->kind()==tetorica::InstrumentDefinition::Kind::AdpcmSample)
       sourceSend=ui.definition->rawAdpcmSample().reverb;
+    if(software)sourceSend=ui.definition->softwarePcmSample().reverb;
     if (vab)
       for (const auto& tone : ui.bank->tones)
         if (tone.program == ui.definition->program() && tone.index == ui.definition->tone())
@@ -1373,7 +1432,7 @@ void TetoricaSPU::showInstrumentPage(InstrumentPage page)
 
 void TetoricaSPU::setPcmDraftFromUI(const tetorica::PcmCycle& cycle)
 {
-  if (!GetUI() || !mInstrumentUI || effectiveSourceMode(*this) != SourceMode::Sample) return;
+  if (!GetUI() || !mInstrumentUI || effectiveSourceMode(*this) != SourceMode::Sample || softwareAudio(mEngines.snapshotDefinition())) return;
   auto& ui = *mInstrumentUI;
   if (GetParam(kParamMorphEnabled)->Bool())
   {
@@ -1388,7 +1447,7 @@ void TetoricaSPU::setPcmDraftFromUI(const tetorica::PcmCycle& cycle)
 void TetoricaSPU::selectMorphEndpointFromUI(bool editB)
 {
   if (!GetUI() || !mInstrumentUI || effectiveSourceMode(*this) != SourceMode::Sample ||
-      !GetParam(kParamMorphEnabled)->Bool() || mInstrumentUI->morphEditB == editB) return;
+      !GetParam(kParamMorphEnabled)->Bool() || softwareAudio(mEngines.snapshotDefinition()) || mInstrumentUI->morphEditB == editB) return;
   if (auto* graph = GetUI()->GetControlWithTag(kCtrlPcmGraph))
     static_cast<SpuWaveformControl*>(graph)->CancelPointerEdit();
   mInstrumentUI->morphEditB = editB;
@@ -1397,7 +1456,7 @@ void TetoricaSPU::selectMorphEndpointFromUI(bool editB)
 
 void TetoricaSPU::choosePcmShapeFromUI(tetorica::WaveformShape shape)
 {
-  if (!GetUI() || !mInstrumentUI || effectiveSourceMode(*this) != SourceMode::Sample) return;
+  if (!GetUI() || !mInstrumentUI || effectiveSourceMode(*this) != SourceMode::Sample || softwareAudio(mEngines.snapshotDefinition())) return;
   if (auto* graph = GetUI()->GetControlWithTag(kCtrlPcmGraph))
     static_cast<SpuWaveformControl*>(graph)->CancelPointerEdit();
   setPcmDraftFromUI(tetorica::makePcmCycle(shape));
@@ -1405,7 +1464,7 @@ void TetoricaSPU::choosePcmShapeFromUI(tetorica::WaveformShape shape)
 
 void TetoricaSPU::revertPcmDraftFromUI()
 {
-  if (!GetUI() || !mInstrumentUI || effectiveSourceMode(*this) != SourceMode::Sample) return;
+  if (!GetUI() || !mInstrumentUI || effectiveSourceMode(*this) != SourceMode::Sample || softwareAudio(mEngines.snapshotDefinition())) return;
   if (auto* graph = GetUI()->GetControlWithTag(kCtrlPcmGraph))
     static_cast<SpuWaveformControl*>(graph)->CancelPointerEdit();
   const auto& definition = mInstrumentUI->definition;
@@ -1423,7 +1482,7 @@ void TetoricaSPU::revertPcmDraftFromUI()
 
 void TetoricaSPU::applyPcmDraftFromUI()
 {
-  if (!GetUI() || !mInstrumentUI || effectiveSourceMode(*this) != SourceMode::Sample) return;
+  if (!GetUI() || !mInstrumentUI || effectiveSourceMode(*this) != SourceMode::Sample || softwareAudio(mEngines.snapshotDefinition())) return;
   if (auto* graph = GetUI()->GetControlWithTag(kCtrlPcmGraph))
     static_cast<SpuWaveformControl*>(graph)->CancelPointerEdit();
   try
@@ -1475,6 +1534,7 @@ void TetoricaSPU::copyToneEnvelopeFromUI()
   const auto& ui = *mInstrumentUI;
   if(ui.definition&&ui.definition->kind()==tetorica::InstrumentDefinition::Kind::AdpcmSample)
     envelope=ui.definition->rawAdpcmSample().envelope;
+  if(softwareAudio(ui.definition))envelope=ui.definition->softwarePcmSample().envelope;
   if (ui.definition && ui.bank)
     for (const auto& tone : ui.bank->tones)
       if (tone.program == ui.definition->program() && tone.index == ui.definition->tone())

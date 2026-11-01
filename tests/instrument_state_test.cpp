@@ -357,7 +357,7 @@ void rawSources(){
   const EnvelopeSettings env{{0x000f,0x1fc0},false,true};const ReverbSettings fx{ReverbPreset::Room,true,true,.25,.75};
   const NoiseSettings noise{true,17};const PmonSettings pm{true,WaveformShape::Square,.25,.75,250};
   const auto wire=encodeState(authored,37,env,fx,noise,pm,{true,.375});const auto read=decode(wire);
-  CHECK(wire[8]==8&&wire[16]==3&&bankLength(wire)==64+original.adpcm.size()+original.name.size()+448);
+  CHECK(wire[8]==kStateSchemaVersion&&wire[16]==3&&bankLength(wire)==64+original.adpcm.size()+original.name.size()+448);
   CHECK(sameRawAdpcmSample(original,read.definition->rawAdpcmSample())&&sameMorphEndpoints(endpoints,read.definition->morphEndpoints()));
   CHECK(sameEnvelope(env,read.envelope)&&sameReverb(fx,read.reverb)&&samePmon(pm,read.pmon)&&read.noise.enabled&&read.morph.enabled);
   CHECK(encodeState(read.definition,read.gainPercent,read.envelope,read.reverb,read.noise,read.pmon,read.morph)==wire);
@@ -498,5 +498,5 @@ void concurrentSnapshots(){
 int main(){
   codec();malformed();pcmCycles();noiseSettings();pmonSettings();morphSettings();rawSources();immediateRestore();snapshotsAndAtomicFailure();
   callbackAndDefinitionLifetime();loaderMetadata();concurrentSnapshots();
-  std::puts("PASS immutable VAB/PCM/rawADPCM state8 metadata/signedvolumes/tuning/source preservation; schema1..7 migration; strict codec, immediate restore, snapshots, failure atomicity, RT lifetime and concurrent collection");
+  std::puts("PASS immutable VAB/PCM/rawADPCM current-state metadata/signedvolumes/tuning/source preservation; legacy schema migration; strict codec, immediate restore, snapshots, failure atomicity, RT lifetime and concurrent collection");
 }

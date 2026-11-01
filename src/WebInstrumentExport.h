@@ -11,7 +11,7 @@ struct ExportedWebInstrument {
   std::string json;
   std::vector<std::string> notes;
 };
-// Non-RT bounded Web version1 snapshot. Gain is intentionally not baked into
+// Non-RT bounded Web v1 ADPCM / v2 Software PCM snapshot. Gain is intentionally not baked into
 // portable voice volumes. Notes describe projection and playback differences;
 // this does not mutate the source, create a native handle, or write any file.
 ExportedWebInstrument writeWebInstrument(const SavedInstrumentState& state,std::string_view name);

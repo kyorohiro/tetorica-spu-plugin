@@ -103,7 +103,8 @@ enum ECtrlTags
   kCtrlPmonStatus,
   kCtrlKeyboardMorph,
   kCtrlKeyboardMorphStatus,
-  kCtrlSaveWeb
+  kCtrlSaveWeb,
+  kCtrlSoftwareAudioInfo
 };
 
 class TetoricaSPU final : public iplug::Plugin
@@ -185,6 +186,7 @@ private:
   void applyEnvelopeParameters() noexcept;
   void applyReverbParameters() noexcept;
   void applySourceParameters() noexcept;
+  tetorica::SavedInstrumentState captureSavedStateLocked() const;
   void applyImportedParameters(const tetorica::SavedInstrumentState& state) noexcept;
   void discardCarriedMidi() noexcept;
   void discardCarriedNotes() noexcept;

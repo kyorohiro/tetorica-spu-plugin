@@ -23,7 +23,7 @@ add_library(tetorica_spu_instrument STATIC
   src/SpuEngineExchange.cpp src/VabLoader.cpp src/InstrumentState.cpp
   src/WebInstrument.cpp src/WebInstrumentLoader.cpp src/SpuExportSource.cpp
   src/WebInstrumentExport.cpp src/WebInstrumentExporter.cpp
-  src/WavImport.cpp src/AdpcmPlayback.cpp src/AudioFileLoader.cpp)
+  src/WavImport.cpp src/AdpcmPlayback.cpp src/AudioFileLoader.cpp src/SoftwarePcm.cpp)
 target_include_directories(tetorica_spu_instrument PUBLIC src)
 target_include_directories(tetorica_spu_instrument SYSTEM PRIVATE
   vendor/iPlug2OOS/iPlug2/Dependencies/Extras)
@@ -40,6 +40,14 @@ add_executable(spu_vab_render tools/spu-vab-render.cpp)
 target_link_libraries(spu_vab_render PRIVATE tetorica_spu_instrument)
 
 if(BUILD_TESTING)
+  foreach(_case software_pcm_state software_pcm_instrument software_audio_loader software_pcm_web)
+    add_executable(${_case}_test tests/${_case}_test.cpp)
+    target_link_libraries(${_case}_test PRIVATE tetorica_spu_instrument)
+    add_test(NAME spu.${_case} COMMAND ${_case}_test)
+    set_tests_properties(spu.${_case} PROPERTIES TIMEOUT 180)
+  endforeach()
+  target_include_directories(software_pcm_web_test SYSTEM PRIVATE vendor/iPlug2OOS/iPlug2/Dependencies/Extras)
+  target_compile_definitions(software_pcm_web_test PRIVATE WEB_FIXTURE_DIR="${CMAKE_CURRENT_SOURCE_DIR}/tests/fixtures/web")
   add_executable(wav_import_test tests/wav_import_test.cpp)
   target_link_libraries(wav_import_test PRIVATE tetorica_spu_instrument)
   add_test(NAME spu.wav.import COMMAND wav_import_test)

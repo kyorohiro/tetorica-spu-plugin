@@ -3,7 +3,7 @@
   "repositories": {
     "vendor/iPlug2OOS": "9b214c1121a0da1e8db14b86a565c942a3bfea7e",
     "vendor/iPlug2OOS/iPlug2": "b64192fe18afd9bc9a1fe324db5aceb48f4a0eee",
-    "vendor/tetorica-soundchip-native": "d0e0324a56d0b2fe92c4367e69ddee11971a7892",
+    "vendor/tetorica-soundchip-native": "997256ea1ca478f8137224282847db411c5b641e",
     "vendor/vst3sdk": "9fad9770f2ae8542ab1a548a68c1ad1ac690abe0",
     "vendor/vst3sdk/base": "3d2e82f8e6bff59c1d8b7a27491a29c2286b5206",
     "vendor/vst3sdk/pluginterfaces": "31d6eeba6daaa3e2a8bfbe3e7a90ca0b7fbfbc1c",
@@ -11,7 +11,7 @@
     "vendor/vst3sdk/cmake": "de6e54eeaaab35b7145f5c32c279b5e892146e04"
   },
   "notes": [
-    "Native SDK uses an immutable public commit after v0.1.6, including SPU Gaussian/headroom corrections, allocation-free reverb clear and live edits to two independent private host PCM banks; it is not a published v0.1.7 release.",
+    "Native SDK uses an immutable public commit after v0.1.6, including SPU Gaussian/headroom corrections, allocation-free reverb clear and live edits to two independent private host PCM banks, plus bounded long-host-PCM event distances; it is not a published v0.1.7 release.",
     "VST3 SDK v3.8.0_build_66. Only base, pluginterfaces, public.sdk and cmake submodules are needed.",
     "Gitlinks are authoritative. Never update a dependency to moving master as part of a normal build."
   ]

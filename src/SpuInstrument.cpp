@@ -4,6 +4,7 @@
 #include "VabBank.h"
 #include "SpuAdpcm.h"
 #include "SpuBuiltin.h"
+#include "SoftwarePcm.h"
 #include <tetorica/ps1_spu.h>
 #include <algorithm>
 #include <cmath>
@@ -159,6 +160,23 @@ SpuInstrument::SpuInstrument(const vab::PreparedTone& tone) {
 SpuInstrument::SpuInstrument(const PcmCycle& pcm) : SpuInstrument(cycleTone(pcm)) {}
 SpuInstrument::SpuInstrument(const RawAdpcmSample& sample) : SpuInstrument(prepareRawAdpcmSample(sample)) {
   mInvertLeft=std::signbit(sample.volumeLeft);mInvertRight=std::signbit(sample.volumeRight);
+}
+SpuInstrument::SpuInstrument(const SoftwarePcmSample& sample) : SpuInstrument() {
+  validateSoftwarePcmSample(sample);
+  const auto& pcm=sample.pcm->samples();
+  // The default constructor has released all temporary private112 voices.
+  // Replacing bank1 and destroying its old cache therefore happen off audio.
+  // Host upload allocates the entire data/guard/loop prefix now: no long
+  // duration decode or END traversal is necessary before callback use.
+  if(!ps1_spu_set_host_pcm_bank(mChip,1,pcm.data(),static_cast<std::uint32_t>(pcm.size()),sample.loop?1:0))
+    throw std::runtime_error("Could not prepare Native SPU software audio");
+  mSoftwarePcm=true;mRootFrequencyHz=sample.baseFrequencyHz;
+  mVolumeLeft=static_cast<unsigned>(std::lround(kVoiceVolume*std::abs(sample.volumeLeft)));
+  mVolumeRight=static_cast<unsigned>(std::lround(kVoiceVolume*std::abs(sample.volumeRight)));
+  mInvertLeft=std::signbit(sample.volumeLeft);mInvertRight=std::signbit(sample.volumeRight);
+  mSourceEnvelope=mEnvelope=sample.envelope;mSourceReverbSend=sample.reverb;
+  configureSourceMode(false,false);
+  if(!mHealthy)throw std::runtime_error("Could not configure Native SPU software audio");
 }
 SpuInstrument::~SpuInstrument() { ps1_spu_destroy(mChip); }
 
@@ -330,7 +348,7 @@ void SpuInstrument::keyOn(unsigned physicalVoice) noexcept {
     // Mode changes already muted the old voice. Latch the new source before
     // an audition fade can reach an old one-shot END and clear its send bit.
     // A zero-level KON followed by audition On retains the128-frame fade-in.
-    if(!mNoise.enabled&&!mMorph.enabled&&(!mPmon.enabled||physicalVoice%2))
+    if(!mSoftwarePcm&&!mNoise.enabled&&!mMorph.enabled&&(!mPmon.enabled||physicalVoice%2))
       write(physicalVoice*16+14,mSampleRepeatAddresses[physicalVoice]);
     write(0x188+(physicalVoice>=16?2:0),1u<<(physicalVoice%16));
     mFreshSource[physicalVoice]=false;
@@ -353,7 +371,7 @@ unsigned SpuInstrument::pitchFor(int note,int channel) const noexcept {
   const int delta=mPitchBend[channel]-8192;
   const double semitones=2.0*delta/(delta<0?8192.0:8191.0);
   const double frequency=440*std::exp2((note-69+semitones)/12.0);
-  const double root=mMorph.enabled?44100./112:mRootFrequencyHz;
+  const double root=mMorph.enabled&&!mSoftwarePcm?44100./112:mRootFrequencyHz;
   return static_cast<unsigned>(std::lround(std::clamp(4096*frequency/root,1.0,16383.0)));
 }
 unsigned SpuInstrument::modulatorPitchFor(int note,int channel) const noexcept {
@@ -470,7 +488,7 @@ void SpuInstrument::writeReverbSendMask() noexcept {
 void SpuInstrument::configureSourceMode(bool noise,bool pmon) noexcept {
   panic();mNoise.enabled=noise;mPmon.enabled=pmon;
   const unsigned hostMask=noise?0xffffff:pmon?0x555555:0;
-  const unsigned morphMask=mMorph.enabled&&!noise?(pmon?0xaaaaaa:0xffffff):0;
+  const unsigned morphMask=(mSoftwarePcm||mMorph.enabled)&&!noise?(pmon?0xaaaaaa:0xffffff):0;
   mHealthy=(ps1_spu_set_host_masks(mChip,hostMask,morphMask)!=0)&&mHealthy;
   write(0x194,noise?0xffff:0);write(0x196,noise?0xff:0);
   write(0x190,pmon?0xaaaa:0);write(0x192,pmon?0xaa:0);
@@ -502,6 +520,7 @@ bool SpuInstrument::setPmon(PmonSettings settings) noexcept {
 }
 bool SpuInstrument::setMorphEndpoints(const MorphEndpoints& endpoints) noexcept {
   if(!validMorphEndpoints(endpoints))return false;
+  if(mSoftwarePcm){mMorphEndpoints=endpoints;return mHealthy;}
   const auto pcm=morphPcm(endpoints,mMorph.amount);
   if(!ps1_spu_update_host_pcm_bank(mChip,1,pcm.data(),pcm.size()))return false;
   mMorphEndpoints=endpoints;mMorphWavePrepared=true;
@@ -510,6 +529,7 @@ bool SpuInstrument::setMorphEndpoints(const MorphEndpoints& endpoints) noexcept 
 bool SpuInstrument::setMorph(MorphSettings settings) noexcept {
   if(!std::isfinite(settings.amount)||settings.amount<0||settings.amount>1)return false;
   if(settings.enabled==mMorph.enabled&&settings.amount==mMorph.amount)return mHealthy;
+  if(mSoftwarePcm){mMorph=settings;return mHealthy;}
   if(settings.enabled&&(!mMorphWavePrepared||settings.amount!=mMorph.amount)){
     const auto pcm=morphPcm(mMorphEndpoints,settings.amount);
     if(!ps1_spu_update_host_pcm_bank(mChip,1,pcm.data(),pcm.size()))return false;

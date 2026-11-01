@@ -10,6 +10,7 @@
 #include "vst3-host/morph-checks.h"
 #include "vst3-host/web-instrument-checks.h"
 #include "vst3-host/wav-import-checks.h"
+#include "vst3-host/software-audio-checks.h"
 #include <AudioToolbox/AudioToolbox.h>
 #include <CoreFoundation/CoreFoundation.h>
 #include <algorithm>
@@ -206,7 +207,7 @@ int main(int argc, char** argv)
 {
   if (argc < 2 || argc > 3)
   {
-    std::cerr << "Usage: tetorica_au_state_check /path/TetoricaSPU.component [fixture.vab]\n";
+    std::cerr << "Usage: tetorica_au_state_check /path/TetoricaSPU.component [fixture.vab | --software-audio-only]\n";
     return 2;
   }
   try
@@ -227,7 +228,8 @@ int main(int argc, char** argv)
       0x00000100, factory);
     require(component, "Cannot register local AU factory");
 
-    const char* fixture = argc == 3 ? argv[2] : VAB_FIXTURE_DIR "/spu-synth-demo.vab";
+    const bool softwareOnly=argc==3&&std::string(argv[2])=="--software-audio-only";
+    const char* fixture = argc == 3&&!softwareOnly ? argv[2] : VAB_FIXTURE_DIR "/spu-synth-demo.vab";
     std::ifstream input(fixture, std::ios::binary | std::ios::ate);
     require(input.good(), "Cannot open original VAB fixture");
     const auto length = input.tellg();
@@ -235,6 +237,10 @@ int main(int argc, char** argv)
     std::vector<std::uint8_t> bank(static_cast<std::size_t>(length));
     input.seekg(0);
     require(bool(input.read(reinterpret_cast<char*>(bank.data()), bank.size())), "Cannot read VAB fixture");
+    if(softwareOnly){
+      tetorica::test::checkSoftwareAudio([&]{return std::make_unique<Instance>(component);},48000,"AU state/MIDIEvent",bank);
+      return 0;
+    }
     const auto definition = tetorica::InstrumentDefinition::fromVab(bank, 3, 1);
     const auto encoded = tetorica::encodeState(definition, 37);
 
@@ -312,6 +318,7 @@ int main(int argc, char** argv)
     tetorica::test::checkMorph([&] { return std::make_unique<Instance>(component); },48000,"AU parameters/MIDIEvent",bank);
     tetorica::test::checkWebInstruments([&] { return std::make_unique<Instance>(component); },48000,"AU state/MIDIEvent",bank);
     tetorica::test::checkWavImports([&] { return std::make_unique<Instance>(component); },48000,"AU state/MIDIEvent");
+    tetorica::test::checkSoftwareAudio([&] { return std::make_unique<Instance>(component); },48000,"AU state/MIDIEvent",bank);
     std::cout << "PASS: local AU embedded VAB/Gain round-trip, first-render MIDI/PCM, separate instance, "
       "malformed CF/state rejection with pending/active preservation, legacy AU migration; no audio device/editor/install\n";
   }

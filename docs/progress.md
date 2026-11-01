@@ -584,3 +584,12 @@
 - [初回CI41265269673](https://github.com/kyorohiro/tetorica-spu-plugin/actions/runs/41265269673)・表示境界補正`a6f1a2e`の[最終CI41266519833](https://github.com/kyorohiro/tetorica-spu-plugin/actions/runs/41266519833)は両job・全step成功。最小subnormal等のRoot表示は実source関数のUBSan probeでも確認した。音声 / stateのsourceはWAV実装以降不変。
 - 初回WAV対応AUをknown manifest照合・退避付きで更新し、GarageBand旧schema8 P3/T0/Gain99を復元した。最終AUも再退避更新・auval成功、saved payload / VABと原本11filesは不変。最終editorはCUA clickで開けず、人の再表示確認へ残した。
 - [操作・制限・rollback](wav_import_20261101.md) / [source hash・現在のinstalled AU manifest・CI metadata](wav_import_20261101.json)。実聴・長時間使用・最終AU editor再表示・実DAW独自WAV UIとautomation録音は未確認としてTODOへ残す。Web/Tauri配布とversion/tag/releaseは変更していない。
+
+## 2026-11-01 JST — 長いAudio / Software PCM実装チェックポイント
+
+- 開始TODO `cffffe0` の後、短WAVのADPCM bytesを維持し、容量超過を32MiB mono PCM16のSoftware audioへ自動切替する実装を追加。
+- Software PCM kind4 / state9、shared immutable buffer、Web v2 base64 PCM16LE import/export（48MiB JSON）、26parameter ID・旧1〜8互換を接続。
+- Nativeの長音源・PITCH1時のevent距離overflowをSDK `997256e`で修正・公開しpin。Native CI12検証成功。
+- Offline / macOS各24件、ASan/UBSan24件、実AU48k・実VST3全3rate、実Web reader・Chromium/WebKitのsmall/20MiB往復成功。最終監査でSoftware rawMorph自動化時の持越しNoteOff誤破棄を修正し、追加host回帰を実行中。
+- Standaloneで20MiB WAV読込、237.77秒表示、Root C4→A4、全体Loop、Save Web v2と元PCM byte完全一致を確認。実聴は未実施。
+- 既知AUをhash退避付きで更新（journal `au-update-doadghp0`）。AUval / GarageBand旧saved state / 最終CIと記録は続行中。公開release・version/tag・Web/Tauri/npmは変更しない。

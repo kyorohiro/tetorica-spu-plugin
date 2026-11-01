@@ -32,8 +32,9 @@ public:
   ~AudioFileLoader();
   AudioFileLoader(const AudioFileLoader&)=delete;
   AudioFileLoader& operator=(const AudioFileLoader&)=delete;
-  // WAV read/decode/resample/ADPCM encode and Native preparation all run on
-  // the worker. Imported files start at C4, one-shot; A/B are retained.
+  // WAV read/decode/resample and Native preparation all run on the worker.
+  // Short files keep ADPCM; physical-RAM overflow uses bounded Software PCM.
+  // Imported files start at C4, one-shot; A/B are retained.
   // Empty/NUL paths or invalid endpoints throw without replacing staged work.
   Ticket requestFile(std::string path,MorphEndpoints endpoints={});
   // Metadata edits stage an immutable definition; Native preparation is never

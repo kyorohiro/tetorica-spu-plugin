@@ -88,10 +88,9 @@ SpuEngineExchange::Generation SpuEngineExchange::commitPreparedImport(
   if(!prepared||!prepared->healthy()||!state.definition)
     throw std::invalid_argument("SPU import: missing healthy prepared engine or definition");
   // This public producer entry point also rejects malformed scalar tuples.
-  // Complete bounded validation/allocation precedes any pending-generation
-  // mutation, even when the normal caller already validated its JSON input.
-  (void)encodeState(state.definition,state.gainPercent,state.envelope,state.reverb,
-                    state.noise,state.pmon,state.morph);
+  // Complete bounded validation precedes any pending-generation mutation.
+  // Do not allocate a full encoded32MiB state merely to validate its tuple.
+  validateSavedInstrumentState(state);
   auto next=std::make_unique<Node>(Node{0,std::move(prepared),state.definition,std::move(state)});
   std::lock_guard<std::mutex> lock(mProducerMutex);
   const auto previous=mLatest.load(std::memory_order_relaxed);
@@ -191,6 +190,7 @@ std::unique_ptr<SpuInstrument> prepareDefinition(const InstrumentDefinition& def
   if(definition.kind()==InstrumentDefinition::Kind::Builtin)prepared=std::make_unique<SpuInstrument>();
   else if(definition.kind()==InstrumentDefinition::Kind::PcmCycle)prepared=std::make_unique<SpuInstrument>(definition.pcmCycle());
   else if(definition.kind()==InstrumentDefinition::Kind::AdpcmSample)prepared=std::make_unique<SpuInstrument>(definition.rawAdpcmSample());
+  else if(definition.kind()==InstrumentDefinition::Kind::SoftwarePcm)prepared=std::make_unique<SpuInstrument>(definition.softwarePcmSample());
   else {
     const auto& bytes=definition.bankBytes();
     const auto bank=vab::parse({bytes.data(),bytes.size()});

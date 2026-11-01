@@ -29,9 +29,15 @@ ExportedWebInstrument writeWebInstrument(const SavedInstrumentState& state,std::
   if(name.empty()||name.size()>320)fail("Web export name must be nonempty and at most 80 UTF-16 units");
   // Validate every authored field before flattening anything. In particular,
   // invalid dormant settings must not disappear behind Noise/Morph priority.
-  const auto validated=encodeState(state.definition,state.gainPercent,state.envelope,state.reverb,state.noise,state.pmon,state.morph);
-  (void)validated;
-  auto source=extractAdpcmSource(*state.definition);
+  validateSavedInstrumentState(state);
+  const bool software=state.definition->kind()==InstrumentDefinition::Kind::SoftwarePcm;
+  RawAdpcmSample source;
+  if(software) {
+    const auto& sample=state.definition->softwarePcmSample();
+    source.baseFrequencyHz=sample.baseFrequencyHz;source.volumeLeft=sample.volumeLeft;
+    source.volumeRight=sample.volumeRight;source.envelope=sample.envelope;
+    source.inspectorPitch=sample.inspectorPitch;source.reverb=sample.reverb;
+  } else source=extractAdpcmSource(*state.definition);
   ExportedWebInstrument exported;
   exported.notes.emplace_back("This is a single Web instrument snapshot, not a complete plugin project. Host bypass, live controllers, sounding notes, effect history and unapplied drafts are not exported.");
   exported.notes.emplace_back("Plugin Gain is not exported or baked into voice volumes. Authored signed volumes are preserved. Web Master and its calibration differ, so playback level can change; a muted plugin can export an audible instrument.");
@@ -64,6 +70,10 @@ ExportedWebInstrument writeWebInstrument(const SavedInstrumentState& state,std::
     pmon.enabled=false;
     exported.notes.emplace_back("Noise takes priority. The masked PMON enable flag is exported Off because the Web format rejects both source flags On; its other PMON settings are retained.");
   }
+  if(software&&morph.enabled) {
+    morph.enabled=false;
+    exported.notes.emplace_back("Software audio cannot use cycle Morph. Its masked enable flag is exported Off; Amount and both endpoints are retained.");
+  }
   if(state.noise.enabled&&morph.enabled) {
     morph.enabled=false;
     exported.notes.emplace_back("Noise takes priority. The masked Morph enable flag is exported Off to retain the original sample; Amount and both endpoints are retained.");
@@ -80,16 +90,23 @@ ExportedWebInstrument writeWebInstrument(const SavedInstrumentState& state,std::
   }
   if(pmon.enabled)
     exported.notes.emplace_back("PMON settings are retained, but the plugin uses a 16-bit host modulator while the Web synthesizer uses encoded ADPCM. Their modulation is not guaranteed sample-identical.");
-  if(!source.waveform) {
+  if(!software&&!source.waveform) {
     const auto capacity=524288-kFreshWebReserved-(pmon.enabled?64:0);
     if(source.adpcm.size()>capacity)
       fail("Exported ADPCM cannot fit a fresh Web synthesizer: reserved editor slots and optional PMON need additional sample RAM");
     exported.notes.emplace_back("Loading this ADPCM consumes Web sample RAM. Reload the Web synthesizer for a fresh bank if earlier samples leave insufficient space.");
   }
-  validateRawAdpcmSample(source);
-  Json sample{{"adpcm",source.adpcm},{"baseFrequencyHz",source.baseFrequencyHz}};
-  if(source.loopStartSamples)sample["loopStartSamples"]=*source.loopStartSamples;
-  Json value{{"schema","tetorica-spu-synth.instrument"},{"version",1},{"name",std::string(name)},
+  Json sample;
+  if(software) {
+    sample={{"pcm16Base64",nullptr},{"baseFrequencyHz",source.baseFrequencyHz},
+      {"loop",state.definition->softwarePcmSample().loop}};
+    exported.notes.emplace_back("Software audio v2 embeds the original mono PCM16 at 44100 Hz, outside physical SPU RAM. The plugin accepts up to32MiB of PCM /48MiB JSON; larger Web recordings are unsupported.");
+  } else {
+    validateRawAdpcmSample(source);
+    sample={{"adpcm",source.adpcm},{"baseFrequencyHz",source.baseFrequencyHz}};
+    if(source.loopStartSamples)sample["loopStartSamples"]=*source.loopStartSamples;
+  }
+  Json value{{"schema","tetorica-spu-synth.instrument"},{"version",software?2:1},{"name",std::string(name)},
     {"preset",{{"volumeLeft",source.volumeLeft},{"volumeRight",source.volumeRight},
       {"adsr1",source.envelope.adsr1},{"adsr2",source.envelope.adsr2},{"pitch",source.inspectorPitch},{"reverb",source.reverb}}},
     {"sample",std::move(sample)},
@@ -98,14 +115,26 @@ ExportedWebInstrument writeWebInstrument(const SavedInstrumentState& state,std::
     {"noise",{{"enabled",state.noise.enabled},{"clock",state.noise.clock}}},
     {"pmon",{{"enabled",pmon.enabled},{"waveform",waveformName(pmon.waveform)},{"ratio",pmon.ratio},{"depth",pmon.depth},{"decayMs",pmon.decayMs}}},
     {"morph",{{"enabled",morph.enabled},{"amount",morph.amount},{"a",state.definition->morphEndpoints().a},{"b",state.definition->morphEndpoints().b}}}};
-  exported.json=value.dump(2)+"\n";
-  if(exported.json.size()>kMaxWebInstrumentBytes)fail("Exported Web instrument exceeds the 8MiB JSON bound");
-  // The same strict importer validates the complete final representation. Name
-  // trimming follows the real Web reader rather than platform locale rules.
+  const auto encode=[&] {
+    auto small=value.dump(2);
+    if(!software)return small+"\n";
+    constexpr std::string_view marker="\"pcm16Base64\": null";
+    const auto field=small.find(marker);
+    if(field==std::string::npos)fail("Missing Software PCM export field");
+    const auto begin=field+marker.size()-4;
+    std::string result;result.reserve(small.size()+((state.definition->softwarePcmSample().pcm->samples().size()*2+2)/3)*4);
+    result.append(small,0,begin);result+='"';
+    appendSoftwarePcmBase64(*state.definition->softwarePcmSample().pcm,result);
+    result+='"';result.append(small,begin+4,std::string::npos);result+='\n';return result;
+  };
+  exported.json=encode();
+  const auto limit=software?kMaxWebInstrumentBytes:kMaxWebV1InstrumentBytes;
+  if(exported.json.size()>limit)fail("Exported Web instrument exceeds its JSON bound");
+  // Validate the final representation against the same bounded strict reader.
   const auto checked=readWebInstrument(exported.json);
   if(checked.name!=name) {
-    value["name"]=checked.name;exported.json=value.dump(2)+"\n";
-    if(exported.json.size()>kMaxWebInstrumentBytes)fail("Exported Web instrument exceeds the 8MiB JSON bound");
+    value["name"]=checked.name;exported.json=encode();
+    if(exported.json.size()>limit)fail("Exported Web instrument exceeds its JSON bound");
   }
   return exported;
 }

@@ -24,6 +24,7 @@ add_executable(tetorica_vst3_audio_check
   "${TETORICA_ROOT}/src/WebInstrumentExport.cpp"
   "${TETORICA_ROOT}/src/WavImport.cpp"
   "${TETORICA_ROOT}/src/AdpcmPlayback.cpp"
+  "${TETORICA_ROOT}/src/SoftwarePcm.cpp"
   "${TETORICA_ROOT}/src/VabBank.cpp"
   "${VST3_SDK}/public.sdk/source/common/memorystream.cpp"
   "${VST3_SDK}/public.sdk/source/vst/hosting/plugprovider.cpp")

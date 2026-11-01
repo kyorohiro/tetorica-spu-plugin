@@ -33,7 +33,12 @@ void references() {
   const auto reference=Json::parse(text("reference.json"));
   for(const auto& entry:reference["cases"]) {
     const auto bytes=text(entry["file"].get<std::string>());
-    if(entry["version"]==2){rejects([&]{readWebInstrument(bytes);},"version2 long software audio");continue;}
+    if(entry["version"]==2){
+      const auto imported=readWebInstrument(bytes);
+      require(imported.state.definition->kind()==InstrumentDefinition::Kind::SoftwarePcm,"Web v2 lost Software PCM");
+      require(imported.state.definition->softwarePcmSample().pcm->samples().size()==4,"Web v2 fixture frames changed");
+      continue;
+    }
     const auto imported=readWebInstrument(bytes);const auto& state=imported.state;
     const auto source=Json::parse(bytes);const auto& expected=entry["expected"];
     require(imported.name==expected["name"],"Web name did not trim exactly");
@@ -118,7 +123,7 @@ void syntaxAndBounds() {
   duplicate=wire;duplicate.insert(1,"\"\\u006eame\":\"extra\",");rejects([&]{readWebInstrument(duplicate);},"duplicate");
   duplicate=wire;const auto sample=duplicate.find("\"sample\":{");require(sample!=std::string::npos,"Fixture JSON shape changed");
   duplicate.insert(sample+10,"\"baseFrequencyHz\":220,");rejects([&]{readWebInstrument(duplicate);},"duplicate");
-  rejects([&]{readWebInstrument(std::string(kMaxWebInstrumentBytes+1,' '));},"8MiB");
+  rejects([&]{readWebInstrument(std::string(kMaxWebInstrumentBytes+1,' '));},"48MiB");
   std::string tooMany="[";for(int i=0;i<530001;++i){if(i)tooMany+=',';tooMany+='0';}tooMany+=']';
   rejects([&]{readWebInstrument(tooMany);},"too many values");
   auto max=good;max["sample"]["adpcm"]=std::vector<unsigned char>(520192,0);
@@ -148,6 +153,6 @@ void unicodeAndOwnership() {
 }
 int main() {
   try{references();malformed();syntaxAndBounds();unicodeAndOwnership();
-    std::cout<<"PASS original Web v1 fixtures/current+legacy PCM/Morph0.65/rawmetadata/reverb/noise/pmon/state roundtrip; strict JSON/depth/nodes/duplicates/UTF16/bounds/ownership; v2 explicit rejection\n";
+    std::cout<<"PASS original Web v1 fixtures/current+legacy PCM/Morph0.65/rawmetadata/reverb/noise/pmon/state roundtrip; strict JSON/depth/nodes/duplicates/UTF16/bounds/ownership; v2 Software PCM import\n";
   }catch(const std::exception& error){std::cerr<<"FAIL Web import: "<<error.what()<<'\n';return 1;}
 }

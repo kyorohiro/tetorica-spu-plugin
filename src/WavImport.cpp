@@ -92,7 +92,7 @@ std::vector<float> decodeMono(const Wave& wave) {
   }
   return mono;
 }
-std::vector<float> resample(const std::vector<float>& input,std::uint32_t rate,std::size_t frames) {
+std::vector<float> resample(std::vector<float> input,std::uint32_t rate,std::size_t frames) {
   if(rate==outputRate)return input;
   // A normalized Blackman-windowed sinc, with its support scaled when
   // downsampling. The .95 cutoff leaves a transition band below Nyquist.
@@ -167,23 +167,64 @@ std::vector<std::uint8_t> encode(const std::vector<float>& pcm,bool loop) {
   }
   return result;
 }
+std::size_t outputFrames(const Wave& wave) {
+  const auto count=(std::uint64_t(wave.frames)*outputRate+wave.rate-1)/wave.rate;
+  if(!count||count>std::numeric_limits<std::size_t>::max())fail("WAV decoded frame count is invalid");
+  return static_cast<std::size_t>(count);
+}
+RawAdpcmSample initialSample(std::string name,WavImportOptions options) {
+  if(options.rootMidiNote<0||options.rootMidiNote>127)fail("WAV root MIDI note must be 0 to 127");
+  RawAdpcmSample sample;sample.name=std::move(name);
+  sample.baseFrequencyHz=440*std::pow(2.,double(options.rootMidiNote-69)/12);
+  sample.adpcm.resize(16);sample.adpcm[1]=1;validateRawAdpcmSample(sample);
+  return sample;
+}
 }
 WavImportResult importWav(vab::BytesView bytes,std::string name,WavImportOptions options) {
-  if(options.rootMidiNote<0||options.rootMidiNote>127)fail("WAV root MIDI note must be 0 to 127");
+  auto sample=initialSample(std::move(name),options);
   const auto wave=read(bytes);
-  const auto frames64=(std::uint64_t(wave.frames)*outputRate+wave.rate-1)/wave.rate;
-  if(frames64==0||frames64>maxFrames)fail("WAV exceeds free SPU sample RAM after resampling; input is not truncated");
-  const auto frames=static_cast<std::size_t>(frames64),padded=(frames+27)/28*28;
+  const auto frames=outputFrames(wave);
+  if(frames>maxFrames)fail("WAV exceeds free SPU sample RAM after resampling; input is not truncated");
+  const auto padded=(frames+27)/28*28;
   if(padded>maxFrames)fail("WAV packet padding exceeds free SPU sample RAM; input is not truncated");
   WavImportResult result;result.sampleRate=wave.rate;result.channels=wave.channels;
   result.sourceFrames=wave.frames;result.resampledFrames=frames;result.paddedFrames=padded-frames;
-  result.sample.name=std::move(name);result.sample.baseFrequencyHz=440*std::pow(2.,double(options.rootMidiNote-69)/12);
-  // Validate name/tuning before resampling or encoding. All later state is
-  // local; exceptions cannot mutate an existing source or callback handle.
-  result.sample.adpcm.resize(16);result.sample.adpcm[1]=1;validateRawAdpcmSample(result.sample);
-  const auto mono=decodeMono(wave);const auto converted=resample(mono,wave.rate,frames);
+  result.sample=std::move(sample);
+  const auto converted=resample(decodeMono(wave),wave.rate,frames);
   result.sample.adpcm=encode(converted,options.loop);
   if(options.loop)result.sample.loopStartSamples=0;
   validateRawAdpcmSample(result.sample);return result;
+}
+WavAudioImportResult importWavAudio(vab::BytesView bytes,std::string name,WavImportOptions options) {
+  auto initial=initialSample(std::move(name),options);const auto wave=read(bytes);
+  const auto frames=outputFrames(wave);
+  if(frames>kMaxSoftwarePcmFrames)fail("WAV exceeds the 32 MiB decoded Software audio limit; input is not truncated");
+  WavAudioImportResult result;result.sampleRate=wave.rate;result.channels=wave.channels;
+  result.sourceFrames=wave.frames;result.resampledFrames=frames;
+  // Decide before allocating decoded floats or spending time on ADPCM search.
+  // The 28-frame ceiling is safe after the independent software-frame bound.
+  const bool software=(frames+27)/28*16>vab::kMaxSampleBytes;
+  auto converted=resample(decodeMono(wave),wave.rate,frames);
+  if(!software) {
+    initial.adpcm=encode(converted,options.loop);
+    if(options.loop)initial.loopStartSamples=0;
+    validateRawAdpcmSample(initial);result.paddedFrames=(frames+27)/28*28-frames;
+    result.sample=std::move(initial);
+  }else {
+    std::vector<std::int16_t> pcm(frames);
+    for(std::size_t at=0;at<frames;++at)pcm[at]=static_cast<std::int16_t>(
+      std::clamp(std::floor(double(converted[at])*32768.+.5),-32768.,32767.));
+    // Drop the potentially large float intermediary before preparing owned
+    // immutable PCM / the Native cache on the worker.
+    std::vector<float>().swap(converted);
+    SoftwarePcmSample sample;sample.pcm=SoftwarePcmBuffer::copyOf(pcm);
+    std::vector<std::int16_t>().swap(pcm);
+    sample.baseFrequencyHz=initial.baseFrequencyHz;sample.loop=options.loop;
+    sample.volumeLeft=initial.volumeLeft;sample.volumeRight=initial.volumeRight;
+    sample.envelope=initial.envelope;sample.reverb=initial.reverb;
+    sample.inspectorPitch=initial.inspectorPitch;sample.name=std::move(initial.name);
+    validateSoftwarePcmSample(sample);result.sample=std::move(sample);
+  }
+  return result;
 }
 } // namespace tetorica

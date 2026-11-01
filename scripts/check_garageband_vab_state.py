@@ -14,9 +14,13 @@ import plistlib
 import struct
 
 MAX_BANK = 1024 * 1024
-MAX_STATE = MAX_BANK + 1024
-MAX_PROJECT_DATA = 64 * 1024 * 1024
-MAX_XML = 2 * 1024 * 1024
+MAX_SOFTWARE_PCM = 32 * 1024 * 1024
+MAX_SOFTWARE_FRAMES = MAX_SOFTWARE_PCM // 2
+MAX_STATE = MAX_SOFTWARE_PCM + 64 + 320 + 1024
+# A maximum-size embedded state expands to about44.8MB of base64 plus XML
+# whitespace. Permit bounded project history/multiple AU fragments as well.
+MAX_PROJECT_DATA = 256 * 1024 * 1024
+MAX_XML = 64 * 1024 * 1024
 MAX_ALTERNATIVES = 128
 MAX_XML_FRAGMENTS = 4096
 IDENTITY = {'type': int.from_bytes(b'aumu', 'big'),
@@ -118,6 +122,37 @@ def decode_raw_sample(source):
             'waveform_consistency_checked': False if waveform is not None else None}
 
 
+def decode_software_sample(source):
+    if len(source) < 64:
+        raise ValueError('Software PCM source header is truncated')
+    version, flags, frames, name_bytes = struct.unpack_from('<4I', source)
+    root, left, right = struct.unpack_from('<3d', source, 16)
+    reserved_loop, packed, pitch, reserved1, reserved2, reserved3 = struct.unpack_from('<6I', source, 40)
+    pcm_bytes = frames * 2
+    if (version != 1 or flags & ~3 or reserved_loop or reserved1 or reserved2 or reserved3
+            or not 1 <= frames <= MAX_SOFTWARE_FRAMES or name_bytes > 320 or pitch > 16383
+            or flags & 1 and frames < 4 or len(source) != 64 + pcm_bytes + name_bytes):
+        raise ValueError('Invalid Software PCM header, flags, metadata or lengths')
+    if (not math.isfinite(root) or not .000001 <= root <= 1000000
+            or any(not math.isfinite(value) or not -1 <= value <= 1 for value in (left, right))):
+        raise ValueError('Invalid Software PCM tuning or signed source volume')
+    try:
+        name = bytes(source[64 + pcm_bytes:]).decode('utf-8', errors='strict')
+    except UnicodeDecodeError as error:
+        raise ValueError('Software PCM name is not valid UTF-8') from error
+    if '\0' in name:
+        raise ValueError('Software PCM name contains NUL')
+    # source is a view into the original state: hash the raw LE bytes without
+    # copying32MiB or materializing millions of Python integer samples.
+    pcm = source[64:64 + pcm_bytes]
+    return {'name': name, 'name_bytes': name_bytes, 'pcm_frames': frames, 'pcm_bytes': pcm_bytes,
+            'pcm16le_sha256': sha(pcm), 'sample_rate': 44100,
+            'base_frequency_hz': root, 'volume_left': left, 'volume_right': right,
+            'adsr1': packed & 65535, 'adsr2': packed >> 16, 'inspector_pitch': pitch,
+            'reverb_send': bool(flags & 2), 'loop': bool(flags & 1),
+            'loop_start_samples': 0 if flags & 1 else None}
+
+
 def decode_payload(payload):
     if not isinstance(payload, bytes):
         raise ValueError('AU data is not a byte string')
@@ -140,10 +175,14 @@ def decode_payload(payload):
     if len(payload) < 40 or payload[:8] != b'TSPUST01':
         raise ValueError('Expected complete TSPUST01 custom state or legacy Gain')
     schema, total, kind, program, tone, size = struct.unpack_from('<6I', payload, 8)
-    if schema not in (1, 2, 3, 4, 5, 6, 7, 8) or total != len(payload) or size > MAX_BANK or total != {1: 40, 2: 48, 3: 72, 4: 72, 5: 80, 6: 112, 7: 1024, 8: 1024}[schema] + size:
-        raise ValueError('Invalid state schema, total or bank length')
-    if kind not in ((0, 1, 2, 3) if schema >= 8 else (0, 1, 2) if schema >= 4 else (0, 1)) or program > 127 or tone > 15:
+    fixed = {1: 40, 2: 48, 3: 72, 4: 72, 5: 80, 6: 112, 7: 1024, 8: 1024, 9: 1024}.get(schema)
+    if fixed is None or total != len(payload) or total != fixed + size:
+        raise ValueError('Invalid state schema, total or source length')
+    if kind not in ((0, 1, 2, 3, 4) if schema >= 9 else (0, 1, 2, 3) if schema >= 8 else (0, 1, 2) if schema >= 4 else (0, 1)) or program > 127 or tone > 15:
         raise ValueError('Invalid state kind or sparse selection')
+    maximum = MAX_SOFTWARE_PCM + 64 + 320 if schema == 9 and kind == 4 else MAX_BANK
+    if size > maximum:
+        raise ValueError('State source exceeds its schema/kind bound')
     if kind == 0 and (size or program or tone):
         raise ValueError('Builtin state has an unexpected bank or selection')
     if kind == 1 and not size:
@@ -152,6 +191,8 @@ def decode_payload(payload):
         raise ValueError('PCM cycle must contain 112 samples and no VAB selection')
     if kind == 3 and (size < 64 or program or tone):
         raise ValueError('Raw ADPCM source has an invalid length or VAB selection')
+    if kind == 4 and (size < 64 or program or tone):
+        raise ValueError('Software PCM source has an invalid length or VAB selection')
     gain, = struct.unpack_from('<d', payload, 32 + size)
     if not math.isfinite(gain) or not 0 <= gain <= 100:
         raise ValueError('Invalid custom-state Gain')
@@ -177,11 +218,12 @@ def decode_payload(payload):
             raise ValueError('Morph endpoints must contain finite PCM in [-1, 1]')
         morph = {'enabled': bool(mflags & 1), 'amount': amount, 'samples_per_endpoint': 112,
                  'a_sha256': sha(a), 'b_sha256': sha(b)}
-    bank = payload[32:32 + size]
+    bank = memoryview(payload)[32:32 + size] if kind == 4 else payload[32:32 + size]
     if kind == 2 and any(not math.isfinite(value) or not -1 <= value <= 1 for value in struct.unpack('<112f', bank)):
         raise ValueError('PCM cycle samples must be finite in [-1, 1]')
     raw = decode_raw_sample(bank) if kind == 3 else None
-    return dict(result, schema=schema, kind={0: 'Builtin', 1: 'VAB', 2: 'PcmCycle', 3: 'AdpcmSample'}[kind],
+    software = decode_software_sample(bank) if kind == 4 else None
+    return dict(result, schema=schema, kind={0: 'Builtin', 1: 'VAB', 2: 'PcmCycle', 3: 'AdpcmSample', 4: 'SoftwarePcm'}[kind],
                 program=program, tone=tone, gain_percent=gain,
                 envelope={'enabled': bool(flags & 1), 'live': bool(flags & 2),
                           'adsr1': packed & 65535, 'adsr2': packed >> 16},
@@ -191,6 +233,7 @@ def decode_payload(payload):
                 pmon={'enabled': bool(pflags & 1), 'waveform': waveform, 'ratio': ratio, 'depth': depth, 'decay_ms': decay},
                 morph=morph,
                 adpcm_sample=raw,
+                software_pcm_sample=software,
                 bank_bytes=size if kind == 1 else 0, bank_sha256=sha(bank) if kind == 1 else None,
                 pcm_samples=112 if kind == 2 else None, pcm_sha256=sha(bank) if kind == 2 else None), bank if kind == 1 else b''
 
@@ -269,7 +312,7 @@ def main():
                            'program': args.program, 'tone': args.tone, 'gain_percent': args.gain} if expected is not None else None,
               'expected_candidate_indices': matches, 'conflicting_candidate_indices': conflicts,
               'passed': passed, 'active_selection_proven': False,
-              'scope': 'Observed AU XML fragments and exact embedded bytes only; not a GarageBand container decoder or active-track binding. Raw ADPCM packet structure and metadata are checked; optional PCM is not re-encoded to verify its ADPCM consistency. Multiple/history candidates are reported, never silently selected. GUI reopen and audio export verify the active instrument separately.'}
+              'scope': 'Observed AU XML fragments and exact embedded bytes only; not a GarageBand container decoder or active-track binding. Raw ADPCM packet structure and metadata are checked; optional PCM is not re-encoded to verify its ADPCM consistency. Software PCM16LE is checked by exact byte count and metadata and hashed without expanding samples. Multiple/history candidates are reported, never silently selected. GUI reopen and audio export verify the active instrument separately.'}
     print(json.dumps(report, indent=2))
     return 0 if passed else 1
 

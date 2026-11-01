@@ -13,7 +13,7 @@ std::string readFile(const std::string& path) {
   if(!stream)throw std::runtime_error("Could not open instrument file");
   const auto size=stream.tellg();
   if(size<=0||static_cast<std::uintmax_t>(size)>kMaxWebInstrumentBytes)
-    throw std::runtime_error("Instrument JSON must be 1 byte to 8 MiB");
+    throw std::runtime_error("Instrument JSON must be 1 byte to 48 MiB");
   std::string text(static_cast<std::size_t>(size),'\0');
   stream.seekg(0);
   if(!stream.read(text.data(),static_cast<std::streamsize>(text.size())))
@@ -36,7 +36,7 @@ WebInstrumentLoader::Ticket WebInstrumentLoader::requestFile(std::string path) {
 }
 WebInstrumentLoader::Ticket WebInstrumentLoader::requestText(std::string text) {
   if(text.empty()||text.size()>kMaxWebInstrumentBytes)
-    throw std::invalid_argument("Instrument JSON must be 1 byte to 8 MiB");
+    throw std::invalid_argument("Instrument JSON must be 1 byte to 48 MiB");
   return request(std::move(text),false);
 }
 WebInstrumentLoader::Ticket WebInstrumentLoader::request(std::string input,bool file) {
@@ -74,7 +74,11 @@ void WebInstrumentLoader::run() {
     std::optional<Prepared> result;
     std::string error;
     try {
-      auto imported=readWebInstrument(job.file?readFile(job.input):job.input);
+      std::string fileText;
+      if(job.file)fileText=readFile(job.input);
+      auto imported=readWebInstrument(job.file?std::string_view(fileText):std::string_view(job.input));
+      // The immutable decoded PCM no longer needs the complete input JSON.
+      std::string().swap(fileText);std::string().swap(job.input);
       auto engine=prepareDefinition(*imported.state.definition);
       result=Prepared{job.ticket,std::move(imported),std::move(engine)};
     } catch(const std::exception& failure) {error=failure.what();}

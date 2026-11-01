@@ -64,6 +64,10 @@ double amplitude(const std::vector<double>& pcm,double frequency,std::size_t beg
 void formatsAndEncoding() {
   auto input=tone(4410,44100,261.6255653005986);const auto bytes=wave(input);
   const auto result=load(bytes);const auto& sample=result.sample;
+  const auto general=importWavAudio({bytes.data(),bytes.size()},"Original WAV 音");
+  CHECK(!general.softwareAudio()&&sameRawAdpcmSample(std::get<RawAdpcmSample>(general.sample),sample));
+  CHECK(general.sampleRate==result.sampleRate&&general.channels==result.channels&&general.sourceFrames==result.sourceFrames&&
+    general.resampledFrames==result.resampledFrames&&general.paddedFrames==result.paddedFrames);
   CHECK(result.sampleRate==44100&&result.channels==1&&result.sourceFrames==4410&&result.resampledFrames==4410&&result.paddedFrames==14);
   CHECK(sample.adpcm.size()==2528&&!sample.loopStartSamples&&sample.adpcm[1]==0&&sample.adpcm[sample.adpcm.size()-15]==1);
   CHECK(sample.baseFrequencyHz==440*std::pow(2.,-9./12)&&sample.name=="Original WAV 音"&&!sample.waveform);
@@ -74,6 +78,8 @@ void formatsAndEncoding() {
   auto mutableBytes=bytes;const auto owned=load(mutableBytes);std::fill(mutableBytes.begin(),mutableBytes.end(),0);
   CHECK(sameRawAdpcmSample(owned.sample,sample));
   const auto looped=load(bytes,{69,true});CHECK(looped.sample.baseFrequencyHz==440&&looped.sample.loopStartSamples==0);
+  const auto generalLoop=importWavAudio({bytes.data(),bytes.size()},"Original WAV 音",{69,true});
+  CHECK(!generalLoop.softwareAudio()&&sameRawAdpcmSample(std::get<RawAdpcmSample>(generalLoop.sample),looped.sample));
   CHECK(looped.sample.adpcm[1]==6&&looped.sample.adpcm[looped.sample.adpcm.size()-15]==3&&looped.paddedFrames==14);
   const auto loops=decode(looped.sample,2);CHECK(std::equal(loops.begin(),loops.begin()+decoded.size(),loops.begin()+decoded.size()));
   const auto shortResult=load(wave(std::vector<float>(7,.25f)),{0,true});

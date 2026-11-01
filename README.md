@@ -7,7 +7,7 @@ Current prototype: original built-in Sine, MIDI Note On/Off and velocity,
 24 voices, channel-aware note ownership, Pitch Bend, Sustain, All sound off,
 Gain, a PCM waveform editor, Software Morph, SPU Noise, paired PMON, custom ADSR editing, shared SPU Reverb and mouse keyboard.
 Load a complete VAB from the editor and select a Program and Tone to audition.
-The bank or PCM cycle, Morph A/B endpoints, selection, Gain, ADSR, Reverb, Noise and PMON settings are embedded in the DAW project state.
+The bank, PCM cycle or imported ADPCM / Software PCM, Morph A/B endpoints, selection, Gain, ADSR, Reverb, Noise and PMON settings are embedded in the DAW project state.
 Additional SPU controls remain planned. The same VAB parser and selected-Tone
 engine can also be exercised with the offline tool below.
 
@@ -336,9 +336,11 @@ settings together at an audio-block boundary, stopping previous notes and tails.
 Invalid files preserve the current sound and valid pending work. Closing the
 editor or restoring a project cancels unfinished import preparation.
 
-The import is bounded to 8 MiB JSON and 520192 ADPCM bytes. The existing Native
-repeat-packet flag restriction still applies. Version 2 long Software audio
-and PSF extraction are follow-up work. Web export is available below.
+Version 1 remains bounded to 8 MiB JSON and 520192 ADPCM bytes, including the
+existing Native repeat-packet flag restriction. Version 2 reads mono PCM16LE
+base64, tuning and one-shot / whole-sample loop, up to 32 MiB decoded PCM and
+48 MiB JSON. This is a bounded subset of the Web format: larger Web recordings
+are rejected. PSF extraction remains follow-up work. Web export is available below.
 
 Web saves the current Morph blend as the base sample; turning Morph Off after
 import returns to that saved sample. It cannot recover a pre-Morph VAB absent
@@ -352,12 +354,15 @@ Choose **Load sound...** and select a `.wav` file. Classic little-endian RIFF/WA
 PCM16 and IEEE Float32, mono or stereo, at 8–384 kHz are supported. Stereo is
 averaged to mono and other rates use a band-limited conversion to 44.1 kHz.
 There is no automatic normalization. Float samples must be finite and within
-[-1, 1]. The software then encodes the recording as ordinary SPU ADPCM.
+[-1, 1]. Short recordings are encoded as ordinary SPU ADPCM. Recordings that
+exceed sample RAM automatically use **Software audio**, mono PCM16 held outside
+physical SPU RAM, while retaining SPU Gaussian interpolation, ADSR, PMON and Reverb.
 
 The initial **Root: C4 (MIDI 60)** plays the recording at its original speed;
 other keys transpose it. The Root and **Playback: One shot** menus occupy the
-Program/Tone row for ADPCM samples. Choose **Loop entire sample** to repeat the
-recording, including up to 27 zero padding frames. Recording boundaries can
+Program/Tone row for ADPCM and Software audio. Choose **Loop entire sample**
+to repeat the recording. ADPCM includes up to 27 zero padding frames; Software
+audio retains the exact converted frame count and loops require at least four frames. Recording boundaries can
 produce a loop click. These changes replace the prepared sound and stop held
 notes and reverb tails. Morph uses its own cycle tuning.
 
@@ -365,15 +370,24 @@ A successful WAV load selects Sample with Morph Off for the new material.
 Gain, ADSR, Reverb and dormant Noise/PMON/Morph settings are retained,
 including the Morph endpoints captured when the file was selected. Root and
 Playback edits retain the current sound settings. The result is embedded in
-the DAW project as ADPCM with its root and loop, so reopening needs no original
-WAV. This is a converted instrument, not a lossless copy of the recording.
+the DAW project with its root and loop, so reopening needs no original WAV.
+ADPCM is lossy. Software audio retains the converted mono 44.1 kHz PCM16,
+without further ADPCM quantization; it is not a copy of the original stereo/rate/float format.
 
 File reading, conversion and native engine preparation run on a worker. A
 failed load keeps the current sound and a valid pending change. The input is
-bounded to 32 MiB and the converted sample must fit SPU sample RAM; oversized
-recordings are rejected without truncation. Compressed WAV, extensible WAV,
-AIFF, RF64/RIFX and long Software audio are follow-up work. The status tooltip
-shows the input rate, frame counts and packet padding.
+bounded to 32 MiB, and converted Software PCM is also bounded to 32 MiB
+(16,777,216 mono frames, about 6 minutes 20 seconds). This supports a 20 MiB
+44.1 kHz mono PCM16 recording without truncation. Inputs that exceed either bound are rejected.
+Compressed WAV, extensible WAV, AIFF and RF64/RIFX remain follow-up work.
+The Source page identifies Software audio, duration and frame count; the status
+tooltip shows input format and conversion details.
+
+Cycle Morph is unavailable while Software audio is the source. Both A/B endpoints,
+Amount and the raw host enable parameter are retained in DAW state; playback
+ignores that enable parameter until returning to a cycle-capable source.
+The keyboard Morph slider shows N/A. PMON still uses 12 note pairs and Sample
+uses 24 voices. Noise keeps the recording while using its shared generator.
 See the [WAV import record](docs/wav_import_20261101.md).
 
 ## Save a sound for the Web Synth
@@ -384,7 +398,9 @@ saved through the native file dialog. The current instrument and any pending
 sound change keep their state. Cancellation or a failed write preserves an
 existing destination file.
 
-Builtin, the selected VAB Tone, a PCM cycle and imported ADPCM are supported.
+Builtin, the selected VAB Tone, a PCM cycle and imported ADPCM export as v1.
+Software audio exports as v2 with the exact converted PCM16 embedded as base64.
+Its masked Morph enable is exported Off, retaining A/B and Amount.
 Active Morph exports A/B, Amount and the current blend as a cyclic ADPCM sample.
 Inactive Morph retains the base sample. Unapplied drafts are not exported.
 Web snapshots contain one instrument; they do not contain the original VAB bank
@@ -442,6 +458,11 @@ Schema 8 adds an original ADPCM sample source, including exact sample bytes and
 its tuning, loop, signed volumes, raw ADSR/send, name and optional authored PCM.
 The 1024-byte fixed layout and previous source payloads are retained; schemas
 1–7 remain readable without requiring the original `.spu.json` file.
+Schema 9 adds Software PCM kind 4: a 64-byte metadata header, little-endian
+PCM16 and a bounded UTF-8 name. The 1024-byte fixed tail and all 26 parameter
+IDs are unchanged. Schemas 1–8 retain their earlier kinds and small-source caps.
+Source metadata edits and export snapshots share immutable PCM; actual project
+save/restore creates bounded serialized data off the audio thread.
 
 The actual AU and VST3 have been tested for embedded-bank round-trip, separate
 instances, immediate first-render MIDI/PCM and malformed-state rejection. VST3
@@ -504,9 +525,9 @@ still need a direct user check; the verified host-preset route is separate.
   MIDI notes 92 and above clamp. Full-range multisampling is follow-up work.
 - Host rate conversion uses continuous linear interpolation. Anti-alias filtering
   below 44.1 kHz and improved conversion quality remain follow-up work.
-- State schema 8 stores a built-in instrument, one selected VAB Tone, one
-  authored 112-sample PCM cycle or one imported ADPCM sample, with a 1 MiB bank limit
-  and 520192-byte sample limit. Key zones, layers and game-driver performance state are
+- State schema 9 stores a built-in instrument, one selected VAB Tone, one
+  authored 112-sample PCM cycle, one imported ADPCM sample or one Software PCM recording.
+  VAB is limited to 1 MiB, ADPCM to 520192 bytes and Software PCM to 32 MiB. Key zones, layers and game-driver performance state are
   not reconstructed. Held notes, release tails, decoder caches and host rate
   are not saved.
 - Configurable Pitch Bend range, smooth Gain changes and per-channel CC120 remain TODO.

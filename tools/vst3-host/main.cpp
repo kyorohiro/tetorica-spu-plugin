@@ -19,6 +19,7 @@
 #include "morph-checks.h"
 #include "web-instrument-checks.h"
 #include "wav-import-checks.h"
+#include "software-audio-checks.h"
 #include "pluginterfaces/vst/ivstmidicontrollers.h"
 
 #include <algorithm>
@@ -744,8 +745,9 @@ void checkStateFailures(const PluginFactory& factory,const ClassInfo& info) {
 }
 
 int main(int argc, char** argv) {
-  if (argc != 2) {
-    std::cerr << "Usage: tetorica_vst3_audio_check /path/to/TetoricaSPU.vst3\n";
+  const bool softwareOnly=argc==3&&std::string(argv[2])=="--software-audio-only";
+  if (argc != 2&&!softwareOnly) {
+    std::cerr << "Usage: tetorica_vst3_audio_check /path/to/TetoricaSPU.vst3 [--software-audio-only]\n";
     return 2;
   }
   try {
@@ -760,6 +762,12 @@ int main(int argc, char** argv) {
       if (info.category() == kVstAudioEffectClass) {
         std::cout << "Loaded " << info.name() << " directly from " << path << '\n';
         for (const double rate : {44100., 48000., 96000.}) {
+          if(softwareOnly){
+            tetorica::test::checkSoftwareAudio([&]{
+              auto instance=std::make_unique<Instance>(factory,info,rate);instance->allowAsymmetric();instance->start();return instance;
+            },rate,"VST3 state/events",originalBank());
+            continue;
+          }
           checkRate(factory, info, rate);
           checkScheduler(factory, info, rate);
           checkEmbeddedState(factory,info,rate);
@@ -795,10 +803,15 @@ int main(int argc, char** argv) {
             auto instance=std::make_unique<Instance>(factory,info,rate);instance->allowAsymmetric();
             instance->start();return instance;
           },rate,"VST3 state/events");
+          tetorica::test::checkSoftwareAudio([&] {
+            auto instance=std::make_unique<Instance>(factory,info,rate);instance->allowAsymmetric();
+            instance->start();return instance;
+          },rate,"VST3 state/events",originalBank());
           tetorica::test::checkControllers([&] {
             auto instance=std::make_unique<Instance>(factory,info,rate);instance->start();return instance;
           },rate,"VST3 IMidiMapping");
         }
+        if(softwareOnly){PluginContextFactory::instance().setPluginContext(nullptr);return 0;}
         checkStateFailures(factory,info);
         checkMappedIngress(factory,info);
         PluginContextFactory::instance().setPluginContext(nullptr);

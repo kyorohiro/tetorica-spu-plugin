@@ -14,6 +14,7 @@
 namespace tetorica {
 namespace vab { struct PreparedTone; }
 struct RawAdpcmSample;
+struct SoftwarePcmSample;
 
 // One exclusive-owner SPU instance. Construct/destruct away from the audio
 // callback: construction loads an immutable sample and primes its ADPCM caches.
@@ -37,6 +38,10 @@ public:
   // ADPCM packets use the ordinary SPU RAM/ADSR/Gaussian/PMON/reverb path.
   explicit SpuInstrument(const PcmCycle& pcm);
   explicit SpuInstrument(const RawAdpcmSample& sample);
+  // Owned long mono44100-Hz PCM is copied into the private native bank away
+  // from audio. Gaussian/ADSR/PMON/Reverb remain in the SPU render path.
+  // Software audio retains authored Morph settings but does not apply them.
+  explicit SpuInstrument(const SoftwarePcmSample& sample);
   ~SpuInstrument();
   SpuInstrument(const SpuInstrument&) = delete;
   SpuInstrument& operator=(const SpuInstrument&) = delete;
@@ -87,6 +92,9 @@ public:
   // Invalid tuples leave all settings and voices unchanged.
   bool setPmon(PmonSettings settings) noexcept;
   MorphSettings morph() const noexcept { return mMorph; }
+  // Audible cycle topology, distinct from the retained raw host parameter.
+  // Noise and Software audio mask Morph without stopping their held notes.
+  bool effectiveMorphEnabled() const noexcept { return mMorph.enabled&&!mNoise.enabled&&!mSoftwarePcm; }
   const MorphEndpoints& morphEndpoints() const noexcept { return mMorphEndpoints; }
   // The wrapper adopts endpoint edits on a worker-prepared engine. This fixed
   // copy also preserves voice state if called with serialized audio ownership.
@@ -95,6 +103,7 @@ public:
   // Amount updates the private112-frame carrier without key events or ADSR/
   // Gaussian/cursor resets. Effective On/Off changes panic and restore the
   // original source when Off. Noise takes priority and retains raw settings.
+  // Software audio retains raw Morph/endpoints with effective Morph Off.
   bool setMorph(MorphSettings settings) noexcept;
   void render(float* left, float* right, int frames) noexcept;
 
@@ -150,6 +159,7 @@ private:
   MorphEndpoints mMorphEndpoints{};
   MorphSettings mMorph{};
   bool mMorphWavePrepared = false;
+  bool mSoftwarePcm = false;
   EnvelopeRegisters mSourceEnvelope{}, mEnvelope{};
   double mRatio = 1;
   double mPhase = 0;

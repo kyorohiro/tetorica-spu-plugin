@@ -80,11 +80,15 @@ std::string importName(const std::string& path) {
   if(accepted==begin)return "Imported WAV";
   return text.substr(points[begin].begin,points[accepted-1].end-points[begin].begin);
 }
-std::string describe(const WavImportResult& result) {
+std::string describe(const WavAudioImportResult& result) {
   std::ostringstream text;
+  if(result.softwareAudio())text<<"Software audio · ";
   text<<"WAV "<<result.sampleRate<<" Hz "<<(result.channels==1?"mono":"stereo")
       <<": "<<result.sourceFrames<<" source frames -> "<<result.resampledFrames
-      <<" at 44100 Hz, +"<<result.paddedFrames<<" padding; C4 / one shot";
+      <<" at 44100 Hz, ";
+  if(result.softwareAudio())text<<double(result.resampledFrames)/44100.<<" seconds, mono PCM16 outside SPU RAM";
+  else text<<"+"<<result.paddedFrames<<" padding";
+  text<<"; C4 / one shot";
   return text.str();
 }
 }
@@ -150,11 +154,13 @@ void AudioFileLoader::run() {
       if(job.file) {
         const auto bytes=readFile(job.path);
         if(!current(job.ticket))continue;
-        auto imported=importWav({bytes.data(),bytes.size()},importName(job.path));
+        auto imported=importWavAudio({bytes.data(),bytes.size()},importName(job.path));
         if(!current(job.ticket))continue;
         details=describe(imported);
-        definition=InstrumentDefinition::withMorphEndpoints(
-          InstrumentDefinition::fromAdpcmSample(imported.sample),job.endpoints);
+        auto source=imported.softwareAudio()?
+          InstrumentDefinition::fromSoftwarePcmSample(std::get<SoftwarePcmSample>(imported.sample)):
+          InstrumentDefinition::fromAdpcmSample(std::get<RawAdpcmSample>(imported.sample));
+        definition=InstrumentDefinition::withMorphEndpoints(source,job.endpoints);
       }
       if(!current(job.ticket))continue;
       auto engine=prepareDefinition(*definition);
