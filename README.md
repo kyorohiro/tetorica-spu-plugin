@@ -524,15 +524,16 @@ The ordinary `--install` still refuses a different existing bundle.
 ```sh
 python3 -m unittest discover -s tests -p 'test_install_au.py' -v
 python3 scripts/install_au.py --update \
-  --expected docs/au_gain_update_20261101.json --backup-root build/au-backups
+  --expected docs/au_cc120_update_20261101.json --backup-root build/au-backups
 # Use the printed manifest path to roll back; refuses an altered installation:
 python3 scripts/install_au.py --rollback build/au-backups/au-update-REPLACE/manifest.json
 ```
 
-The [Gain smoothing AU update record](docs/au_gain_update_20261101.md) contains the
-[current installed manifest](docs/au_gain_update_20261101.json), retained backup
+The [CC120 AU update record](docs/au_cc120_update_20261101.md) contains the
+[current installed manifest](docs/au_cc120_update_20261101.json), retained backup
 and rollback procedure. The installed AU passed auval and the full AU host
-regressions, including live Gain ramps and restore/reset/reactivation/bypass,
+regressions, including channel-only CC120, preserved shared Reverb tails,
+PMON pair reuse, live Gain ramps and restore/reset/reactivation/bypass,
 as well as the [loop compatibility fix](docs/loop_repeat_20261101.md).
 A copied GarageBand project also restored its embedded VAB, Program 3, Tone 0
 and Gain 99% after save, full host exit and reopen.

@@ -693,3 +693,11 @@
 - ユーザーの続行指示で、作業前TODOを保存する。開始`476bfa9`、実装`0bb1bb7`、SDK `95cf71a`。
 - installed Gain版と新buildの既知manifest、現在のhost documentを照合し、保存前copyの退避とhost終了後に更新する。
 - 新しい検証copyで旧VABの保存再起動を確認し、配置manifestとrollback手順を残す。実GUI全停止buttonと実聴等は、成功した確認だけを記録する。
+
+## 2026-11-01 JST — CC120版installed AU更新・GarageBand復元完了
+
+- Gain版installed全5filesとCC120 build全5filesを照合し、hostを保存・終了後、`au-update-anheafyl`で退避更新した。新binary `d9c6033f…`、旧退避2組 `cd59d41b…`と各manifestが一致した。
+- installed版のauval成功（26params、既知preset-name warningは残る）。実AU48kHz全15 PASS行、16channel CC120・survivor PCM /controllers・nonzero PMON12pair停止再利用・共有Reverb tail保持を含む。
+- 新copy `build/au-cc120-update-v1d1boac/spu-cc120-restore-check.band`を保存・完全終了・再起動し、実AUのEmbedded VAB /P3/T0/Gain99 /Project sound restoredを確認。schema9 payload4768bytes /VAB3744bytes、原本11files /known7filesは不変。
+- [配置・戻し方](au_cc120_update_20261101.md) /[current installed manifest・証跡](au_cc120_update_20261101.json)。開始時Gain検証copyは保存前に全11files退避し、意図的な保存後もpayload一致。新copyのAU editorを表示、再生・録音停止で残した。
+- production source /SDK /version /tag /公開releaseは変更していない。実GUI All sound off・独自Load sound・実聴・長時間・DAW automationは未確認として維持した。

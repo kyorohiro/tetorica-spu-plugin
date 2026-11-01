@@ -39,21 +39,25 @@ flag4-only /markerless repeatの互換性も修正し、元bytesのまま実AU/V
 [loopfix AU更新・復元記録](../au_loop_update_20261101.md)を参照。
 Gain smoothingも実装し、unit /実AU・VST3 /sanitizer /CIを確認した。[検証記録](../gain_smoothing_20261101.md)。
 Gain版installed AUへの退避更新・旧VABの保存再起動も完了した。
-[現在のAU更新・復元記録](../au_gain_update_20261101.md)と[current installed AU manifest](../au_gain_update_20261101.json)を参照。
+[Gain版AU更新・復元記録](../au_gain_update_20261101.md)を参照。
 CC120のチャンネル別停止も実装・検証・[CI全2job成功](https://github.com/kyorohiro/tetorica-spu-plugin/actions/runs/41299598667)まで完了した。
-[仕様・配置状況](../cc120_20261101.md)を参照。installed AUはGain版のままで、新CC120はまだ配置していない。
+[仕様](../cc120_20261101.md)を参照。CC120版installed AUへの退避更新とGarageBand旧VABの保存再起動も完了した。
+[現在の配置・復元記録](../au_cc120_update_20261101.md) /[current installed AU manifest](../au_cc120_update_20261101.json)を参照。
 
-### CC120版AU更新・GarageBand復元の今回の区切り（2026-11-01、作業中）
+### CC120版AU更新・GarageBand復元の今回の区切り（2026-11-01、完了）
 
 開始Plugin `476bfa9`、実装`0bb1bb7`、Native SDK `95cf71a`。
 ユーザーの続行指示で、作業前TODOを保存してから配置と検証を行う。
 
-- [ ] installed全5filesを`docs/au_gain_update_20261101.json`へ、新build全5filesを`docs/cc120_20261101.json`のbuild bundleへ照合する。
-- [ ] GarageBandの現在のdocument /再生・録音 /未保存状態を確認し、既知検証copyを保存前に退避する。原本を保持し、hostを保存・終了する。
-- [ ] known manifest一致時だけCC120版AUへ退避更新し、journal /旧新hash /rollback手順を保存する。
-- [ ] installed版のauvalと実AU host検証を行い、チャンネル別CC120・他channel PCM /controller /shared Reverb保持・PMON停止再利用を確認する。
-- [ ] 新しいGarageBand検証copyで旧VAB P3/T0/Gain99 /embedded payloadの復元、保存・完全終了・再起動・editor再表示を確認する。
-- [ ] current installed manifest /検証記録 /再開TODOを更新してcommit /pushする。実GUIボタン・実聴・長時間・実DAW automationの未確認範囲を区別する。
+- [x] installed全5filesを`docs/au_gain_update_20261101.json`へ、新build全5filesを`docs/cc120_20261101.json`のbuild bundleへ照合する。
+- [x] GarageBandの現在のdocument /再生・録音 /保存ダイアログを確認し、既知検証copyを保存前に全11files退避する。原本を保持し、hostを保存・終了する。
+- [x] known manifest一致時だけCC120版AUへ退避更新し、journal /旧新hash /rollback手順を保存する（`au-update-anheafyl`）。
+- [x] installed版のauvalと実AU host検証を行い、チャンネル別CC120・他channel PCM /controller /shared Reverb保持・PMON停止再利用を確認する（26params、48kHz全15 PASS行）。
+- [x] 新しいGarageBand検証copyで旧VAB P3/T0/Gain99 /embedded payloadの復元、保存・完全終了・再起動・editor再表示を確認する（payload4768bytes /VAB3744bytes一致、原本11files・known7files不変）。
+- [x] current installed manifest /検証記録 /再開TODOを更新してcommit /pushする。実GUIボタン・実聴・長時間・実DAW automationの未確認範囲を区別する。
+
+[検証記録](../au_cc120_update_20261101.md)。次回updateのexpectedは`docs/au_cc120_update_20261101.json`。
+GarageBandは`build/au-cc120-update-v1d1boac/spu-cc120-restore-check.band`上のAU editorを表示、再生・録音停止。
 
 今回は配置と検証のみ。実装 /parameter /state /SDK pin、Web /Tauri /npm /version /tag /公開releaseは変更しない。
 
@@ -70,12 +74,11 @@ CC120のチャンネル別停止も実装・検証・[CI全2job成功](https://g
 
 [検証記録](../cc120_20261101.md) /[source・binary・log hash /CI metadata](../cc120_20261101.json)。
 
-- [ ] 次の配置更新でGain版installed AUのknown manifestを照合し、host保存終了・退避update後にGarageBand旧projectの復元を確認する。
+- [x] 後続の配置更新でGain版installed AUのknown manifestを照合し、host保存終了・退避update後にGarageBand旧projectの復元を確認した（[配置記録](../au_cc120_update_20261101.md)）。
 - [ ] 実DAWのAll sound off buttonを操作し、保持音・共有残響の全停止と停止後の新しいUI NoteOnを確認する。unit /source reviewと実host MIDI CC120検査は成功済みで、実GUI操作は別に確認する。
 
 既存parameter ID0〜25 /state schema9 /Gain範囲を維持する。
-installed AUとGarageBandはこの実装buildでは変更しない。次の配置更新には
-`docs/au_gain_update_20261101.json`のknown manifest照合・host保存終了・退避手順を使う。
+実装build時点ではinstalled AUとGarageBandを変更せず、後続の上段作業でknown manifest照合・host保存終了・退避更新を行った。
 AU preset-name warning・分割VH/VB UI・version /tag /release・Web /Tauri /npm配布は今回追加しない。
 
 ### Gain smoothing版AU更新・GarageBand復元の今回の区切り（2026-11-01、完了）

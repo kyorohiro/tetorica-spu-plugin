@@ -1,0 +1,427 @@
+{
+  "schema": 1,
+  "date_jst": "2026-11-01",
+  "recorded_at_utc": "2026-11-01T11:38:10.892075+00:00",
+  "source_commit": "0bb1bb769b0b76314ee736e21aadc06b72bb1a2b",
+  "starting_commit": "476bfa971ea7d2bbc5e441f0b8e50541eac66c41",
+  "todo_commit": "4b5e0ec1040d3390161b1c33f69995d07db13532",
+  "native_commit": "95cf71a857b15d0ea932ebf97d5fde80b5e80a95",
+  "implementation_record": "docs/cc120_20261101.json",
+  "scope": "Deploy the existing verified CC120 AU and restore/save/reopen the old demo VAB in a new GarageBand project copy. No production source, SDK, parameter/state/version/tag/release, Web/Tauri/npm changes.",
+  "au": {
+    "file_sha256": {
+      "Contents/Info.plist": "94a46fcfc638d76a05aca50d5deedaff2a7a934aee55a816d007b6dff9c9bbc4",
+      "Contents/MacOS/TetoricaSPU": "d9c6033f221c7f32e3efbd4c01762b15f378132cc0426ff08088246e54985e04",
+      "Contents/PkgInfo": "d06a80ba92de0833d0ed03de1b02b7c8913f126d9e8c8931b190765dd5d83b11",
+      "Contents/Resources/Roboto-Regular.ttf": "b2efabca5ea4bc56eea829713706b5cd0788b82aca153bd4adde9b1573933b4f",
+      "Contents/Resources/THIRD_PARTY_NOTICES.txt": "d26ed5d113ec81968e0f1c41560491631e9c77c5bddf6ad6608dbf8697ce5dcf"
+    },
+    "file_bytes": {
+      "Contents/Info.plist": 1541,
+      "Contents/MacOS/TetoricaSPU": 1851096,
+      "Contents/PkgInfo": 8,
+      "Contents/Resources/Roboto-Regular.ttf": 145348,
+      "Contents/Resources/THIRD_PARTY_NOTICES.txt": 58824
+    },
+    "file_count": 5,
+    "total_bytes": 2056817,
+    "source": "/Users/kyorohiro/development8/wfm/hello_ymfm/w/tetorica-spu-plugin/build/macos/out/TetoricaSPU.component",
+    "destination": "/Users/kyorohiro/Library/Audio/Plug-Ins/Components/TetoricaSPU.component",
+    "updated_this_task": true,
+    "update_journal_created_utc": "2026-11-01T11:29:09.022223+00:00",
+    "expected_previous_record": "docs/au_gain_update_20261101.json",
+    "previous_file_sha256": {
+      "Contents/Info.plist": "94a46fcfc638d76a05aca50d5deedaff2a7a934aee55a816d007b6dff9c9bbc4",
+      "Contents/MacOS/TetoricaSPU": "cd59d41bd23a6f97467f8bfbbe1cdfcf9a95aaaf557a5970b134e2214a4a461e",
+      "Contents/PkgInfo": "d06a80ba92de0833d0ed03de1b02b7c8913f126d9e8c8931b190765dd5d83b11",
+      "Contents/Resources/Roboto-Regular.ttf": "b2efabca5ea4bc56eea829713706b5cd0788b82aca153bd4adde9b1573933b4f",
+      "Contents/Resources/THIRD_PARTY_NOTICES.txt": "d26ed5d113ec81968e0f1c41560491631e9c77c5bddf6ad6608dbf8697ce5dcf"
+    },
+    "update_manifest": "/Users/kyorohiro/development8/wfm/hello_ymfm/w/tetorica-spu-plugin/build/au-backups/au-update-anheafyl/manifest.json",
+    "backup_component": "/Users/kyorohiro/development8/wfm/hello_ymfm/w/tetorica-spu-plugin/build/au-backups/au-update-anheafyl/previous.component",
+    "old_archive": "/Users/kyorohiro/development8/wfm/hello_ymfm/w/tetorica-spu-plugin/build/au-backups/au-update-anheafyl/original.component",
+    "workspace_matches_installed": true,
+    "previous_and_archive_match_previous_manifest": true,
+    "hosts_stopped_before_update": true,
+    "host_exit_evidence": "CUA Save on known test-copy quit returned procNotFound; ps comm listing had no GarageBand/AUHosting/TetoricaSPU matches before update. Installer also checked known hosts twice.",
+    "rollback_command": "python3 scripts/install_au.py --rollback build/au-backups/au-update-anheafyl/manifest.json",
+    "rollback_executed": false,
+    "rollback_scope": "Save and quit audio hosts first. Conditional rollback refuses a changed installation. Retain the journal and both old bundles locally under build/au-backups.",
+    "integrity_checks": {
+      "journalInstalled": true,
+      "newAll5EqualSourceAndCC120Record": true,
+      "oldBoth5EqualGainRecord": true,
+      "source17Unchanged": true
+    }
+  },
+  "verification": {
+    "auval": {
+      "exit_code": 0,
+      "parameter_count": 26,
+      "result": "AU VALIDATION SUCCEEDED.",
+      "known_warning": "Preset name is not retained in retrieved class data",
+      "forced_local_registry_refresh": false
+    },
+    "installed_au_host": {
+      "exit_code": 0,
+      "sample_rate": 48000,
+      "pass_lines": 15,
+      "fail_lines": 0,
+      "coverage": [
+        "16-channel CC120, controller preservation, surviving-channel exact PCM and sample offsets",
+        "held/deferred/release, split/future/same-offset fresh notes",
+        "12 nonzero-PMON pairs, target stop/surviving PCM/stopped-pair reuse",
+        "shared Reverb tail retained against exact reference",
+        "existing Gain/ADSR/PCM/Noise/PMON/Morph/Web/WAV/Software Audio/LoopRepeat/embedded state regressions"
+      ],
+      "device_or_editor_opened": false
+    },
+    "production_verification": "Unit/sanitizer/VST3/CI passed in docs/cc120_20261101.json. Source unchanged, so no full rebuild/test/CI rerun for deployment-only work.",
+    "implementation_ci_url": "https://github.com/kyorohiro/tetorica-spu-plugin/actions/runs/41299598667"
+  },
+  "garageband": {
+    "trial_project": "/Users/kyorohiro/development8/wfm/hello_ymfm/w/tetorica-spu-plugin/build/au-cc120-update-v1d1boac/spu-cc120-restore-check.band",
+    "trial_copied_from": "/Users/kyorohiro/development8/wfm/hello_ymfm/w/tetorica-spu-plugin/build/spu-vab-check.band",
+    "ui_restore_before_save": true,
+    "saved_then_fully_quit_and_relaunched": true,
+    "ui_restore_after_reopen": true,
+    "visually_observed": [
+      "Embedded VAB",
+      "Program 3",
+      "Tone 0",
+      "Gain 99.0%",
+      "Project sound restored",
+      "Reverb Off",
+      "Morph Off"
+    ],
+    "transport_observed": {
+      "playing": false,
+      "recording": false
+    },
+    "editor_left_open_on_trial": true,
+    "full_exit_evidence": "After Save-on-quit, CUA returned App quit; ps comm listing had no main GarageBand/AUHosting/TetoricaSPU process, only the unrelated GarageBandThumbnailExtension. Relaunch opened the exact trial URL before AU editor was opened.",
+    "payload_unchanged": true,
+    "embedded_vab_unchanged": true,
+    "saved_candidate": {
+      "file": "/Users/kyorohiro/development8/wfm/hello_ymfm/w/tetorica-spu-plugin/build/au-cc120-update-v1d1boac/spu-cc120-restore-check.band/Alternatives/000/ProjectData",
+      "xml_offset": 118729,
+      "xml_end": 125744,
+      "xml_bytes": 7015,
+      "xml_sha256": "c34e84ce1aca29d62c2bea3420daab8daa6a3be2a942f99aeb34a0bf48c9eae2",
+      "au_identity": {
+        "type": 1635085685,
+        "subtype": 1416851573,
+        "manufacturer": 1415935090
+      },
+      "au_version": 256,
+      "payload_bytes": 4768,
+      "payload_sha256": "35a6b2cd76ff553bd121a87b5a46513cbb78b953da1f673cedd863447fb33e1c",
+      "schema": 9,
+      "kind": "VAB",
+      "program": 3,
+      "tone": 0,
+      "gain_percent": 99.0,
+      "envelope": {
+        "enabled": false,
+        "live": true,
+        "adsr1": 15,
+        "adsr2": 8128
+      },
+      "reverb": {
+        "preset": 0,
+        "enabled": false,
+        "use_tone_send": false,
+        "volume_left": 0.25,
+        "volume_right": 0.25
+      },
+      "noise": {
+        "enabled": false,
+        "clock": 48
+      },
+      "pmon": {
+        "enabled": false,
+        "waveform": 0,
+        "ratio": 1.0,
+        "depth": 0.5,
+        "decay_ms": 500.0
+      },
+      "morph": {
+        "enabled": false,
+        "amount": 0.0,
+        "samples_per_endpoint": 112,
+        "a_sha256": "f3f9596f36e620c8f5df26fef003fac2f171e1e049941cfd0133f1e73927eeaa",
+        "b_sha256": "77e744eb44c7265565fa738c33e54b6997fe231e9c60bb61e3be20859ccf5264"
+      },
+      "adpcm_sample": null,
+      "software_pcm_sample": null,
+      "bank_bytes": 3744,
+      "bank_sha256": "71a7de205c0ebe1b8743288d90cd3b0204da9bd81aed9159af31f404d7cf2be6",
+      "pcm_samples": null,
+      "pcm_sha256": null,
+      "matches_expected": true
+    },
+    "state_inspector_scope": "Saved matching AU XML fragments and exact embedded bytes only; not a GarageBand container decoder or active-track binding proof.",
+    "active_instrument_evidence": "Actual AU editor restored P3/T0/G99/Embedded VAB separately observed before save and after full restart. Exact trial document URL and stopped transport observed in main AX state.",
+    "project_integrity_checks": {
+      "schema9": true,
+      "kindVAB": true,
+      "payload4768HashUnchanged": true,
+      "vab3744HashUnchanged": true,
+      "program3tone0gain99": true,
+      "known7FilesUnchanged": true,
+      "original11FilesUnchanged": true,
+      "preSaveBackup11Unchanged": true,
+      "initialOpenPayloadUnchanged": true,
+      "noConflictingAuCandidate": true
+    },
+    "protected_projects": {
+      "known-project": {
+        "project": "/Users/kyorohiro/development8/wfm/hello_ymfm/w/tetorica-spu-plugin/build/spu-vab-check.band",
+        "fileCount": 7,
+        "allFilesAndHashesMatchBefore": true,
+        "files": {
+          "Alternatives/000/DisplayState.plist": {
+            "bytes": 3167,
+            "sha256": "c805602913d032aa63a6436b3daf7912727a4d1c7e85d79a9731e993b76b2d0b"
+          },
+          "Alternatives/000/DisplayStateArchive": {
+            "bytes": 5610,
+            "sha256": "43dbcef56d1a66504503d5f86dd22337682d0ec7f49d1c8573e7f2aa6e94b672"
+          },
+          "Alternatives/000/MetaData.plist": {
+            "bytes": 733,
+            "sha256": "e828be6d50e93a28908aba862e511f1e3c736fe8ed01b1923e3250282c6ad4fb"
+          },
+          "Alternatives/000/ProjectData": {
+            "bytes": 288953,
+            "sha256": "06e788696a268255a6812742db07bcf741d9f45d804975e232a4896cf72e78ee"
+          },
+          "Alternatives/000/WindowImage.jpg": {
+            "bytes": 132573,
+            "sha256": "4ef57d58f29ae1774cf130aa8189c3889bb198cf3e0dc41708588f560bffc83c"
+          },
+          "Resources/ProjectInformation.plist": {
+            "bytes": 218,
+            "sha256": "078f82c873d78abb6a1c7acb7fadf0b877ba605a40a84c52929db0fedc430b15"
+          },
+          "projectData": {
+            "bytes": 169544,
+            "sha256": "b8abb99c1c6e208293ced2a8246573331794a31a4ee0dbdbd8e313ba8f3eae66"
+          }
+        }
+      },
+      "original-project": {
+        "project": "/Users/kyorohiro/development8/wfm/hello_ymfm/w/tetorica-spu-plugin/build/spu-au-check.band",
+        "fileCount": 11,
+        "allFilesAndHashesMatchBefore": true,
+        "files": {
+          "Alternatives/000/Autosave/.dummy": {
+            "bytes": 0,
+            "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+          },
+          "Alternatives/000/Autosave/2026-10-31 10:12:23Z.displayData": {
+            "bytes": 4884,
+            "sha256": "c2b29c82b187b6da04daaf17dbef530296859a95f39bac812a3261fe6c70d7ed"
+          },
+          "Alternatives/000/Autosave/2026-10-31 10:12:23Z.eventData": {
+            "bytes": 392,
+            "sha256": "0c7d3cd92b56d8c216b0b9663c58ef3692eee4ea739e19d1d9d20f0cfb98f63d"
+          },
+          "Alternatives/000/Autosave/2026-10-31 10:12:23Z.songData": {
+            "bytes": 61340,
+            "sha256": "fc19d5172a5a19db59c790fb8bc06e922a5b157b44f99798d77dc7f9cc6e4515"
+          },
+          "Alternatives/000/DisplayState.plist": {
+            "bytes": 2683,
+            "sha256": "fe2af1ddf457b06a4d47e4f34e17773d62963bdc54926a3f8dbd4777a5a56ed1"
+          },
+          "Alternatives/000/DisplayStateArchive": {
+            "bytes": 4884,
+            "sha256": "cc3008d309493456ddac4c78d0597ce13d554f0a35d815edaa14d255db6144f3"
+          },
+          "Alternatives/000/MetaData.plist": {
+            "bytes": 733,
+            "sha256": "e828be6d50e93a28908aba862e511f1e3c736fe8ed01b1923e3250282c6ad4fb"
+          },
+          "Alternatives/000/ProjectData": {
+            "bytes": 234709,
+            "sha256": "95061279acf172082d2f37e03f5ad9d64067f940c5c2c9abc99adda613e76931"
+          },
+          "Alternatives/000/WindowImage.jpg": {
+            "bytes": 132958,
+            "sha256": "6176a5b9e9790b722392e0d80622fa9e4c4fa9087bf99c255cbc6a46159b3bcd"
+          },
+          "Resources/ProjectInformation.plist": {
+            "bytes": 217,
+            "sha256": "2dd01b478b456764e72ddeaaf05479c1f41bf9ab370f2b85bbe0c575430515ab"
+          },
+          "projectData": {
+            "bytes": 169544,
+            "sha256": "b8abb99c1c6e208293ced2a8246573331794a31a4ee0dbdbd8e313ba8f3eae66"
+          }
+        }
+      }
+    },
+    "initially_open_project": {
+      "project": "/Users/kyorohiro/development8/wfm/hello_ymfm/w/tetorica-spu-plugin/build/au-gain-update-8o13a8ay/spu-gain-restore-check.band",
+      "backup": "/Users/kyorohiro/development8/wfm/hello_ymfm/w/tetorica-spu-plugin/build/au-cc120-update-v1d1boac/pre-save-open-project.band",
+      "backupFileCount": 11,
+      "backupAllFilesAndHashesMatchBefore": true,
+      "payloadBefore": "35a6b2cd76ff553bd121a87b5a46513cbb78b953da1f673cedd863447fb33e1c",
+      "payloadAfterSave": "35a6b2cd76ff553bd121a87b5a46513cbb78b953da1f673cedd863447fb33e1c",
+      "payloadUnchanged": true,
+      "sourceFilesMayChangeOnIntentionalSave": true,
+      "backup_file_manifest": {
+        "Alternatives/000/Autosave/.dummy": {
+          "bytes": 0,
+          "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+        },
+        "Alternatives/000/Autosave/2026-11-01 11:26:33Z.displayData": {
+          "bytes": 4905,
+          "sha256": "10661fc2e5d47206422b45251c39bcece24c26d67ea3474ab6c786964f535ac7"
+        },
+        "Alternatives/000/Autosave/2026-11-01 11:26:33Z.eventData": {
+          "bytes": 392,
+          "sha256": "0523e50fc4b9e764b8533deaaea22e0c58848f822ee2a2e5768a94ac3c5221c1"
+        },
+        "Alternatives/000/Autosave/2026-11-01 11:26:33Z.songData": {
+          "bytes": 84840,
+          "sha256": "83622bb10edceba8f33e9fb0dc6d5716f703267121e2170093b70ce0e24dad6f"
+        },
+        "Alternatives/000/DisplayState.plist": {
+          "bytes": 2683,
+          "sha256": "2f7478393fe2d6213166079452a4039b580d5b0a5d99685a3b5014660b963fa2"
+        },
+        "Alternatives/000/DisplayStateArchive": {
+          "bytes": 4884,
+          "sha256": "5886a474e6cc7c75cdc411f7e3b9748ae25f83810f61add3ed74e793035f6d71"
+        },
+        "Alternatives/000/MetaData.plist": {
+          "bytes": 733,
+          "sha256": "e828be6d50e93a28908aba862e511f1e3c736fe8ed01b1923e3250282c6ad4fb"
+        },
+        "Alternatives/000/ProjectData": {
+          "bytes": 288961,
+          "sha256": "cdf34d70412a08ea570c3b3cd53406910debb8f66578b168c27103a42e5e99e6"
+        },
+        "Alternatives/000/WindowImage.jpg": {
+          "bytes": 133126,
+          "sha256": "7e437a63064d7e1f002e98462cfb932f8d7ebce038c86966defdfc0271c19cf4"
+        },
+        "Resources/ProjectInformation.plist": {
+          "bytes": 229,
+          "sha256": "8c4ed6ed3079e91891b821ab95090cecb1f7e00eba7e195b6e1c1806b60f4e31"
+        },
+        "projectData": {
+          "bytes": 169544,
+          "sha256": "b8abb99c1c6e208293ced2a8246573331794a31a4ee0dbdbd8e313ba8f3eae66"
+        }
+      }
+    },
+    "initially_open_project_scope": "Known previous Gain test copy was backed up, intentionally saved on quitting and switching to the new trial. Its UI/project/autosave files may change; embedded payload is unchanged. Protected original and known source were not saved/overwritten.",
+    "scope": "Old demo VAB restore only. No physical listening, performance audition, automation recording, direct custom Load sound or All sound off button verification."
+  },
+  "pending_human": [
+    "Actual DAW All sound off button: held notes/shared tail stop, followed by fresh UI notes",
+    "Physical listening/latency/clicks/long real-time use",
+    "DAW automation recording, Tone-only dirty tracking, custom Load sound and editor/popup/file-panel lifecycle"
+  ],
+  "evidence": {
+    "build/au-backups/au-update-anheafyl/manifest.json": {
+      "path": "build/au-backups/au-update-anheafyl/manifest.json",
+      "bytes": 2094,
+      "sha256": "b26d99fa004a0bb9494dde78ecbe6ffd00af173fd8aad1ae4e9b8b9ac79ab4c5"
+    },
+    "au-integrity.json": {
+      "path": "build/au-cc120-update-v1d1boac/au-integrity.json",
+      "bytes": 3179,
+      "sha256": "b0b05f01b0bba18ea2539c616fe02a3af2371e9ee16f558d18b8edc5ea5e6670"
+    },
+    "auval.log": {
+      "path": "build/au-cc120-update-v1d1boac/auval.log",
+      "bytes": 9427,
+      "sha256": "8aecfc03cb77fd210adac55c25ddca66fda574b7993fb07dba3c8907f3b0ac28"
+    },
+    "before.json": {
+      "path": "build/au-cc120-update-v1d1boac/before.json",
+      "bytes": 7597,
+      "sha256": "2ca118cbeb5644ce55c5fed8c8e1105f743805d289ef5c455a8a3ff568cc2a30"
+    },
+    "install.log": {
+      "path": "build/au-cc120-update-v1d1boac/install.log",
+      "bytes": 185,
+      "sha256": "18b59ad71b97e0d7441817740c97ad2608d9c4663257abf4f297da58f68f2dd7"
+    },
+    "installed-au-host.log": {
+      "path": "build/au-cc120-update-v1d1boac/installed-au-host.log",
+      "bytes": 4877,
+      "sha256": "11de6acba1358cbe1dd42cf0989ab264250a9243be79eccd5919ac7f9501b564"
+    },
+    "open-after-save-state.json": {
+      "path": "build/au-cc120-update-v1d1boac/open-after-save-state.json",
+      "bytes": 3536,
+      "sha256": "f270d6d341b5bb549fa1a226dfde56522add9cc2f2e4e24bc44f9a426c117607"
+    },
+    "open-before-save-state.json": {
+      "path": "build/au-cc120-update-v1d1boac/open-before-save-state.json",
+      "bytes": 3536,
+      "sha256": "0e34d3029c95d44a85d2ed03327004ef570d97fce3a6d2acee0e3c3989570c13"
+    },
+    "open-before-save.ax.txt": {
+      "path": "build/au-cc120-update-v1d1boac/open-before-save.ax.txt",
+      "bytes": 21339,
+      "sha256": "2d0ed5644f95045f4235c5fb5d2be40e7d8022596a5613577d8654e838753b70"
+    },
+    "project-integrity-after-save.json": {
+      "path": "build/au-cc120-update-v1d1boac/project-integrity-after-save.json",
+      "bytes": 90,
+      "sha256": "eedf230f451fbffd109b857b4c1c12a08bef9ed905dd9739da68e2651dec63a8"
+    },
+    "restored-after-reopen.ax.txt": {
+      "path": "build/au-cc120-update-v1d1boac/restored-after-reopen.ax.txt",
+      "bytes": 697,
+      "sha256": "9fbaa8a5b9bc71ba5d22a94d31a7db33776210668a124c6a73733835b9602b83"
+    },
+    "restored-after-reopen.png": {
+      "path": "build/au-cc120-update-v1d1boac/restored-after-reopen.png",
+      "bytes": 199923,
+      "sha256": "3b72e526772b0fd2c4810395d4525928ea4f534e7e5037bbfe9a3b610c8db8cf"
+    },
+    "restored-before-save.ax.txt": {
+      "path": "build/au-cc120-update-v1d1boac/restored-before-save.ax.txt",
+      "bytes": 697,
+      "sha256": "9fbaa8a5b9bc71ba5d22a94d31a7db33776210668a124c6a73733835b9602b83"
+    },
+    "restored-before-save.png": {
+      "path": "build/au-cc120-update-v1d1boac/restored-before-save.png",
+      "bytes": 188201,
+      "sha256": "dba3f4d2be9563375b72650c19f744502cb83191f977297521d646b4d34b6849"
+    },
+    "trial-after-reopen-state.json": {
+      "path": "build/au-cc120-update-v1d1boac/trial-after-reopen-state.json",
+      "bytes": 3544,
+      "sha256": "a96f30942cd0f73ae2adb443b6f786a0475dc52eb65aa23b33736e79f110606b"
+    },
+    "trial-after-reopen.ax.txt": {
+      "path": "build/au-cc120-update-v1d1boac/trial-after-reopen.ax.txt",
+      "bytes": 21149,
+      "sha256": "80fc64957fcec25f27eae8ce5d5c6057997f489ce4935c71cd535e6f7d3c69f3"
+    },
+    "trial-after-save-state.json": {
+      "path": "build/au-cc120-update-v1d1boac/trial-after-save-state.json",
+      "bytes": 3544,
+      "sha256": "a96f30942cd0f73ae2adb443b6f786a0475dc52eb65aa23b33736e79f110606b"
+    },
+    "trial-before-open-state.json": {
+      "path": "build/au-cc120-update-v1d1boac/trial-before-open-state.json",
+      "bytes": 3544,
+      "sha256": "1d3b685f7b525640456715e94b85f31a03d7ab122a121f514496d77dd1e6b336"
+    },
+    "trial-before-save.ax.txt": {
+      "path": "build/au-cc120-update-v1d1boac/trial-before-save.ax.txt",
+      "bytes": 21342,
+      "sha256": "f8e3b00f1aa35323fc62abd752ec54f0bf74aed9bccee1bbc10ebb01b64b8b19"
+    }
+  },
+  "evidence_scope": "Ignored build/ logs, screenshots, projects, backup bundles and journal remain local; only hashes and verification description are committed. Keep local backup bundles for rollback."
+}
