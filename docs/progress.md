@@ -647,3 +647,9 @@
 - Offline /macOS /ASan+UBSanのCTest各25件が成功。RT区間のC++new/delete0、数式係数・分割完全一致・不正値・resetを確認。
 - 実AU48k /実VST3全3rateで左右PCM oracle、down/up/途中変更、state保存target/firstrestore/失敗時保持、reset/reactivate/bypass後のsnapを検証。VST3 validator47/0も成功。
 - この時点でCIはこれから確認。installed AU /GarageBandは維持し、実聴・実DAW automation /長時間動作は未確認として残す。
+
+## 2026-11-01 JST — Gain smoothingのCI成功・区切り完了
+
+- 実装`3ec6049` exact headの[CI 41291073473](https://github.com/kyorohiro/tetorica-spu-plugin/actions/runs/41291073473)でoffline /macOS全2job成功。全stepに失敗なし。CI側AU install/auval、VST3 validator /実host、AU実hostも成功した。
+- [仕様・検証記録](gain_smoothing_20261101.md) /[source・binary・log hash /CI metadata](gain_smoothing_20261101.json)を保存。artifactはmetadataだけ確認し、download /実行 /release公開はしていない。
+- 手元installed AUはloopfix版の全5filesが前回manifestと一致。Gain版への配置とGarageBand旧copyの確認は次の工程。実聴・長時間・automation録音と既存独自UI確認TODOも維持した。

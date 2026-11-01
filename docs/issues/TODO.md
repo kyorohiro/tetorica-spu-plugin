@@ -37,8 +37,10 @@ WAV素材の読み込み・Root / Playback編集も完了した。[操作・検�
 flag4-only /markerless repeatの互換性も修正し、元bytesのまま実AU/VST3・CIで検証した。
 [実装の記録](../loop_repeat_20261101.md)を参照。loopfix版installed AUへの更新・旧VAB projectの保存再起動も完了した。
 [AU更新・復元記録](../au_loop_update_20261101.md)と[current installed AU manifest](../au_loop_update_20261101.json)を参照。
+Gain smoothingも実装し、unit /実AU・VST3 /sanitizer /CIを確認した。[検証記録](../gain_smoothing_20261101.md)。
+この新buildはまだinstalled AUへ配置しておらず、開いているGarageBandと上のmanifestを維持している。
 
-### Gain smoothingの今回の区切り（2026-11-01、CI確認中）
+### Gain smoothingの今回の区切り（2026-11-01、完了）
 
 開始Plugin `65ff2fe`、Native SDK `95cf71a`。ユーザーの続行指示で音量変更時の段差を抑える。
 作業前にこのTODOを保存する。
@@ -48,10 +50,15 @@ flag4-only /markerless repeatの互換性も修正し、元bytesのまま実AU/V
 - [x] 初回 / reset・rate変更 / deactivate後 / 成功host restore / imported tuple採用は保存Gainへ即時同期する。通常の音源交換ではrampを維持し、失敗restoreでは進行中rampも保持する。
 - [x] 既存Gain 0〜100% / parameter ID0〜25 / state schema9を維持し、保存するのはtarget値だけとする。通常Gain automationのhost block単位の扱いを説明し、sample offset対応の拡張は今回追加しない。
 - [x] 44.1 / 48 / 96kHz、上下変更・途中反転・0への到達・定常PCM一致・分割一致・旧state初回音量・不正入力保持をunit / 実AU・VST3で検証する（reset / reactivate / bypass直後のPCMも成功）。
-- [ ] build / CTest / validator / sanitizer / CIを確認し、結果・制限・次の入口を記録してcommit / pushする。
+- [x] build / CTest / validator / sanitizer / CIを確認し、結果・制限・次の入口を記録してcommit / pushする（実装`3ec6049`、CTest各25件、VST3 validator47/0、[CI全2job成功](https://github.com/kyorohiro/tetorica-spu-plugin/actions/runs/41291073473)）。
+
+[検証・次の入口](../gain_smoothing_20261101.md) /[source・binary・log・CI metadata](../gain_smoothing_20261101.json)。
 
 installed AUと開いているGarageBandはこの実装buildで置換しない。更新はhost保存・終了と
 `docs/au_loop_update_20261101.json`の照合・退避手順を使う別工程とする。
+
+- [ ] 次にGain smoothing版AUを配置する場合は、上のknown manifest照合・host保存終了・退避updateを行い、旧GarageBand copyの保存再起動を確認する。
+
 分割VH/VB UI、version / tag /公開release、Web / Tauri / npm配布は今回変更しない。
 
 ### loopfix版AU更新・旧GarageBand復元の今回の区切り（2026-11-01、完了）

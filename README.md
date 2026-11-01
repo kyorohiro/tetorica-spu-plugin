@@ -99,6 +99,8 @@ target per block; individual automation-point offsets are not scheduled.
 Initial playback, audio reset, reactivation and successful state/import restore
 start at the saved Gain immediately. Only the target is saved; an unfinished
 ramp is live processing state. Gain remains 0–100%, parameter ID 0.
+See [Gain smoothing verification](docs/gain_smoothing_20261101.md) for the
+actual AU/VST3 PCM checks and deployment status.
 
 ## PCM waveform editing
 
