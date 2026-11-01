@@ -659,3 +659,11 @@
 - ユーザーの続行指示で、最新版AUへの退避更新とGarageBand旧project保存再起動を進める。開始`fcb2848`、実装`3ec6049`、SDK `95cf71a`。
 - 作業前TODOを先に保存する。installed /buildの既知hashとhost状態を確認し、原本と保存前copyを保護してから更新する。
 - 今回は配置と検証・記録のみ。実聴 /長時間 /実DAW automation録音や独自Load UIの未確認範囲を区別する。
+
+## 2026-11-01 JST — Gain版installed AU更新・GarageBand保存再起動完了
+
+- 前回loopfix manifestとhost終了を確認し、`au-update-dpj7avip`でGain版へ退避更新した。新source /installed全5filesは`cd59d41b…`、旧backup両組の全5filesは`60a6c196…`で各記録と一致。rollback journalと旧bundleは保持している。
+- installed版のauval成功（26params、既知preset-name warningは残る）。実installed bundleを読む48kHz host全14 PASS行、Gain PCM oracle・保存target・restore/reset/reactivate/bypass後のsnapを含む。
+- 新しいGarageBand copyを保存・完全終了・再起動し、実AU画面のEmbedded VAB /P3/T0/Gain99 /Project sound restoredを確認。schema9 payload4768bytes /VAB3744bytesは完全一致、原本11filesとknown7filesも不変。
+- [操作・戻し方](au_gain_update_20261101.md) /[current installed manifest・証跡](au_gain_update_20261101.json)。開始時copyは全file退避して意図的に保存し、payloadを保持した。新copyのeditorを表示、再生・録音停止で残している。
+- 今回はsource /version/tag /公開releaseを変更していない。実聴・長時間・実DAW automationと独自Load sound /editor lifecycle等の人確認はTODOに維持した。

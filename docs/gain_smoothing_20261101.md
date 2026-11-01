@@ -64,8 +64,11 @@ AUのローカルfactory登録はsandbox内で拒否されたため、許可さ�
 
 ## 配置済みAUと次の入口
 
-今回、installed AUと開いているGarageBandは変更していない。
-[現在のinstalled manifest](au_loop_update_20261101.json)はloopfix版のまま。
+**後続作業でGain版を配置済み:** [AU更新・GarageBand保存再起動の記録](au_gain_update_20261101.md)。
+現在のinstalled manifestは[こちら](au_gain_update_20261101.json)。以下は実装検証時点の履歴。
+
+実装検証時点では、installed AUと開いているGarageBandは変更していない。
+[その時点のinstalled manifest](au_loop_update_20261101.json)はloopfix版。
 新buildのAUとはbinary hashが異なる。
 配置更新はhost保存・終了、known manifest照合、旧bundle退避を行う[手順](au_loop_update_20261101.md)で進める。
 

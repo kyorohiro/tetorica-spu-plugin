@@ -36,21 +36,25 @@ WAV素材の読み込み・Root / Playback編集も完了した。[操作・検�
 [操作・検証記録](../software_audio_20261101.md)を参照。
 flag4-only /markerless repeatの互換性も修正し、元bytesのまま実AU/VST3・CIで検証した。
 [実装の記録](../loop_repeat_20261101.md)を参照。loopfix版installed AUへの更新・旧VAB projectの保存再起動も完了した。
-[AU更新・復元記録](../au_loop_update_20261101.md)と[current installed AU manifest](../au_loop_update_20261101.json)を参照。
+[loopfix AU更新・復元記録](../au_loop_update_20261101.md)を参照。
 Gain smoothingも実装し、unit /実AU・VST3 /sanitizer /CIを確認した。[検証記録](../gain_smoothing_20261101.md)。
-この新buildはまだinstalled AUへ配置しておらず、開いているGarageBandと上のmanifestを維持している。
+Gain版installed AUへの退避更新・旧VABの保存再起動も完了した。
+[現在のAU更新・復元記録](../au_gain_update_20261101.md)と[current installed AU manifest](../au_gain_update_20261101.json)を参照。
 
-### Gain smoothing版AU更新・GarageBand復元の今回の区切り（2026-11-01、開始前）
+### Gain smoothing版AU更新・GarageBand復元の今回の区切り（2026-11-01、完了）
 
 開始Plugin `fcb2848`、実装`3ec6049`、Native SDK `95cf71a`。
 ユーザーの続行指示で、作業前にこのTODOを保存する。
 
-- [ ] installed全5filesを`docs/au_loop_update_20261101.json`へ、新build全5filesを`docs/gain_smoothing_20261101.json`へ照合する。
-- [ ] GarageBandの現在のdocument /再生・録音 /未保存状態を確認し、既知検証copyを保存前に退避する。原本は保持し、hostを保存・終了する。
-- [ ] known manifest一致時だけGain版AUへ退避更新し、journal /旧新hash /rollback手順を保存する。
-- [ ] installed版のauvalと実AU host検証（Gainの5ms /reset /restore /bypassを含む）を確認する。
-- [ ] 新しいGarageBand検証copyでP3/T0/Gain99 /embedded VABの復元、保存・完全終了・再起動・editor再表示を確認し、payload /VAB /保護原本を照合する。
-- [ ] current installed manifest /検証記録 /再開TODOを更新してcommit /pushする。実聴・長時間・実DAW automation録音・独自Load操作は成功していないものを未確認として残す。
+- [x] installed全5filesを`docs/au_loop_update_20261101.json`へ、新build全5filesを`docs/gain_smoothing_20261101.json`へ照合する。
+- [x] GarageBandの現在のdocument /再生・録音 /未保存状態を確認し、既知検証copyを保存前に退避する。原本は保持し、hostを保存・終了する。
+- [x] known manifest一致時だけGain版AUへ退避更新し、journal /旧新hash /rollback手順を保存する（`au-update-dpj7avip`）。
+- [x] installed版のauvalと実AU host検証（Gainの5ms /reset /restore /bypassを含む）を確認する（26params、48kHz全14 PASS行）。
+- [x] 新しいGarageBand検証copyでP3/T0/Gain99 /embedded VABの復元、保存・完全終了・再起動・editor再表示を確認し、payload4768bytes /VAB3744bytes /原本11files・known7filesの一致を確認する。
+- [x] current installed manifest /検証記録 /再開TODOを更新してcommit /pushする。実聴・長時間・実DAW automation録音・独自Load操作は成功していないものを未確認として残す。
+
+[検証記録](../au_gain_update_20261101.md)。次回updateのexpectedは`docs/au_gain_update_20261101.json`。
+GarageBandは`build/au-gain-update-8o13a8ay/spu-gain-restore-check.band`上のAU editorを表示、再生・録音停止。
 
 Gainのsourceやparameter /state形式、version /tag /公開release、Web /Tauri /npm配布は変更しない。
 
@@ -68,10 +72,9 @@ Gainのsourceやparameter /state形式、version /tag /公開release、Web /Taur
 
 [検証・次の入口](../gain_smoothing_20261101.md) /[source・binary・log・CI metadata](../gain_smoothing_20261101.json)。
 
-installed AUと開いているGarageBandはこの実装buildで置換しない。更新はhost保存・終了と
-`docs/au_loop_update_20261101.json`の照合・退避手順を使う別工程とする。
+実装時点ではinstalled AUとGarageBandを変更せず、後続の上段作業で照合・退避更新した。
 
-- [ ] 次にGain smoothing版AUを配置する場合は、上のknown manifest照合・host保存終了・退避updateを行い、旧GarageBand copyの保存再起動を確認する。
+- [x] 後続作業でknown manifest照合・host保存終了・退避updateを行い、Gain版AUで旧GarageBand copyの保存再起動を確認した（[記録](../au_gain_update_20261101.md)）。
 
 分割VH/VB UI、version / tag /公開release、Web / Tauri / npm配布は今回変更しない。
 

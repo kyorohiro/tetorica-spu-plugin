@@ -1,5 +1,8 @@
 # loopfix版AU更新・GarageBand旧project復元（2026-11-01）
 
+**後続更新:** [Gain版AU更新・旧project復元](au_gain_update_20261101.md)を完了した。
+現在のinstalled manifestは[Gain版記録](au_gain_update_20261101.json)。以下はloopfix版配置時の履歴。
+
 ADPCMループ互換修正済みのAUを手元へ配置し、GarageBandの旧VAB音色を新しい検証copyで
 保存・完全終了・再起動して、Program 3 / Tone 0 / Gain 99%の復元を確認した。
 installed AUの`auval`と実AU hostの全回帰も成功した。
