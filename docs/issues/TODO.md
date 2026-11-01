@@ -47,6 +47,20 @@ AUプリセット名warning解消と分割VH/VBのLoad sound対応も完了し�
 [最新の実装・配置・復元記録](../preset_split_vab_20261101.md) /[current installed AU manifest](../preset_split_vab_20261101.json)を参照。
 内蔵Sineの広域化も実装・CI成功した。[新build検証記録](../builtin_sine_range_20261102.md)を参照。手元installed AUは上のmanifestから変更していない。
 
+### macOS /Windows配布候補の今回の区切り（2026-11-02、作業中）
+
+開始Plugin `85c8f4e`、Native SDK `95cf71a`。ユーザーの指示で配布物作成と各OSのActions検証を進める。
+
+- [ ] macOSのUniversal（arm64 /x86_64）APP /AU /VST3を、全static dependencyを含めて構築・検証する。
+- [ ] Windows x64のAPP /VST3に必要なresource・font・MSVC runtime・SDK接続を整え、Windows runnerでbuild /CTest /実VST3 host /validatorを確認する。
+- [ ] LinuxのPlugin対応可否を固定iPlug2 sourceで調査する。現在の描画 /APP /VST3 /Timer基盤は未対応。既存Linux coreの検査とDAW Pluginの配布を混同せず、対応範囲はユーザーへ確認する。
+- [ ] Preview候補ZIPとSHA256 /source・binary manifest /導入手順 /license noticesを作る。macOSのstaging copyだけにad-hoc署名し、Developer ID署名・公証済みとは表示しない。
+- [ ] GitHub Actionsで候補artifactを生成・取得し、ZIP内容・architecture・同梱物・hashを照合する。既存の音源 /保存互換の回帰も維持する。
+- [ ] 結果・OS別制限・再開TODOを記録してcommit /pushする。
+
+version /tag /公開Releaseはこの段階では作成せず、具体的な配布候補を先に準備する。
+手元installed AU・GarageBand project、Web /Tauri /npm /SDK pinは変更しない。
+
 ### 内蔵Sine高音域対応の今回の区切り（2026-11-02、実装・CI完了）
 
 開始Plugin `33bed02`、Native SDK `95cf71a`。ユーザーの続行指示で、実装前にTODOを保存する。
