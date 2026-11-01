@@ -12,6 +12,7 @@
 #include "vst3-host/wav-import-checks.h"
 #include "vst3-host/software-audio-checks.h"
 #include "vst3-host/loop-repeat-checks.h"
+#include "vst3-host/gain-smoothing-checks.h"
 #include <AudioToolbox/AudioToolbox.h>
 #include <CoreFoundation/CoreFoundation.h>
 #include <algorithm>
@@ -130,6 +131,16 @@ public:
     AudioUnitParameterValue result = 0;
     ok(AudioUnitGetParameter(mUnit, 0, kAudioUnitScope_Global, 0, &result), "Cannot read AU Gain");
     return result;
+  }
+  void setGainForTest(double normalized) {
+    require(std::isfinite(normalized)&&normalized>=0&&normalized<=1,"Invalid test Gain");
+    ok(AudioUnitSetParameter(mUnit,0,kAudioUnitScope_Global,0,
+      static_cast<AudioUnitParameterValue>(normalized*100),0),"AU Gain parameter rejected");
+  }
+  void setBypassForGainTest(bool bypassed) {
+    const UInt32 value=bypassed?1:0;
+    ok(AudioUnitSetProperty(mUnit,kAudioUnitProperty_BypassEffect,
+      kAudioUnitScope_Global,0,&value,sizeof(value)),"AU Gain-test bypass rejected");
   }
   std::vector<std::uint8_t> savedBytes() const {
     const auto state=save();return body(state.get());
@@ -310,6 +321,7 @@ int main(int argc, char** argv)
     const auto decoded = tetorica::decodeState({legacyBody.data(), legacyBody.size()});
     require(decoded.definition->kind() == tetorica::InstrumentDefinition::Kind::Builtin &&
       decoded.gainPercent == 17., "Legacy AU state did not migrate to a builtin definition");
+    tetorica::test::checkGainSmoothing([&] { return std::make_unique<Instance>(component); },48000,"AU parameters/MIDIEvent");
     tetorica::test::checkControllers([&] { return std::make_unique<Instance>(component); },48000,"AU MIDIEvent");
     tetorica::test::checkEnvelopes([&] { return std::make_unique<Instance>(component); },48000,"AU parameters",bank);
     tetorica::test::checkReverbs([&] { return std::make_unique<Instance>(component); },48000,"AU parameters",bank);

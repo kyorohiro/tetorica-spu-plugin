@@ -38,16 +38,16 @@ flag4-only /markerless repeatの互換性も修正し、元bytesのまま実AU/V
 [実装の記録](../loop_repeat_20261101.md)を参照。loopfix版installed AUへの更新・旧VAB projectの保存再起動も完了した。
 [AU更新・復元記録](../au_loop_update_20261101.md)と[current installed AU manifest](../au_loop_update_20261101.json)を参照。
 
-### Gain smoothingの今回の区切り（2026-11-01、実装前）
+### Gain smoothingの今回の区切り（2026-11-01、CI確認中）
 
 開始Plugin `65ff2fe`、Native SDK `95cf71a`。ユーザーの続行指示で音量変更時の段差を抑える。
 作業前にこのTODOを保存する。
 
-- [ ] Gainの適用位置とhost automation / reset / restore / importの境界を確認する。
-- [ ] SPU後段のGainに約5msの直線rampを加える。左右共通のsample係数とし、MIDI分割・scratch / block境界でrampを再開始しない。同値targetでの再開始、RT確保・lockを避ける。
-- [ ] 初回 / reset・rate変更 / deactivate後 / 成功host restore / imported tuple採用は保存Gainへ即時同期する。通常の音源交換ではrampを維持し、失敗restoreでは進行中rampも保持する。
-- [ ] 既存Gain 0〜100% / parameter ID0〜25 / state schema9を維持し、保存するのはtarget値だけとする。通常Gain automationのhost block単位の扱いを説明し、sample offset対応の拡張は今回追加しない。
-- [ ] 44.1 / 48 / 96kHz、上下変更・途中反転・0への到達・定常PCM一致・分割一致・旧state初回音量・不正入力保持をunit / 実AU・VST3で検証する。
+- [x] Gainの適用位置とhost automation / reset / restore / importの境界を確認する。
+- [x] SPU後段のGainに約5msの直線rampを加える。左右共通のsample係数とし、MIDI分割・scratch / block境界でrampを再開始しない。同値targetでの再開始、RT確保・lockを避ける。
+- [x] 初回 / reset・rate変更 / deactivate後 / 成功host restore / imported tuple採用は保存Gainへ即時同期する。通常の音源交換ではrampを維持し、失敗restoreでは進行中rampも保持する。
+- [x] 既存Gain 0〜100% / parameter ID0〜25 / state schema9を維持し、保存するのはtarget値だけとする。通常Gain automationのhost block単位の扱いを説明し、sample offset対応の拡張は今回追加しない。
+- [x] 44.1 / 48 / 96kHz、上下変更・途中反転・0への到達・定常PCM一致・分割一致・旧state初回音量・不正入力保持をunit / 実AU・VST3で検証する（reset / reactivate / bypass直後のPCMも成功）。
 - [ ] build / CTest / validator / sanitizer / CIを確認し、結果・制限・次の入口を記録してcommit / pushする。
 
 installed AUと開いているGarageBandはこの実装buildで置換しない。更新はhost保存・終了と
@@ -431,7 +431,8 @@ complete `.vab`を最初の対象とする。分割VH/VBの複数file dialogは�
 - [ ] sample rate変換の品質・遅延報告を検討する。44.1kHz未満のanti-alias filterは未実装。
 - [x] Pitch Bend / Sustainを追加する（[検証記録](../midi_expression_20261031.md)）。
 - [ ] CC120をチャンネル別の即時停止にする（現状はglobal panic、CC123はchannel release）。
-- [ ] Gain変更を滑らかにし、sample単位のautomationの扱いを検討する。
+- [x] Gain変更を約5msで滑らかにする。sampleごとの出力補間と、既存block単位targetの違いを説明する。
+- [ ] 通常parameter automationの各pointをsample offsetで処理する拡張を検討する（現在のGain smoothingはblock targetからの補間）。
 - [ ] AUでrender thread以外から届くMIDIのbounded ingressを検証・対応する。現状のhost MIDI / lifecycle操作は単一consumerとして直列化される前提。
 - [ ] AU factory presetの名前を初期化し、auvalのpreset-name warningを解消する。
 - [x] AU更新時は既存bundleと前回配置したhashを照合し、退避・更新できる手順を用意する（explicit update / 条件付きrollback、11 tests、実更新済み）。

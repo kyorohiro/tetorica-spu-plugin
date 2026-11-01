@@ -21,6 +21,7 @@
 #include "wav-import-checks.h"
 #include "software-audio-checks.h"
 #include "loop-repeat-checks.h"
+#include "gain-smoothing-checks.h"
 #include "pluginterfaces/vst/ivstmidicontrollers.h"
 
 #include <algorithm>
@@ -143,6 +144,16 @@ public:
     auto* queue = parameters.addParameterData(gainId, queueIndex);
     require(queue, "Cannot enqueue Gain automation");
     ok(queue->addPoint(0, value, pointIndex), "Cannot enqueue Gain value");
+  }
+  void setGainForTest(double normalized) {
+    require(std::isfinite(normalized)&&normalized>=0&&normalized<=1,"Invalid test Gain");
+    setGain(normalized);
+  }
+  void setBypassForGainTest(bool bypassed) {
+    // The pinned instrument has no advertised bypass parameter. Exercise its
+    // existing reserved process parameter, as in the mapped-ingress suite.
+    const auto bypass=mappedControllerForTest(0,kCtrlBankSelectMSB)-2;
+    parameterForTest(bypass,bypassed?1.:0.,0);
   }
   double gain() const { return controller->getParamNormalized(gainId); }
   void allowAsymmetric() { symmetricExpected=false; }
@@ -730,7 +741,10 @@ void checkStateFailures(const PluginFactory& factory,const ClassInfo& info) {
 
   StateBytes legacy(12);putDouble(legacy,0,27.5);
   Instance freshLegacy(factory,info,rate),builtin(factory,info,rate);freshLegacy.allowAsymmetric();
-  restoreRequired(freshLegacy,legacy);freshLegacy.start();builtin.start();builtin.setGain(.275);
+  restoreRequired(freshLegacy,legacy);
+  auto currentBuiltin=tetorica::encodeState(tetorica::InstrumentDefinition::builtin(),27.5);
+  currentBuiltin.insert(currentBuiltin.end(),4,0);restoreRequired(builtin,currentBuiltin);
+  freshLegacy.start();builtin.start();
   sameStereo(freshLegacy,builtin,{on});
   require(std::abs(freshLegacy.gain()-.275)<1e-6,"Legacy Gain-only state was not restored");
   // Existing Gain-only projects select Builtin even when replacing an import.
@@ -771,6 +785,9 @@ int main(int argc, char** argv) {
           checkRate(factory, info, rate);
           checkScheduler(factory, info, rate);
           checkEmbeddedState(factory,info,rate);
+          tetorica::test::checkGainSmoothing([&] {
+            auto instance=std::make_unique<Instance>(factory,info,rate);instance->start();return instance;
+          },rate,"VST3 parameters/events");
           tetorica::test::checkEnvelopes([&] {
             auto instance=std::make_unique<Instance>(factory,info,rate);instance->allowAsymmetric();
             instance->start();return instance;

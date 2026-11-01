@@ -62,6 +62,7 @@ void TetoricaSPU::OnReset()
   mReady = mEngines.instrument().prepare(GetSampleRate());
   mEngines.instrument().panic();
   mEnvelopeApplied = false;
+  mGainNeedsReset = true;
 }
 
 void TetoricaSPU::OnActivate(bool active)
@@ -73,6 +74,7 @@ void TetoricaSPU::OnActivate(bool active)
     resetControllerCache();
     mEngines.instrument().panic();
     mEngines.instrument().resetControllers();
+    mGainNeedsReset = true;
   }
 }
 
@@ -286,7 +288,7 @@ void TetoricaSPU::applyReverbParameters() noexcept
   mEngines.instrument().setReverb(settings);
 }
 
-void TetoricaSPU::renderRange(iplug::sample** outputs, int offset, int nFrames, double gain)
+void TetoricaSPU::renderRange(iplug::sample** outputs, int offset, int nFrames)
 {
   while (nFrames > 0)
   {
@@ -294,6 +296,7 @@ void TetoricaSPU::renderRange(iplug::sample** outputs, int offset, int nFrames, 
     mEngines.instrument().render(mLeft.data(), mRight.data(), count);
     for (int frame = 0; frame < count; ++frame)
     {
+      const double gain = mGain.next(); // One shared coefficient per stereo frame.
       outputs[0][offset + frame] = static_cast<iplug::sample>(mLeft[frame] * gain);
       outputs[1][offset + frame] = static_cast<iplug::sample>(mRight[frame] * gain);
     }
@@ -321,6 +324,7 @@ void TetoricaSPU::ProcessBlock(iplug::sample**, iplug::sample** outputs, int nFr
     if(const auto* imported=mEngines.adoptedImportState())
     {
       applyImportedParameters(*imported);
+      mGainNeedsReset = true;
       mImportAppliedGeneration.store(mEngines.adoptedGeneration(),std::memory_order_release);
     }
     applyControllerCache();
@@ -346,20 +350,28 @@ void TetoricaSPU::ProcessBlock(iplug::sample**, iplug::sample** outputs, int nFr
   applySourceParameters();
 
   const double requestedGain = GetParam(kParamGain)->Value() / 100.;
-  const double gain = std::isfinite(requestedGain) ? std::clamp(requestedGain, 0., 1.) : 0.;
+  // Ordinary host automation supplies one target per block. The ramp follows
+  // output sample time, across scratch chunks, MIDI offsets and later blocks.
+  if (mGainNeedsReset)
+  {
+    mGain.reset(GetSampleRate(), requestedGain);
+    mGainNeedsReset = false;
+  }
+  else
+    mGain.setTarget(requestedGain);
   int offset = 0;
   std::size_t event = 0;
   while (event < mMidiCount && mMidi[event].message.mOffset < nFrames)
   {
     const int nextOffset = mMidi[event].message.mOffset;
-    renderRange(outputs, offset, nextOffset - offset, gain);
+    renderRange(outputs, offset, nextOffset - offset);
     offset = nextOffset;
     do
     {
       applyMidi(mMidi[event++].message);
     } while (event < mMidiCount && mMidi[event].message.mOffset == nextOffset);
   }
-  renderRange(outputs, offset, nFrames - offset, gain);
+  renderRange(outputs, offset, nFrames - offset);
 
   // Preserve a host event exactly at the end of the block for sample zero of
   // the next block, as well as any later event supplied by a host.

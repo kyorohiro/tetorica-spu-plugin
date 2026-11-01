@@ -198,6 +198,9 @@ int TetoricaSPU::UnserializeState(const iplug::IByteChunk& chunk, int startPos)
     // This trusted complete parameter chunk was fully validated and allocated
     // above. The framework sets all 26 values and calls OnParamReset.
     UnserializeParams(params, 0);
+    // A restored target is the initial level, not a live fade from the old
+    // project. Publish only after successful validation/transactional commit.
+    mGainNeedsReset = true;
     // A host restore can arrive off the UI thread. Only publish a revision
     // here; OnIdle will refresh its model without requesting another engine.
     // Failed validation/preparation above must leave an in-flight UI load alone.

@@ -108,6 +108,7 @@ Steinberg::tresult PLUGIN_API TetoricaSPU::process(Steinberg::Vst::ProcessData& 
     resetControllerCache();
     mEngines.instrument().panic();
     mEngines.instrument().resetControllers();
+    mGainNeedsReset=true;
   }
   return result;
 }

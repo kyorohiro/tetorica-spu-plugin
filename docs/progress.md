@@ -640,3 +640,10 @@
 - ユーザーの続行指示で、作業前TODOを保存。開始`65ff2fe`、SDK `95cf71a`。
 - SPU後段のlive Gain変更へ約5msのsample rampを加え、初回 /成功restoreは保存値へ同期する方針。既存parameter /state形式と通常automationのblock単位処理を維持する。
 - コード・unit /実AU・VST3回帰・CIを検証する。開いているGarageBandやinstalled AUは今回のbuildでは置換しない。
+
+## 2026-11-01 JST — Gain smoothingのローカル検証成功
+
+- SPU出力後段へ5ms linear rampを接続し、source swapと成功restore/importを区別した。targetだけを既存state9へ保存し、26parameter IDs /Gain 0〜100%を維持。
+- Offline /macOS /ASan+UBSanのCTest各25件が成功。RT区間のC++new/delete0、数式係数・分割完全一致・不正値・resetを確認。
+- 実AU48k /実VST3全3rateで左右PCM oracle、down/up/途中変更、state保存target/firstrestore/失敗時保持、reset/reactivate/bypass後のsnapを検証。VST3 validator47/0も成功。
+- この時点でCIはこれから確認。installed AU /GarageBandは維持し、実聴・実DAW automation /長時間動作は未確認として残す。

@@ -91,6 +91,15 @@ restore leaves the existing instrument and controller state intact.
 VST3 bypass also clears held/deferred notes and controllers, so input from
 bypassed blocks is not replayed when processing resumes.
 
+Gain changes use an approximately **5 ms linear ramp** after the SPU output,
+with one shared coefficient per stereo frame. The ramp continues across audio
+blocks and MIDI offsets. This is plugin output smoothing, separate from the
+SPU's voice volumes and ADSR. Normal host Gain automation still supplies one
+target per block; individual automation-point offsets are not scheduled.
+Initial playback, audio reset, reactivation and successful state/import restore
+start at the saved Gain immediately. Only the target is saved; an unfinished
+ramp is live processing state. Gain remains 0–100%, parameter ID 0.
+
 ## PCM waveform editing
 
 Open the **Source** page with **Source: Sample** to choose Sine, Triangle, Saw or Square, or draw one cycle
@@ -537,7 +546,8 @@ still need a direct user check; the verified host-preset route is separate.
   VAB is limited to 1 MiB, ADPCM to 520192 bytes and Software PCM to 32 MiB. Key zones, layers and game-driver performance state are
   not reconstructed. Held notes, release tails, decoder caches and host rate
   are not saved.
-- Configurable Pitch Bend range, smooth Gain changes and per-channel CC120 remain TODO.
+- Configurable Pitch Bend range and per-channel CC120 remain TODO.
+- Sample-accurate ordinary parameter automation remains TODO; Gain output smoothing is sample-based after each block target is received.
   Currently CC120 immediately stops all channels; CC123 releases its own channel.
 - Prepared-engine changes start with no held notes and cut the previous tail.
   Carried MIDI from previous blocks is removed; new current-block host MIDI is

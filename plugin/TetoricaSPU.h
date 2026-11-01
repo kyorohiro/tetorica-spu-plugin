@@ -12,6 +12,7 @@
 #include "WebInstrumentLoader.h"
 #include "WebInstrumentExporter.h"
 #include "AudioFileLoader.h"
+#include "GainSmoother.h"
 #include <array>
 #include <atomic>
 #include <cstddef>
@@ -190,7 +191,7 @@ private:
   void applyImportedParameters(const tetorica::SavedInstrumentState& state) noexcept;
   void discardCarriedMidi() noexcept;
   void discardCarriedNotes() noexcept;
-  void renderRange(iplug::sample** outputs, int offset, int nFrames, double gain);
+  void renderRange(iplug::sample** outputs, int offset, int nFrames);
 
   // All MIDI and render storage is allocated with the instance, never while
   // processing audio. Host offsets are kept across short/variable blocks.
@@ -218,6 +219,10 @@ private:
   std::size_t mMidiCount = 0;
   bool mMidiOverflow = false;
   bool mReady = false;
+  // Output-only live state: only the authored target is serialized. Lifecycle
+  // restore/reset snaps on the first render; ordinary source swaps retain it.
+  tetorica::AudioGainSmoother mGain;
+  bool mGainNeedsReset = true;
   // Audio-thread-owned live MIDI state, separate from saved instrument state.
   // A UI bank/tone replacement inherits it; host restore/reset starts neutral.
   // Bend is stored as the signed displacement from raw MIDI center 8192.
