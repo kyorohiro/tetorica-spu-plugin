@@ -52,6 +52,9 @@ exact SDK commitでNative5 platform /WASM7の12検証jobが成功し、Release j
 
 ## installed AUと未確認範囲
 
+**後続作業で更新済み:** [AU更新・旧project保存再起動の記録](au_loop_update_20261101.md)。
+現在のinstalled manifestは[こちら](au_loop_update_20261101.json)。以下はループ実装修正時点の履歴。
+
 **今回、手元のinstalled AUは更新していない。**
 [Software audio記録](software_audio_20261101.json)の5filesとread-onlyで一致を確認した。
 installed binaryは `b46c3150a8c1b5a0c22ce41fce78bc04d38b39a8442f99392bf03ed5d585ea7f`。

@@ -33,21 +33,25 @@ PCMの4波形・自由描画・Apply / Revertも実装し、実AU/VST3とStandal
 Web音色v1の[import](../web_instrument_import_20261101.md)と[export](../web_instrument_export_20261101.md)も完了した。
 WAV素材の読み込み・Root / Playback編集も完了した。[操作・検証記録](../wav_import_20261101.md)を参照。
 長いAudio /Software PCMとWeb v2を実装し、実AU/VST3・Web実interop・両repo CI成功済み。
-[操作・検証記録](../software_audio_20261101.md)と[current installed AU manifest](../software_audio_20261101.json)を参照。
+[操作・検証記録](../software_audio_20261101.md)を参照。
 flag4-only /markerless repeatの互換性も修正し、元bytesのまま実AU/VST3・CIで検証した。
-[今回の記録](../loop_repeat_20261101.md)を参照。installed AUは今回更新せず、上のSoftware audio版を維持している。
+[実装の記録](../loop_repeat_20261101.md)を参照。loopfix版installed AUへの更新・旧VAB projectの保存再起動も完了した。
+[AU更新・復元記録](../au_loop_update_20261101.md)と[current installed AU manifest](../au_loop_update_20261101.json)を参照。
 
-### loopfix版AU更新・旧GarageBand復元の今回の区切り（2026-11-01、実装前）
+### loopfix版AU更新・旧GarageBand復元の今回の区切り（2026-11-01、完了）
 
 ユーザー「では、続きをおねがいします」で、最新版AUへの更新→GarageBand旧project復元確認を開始する。
 開始Plugin `1e81db9`、Native SDK `95cf71a`。この節を先に保存し、既存ファイルを保護して進める。
 
-- [ ] installed AUを `docs/software_audio_20261101.json` の全file hashと照合し、新buildがloopfix版であることを確認する。
-- [ ] GarageBandの現在のdocument /再生 /録音 /未保存状態を確認する。保存対象を保護し、hostを終了してから更新する。
-- [ ] known hash一致時だけ旧AUを退避し、新AUへ更新する。journal /新旧hash /rollback手順を保存する。
-- [ ] auval /登録と、新installed AUを読む実AU hostのPCM・state回帰を確認する。
-- [ ] 旧GarageBand projectの原本は保持し、新しい検証copyでVAB P3/T0/Gain99・保存設定の復元 /再表示 /保存再起動を確認する。保存payload /元VAB /原本11filesを照合する。
-- [ ] 結果 /current installed manifest /人の実聴・独自UI /長時間 /automationの未確認範囲を記録し、commit /pushする。
+- [x] installed AUを `docs/software_audio_20261101.json` の全file hashと照合し、新buildがloopfix版であることを確認する。
+- [x] GarageBandの現在のdocument /再生 /録音 /未保存状態を確認する。保存対象を保護し、hostを終了してから更新する。
+- [x] known hash一致時だけ旧AUを退避し、新AUへ更新する。journal /新旧hash /rollback手順を保存する（`au-update-igtc8_ol`）。
+- [x] auval /登録と、新installed AUを読む実AU hostのPCM・state回帰を確認する（auval成功、48kHz全13 PASS行、LoopRepeat4条件を含む）。
+- [x] 旧GarageBand projectの原本は保持し、新しい検証copyでVAB P3/T0/Gain99・保存設定の復元 /再表示 /保存再起動を確認する。保存payload4768bytes /元VAB3744bytes /原本11filesと複製元7filesは一致。
+- [x] 結果 /current installed manifest /人の実聴・独自UI /長時間 /automationの未確認範囲を記録し、commit /pushする。
+
+[記録](../au_loop_update_20261101.md)。次回updateのexpectedは`docs/au_loop_update_20261101.json`。
+GarageBandは`build/au-loop-update-nu3dlwkx/spu-loop-restore-check.band`を開き、AU editorを表示中。再生・録音は停止。
 
 分割VH/VB UI・Gain smoothing・version/tag /公開release /Web /Tauri /npm配布は今回追加しない。
 新しい音源の実DAW独自Load操作は既存のAI入力制約を見て判断し、成功していない操作を確認済みと扱わない。
@@ -59,7 +63,8 @@ flag4-only /markerless repeatの互換性も修正し、元bytesのまま実AU/V
 - [x] worker /program初期Tone探索 /Web loader /Python inspectorのunsupported期待と説明を更新し、元bytes /PCM持続 /loop位置 /不正入力atomicの回帰を加える。
 - [x] 既存flag6 /markerless /Gaussian /long Software2banks /RT new-delete0と、実AU /VST3 /sanitizer /CIを検証し、公開SDK commitへsubmodule /lockを固定する。
 - [x] README /検証記録 /再開TODOを更新してcommit /pushする。今回はinstalled AUを更新せず、Software audio版5filesの一致をread-onlyで確認した。
-- [ ] 次にinstalled AUを更新するときは既知Software audio manifestの照合・退避・rollback手順を使う。実DAW独自UIでloop素材の読込・保存再起動、人の実聴と長時間使用は別に確認する。
+- [x] 後続作業で既知Software audio manifestの照合・退避・rollback手順を使い、installed AU更新と旧VABの保存再起動を確認した（[記録](../au_loop_update_20261101.md)）。
+- [ ] 実DAW独自UIで新loop素材を読み込み、保存再起動を確認する。人の実聴と長時間使用も別に確認する。
 
 開始Plugin `6ddd13b`、SDK `997256e`。親Web Synth /Playgroundへの反映もユーザー了承済み。
 実装 `78e0b83`、SDK `95cf71a`。offline/macOS/ASan各24件、実AU48k /VST3全3rate、validator47/0、Python18成功。
@@ -428,7 +433,7 @@ complete `.vab`を最初の対象とする。分割VH/VBの複数file dialogは�
 - [ ] VAB/Toneのみの変更でDAWがprojectを変更済みと扱うことを確認する。VST3はoptional setDirty、AUはpublic PresentPreset通知を使用中。
 - [ ] editorを開いたままのhost restoreと、file dialog / Program・Tone popup中のeditor close/reopenを実DAWで追試する。
 - [ ] 分割VH/VBのファイル選択を追加する（parserとoffline APIは対応済み）。
-- [x] Native SDKのrepeat先packetにflag 2がないloopを修正・検証した。flag4-only /markerless0の元bytesを保ち、実AU/VST3・sanitizer・CIで確認済み（[記録](../loop_repeat_20261101.md)）。installed AU更新と人の確認は今回節に残す。
+- [x] Native SDKのrepeat先packetにflag 2がないloopを修正・検証した。flag4-only /markerless0の元bytesを保ち、実AU/VST3・sanitizer・CIで確認済み（[記録](../loop_repeat_20261101.md)）。[installed AU更新・旧project復元](../au_loop_update_20261101.md)も完了。新素材の独自UI操作・実聴は未確認。
 - [x] ADSRをhost parameter / state / graph編集へ公開する（[実AU/VST3・GUI検証](../adsr_editing_20261031.md)）。
 - [x] SPU Reverbをpreset / Enable / Return / sendとstateへ公開する（[検証記録](../reverb_20261031.md)）。
 - [x] PCMの波形選択・描画、Noise、PMONを順に公開する。

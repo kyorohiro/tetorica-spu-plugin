@@ -626,3 +626,11 @@
 - ユーザーの続行指示で、loopfix実装78e0b83 /SDK95cf71aのAUをknown manifest退避付きで更新し、旧GarageBand保存データを確認する。
 - 実行前TODOを追加。host状態・installed5files /buildhash /原本projectを確認後、更新と検証を進める。
 - 未保存documentが見つかった場合は破棄せず保護する。公開releaseや別の機能実装はこの区切りへ混ぜない。
+
+## 2026-11-01 JST — loopfix版installed AU更新・GarageBand保存再起動完了
+
+- 既知Software audio manifest全5filesとの一致とhost終了を確認し、`au-update-igtc8_ol`でloopfix版AUへ退避更新した。新source /installedの全5files一致、旧コピー /退避原本の全5filesも旧manifestと一致。条件付きrollback用journalは保持している。
+- 配置済みAUの`auval`成功（26params、既知preset-name warningは残る）。実installed bundleを読む48kHz host回帰も全13 PASS行、LoopRepeat4条件 /元bytes /embedded reopen /20MiB Software audioを含む。
+- 既知VAB projectを新copyに複製し、GarageBandで保存・完全終了・再起動後のP3/T0/Gain99 /Embedded VAB /Project sound restoredを画面で確認した。schema9 payload4768bytesとVAB3744bytesは完全一致、原本11filesと複製元7filesは不変。
+- 開始時の別の既知検証copyは全file退避後に保存した。project /UI /autosaveは変わったがpayloadは一致。新trialを再生・録音停止、AU editor表示状態で残している。
+- [検証・戻し方](au_loop_update_20261101.md) /[current installed manifest・hash](au_loop_update_20261101.json)。実聴・長時間動作・新loop/WAV/Web v2の実DAW独自Load・automation録音等は未確認としてTODOに維持した。今回コード・version/tag /公開releaseは変更していない。次のコード候補はGain smoothing。

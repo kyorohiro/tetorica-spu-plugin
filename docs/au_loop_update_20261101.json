@@ -1,0 +1,367 @@
+{
+  "schema": 1,
+  "date_jst": "2026-11-01",
+  "recorded_at_utc": "2026-11-01T08:05:55.397433+00:00",
+  "source_commit": "78e0b8358bd9855dbd061b421656213b2fb34041",
+  "todo_commit": "67a547d4dd5a033226e6aa870c0810b296475cc4",
+  "native_commit": "95cf71a857b15d0ea932ebf97d5fde80b5e80a95",
+  "scope": "Installed the already-verified loopfix AU and checked an old embedded-VAB GarageBand project copy through save, full host exit and reopen. No production source, parameter IDs, state schema, version, tag or release changes in this task.",
+  "implementation_record": "docs/loop_repeat_20261101.json",
+  "au": {
+    "file_sha256": {
+      "Contents/Info.plist": "94a46fcfc638d76a05aca50d5deedaff2a7a934aee55a816d007b6dff9c9bbc4",
+      "Contents/MacOS/TetoricaSPU": "60a6c1967f4fb56bb54f89a24f33769920b331f28ad8024969c9c861b805c368",
+      "Contents/PkgInfo": "d06a80ba92de0833d0ed03de1b02b7c8913f126d9e8c8931b190765dd5d83b11",
+      "Contents/Resources/Roboto-Regular.ttf": "b2efabca5ea4bc56eea829713706b5cd0788b82aca153bd4adde9b1573933b4f",
+      "Contents/Resources/THIRD_PARTY_NOTICES.txt": "d26ed5d113ec81968e0f1c41560491631e9c77c5bddf6ad6608dbf8697ce5dcf"
+    },
+    "file_bytes": {
+      "Contents/Info.plist": 1541,
+      "Contents/MacOS/TetoricaSPU": 1850680,
+      "Contents/PkgInfo": 8,
+      "Contents/Resources/Roboto-Regular.ttf": 145348,
+      "Contents/Resources/THIRD_PARTY_NOTICES.txt": 58824
+    },
+    "source": "/Users/kyorohiro/development8/wfm/hello_ymfm/w/tetorica-spu-plugin/build/macos/out/TetoricaSPU.component",
+    "destination": "/Users/kyorohiro/Library/Audio/Plug-Ins/Components/TetoricaSPU.component",
+    "updated_this_task": true,
+    "updated_at_utc": "2026-11-01T07:45:12.125747+00:00",
+    "expected_previous_record": "docs/software_audio_20261101.json",
+    "previous_file_sha256": {
+      "Contents/Info.plist": "94a46fcfc638d76a05aca50d5deedaff2a7a934aee55a816d007b6dff9c9bbc4",
+      "Contents/MacOS/TetoricaSPU": "b46c3150a8c1b5a0c22ce41fce78bc04d38b39a8442f99392bf03ed5d585ea7f",
+      "Contents/PkgInfo": "d06a80ba92de0833d0ed03de1b02b7c8913f126d9e8c8931b190765dd5d83b11",
+      "Contents/Resources/Roboto-Regular.ttf": "b2efabca5ea4bc56eea829713706b5cd0788b82aca153bd4adde9b1573933b4f",
+      "Contents/Resources/THIRD_PARTY_NOTICES.txt": "d26ed5d113ec81968e0f1c41560491631e9c77c5bddf6ad6608dbf8697ce5dcf"
+    },
+    "update_manifest": "/Users/kyorohiro/development8/wfm/hello_ymfm/w/tetorica-spu-plugin/build/au-backups/au-update-igtc8_ol/manifest.json",
+    "backup_component": "/Users/kyorohiro/development8/wfm/hello_ymfm/w/tetorica-spu-plugin/build/au-backups/au-update-igtc8_ol/previous.component",
+    "old_archive": "/Users/kyorohiro/development8/wfm/hello_ymfm/w/tetorica-spu-plugin/build/au-backups/au-update-igtc8_ol/original.component",
+    "workspace_matches_installed": true,
+    "previous_and_archive_match_previous_manifest": true,
+    "file_count": 5,
+    "total_bytes": 2056401,
+    "hosts_stopped_before_update": true,
+    "rollback_command": "python3 scripts/install_au.py --rollback build/au-backups/au-update-igtc8_ol/manifest.json",
+    "rollback_executed": false,
+    "rollback_scope": "Run only after saving and quitting audio hosts. The installer conditionally refuses an altered installation. Both old bundles and the journal are retained locally under build; do not delete this directory while relying on rollback.",
+    "integrity_checks": {
+      "journal_installed": true,
+      "installed_all5_equal_source": true,
+      "installed_equal_journal_new": true,
+      "source_binary_equal_loop_record": true,
+      "previous_all5_equal_software_audio": true,
+      "original_all5_equal_software_audio": true,
+      "previous_and_original_equal_bytes_hashes": true,
+      "journal_old_equal_software_audio": true
+    }
+  },
+  "verification": {
+    "auval": {
+      "command": "python3 scripts/validate_au.py",
+      "exit_code": 0,
+      "passed": true,
+      "parameter_count": 26,
+      "known_nonfatal_warnings": [
+        "Preset name is not retained in retrieved class data"
+      ],
+      "local_registry_refresh_used": false
+    },
+    "installed_au_host": {
+      "command": "build/macos/tetorica_au_state_check /Users/kyorohiro/Library/Audio/Plug-Ins/Components/TetoricaSPU.component",
+      "exit_code": 0,
+      "passed": true,
+      "sample_rate": 48000,
+      "pass_lines": [
+        "PASS AU MIDIEvent controllers sampleRate=48000 bend14Endpoints=true multiPointOffsets=true splitBlocks=true noRetrigger=true sustain64_63=true channel15Isolation=true CC123Pedal=true CC121HeldDeferred=true panicPreservesControllers=true resetRestoreOverflowClear=true liveStateExcluded=true deferredController=true reactivateReset=true releaseTailRetunedNoKON=true restoreDiscardsFutureControllers=true",
+        "PASS AU parameters ADSR sampleRate=48000 nineFieldsState=true schema1Migration=true legacyDefaults=true malformedAtomic=true firstRestoreBlock=true sourcePreserved=true disabledOriginalPCM=true blockAutomation=true nextNoteDeferred=true heldNoRetrigger=true applyOffOnRefresh=true",
+        "PASS AU parameters Reverb sampleRate=48000 full17Params=true firstWetRestore=true sourceSend=true presetAutomationIndependent=true presetsDiffer=true disabledDry=true zeroReturnDry=true stereoReturns=true releasedTail=true panicClears=true offClears=true restoreClearsHistory=true malformedAtomic=true schema1Schema2Schema3Legacy=true",
+        "PASS AU state/MIDIEvent PCM cycles sampleRate=48000 shapes4Distinct=true pitchAndLoop=true samples112Exact=true customDrawnState=true firstRestoreBlock=true pendingActiveAtomic=true separateInstances=true heldCarriedRestore=true settingsIndependent=true",
+        "PASS AU parameters/MIDIEvent Noise sampleRate=48000 full19Params=true firstRestoreBlock=true noNoteBendTracking=true clockLive=true sameClockNoop=true topologyPanic=true oldCarriedNotesCleared=true freshNotePreserved=true sourceRetained=true malformedAtomic=true schema1To4Legacy=true schema4PCMFX=true",
+        "PASS PMON paired MIDI controllers sampleRate=48000 bend14Endpoints=true multiPointOffsets=true splitBlocks=true noRetrigger=true sustain64_63=true channel15Isolation=true CC123Pedal=true CC121HeldDeferred=true panicPreservesControllers=true resetRestoreOverflowClear=true liveStateExcluded=true deferredController=true reactivateReset=true releaseTailRetunedNoKON=true restoreDiscardsFutureControllers=true",
+        "PASS AU parameters/MIDIEvent PMON sampleRate=48000 full24Params=true firstRestoreBlock=true depthZeroOriginal=true noRetrigger=true fourShapes=true waveformRatioDepthLive=true decayNextKey=true noisePriority=true bothRawFlagsSaved=true topologyPanic=true freshAndCarriedControllers=true malformedAtomic=true schema1To5Legacy=true pairedMIDI=true",
+        "PASS AU parameters/MIDIEvent Morph sampleRate=48000 full26Params=true immutableAB=true firstRestoreBlock=true amountLive=true heldReleaseNoKON=true AMidB=true PMONCombined=true noisePriority=true topologyPanic=true freshCarriedControllers=true malformedPendingActiveAtomic=true schema1To6Legacy=true originalSourceRestored=true",
+        "PASS AU state/MIDIEvent WebInstrument sampleRate=48000 actualWebFixtures6=true rawBytesMetadata=true full26Params=true firstRestoreBlock=true signedPolarity=true rootTuning=true sourceADSR=true sourceReverbSend=true malformedPendingActiveAtomic=true carriedMidi=true separateInstance=true schema7Migration=true",
+        "PASS AU state/MIDIEvent WavImport sampleRate=48000 formats4=true embeddedSourceWithoutWav=true full26Params=true firstRestoreBlock=true rootTuning=true metadataEdits=true recordedPitch=true oneShotEndsUnderSustain=true loopContinues=true singlePacketLoop=true invalidPendingActiveAtomic=true carriedMidi=true separateInstance=true",
+        "PASS AU state/MIDIEvent SoftwareAudio sampleRate=48000 webV2=true full26Params=true firstRestoreBlock=true rawMorphDormant=true dormantMorphCarriedOff=true rootTuning=true PMONCarrier=true reverb=true oneShotLoop=true malformedPendingActiveAtomic=true carriedMidi=true schema8Migration=true large20MiB=true",
+        "PASS AU state/MIDIEvent LoopRepeat sampleRate=48000 VABRaw4Cases=true marker4=true markerless0=true nonzeroRepeat=true originalBytes=true full26Params=true firstRestoreBlock=true PCMExactToFlag6Or2=true continuesAfterEND=true embeddedReopen=true WebOriginalFlags=true hostBankModeReturn=true",
+        "PASS: local AU embedded VAB/Gain round-trip, first-render MIDI/PCM, separate instance, malformed CF/state rejection with pending/active preservation, legacy AU migration; no audio device/editor/install"
+      ],
+      "scope": "Actual installed AU bundle, state/MIDI/PCM host checks without an audio device or editor. LoopRepeat proves four original-byte loop cases and embedded reopen; this does not prove physical listening or custom Load sound UI behavior."
+    },
+    "previous_implementation_ci": {
+      "record": "docs/loop_repeat_20261101.json",
+      "plugin_url": "https://github.com/kyorohiro/tetorica-spu-plugin/actions/runs/41276718988",
+      "plugin_head_sha": "78e0b8358bd9855dbd061b421656213b2fb34041",
+      "native_url": "https://github.com/kyorohiro/tetorica-soundchip-native/actions/runs/41275704074",
+      "native_head_sha": "95cf71a857b15d0ea932ebf97d5fde80b5e80a95",
+      "scope": "Prior production implementation CI, not a new run for this documentation-only checkpoint."
+    }
+  },
+  "garageband": {
+    "trial_project": "/Users/kyorohiro/development8/wfm/hello_ymfm/w/tetorica-spu-plugin/build/au-loop-update-nu3dlwkx/spu-loop-restore-check.band",
+    "trial_copied_from": "/Users/kyorohiro/development8/wfm/hello_ymfm/w/tetorica-spu-plugin/build/spu-vab-check.band",
+    "ui_restore_before_save": true,
+    "saved_then_fully_quit_and_relaunched": true,
+    "ui_restore_after_reopen": true,
+    "visually_observed": [
+      "Embedded VAB",
+      "Program 3",
+      "Tone 0",
+      "Gain 99.0%",
+      "Project sound restored",
+      "Reverb Off",
+      "Morph Off"
+    ],
+    "transport_observed": {
+      "playing": false,
+      "recording": false
+    },
+    "editor_left_open_on_trial": true,
+    "payload_unchanged": true,
+    "embedded_vab_unchanged": true,
+    "saved_candidate": {
+      "file": "/Users/kyorohiro/development8/wfm/hello_ymfm/w/tetorica-spu-plugin/build/au-loop-update-nu3dlwkx/spu-loop-restore-check.band/Alternatives/000/ProjectData",
+      "xml_offset": 118729,
+      "xml_end": 125744,
+      "xml_bytes": 7015,
+      "xml_sha256": "c34e84ce1aca29d62c2bea3420daab8daa6a3be2a942f99aeb34a0bf48c9eae2",
+      "au_identity": {
+        "type": 1635085685,
+        "subtype": 1416851573,
+        "manufacturer": 1415935090
+      },
+      "au_version": 256,
+      "payload_bytes": 4768,
+      "payload_sha256": "35a6b2cd76ff553bd121a87b5a46513cbb78b953da1f673cedd863447fb33e1c",
+      "schema": 9,
+      "kind": "VAB",
+      "program": 3,
+      "tone": 0,
+      "gain_percent": 99.0,
+      "envelope": {
+        "enabled": false,
+        "live": true,
+        "adsr1": 15,
+        "adsr2": 8128
+      },
+      "reverb": {
+        "preset": 0,
+        "enabled": false,
+        "use_tone_send": false,
+        "volume_left": 0.25,
+        "volume_right": 0.25
+      },
+      "noise": {
+        "enabled": false,
+        "clock": 48
+      },
+      "pmon": {
+        "enabled": false,
+        "waveform": 0,
+        "ratio": 1.0,
+        "depth": 0.5,
+        "decay_ms": 500.0
+      },
+      "morph": {
+        "enabled": false,
+        "amount": 0.0,
+        "samples_per_endpoint": 112,
+        "a_sha256": "f3f9596f36e620c8f5df26fef003fac2f171e1e049941cfd0133f1e73927eeaa",
+        "b_sha256": "77e744eb44c7265565fa738c33e54b6997fe231e9c60bb61e3be20859ccf5264"
+      },
+      "adpcm_sample": null,
+      "software_pcm_sample": null,
+      "bank_bytes": 3744,
+      "bank_sha256": "71a7de205c0ebe1b8743288d90cd3b0204da9bd81aed9159af31f404d7cf2be6",
+      "pcm_samples": null,
+      "pcm_sha256": null,
+      "matches_expected": true
+    },
+    "state_inspector_scope": "Observed AU XML fragments and exact embedded bytes only; not a GarageBand container decoder or active-track binding. Raw ADPCM packet structure and metadata are checked; optional PCM is not re-encoded to verify its ADPCM consistency. Software PCM16LE is checked by exact byte count and metadata and hashed without expanding samples. Multiple/history candidates are reported, never silently selected. GUI reopen and audio export verify the active instrument separately.",
+    "active_instrument_evidence": "The read-only XML inspector alone does not establish active binding. GUI reopen screenshots separately show the actual active TetoricaSPU editor and restored P3/T0/Gain99.",
+    "protected_projects": {
+      "known-project": {
+        "project": "/Users/kyorohiro/development8/wfm/hello_ymfm/w/tetorica-spu-plugin/build/spu-vab-check.band",
+        "fileCount": 7,
+        "allFilesAndHashesMatchBefore": true,
+        "files": {
+          "Alternatives/000/DisplayState.plist": {
+            "bytes": 3167,
+            "sha256": "c805602913d032aa63a6436b3daf7912727a4d1c7e85d79a9731e993b76b2d0b"
+          },
+          "Alternatives/000/DisplayStateArchive": {
+            "bytes": 5610,
+            "sha256": "43dbcef56d1a66504503d5f86dd22337682d0ec7f49d1c8573e7f2aa6e94b672"
+          },
+          "Alternatives/000/MetaData.plist": {
+            "bytes": 733,
+            "sha256": "e828be6d50e93a28908aba862e511f1e3c736fe8ed01b1923e3250282c6ad4fb"
+          },
+          "Alternatives/000/ProjectData": {
+            "bytes": 288953,
+            "sha256": "06e788696a268255a6812742db07bcf741d9f45d804975e232a4896cf72e78ee"
+          },
+          "Alternatives/000/WindowImage.jpg": {
+            "bytes": 132573,
+            "sha256": "4ef57d58f29ae1774cf130aa8189c3889bb198cf3e0dc41708588f560bffc83c"
+          },
+          "Resources/ProjectInformation.plist": {
+            "bytes": 218,
+            "sha256": "078f82c873d78abb6a1c7acb7fadf0b877ba605a40a84c52929db0fedc430b15"
+          },
+          "projectData": {
+            "bytes": 169544,
+            "sha256": "b8abb99c1c6e208293ced2a8246573331794a31a4ee0dbdbd8e313ba8f3eae66"
+          }
+        }
+      },
+      "original-project": {
+        "project": "/Users/kyorohiro/development8/wfm/hello_ymfm/w/tetorica-spu-plugin/build/spu-au-check.band",
+        "fileCount": 11,
+        "allFilesAndHashesMatchBefore": true,
+        "files": {
+          "Alternatives/000/Autosave/.dummy": {
+            "bytes": 0,
+            "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+          },
+          "Alternatives/000/Autosave/2026-10-31 10:12:23Z.displayData": {
+            "bytes": 4884,
+            "sha256": "c2b29c82b187b6da04daaf17dbef530296859a95f39bac812a3261fe6c70d7ed"
+          },
+          "Alternatives/000/Autosave/2026-10-31 10:12:23Z.eventData": {
+            "bytes": 392,
+            "sha256": "0c7d3cd92b56d8c216b0b9663c58ef3692eee4ea739e19d1d9d20f0cfb98f63d"
+          },
+          "Alternatives/000/Autosave/2026-10-31 10:12:23Z.songData": {
+            "bytes": 61340,
+            "sha256": "fc19d5172a5a19db59c790fb8bc06e922a5b157b44f99798d77dc7f9cc6e4515"
+          },
+          "Alternatives/000/DisplayState.plist": {
+            "bytes": 2683,
+            "sha256": "fe2af1ddf457b06a4d47e4f34e17773d62963bdc54926a3f8dbd4777a5a56ed1"
+          },
+          "Alternatives/000/DisplayStateArchive": {
+            "bytes": 4884,
+            "sha256": "cc3008d309493456ddac4c78d0597ce13d554f0a35d815edaa14d255db6144f3"
+          },
+          "Alternatives/000/MetaData.plist": {
+            "bytes": 733,
+            "sha256": "e828be6d50e93a28908aba862e511f1e3c736fe8ed01b1923e3250282c6ad4fb"
+          },
+          "Alternatives/000/ProjectData": {
+            "bytes": 234709,
+            "sha256": "95061279acf172082d2f37e03f5ad9d64067f940c5c2c9abc99adda613e76931"
+          },
+          "Alternatives/000/WindowImage.jpg": {
+            "bytes": 132958,
+            "sha256": "6176a5b9e9790b722392e0d80622fa9e4c4fa9087bf99c255cbc6a46159b3bcd"
+          },
+          "Resources/ProjectInformation.plist": {
+            "bytes": 217,
+            "sha256": "2dd01b478b456764e72ddeaaf05479c1f41bf9ab370f2b85bbe0c575430515ab"
+          },
+          "projectData": {
+            "bytes": 169544,
+            "sha256": "b8abb99c1c6e208293ced2a8246573331794a31a4ee0dbdbd8e313ba8f3eae66"
+          }
+        },
+        "all11StartManifestHashesMatch": true
+      }
+    },
+    "initially_open_project": {
+      "path": "/Users/kyorohiro/development8/wfm/hello_ymfm/w/tetorica-spu-plugin/build/software-garageband-r9kkkh93/spu-software-check.band",
+      "pre_save_backup": "/Users/kyorohiro/development8/wfm/hello_ymfm/w/tetorica-spu-plugin/build/au-loop-update-nu3dlwkx/pre-save-open-project.band",
+      "backup_all_files_match_before": true,
+      "saved_before_update_and_when_switching_to_trial": true,
+      "payload_unchanged": true,
+      "scope": "This owned old test copy was intentionally saved. Project/UI/autosave files changed; no claim that the whole saved copy stayed byte-identical. Despite its software-check filename it contains the old demo VAB, not long Software audio."
+    },
+    "scope": "Old schema9 demo-VAB restore; not direct GarageBand loading of a new flag4 loop fixture, Web v2 or long WAV. No playback, recording or physical listening in this checkpoint."
+  },
+  "pending_human": [
+    "Use the actual DAW custom Load sound UI for original flag4/markerless loop material, WAV and Web v2; edit, save/reopen and verify restoration without the original input file.",
+    "Physical listening: loop boundaries, click/noise, latency, PMON/Reverb and long realtime playback.",
+    "Program11 intermediate UI, Tone-only dirty behavior, editor/picker lifecycle and automation recording.",
+    "Review concrete artifacts and remaining validation before deciding on a Preview release."
+  ],
+  "next_code_candidate": "Gain smoothing; TODO only, not implemented in this checkpoint.",
+  "evidence": {
+    "au-integrity.json": {
+      "path": "build/au-loop-update-nu3dlwkx/au-integrity.json",
+      "bytes": 6181,
+      "sha256": "1785da9242902871704972bbf016c1b383ae92b28df2c6272f2c08c324fa2642"
+    },
+    "auval.log": {
+      "path": "build/au-loop-update-nu3dlwkx/auval.log",
+      "bytes": 9427,
+      "sha256": "7ed7ddec6f983de01b5a66bbdd3c3c1609429fffb83124d91295abb6e881c137"
+    },
+    "installed-au-host.log": {
+      "path": "build/au-loop-update-nu3dlwkx/installed-au-host.log",
+      "bytes": 4100,
+      "sha256": "310f1e4bfd019e7dad0b0c33be6ec9f32cf6b042c86d6ec11096e10e36dba42c"
+    },
+    "before.json": {
+      "path": "build/au-loop-update-nu3dlwkx/before.json",
+      "bytes": 6011,
+      "sha256": "e65c7966e41e7710a55fbb01c3d9ee397ca9d7b141ee8ff053c53dd4f6505a5f"
+    },
+    "project-integrity-after-save.json": {
+      "path": "build/au-loop-update-nu3dlwkx/project-integrity-after-save.json",
+      "bytes": 7375,
+      "sha256": "a076cdb707775de0b5bce3d8e7a5f8aa3803b41795846ecb3411635e9a2f823a"
+    },
+    "open-after-save-state.json": {
+      "path": "build/au-loop-update-nu3dlwkx/open-after-save-state.json",
+      "bytes": 3540,
+      "sha256": "8a1ee779f1b2d8675ff2884f4a62221d87e7fe6794aad89075eee6c3076f18d2"
+    },
+    "open-project-after-save.json": {
+      "path": "build/au-loop-update-nu3dlwkx/open-project-after-save.json",
+      "bytes": 1270,
+      "sha256": "8ac73acfac18029b3c51070c504e21963634f18c3a0f8fe22e6fda2e026b42dc"
+    },
+    "trial-before-open-state.json": {
+      "path": "build/au-loop-update-nu3dlwkx/trial-before-open-state.json",
+      "bytes": 3536,
+      "sha256": "1f0bed3a860f92b34e2cfbff559ba1cc0517fecd741e6bdd51fc9d5e1dd2a3fe"
+    },
+    "trial-after-save-state.json": {
+      "path": "build/au-loop-update-nu3dlwkx/trial-after-save-state.json",
+      "bytes": 3536,
+      "sha256": "bb626a972821c4bd7caafd30e5ad1f8c8e980967542db0377e5b209d88f2e86d"
+    },
+    "trial-after-reopen-state.json": {
+      "path": "build/au-loop-update-nu3dlwkx/trial-after-reopen-state.json",
+      "bytes": 3536,
+      "sha256": "bb626a972821c4bd7caafd30e5ad1f8c8e980967542db0377e5b209d88f2e86d"
+    },
+    "restored-before-save.png": {
+      "path": "build/au-loop-update-nu3dlwkx/restored-before-save.png",
+      "bytes": 188187,
+      "sha256": "8f9c41f6a9559b66cacfc417e427f276fb235a1a73ebfea362091b4a243b9629"
+    },
+    "restored-after-reopen.png": {
+      "path": "build/au-loop-update-nu3dlwkx/restored-after-reopen.png",
+      "bytes": 199923,
+      "sha256": "3b72e526772b0fd2c4810395d4525928ea4f534e7e5037bbfe9a3b610c8db8cf"
+    },
+    "trial-before-save.ax.txt": {
+      "path": "build/au-loop-update-nu3dlwkx/trial-before-save.ax.txt",
+      "bytes": 21140,
+      "sha256": "9dd9a6bbd7d4a8be3a8ce47418550897163edac3ddcddcd817c4d45b2b1ac68a"
+    },
+    "restored-after-reopen.ax.txt": {
+      "path": "build/au-loop-update-nu3dlwkx/restored-after-reopen.ax.txt",
+      "bytes": 697,
+      "sha256": "9fbaa8a5b9bc71ba5d22a94d31a7db33776210668a124c6a73733835b9602b83"
+    },
+    "update_manifest": {
+      "path": "build/au-backups/au-update-igtc8_ol/manifest.json",
+      "bytes": 2094,
+      "sha256": "3ce4628b65654738cec0d0601f55a91ff8250b334279ec83e3f6d6f8c9134ba1"
+    }
+  },
+  "evidence_scope": "Local logs, screenshots, project copies and rollback bundles remain under ignored build/. Their hashes are recorded here; these local artifacts are not published by this documentation commit."
+}

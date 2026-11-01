@@ -500,16 +500,17 @@ The ordinary `--install` still refuses a different existing bundle.
 ```sh
 python3 -m unittest discover -s tests -p 'test_install_au.py' -v
 python3 scripts/install_au.py --update \
-  --expected docs/software_audio_20261101.json --backup-root build/au-backups
+  --expected docs/au_loop_update_20261101.json --backup-root build/au-backups
 # Use the printed manifest path to roll back; refuses an altered installation:
 python3 scripts/install_au.py --rollback build/au-backups/au-update-REPLACE/manifest.json
 ```
 
-The [Software audio record](docs/software_audio_20261101.md) contains the
-current installed manifest, backup report and GarageBand restoration result.
-The later [loop compatibility fix](docs/loop_repeat_20261101.md) was tested by
-loading the new build bundles directly; the local installed AU remains the
-Software audio version until an explicit update using the manifest above.
+The [loopfix AU update record](docs/au_loop_update_20261101.md) contains the
+[current installed manifest](docs/au_loop_update_20261101.json), retained backup
+and rollback procedure. The installed AU passed auval and the full AU host
+regressions, including the [loop compatibility fix](docs/loop_repeat_20261101.md).
+A copied GarageBand project also restored its embedded VAB, Program 3, Tone 0
+and Gain 99% after save, full host exit and reopen.
 
 The destination is `~/Library/Audio/Plug-Ins/Components/TetoricaSPU.component`.
 This is an explicit test installation; the normal build still does not deploy.
