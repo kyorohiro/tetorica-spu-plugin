@@ -43,6 +43,20 @@ Gain版installed AUへの退避更新・旧VABの保存再起動も完了した�
 CC120のチャンネル別停止も実装・検証・[CI全2job成功](https://github.com/kyorohiro/tetorica-spu-plugin/actions/runs/41299598667)まで完了した。
 [仕様・配置状況](../cc120_20261101.md)を参照。installed AUはGain版のままで、新CC120はまだ配置していない。
 
+### CC120版AU更新・GarageBand復元の今回の区切り（2026-11-01、作業中）
+
+開始Plugin `476bfa9`、実装`0bb1bb7`、Native SDK `95cf71a`。
+ユーザーの続行指示で、作業前TODOを保存してから配置と検証を行う。
+
+- [ ] installed全5filesを`docs/au_gain_update_20261101.json`へ、新build全5filesを`docs/cc120_20261101.json`のbuild bundleへ照合する。
+- [ ] GarageBandの現在のdocument /再生・録音 /未保存状態を確認し、既知検証copyを保存前に退避する。原本を保持し、hostを保存・終了する。
+- [ ] known manifest一致時だけCC120版AUへ退避更新し、journal /旧新hash /rollback手順を保存する。
+- [ ] installed版のauvalと実AU host検証を行い、チャンネル別CC120・他channel PCM /controller /shared Reverb保持・PMON停止再利用を確認する。
+- [ ] 新しいGarageBand検証copyで旧VAB P3/T0/Gain99 /embedded payloadの復元、保存・完全終了・再起動・editor再表示を確認する。
+- [ ] current installed manifest /検証記録 /再開TODOを更新してcommit /pushする。実GUIボタン・実聴・長時間・実DAW automationの未確認範囲を区別する。
+
+今回は配置と検証のみ。実装 /parameter /state /SDK pin、Web /Tauri /npm /version /tag /公開releaseは変更しない。
+
 ### CC120チャンネル別停止の今回の区切り（2026-11-01、完了）
 
 開始Plugin `faa8922`、Native SDK `95cf71a`。ユーザーの続行指示で、作業前TODOを保存する。

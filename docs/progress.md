@@ -687,3 +687,9 @@
 - 実装`0bb1bb7` exact headの[CI 41299598667](https://github.com/kyorohiro/tetorica-spu-plugin/actions/runs/41299598667)でoffline /macos全2job・全step成功。CIのAU install /auval、VST3 validator・実host、AU実hostも成功した。
 - [仕様・検証・次の配置入口](cc120_20261101.md) /[source・binary・log hash /CI metadata](cc120_20261101.json)を保存。artifact digestは記録したが、artifact /log archiveのdownloadや配布物実行は行っていない。
 - 手元installed AU全5filesはGain版manifestのまま一致。新CC120はsource /workspace bundleにあり、今回installed AUとGarageBandは変更していない。次の入口はknown manifest照合付きAU更新。実GUI全停止button・実聴・長時間・実DAW automation等の人確認TODOを維持した。
+
+## 2026-11-01 JST — CC120版AU更新・GarageBand復元開始
+
+- ユーザーの続行指示で、作業前TODOを保存する。開始`476bfa9`、実装`0bb1bb7`、SDK `95cf71a`。
+- installed Gain版と新buildの既知manifest、現在のhost documentを照合し、保存前copyの退避とhost終了後に更新する。
+- 新しい検証copyで旧VABの保存再起動を確認し、配置manifestとrollback手順を残す。実GUI全停止buttonと実聴等は、成功した確認だけを記録する。
