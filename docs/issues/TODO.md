@@ -44,6 +44,21 @@ CC120のチャンネル別停止も実装・検証・[CI全2job成功](https://g
 [仕様](../cc120_20261101.md)を参照。CC120版installed AUへの退避更新とGarageBand旧VABの保存再起動も完了した。
 [現在の配置・復元記録](../au_cc120_update_20261101.md) /[current installed AU manifest](../au_cc120_update_20261101.json)を参照。
 
+### AUプリセット名・分割VH/VB読込の今回の区切り（2026-11-01、作業中）
+
+開始Plugin `56f6403`、Native SDK `95cf71a`。ユーザーの続行指示で、作業前TODOを保存する。
+
+- [ ] AUのfactory /present preset名とClassInfo保存復元の整合を調べ、既知のpreset-name warningを修正する。独自embedded stateの検証前変更や不正restore時の副作用を加えない。
+- [ ] 実AU hostにpreset名のproperty round-trip・不正state保持の回帰を加え、既存parameter /音源 /state互換を保つ。
+- [ ] workerへ分割VH/VB file読込を追加し、既存parserのbytes・容量検証を再利用する。完全VAB相当のembedded bankへ正規化し、元fileなしで保存復元・Web exportできるようにする。
+- [ ] Load soundでVHまたはVBを選び、対応するもう一方を選択できるようにする。取消 /error /古いdialog callback /editor close時に現音源を保ち、file読込と準備をaudio thread外で行う。
+- [ ] split fixtureと不正 /取消 /世代競合 /容量上限 /embedded保存をunitと実AU/VST3、Standalone UIで検証し、必要なsanitizer /validator /CIを確認する。
+- [ ] 検証後にknown manifest付きAU退避更新とauval warning消失・GarageBand旧project保存再起動を確認する。実DAW独自file panelへAI入力が届かない範囲は未確認として区別する。
+- [ ] 仕様 /制限 /source・binary・log /配置manifestと再開TODOを記録してcommit /pushする。
+
+既存parameter ID0〜25 /state schema9 /Gain範囲 /SDK pinを維持する。
+Web /Tauri /npm /version /tag /公開releaseは今回変更しない。
+
 ### CC120版AU更新・GarageBand復元の今回の区切り（2026-11-01、完了）
 
 開始Plugin `476bfa9`、実装`0bb1bb7`、Native SDK `95cf71a`。

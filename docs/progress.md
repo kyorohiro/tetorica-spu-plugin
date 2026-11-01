@@ -701,3 +701,9 @@
 - 新copy `build/au-cc120-update-v1d1boac/spu-cc120-restore-check.band`を保存・完全終了・再起動し、実AUのEmbedded VAB /P3/T0/Gain99 /Project sound restoredを確認。schema9 payload4768bytes /VAB3744bytes、原本11files /known7filesは不変。
 - [配置・戻し方](au_cc120_update_20261101.md) /[current installed manifest・証跡](au_cc120_update_20261101.json)。開始時Gain検証copyは保存前に全11files退避し、意図的な保存後もpayload一致。新copyのAU editorを表示、再生・録音停止で残した。
 - production source /SDK /version /tag /公開releaseは変更していない。実GUI All sound off・独自Load sound・実聴・長時間・DAW automationは未確認として維持した。
+
+## 2026-11-01 JST — AUプリセット名warningと分割VH/VB UI開始
+
+- ユーザーの続行指示で、開始`56f6403` /SDK `95cf71a`から作業前TODOを保存する。
+- AU preset-name warningをproperty検査付きで修正し、続いてworkerとLoad soundへ分割VH/VBを追加する。embedded bank /state /既存音色を保持し、取消・不正・古いcallbackを検証する。
+- build /実host /CI後にmanifest照合付きAU更新とGarageBand旧project復元を進める。実DAW独自file panelのAI入力制約と実聴等の未確認範囲は分ける。
