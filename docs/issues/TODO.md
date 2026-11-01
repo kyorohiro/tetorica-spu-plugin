@@ -32,24 +32,34 @@ PCMの4波形・自由描画・Apply / Revertも実装し、実AU/VST3とStandal
 [Morphの記録](../morph_20261101.md)と[保存・更新記録](../morph_20261101.json)を参照。
 Web音色v1の[import](../web_instrument_import_20261101.md)と[export](../web_instrument_export_20261101.md)も完了した。
 WAV素材の読み込み・Root / Playback編集も完了した。[操作・検証記録](../wav_import_20261101.md)を参照。
-現在のinstalled AU manifestは[WAV検証JSON](../wav_import_20261101.json)。
+長いAudio /Software PCMとWeb v2を実装し、実AU/VST3・Web実interop・両repo CI成功済み。
+[操作・検証記録](../software_audio_20261101.md)と[current installed AU manifest](../software_audio_20261101.json)を参照。
 
-### 長いAudio / Software PCMの今回の区切り（2026-11-01、実装前）
+### 長いAudio / Software PCMの今回の区切り（2026-11-01、完了）
 
-- [ ] 既存WAVの入力32MiBを維持し、通常SPU ADPCM容量以内は従来bytesを保つ。超過する素材はmono / 44.1kHz / signed PCM16のSoftware audioへ自動切替し、20MiB級WAVを途中切捨てなく演奏できるようにする。
-- [ ] 保持PCMは32MiB（16,777,216frames、約6分20秒）、Web v2 JSONは48MiBを独立上限にする。Web側の30分 / 224MiBより小さい対応範囲として明示し、入力サイズ・再標本化後frames・state/base64長を確保前に検証する。
-- [ ] Software audioはPS1物理RAM外のソフト拡張とUIに表示する。Root / One shot / Loop entire sample、元PCM16・signed volume・ADSR / send / nameを保持し、Gaussian / envelope / PMON / ReverbはSPU coreで処理する。
-- [ ] bank0はNoise / PMON、bank1は長PCMへ使う。長PCM中はcycle Morphを実効OffとしてUIから使用不可にし、A/B / Amountとraw authored設定は保持する。Noise優先とPMON12組、Sample24音を維持し、callback内で大PCMを書き換えない。
-- [ ] Native SDKの長音源・低PITCHでEND距離がuint32 overflowする問題を修正し、境界1,048,576frames / PITCH1・one-shot / loopを回帰検証する。SDKをcommit / pushして依存lockとsubmoduleを公開commitへ固定する。新bank API・version/tag/releaseは追加しない。
-- [ ] private immutable PCM storageを共有し、Root / Loop / A/B変更やauthoring snapshotで音声全量をコピーしない。worker以外でdecode / resample / Native大cache準備を行わず、検証目的だけのstate全量encodeとUIのSerialize→decode snapshotを除く。
-- [ ] source kind4 / state schema9へPCM16LEとmetadataを埋め込み、元fileなしでDAW復元する。旧schema1〜8 / legacy、26parameter IDと旧小source上限を維持し、不正入力でactive / pending / scalar値を壊さない。
-- [ ] Web `.spu.json` v2のbase64 PCM16LEを読み書きする。v1は従来8MiB / ADPCM制約を維持する。v2のroot範囲・loop最低4frames・waveform / enabled Morph禁止、名前・JSON深さ / node上限 / duplicate / unknown key・canonical base64を確保前に検証する。
-- [ ] Software sourceのv2 exportは元のPCM16を保持しGainを焼き込まない。Noise / PMON / Morphのmask表現を説明し、長い録音と112cycle Morphを混同しない。file dialog / Cancel / editor close / host restore / latest ticketの既存保証を保つ。
-- [ ] build内に決定的な20MiB fixtureを生成して検証し、大きな録音をgitへ入れない。RT new/delete0・全音源切替・MIDI / FX・state9 / 旧互換・不正入力保持、実AU/VST3の元fileなし復元、実Web reader / Chromium / WebKit往復・ASan・両repo CIを検証する。
-- [ ] StandaloneのSoftware表示 / Root / Loop / 保存 / エラー時保持、installed AUのknown hash退避更新と既存GarageBand保存データを確認し、検証記録と再開TODOをcommit / pushする。AI入力が届かない実DAW独自UI・実聴 / 長時間確認は人のTODOへ区別して残す。
+- [x] 既存WAVの入力32MiBを維持し、通常SPU ADPCM容量以内は従来bytesを保つ。超過する素材はmono / 44.1kHz / signed PCM16のSoftware audioへ自動切替し、20MiB級WAVを途中切捨てなく演奏できるようにする。
+- [x] 保持PCMは32MiB（16,777,216frames、約6分20秒）、Web v2 JSONは48MiBを独立上限にする。Web側の30分 / 224MiBより小さい対応範囲として明示し、入力サイズ・再標本化後frames・state/base64長を確保前に検証する。
+- [x] Software audioはPS1物理RAM外のソフト拡張とUIに表示する。Root / One shot / Loop entire sample、元PCM16・signed volume・ADSR / send / nameを保持し、Gaussian / envelope / PMON / ReverbはSPU coreで処理する。
+- [x] bank0はNoise / PMON、bank1は長PCMへ使う。長PCM中はcycle Morphを実効OffとしてUIから使用不可にし、A/B / Amountとraw authored設定は保持する。Noise優先とPMON12組、Sample24音を維持し、callback内で大PCMを書き換えない。
+- [x] Native SDKの長音源・低PITCHでEND距離がuint32 overflowする問題を修正し、境界1,048,576frames / PITCH1・one-shot / loopを回帰検証する。SDKをcommit / pushして依存lockとsubmoduleを公開commitへ固定する。新bank API・version/tag/releaseは追加しない。
+- [x] private immutable PCM storageを共有し、Root / Loop / A/B変更やauthoring snapshotで音声全量をコピーしない。worker以外でdecode / resample / Native大cache準備を行わず、検証目的だけのstate全量encodeとUIのSerialize→decode snapshotを除く。
+- [x] source kind4 / state schema9へPCM16LEとmetadataを埋め込み、元fileなしでDAW復元する。旧schema1〜8 / legacy、26parameter IDと旧小source上限を維持し、不正入力でactive / pending / scalar値を壊さない。
+- [x] Web `.spu.json` v2のbase64 PCM16LEを読み書きする。v1は従来8MiB / ADPCM制約を維持する。v2のroot範囲・loop最低4frames・waveform / enabled Morph禁止、名前・JSON深さ / node上限 / duplicate / unknown key・canonical base64を確保前に検証する。
+- [x] Software sourceのv2 exportは元のPCM16を保持しGainを焼き込まない。Noise / PMON / Morphのmask表現を説明し、長い録音と112cycle Morphを混同しない。file dialog / Cancel / editor close / host restore / latest ticketの既存保証を保つ。
+- [x] build内に決定的な20MiB fixtureを生成して検証し、大きな録音をgitへ入れない。RT new/delete0・全音源切替・MIDI / FX・state9 / 旧互換・不正入力保持、実AU/VST3の元fileなし復元、実Web reader / Chromium / WebKit往復・ASan・両repo CIを検証する。
+- [x] StandaloneのSoftware表示 / Root / Loop / 保存、worker不正入力時保持、installed AUのknown hash退避更新と既存GarageBand保存データを確認し、検証記録と再開TODOをcommit / pushする。AI入力が届かない実DAW独自UI・実聴 / 長時間確認は人のTODOへ区別して残す。
 
 開始は`a08f670`、main / origin同期・clean tree。更新前installed AU manifestは[WAV記録](../wav_import_20261101.json)。
 AIFF / 圧縮音声 / streaming再生・Morph LFO・外部入力Reverb・Web/Tauri配布とnpm公開は今回追加しない。
+
+実装 `a02ee74`。Offline/macOS24件、ASan/UBSan24件、実AU/VST3・Web2engineの20MiB往復、CI全成功。
+最終監査の持越しNoteOff修正も実host全rateで回帰成功。
+
+**人が再開したとき:**
+
+- [ ] GarageBand AUでWAV /Web v2をLoad soundから直接読み込む。Root/Loop・取消/エラー時保持・保存/再起動・元file移動後の復元を確認する。AIからAU内のfile panelを操作できず、この直接操作は未確認。
+- [ ] 20MiB級素材の実聴、loop seam、PMON/Reverb、長時間再生とautomation録音を確認する。
+- [ ] これらを見てPreview releaseを判断する。実装・CI成功を実聴確認済みとは扱わない。
 
 ### WAV素材読み込みの今回の区切り（2026-11-01、完了）
 
@@ -62,7 +72,7 @@ AIFF / 圧縮音声 / streaming再生・Morph LFO・外部入力Reverb・Web/Tau
 - [x] 共通Load soundへWAVを追加し、既存720×620・Source / ADSR / Reverb・鍵盤を保つ。VAB用Program/Toneの位置をADPCM時はRoot / Playbackへ使い、音声変換と容量超過を明示する。
 - [x] Offline / macOS / ASan・実AU/VST3・validator・CI、Standaloneのfile読込 / root / loop操作、既知AU退避更新と旧GarageBand復元を確認し、検証記録をcommit / pushする。
 - [ ] 人の実聴・長時間使用、最終AUのeditor再表示、実DAW独自WAV読込 / Root / Playback操作とautomation録音を確認する。Standalone UI・実AU/VST3の自動検査・初回WAV対応AUの旧GarageBand復元とは別に記録する。最終AUのeditorはCUA clickでは開けなかった。
-- [ ] 次の区切りで、長いAudioのhost PCM / Web v2を設計する。元PCMの所有権・容量とDAW state上限・旧互換・Noise/PMON/Morph共存を先に決め、既存RAM上限を増やすだけで対応済みにしない。
+- [x] 次の区切りで長いAudioのhost PCM / Web v2を設計・実装した。shared所有権・独立容量上限・state9 /旧互換・Noise/PMON共存・長AudioのMorph使用不可は、上段の[記録](../software_audio_20261101.md)を参照。
 
 開始は`ecd4681`、main / origin同期・clean tree。更新前installed AU manifestは[export記録](../web_instrument_export_20261101.json)。
 WAV実装`af20bcc`、Root表示の境界補正を含む最終`a6f1a2e`、[最終CI両job成功](https://github.com/kyorohiro/tetorica-spu-plugin/actions/runs/41266519833)。Offline / macOS / ASanは各20/20、実AU48k / VST3全3rate・公式validator47/0・auval26params成功。表示補正は実source関数のUBSan極値probeも成功した。
@@ -92,7 +102,7 @@ installed AUを退避更新し、auval26paramsとGarageBand旧schema8 P3/T0/Gain
 
 ### Web音色ファイル読み込みの今回の区切り（2026-11-01、完了）
 
-- [x] Web `.spu.json` version1の通常ADPCM / 112 PCM / Morph音色を読み込む。JSONの構文・schema・全値・sampleとwaveform/Morphの整合性を、現在音源やparameterを変更する前に検証する。version2の長いSoftware audioは明示エラーにする。
+- [x] Web `.spu.json` version1の通常ADPCM / 112 PCM / Morph音色を読み込む。JSONの構文・schema・全値・sampleとwaveform/Morphの整合性を、現在音源やparameterを変更する前に検証する。この区切り時点のversion2は明示エラーとした。現在は上段の長いAudio対応でbounded v2 import/exportを実装済み。
 - [x] 任意ADPCMを保持するimmutable source kindを追加し、元bytes・baseFrequencyHz・loopStart・signed左右volume・source ADSR・reverb sendと任意の元PCMを保存する。Webのpreset.pitchはinspector値として保持し、keyboard音程はWebと同じroot基準にする。
 - [x] parserはサイズ・深さ・配列長を制限し、duplicate / unknown keys・非finite・不正Unicode・不正ADPCMを拒否する。既知のNative repeat flag制限は明示エラーを保ち、黙ってloopやbytesを書き換えない。
 - [x] Reverb / Noise / PMON / Morphを既存26parameterとA/B定義へ対応させる。Webにないplugin Gainは読み込み時の値を保持する。WebとpluginのMorph Off / ADPCM・16bit carrierの違いを説明し、bit完全一致は約束しない。

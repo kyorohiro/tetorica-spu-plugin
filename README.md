@@ -388,7 +388,8 @@ Amount and the raw host enable parameter are retained in DAW state; playback
 ignores that enable parameter until returning to a cycle-capable source.
 The keyboard Morph slider shows N/A. PMON still uses 12 note pairs and Sample
 uses 24 voices. Noise keeps the recording while using its shared generator.
-See the [WAV import record](docs/wav_import_20261101.md).
+See the [WAV import record](docs/wav_import_20261101.md) and
+[Software audio verification](docs/software_audio_20261101.md).
 
 ## Save a sound for the Web Synth
 
@@ -497,12 +498,12 @@ The ordinary `--install` still refuses a different existing bundle.
 ```sh
 python3 -m unittest discover -s tests -p 'test_install_au.py' -v
 python3 scripts/install_au.py --update \
-  --expected docs/wav_import_20261101.json --backup-root build/au-backups
+  --expected docs/software_audio_20261101.json --backup-root build/au-backups
 # Use the printed manifest path to roll back; refuses an altered installation:
 python3 scripts/install_au.py --rollback build/au-backups/au-update-REPLACE/manifest.json
 ```
 
-The [WAV import record](docs/wav_import_20261101.md) contains the
+The [Software audio record](docs/software_audio_20261101.md) contains the
 current installed manifest, backup report and GarageBand restoration result.
 
 The destination is `~/Library/Audio/Plug-Ins/Components/TetoricaSPU.component`.

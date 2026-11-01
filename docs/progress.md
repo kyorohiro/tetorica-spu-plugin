@@ -593,3 +593,12 @@
 - Offline / macOS各24件、ASan/UBSan24件、実AU48k・実VST3全3rate、実Web reader・Chromium/WebKitのsmall/20MiB往復成功。最終監査でSoftware rawMorph自動化時の持越しNoteOff誤破棄を修正し、追加host回帰を実行中。
 - Standaloneで20MiB WAV読込、237.77秒表示、Root C4→A4、全体Loop、Save Web v2と元PCM byte完全一致を確認。実聴は未実施。
 - 既知AUをhash退避付きで更新（journal `au-update-doadghp0`）。AUval / GarageBand旧saved state / 最終CIと記録は続行中。公開release・version/tag・Web/Tauri/npmは変更しない。
+
+## 2026-11-01 JST — 長いAudio完了・CI成功・AU更新 /旧state復元
+
+- 実装 `a02ee74` の[CI 41271743574](https://github.com/kyorohiro/tetorica-spu-plugin/actions/runs/41271743574)はoffline /macos全step成功。Native `997256e`もCI12検証成功。
+- 最終Software rawMorph切替によるcarried NoteOff誤破棄を修正し、実AU48k/VST3全3rateで両方向のrelease一致・無音化を確認。最終macOS24/24、ASan全24＋最終core1成功、Python17、公式validator47/0、auval成功。
+- installed AUは `au-update-doadghp0` でhash退避更新、5files一致。GarageBand旧VAB P3/T0/G99を画面で復元確認し、再保存では4768bytesのschema番号byte8だけが8→9に変更。他payload完全一致、原本11files不変。
+- Standaloneで20MiB WAV・Root/Loop・Save Web v2の元PCM一致、実Web reader /Chromium/WebKitでsmall/20MiBの往復一致も確認。
+- [今回の操作記録](software_audio_20261101.md) / [machine record・current AU manifest](software_audio_20261101.json)。
+- **次:** 人のGarageBand Load sound直接操作・保存再起動・実聴/長時間/automation録音。AU内file panelへのAI入力は確認できず、最後の新しい検証copyはVABのまま、再生/録音停止・editor閉。Preview releaseはこれらの後に判断する。

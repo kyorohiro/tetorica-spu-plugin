@@ -1,0 +1,1203 @@
+{
+  "schema": 1,
+  "date_jst": "2026-11-01",
+  "source_commit": "a02ee740034d55962c5acb201303467138361996",
+  "todo_commit": "cffffe0",
+  "native_commit": "997256ea1ca478f8137224282847db411c5b641e",
+  "scope": {
+    "software_pcm_bytes": 33554432,
+    "software_pcm_frames": 16777216,
+    "web_v1_json_bytes": 8388608,
+    "web_v2_json_bytes": 50331648,
+    "state_bytes": 33555840,
+    "web_full_30_minutes_supported": false,
+    "parameters": 26,
+    "state_schema": 9,
+    "software_source_kind": 4,
+    "cycle_morph_effective": false,
+    "raw_morph_parameters_and_endpoints_retained": true
+  },
+  "verification": {
+    "offline": {
+      "passed": 24,
+      "total": 24,
+      "seconds": 12.39
+    },
+    "macos_final": {
+      "passed": 24,
+      "total": 24,
+      "seconds": 11.24
+    },
+    "asan_ubsan": {
+      "passed": 24,
+      "total": 24,
+      "seconds": 125.35,
+      "scope": "Full pure/native suite before final effectiveMorph getter change; final modified core rerun separately passed. Wrapper carry regression uses actual AU/VST3 below. LeakSanitizer is unavailable on this macOS toolchain."
+    },
+    "asan_final_core": {
+      "passed": 1,
+      "total": 1,
+      "options": "detect_leaks=0:halt_on_error=1 / UBSAN halt_on_error=1",
+      "initial_attempt": "Explicit detect_leaks=1 aborted as unsupported before test execution; repeated with supported options successfully."
+    },
+    "python": {
+      "installer": 11,
+      "garageband_inspector": 6,
+      "passed": 17
+    },
+    "actual_au": {
+      "rates": [
+        48000
+      ],
+      "full_previous_and_new_suites": true,
+      "final_software_suite_and_morph_carried_note_off": true,
+      "large_20MiB_restore_without_source": true
+    },
+    "actual_vst3": {
+      "rates": [
+        44100,
+        48000,
+        96000
+      ],
+      "full_previous_and_new_suites": true,
+      "final_software_suite_and_morph_carried_note_off": true,
+      "large_20MiB_restore_without_source_at_48k": true
+    },
+    "vst3_validator": {
+      "passed": 47,
+      "failed": 0
+    },
+    "auval": true,
+    "callback_cpp_new_delete": 0,
+    "initial_sine_wav_sha256": "7a61b56d356ac198c35808b503cf0b61b55a9547b21770eb2a67c97d0cc4aef3"
+  },
+  "browser": {
+    "startedAt": "2026-11-01T03:48:10.085Z",
+    "scope": "Plugin-generated Web v2, JSON<=48MiB and monoPCM16<=32MiB. Actual Web supports larger inputs; this does not test its full30-minute range. No physical listening or Native/Web rendered-PCM identity claim.",
+    "sources": [
+      {
+        "path": "docs/synth-spu/spu_synth_instrument.js",
+        "sha256": "f18d97276abd98468135e6da3ba5bc191f5286b5fae8e5e2eb52d544b8b5fa5b"
+      },
+      {
+        "path": "docs/synth-spu/spu_synth_long_audio.js",
+        "sha256": "e74c7336cf5b5364c8529b6caf5b0b0796d7ff80bc093d450d74dceee81adc3a"
+      }
+    ],
+    "pure": [
+      {
+        "id": "v2-small",
+        "file": "v2-small.spu.json",
+        "jsonBytes": 9558,
+        "jsonSha256": "2a3eca96fd8c4b8ee90c567f6d5f81b4ae71271c6505667b9f79a6fb78a74120",
+        "metadata": {
+          "schema": "tetorica-spu-synth.instrument",
+          "version": 2,
+          "name": "v2-small",
+          "preset": {
+            "volumeLeft": -0.375,
+            "volumeRight": 0.625,
+            "adsr1": 4660,
+            "adsr2": 15036,
+            "pitch": 1234,
+            "reverb": true
+          },
+          "sample": {
+            "baseFrequencyHz": 261.6255653005986,
+            "loop": true
+          },
+          "reverb": {
+            "preset": "off",
+            "volumeLeft": 0.375,
+            "volumeRight": 0.625
+          },
+          "waveform": null,
+          "pmon": {
+            "enabled": false,
+            "ratio": 2.5,
+            "depth": 0.375,
+            "decayMs": 1250,
+            "waveform": "triangle"
+          },
+          "noise": {
+            "enabled": true,
+            "clock": 17
+          },
+          "morph": {
+            "enabled": false,
+            "amount": 0.375,
+            "a": [
+              0,
+              0.02857142873108387,
+              0.05714285746216774,
+              0.08571428805589676,
+              0.11428571492433548,
+              0.1428571492433548,
+              0.17142857611179352,
+              0.20000000298023224,
+              0.22857142984867096,
+              0.2571428716182709,
+              0.2857142984867096,
+              0.3142857253551483,
+              0.34285715222358704,
+              0.37142857909202576,
+              0.4000000059604645,
+              0.4285714328289032,
+              0.4571428596973419,
+              0.48571428656578064,
+              0.5142857432365417,
+              0.5428571701049805,
+              0.5714285969734192,
+              0.6000000238418579,
+              0.6285714507102966,
+              0.6571428775787354,
+              0.6857143044471741,
+              0.7142857313156128,
+              0.7428571581840515,
+              0.7714285850524902,
+              0.800000011920929,
+              0.7714285850524902,
+              0.7428571581840515,
+              0.7142857313156128,
+              0.6857143044471741,
+              0.6571428775787354,
+              0.6285714507102966,
+              0.6000000238418579,
+              0.5714285969734192,
+              0.5428571701049805,
+              0.5142857432365417,
+              0.48571428656578064,
+              0.4571428596973419,
+              0.4285714328289032,
+              0.4000000059604645,
+              0.37142857909202576,
+              0.34285715222358704,
+              0.3142857253551483,
+              0.2857142984867096,
+              0.2571428716182709,
+              0.22857142984867096,
+              0.20000000298023224,
+              0.17142857611179352,
+              0.1428571492433548,
+              0.11428571492433548,
+              0.08571428805589676,
+              0.05714285746216774,
+              0.02857142873108387,
+              6.237074829292327e-17,
+              -0.02857142873108387,
+              -0.05714285746216774,
+              -0.08571428805589676,
+              -0.11428571492433548,
+              -0.1428571492433548,
+              -0.17142857611179352,
+              -0.20000000298023224,
+              -0.22857142984867096,
+              -0.2571428716182709,
+              -0.2857142984867096,
+              -0.3142857253551483,
+              -0.34285715222358704,
+              -0.37142857909202576,
+              -0.4000000059604645,
+              -0.4285714328289032,
+              -0.4571428596973419,
+              -0.48571428656578064,
+              -0.5142857432365417,
+              -0.5428571701049805,
+              -0.5714285969734192,
+              -0.6000000238418579,
+              -0.6285714507102966,
+              -0.6571428775787354,
+              -0.6857143044471741,
+              -0.7142857313156128,
+              -0.7428571581840515,
+              -0.7714285850524902,
+              -0.800000011920929,
+              -0.7714285850524902,
+              -0.7428571581840515,
+              -0.7142857313156128,
+              -0.6857143044471741,
+              -0.6571428775787354,
+              -0.6285714507102966,
+              -0.6000000238418579,
+              -0.5714285969734192,
+              -0.5428571701049805,
+              -0.5142857432365417,
+              -0.48571428656578064,
+              -0.4571428596973419,
+              -0.4285714328289032,
+              -0.4000000059604645,
+              -0.37142857909202576,
+              -0.34285715222358704,
+              -0.3142857253551483,
+              -0.2857142984867096,
+              -0.2571428716182709,
+              -0.22857142984867096,
+              -0.20000000298023224,
+              -0.17142857611179352,
+              -0.1428571492433548,
+              -0.11428571492433548,
+              -0.08571428805589676,
+              -0.05714285746216774,
+              -0.02857142873108387
+            ],
+            "b": [
+              0.800000011920929,
+              0.800000011920929,
+              0.800000011920929,
+              0.800000011920929,
+              0.800000011920929,
+              0.800000011920929,
+              0.800000011920929,
+              0.800000011920929,
+              0.800000011920929,
+              0.800000011920929,
+              0.800000011920929,
+              0.800000011920929,
+              0.800000011920929,
+              0.800000011920929,
+              0.800000011920929,
+              0.800000011920929,
+              0.800000011920929,
+              0.800000011920929,
+              0.800000011920929,
+              0.800000011920929,
+              0.800000011920929,
+              0.800000011920929,
+              0.800000011920929,
+              0.800000011920929,
+              0.800000011920929,
+              0.800000011920929,
+              0.800000011920929,
+              0.800000011920929,
+              0.800000011920929,
+              0.800000011920929,
+              0.800000011920929,
+              0.800000011920929,
+              0.800000011920929,
+              0.800000011920929,
+              0.800000011920929,
+              0.800000011920929,
+              0.800000011920929,
+              0.800000011920929,
+              0.800000011920929,
+              0.800000011920929,
+              0.800000011920929,
+              0.800000011920929,
+              0.800000011920929,
+              0.800000011920929,
+              0.800000011920929,
+              0.800000011920929,
+              0.800000011920929,
+              0.800000011920929,
+              0.800000011920929,
+              0.800000011920929,
+              0.800000011920929,
+              0.800000011920929,
+              0.800000011920929,
+              0.800000011920929,
+              0.800000011920929,
+              0.800000011920929,
+              -0.800000011920929,
+              -0.800000011920929,
+              -0.800000011920929,
+              -0.800000011920929,
+              -0.800000011920929,
+              -0.800000011920929,
+              -0.800000011920929,
+              -0.800000011920929,
+              -0.800000011920929,
+              -0.800000011920929,
+              -0.800000011920929,
+              -0.800000011920929,
+              -0.800000011920929,
+              -0.800000011920929,
+              -0.800000011920929,
+              -0.800000011920929,
+              -0.800000011920929,
+              -0.800000011920929,
+              -0.800000011920929,
+              -0.800000011920929,
+              -0.800000011920929,
+              -0.800000011920929,
+              -0.800000011920929,
+              -0.800000011920929,
+              -0.800000011920929,
+              -0.800000011920929,
+              -0.800000011920929,
+              -0.800000011920929,
+              -0.800000011920929,
+              -0.800000011920929,
+              -0.800000011920929,
+              -0.800000011920929,
+              -0.800000011920929,
+              -0.800000011920929,
+              -0.800000011920929,
+              -0.800000011920929,
+              -0.800000011920929,
+              -0.800000011920929,
+              -0.800000011920929,
+              -0.800000011920929,
+              -0.800000011920929,
+              -0.800000011920929,
+              -0.800000011920929,
+              -0.800000011920929,
+              -0.800000011920929,
+              -0.800000011920929,
+              -0.800000011920929,
+              -0.800000011920929,
+              -0.800000011920929,
+              -0.800000011920929,
+              -0.800000011920929,
+              -0.800000011920929,
+              -0.800000011920929,
+              -0.800000011920929,
+              -0.800000011920929,
+              -0.800000011920929
+            ]
+          }
+        },
+        "frames": 1120,
+        "pcm16Sha256": "70d9017b15488c2b8717c7c787e4c7b4e0458155cfee2cecf721b6672de3a730",
+        "passed": true
+      },
+      {
+        "id": "v2-20MiB",
+        "file": "v2-20MiB.spu.json",
+        "jsonBytes": 27968599,
+        "jsonSha256": "d775c0cc78a92e15f0e5e924ccba56a659d6443efcaa4b169d054bbca9d9fed4",
+        "metadata": {
+          "schema": "tetorica-spu-synth.instrument",
+          "version": 2,
+          "name": "v2-20MiB",
+          "preset": {
+            "volumeLeft": -0.375,
+            "volumeRight": 0.625,
+            "adsr1": 4660,
+            "adsr2": 15036,
+            "pitch": 1234,
+            "reverb": true
+          },
+          "sample": {
+            "baseFrequencyHz": 261.6255653005986,
+            "loop": true
+          },
+          "reverb": {
+            "preset": "off",
+            "volumeLeft": 0.375,
+            "volumeRight": 0.625
+          },
+          "waveform": null,
+          "pmon": {
+            "enabled": false,
+            "ratio": 2.5,
+            "depth": 0.375,
+            "decayMs": 1250,
+            "waveform": "triangle"
+          },
+          "noise": {
+            "enabled": false,
+            "clock": 17
+          },
+          "morph": {
+            "enabled": false,
+            "amount": 0.375,
+            "a": [
+              0,
+              0.02857142873108387,
+              0.05714285746216774,
+              0.08571428805589676,
+              0.11428571492433548,
+              0.1428571492433548,
+              0.17142857611179352,
+              0.20000000298023224,
+              0.22857142984867096,
+              0.2571428716182709,
+              0.2857142984867096,
+              0.3142857253551483,
+              0.34285715222358704,
+              0.37142857909202576,
+              0.4000000059604645,
+              0.4285714328289032,
+              0.4571428596973419,
+              0.48571428656578064,
+              0.5142857432365417,
+              0.5428571701049805,
+              0.5714285969734192,
+              0.6000000238418579,
+              0.6285714507102966,
+              0.6571428775787354,
+              0.6857143044471741,
+              0.7142857313156128,
+              0.7428571581840515,
+              0.7714285850524902,
+              0.800000011920929,
+              0.7714285850524902,
+              0.7428571581840515,
+              0.7142857313156128,
+              0.6857143044471741,
+              0.6571428775787354,
+              0.6285714507102966,
+              0.6000000238418579,
+              0.5714285969734192,
+              0.5428571701049805,
+              0.5142857432365417,
+              0.48571428656578064,
+              0.4571428596973419,
+              0.4285714328289032,
+              0.4000000059604645,
+              0.37142857909202576,
+              0.34285715222358704,
+              0.3142857253551483,
+              0.2857142984867096,
+              0.2571428716182709,
+              0.22857142984867096,
+              0.20000000298023224,
+              0.17142857611179352,
+              0.1428571492433548,
+              0.11428571492433548,
+              0.08571428805589676,
+              0.05714285746216774,
+              0.02857142873108387,
+              6.237074829292327e-17,
+              -0.02857142873108387,
+              -0.05714285746216774,
+              -0.08571428805589676,
+              -0.11428571492433548,
+              -0.1428571492433548,
+              -0.17142857611179352,
+              -0.20000000298023224,
+              -0.22857142984867096,
+              -0.2571428716182709,
+              -0.2857142984867096,
+              -0.3142857253551483,
+              -0.34285715222358704,
+              -0.37142857909202576,
+              -0.4000000059604645,
+              -0.4285714328289032,
+              -0.4571428596973419,
+              -0.48571428656578064,
+              -0.5142857432365417,
+              -0.5428571701049805,
+              -0.5714285969734192,
+              -0.6000000238418579,
+              -0.6285714507102966,
+              -0.6571428775787354,
+              -0.6857143044471741,
+              -0.7142857313156128,
+              -0.7428571581840515,
+              -0.7714285850524902,
+              -0.800000011920929,
+              -0.7714285850524902,
+              -0.7428571581840515,
+              -0.7142857313156128,
+              -0.6857143044471741,
+              -0.6571428775787354,
+              -0.6285714507102966,
+              -0.6000000238418579,
+              -0.5714285969734192,
+              -0.5428571701049805,
+              -0.5142857432365417,
+              -0.48571428656578064,
+              -0.4571428596973419,
+              -0.4285714328289032,
+              -0.4000000059604645,
+              -0.37142857909202576,
+              -0.34285715222358704,
+              -0.3142857253551483,
+              -0.2857142984867096,
+              -0.2571428716182709,
+              -0.22857142984867096,
+              -0.20000000298023224,
+              -0.17142857611179352,
+              -0.1428571492433548,
+              -0.11428571492433548,
+              -0.08571428805589676,
+              -0.05714285746216774,
+              -0.02857142873108387
+            ],
+            "b": [
+              0.800000011920929,
+              0.800000011920929,
+              0.800000011920929,
+              0.800000011920929,
+              0.800000011920929,
+              0.800000011920929,
+              0.800000011920929,
+              0.800000011920929,
+              0.800000011920929,
+              0.800000011920929,
+              0.800000011920929,
+              0.800000011920929,
+              0.800000011920929,
+              0.800000011920929,
+              0.800000011920929,
+              0.800000011920929,
+              0.800000011920929,
+              0.800000011920929,
+              0.800000011920929,
+              0.800000011920929,
+              0.800000011920929,
+              0.800000011920929,
+              0.800000011920929,
+              0.800000011920929,
+              0.800000011920929,
+              0.800000011920929,
+              0.800000011920929,
+              0.800000011920929,
+              0.800000011920929,
+              0.800000011920929,
+              0.800000011920929,
+              0.800000011920929,
+              0.800000011920929,
+              0.800000011920929,
+              0.800000011920929,
+              0.800000011920929,
+              0.800000011920929,
+              0.800000011920929,
+              0.800000011920929,
+              0.800000011920929,
+              0.800000011920929,
+              0.800000011920929,
+              0.800000011920929,
+              0.800000011920929,
+              0.800000011920929,
+              0.800000011920929,
+              0.800000011920929,
+              0.800000011920929,
+              0.800000011920929,
+              0.800000011920929,
+              0.800000011920929,
+              0.800000011920929,
+              0.800000011920929,
+              0.800000011920929,
+              0.800000011920929,
+              0.800000011920929,
+              -0.800000011920929,
+              -0.800000011920929,
+              -0.800000011920929,
+              -0.800000011920929,
+              -0.800000011920929,
+              -0.800000011920929,
+              -0.800000011920929,
+              -0.800000011920929,
+              -0.800000011920929,
+              -0.800000011920929,
+              -0.800000011920929,
+              -0.800000011920929,
+              -0.800000011920929,
+              -0.800000011920929,
+              -0.800000011920929,
+              -0.800000011920929,
+              -0.800000011920929,
+              -0.800000011920929,
+              -0.800000011920929,
+              -0.800000011920929,
+              -0.800000011920929,
+              -0.800000011920929,
+              -0.800000011920929,
+              -0.800000011920929,
+              -0.800000011920929,
+              -0.800000011920929,
+              -0.800000011920929,
+              -0.800000011920929,
+              -0.800000011920929,
+              -0.800000011920929,
+              -0.800000011920929,
+              -0.800000011920929,
+              -0.800000011920929,
+              -0.800000011920929,
+              -0.800000011920929,
+              -0.800000011920929,
+              -0.800000011920929,
+              -0.800000011920929,
+              -0.800000011920929,
+              -0.800000011920929,
+              -0.800000011920929,
+              -0.800000011920929,
+              -0.800000011920929,
+              -0.800000011920929,
+              -0.800000011920929,
+              -0.800000011920929,
+              -0.800000011920929,
+              -0.800000011920929,
+              -0.800000011920929,
+              -0.800000011920929,
+              -0.800000011920929,
+              -0.800000011920929,
+              -0.800000011920929,
+              -0.800000011920929,
+              -0.800000011920929,
+              -0.800000011920929
+            ]
+          }
+        },
+        "frames": 10485760,
+        "pcm16Sha256": "fd0a851b185e61d357568ccef90c209b9e5e07c1de2cb1d6b8800b6398459479",
+        "passed": true
+      }
+    ],
+    "browsers": [
+      {
+        "engine": "chromium",
+        "id": "v2-small",
+        "frames": 1120,
+        "pcm16Sha256": "70d9017b15488c2b8717c7c787e4c7b4e0458155cfee2cecf721b6672de3a730",
+        "metadataExact": true,
+        "physicalOutputMuted": true,
+        "savedFromActualEngine": true,
+        "passed": true
+      },
+      {
+        "engine": "chromium",
+        "id": "v2-20MiB",
+        "frames": 10485760,
+        "pcm16Sha256": "fd0a851b185e61d357568ccef90c209b9e5e07c1de2cb1d6b8800b6398459479",
+        "metadataExact": true,
+        "physicalOutputMuted": true,
+        "savedFromActualEngine": true,
+        "passed": true
+      },
+      {
+        "engine": "webkit",
+        "id": "v2-small",
+        "frames": 1120,
+        "pcm16Sha256": "70d9017b15488c2b8717c7c787e4c7b4e0458155cfee2cecf721b6672de3a730",
+        "metadataExact": true,
+        "physicalOutputMuted": true,
+        "savedFromActualEngine": true,
+        "passed": true
+      },
+      {
+        "engine": "webkit",
+        "id": "v2-20MiB",
+        "frames": 10485760,
+        "pcm16Sha256": "fd0a851b185e61d357568ccef90c209b9e5e07c1de2cb1d6b8800b6398459479",
+        "metadataExact": true,
+        "physicalOutputMuted": true,
+        "savedFromActualEngine": true,
+        "passed": true
+      }
+    ],
+    "passed": true,
+    "completedAt": "2026-11-01T03:48:15.470Z"
+  },
+  "ci": {
+    "recordVersion": 1,
+    "repository": "kyorohiro/tetorica-spu-plugin",
+    "scope": "GitHub Actions metadata only. No job-log API, artifact download, installation, tag or release publication performed.",
+    "sourceCommit": "a02ee740034d55962c5acb201303467138361996",
+    "run": {
+      "conclusion": "success",
+      "created_at": "2026-11-01T04:06:08Z",
+      "head_sha": "a02ee740034d55962c5acb201303467138361996",
+      "html_url": "https://github.com/kyorohiro/tetorica-spu-plugin/actions/runs/41271743574",
+      "id": 41271743574,
+      "run_attempt": 1,
+      "run_started_at": "2026-11-01T04:06:08Z",
+      "status": "completed",
+      "updated_at": "2026-11-01T04:11:10Z"
+    },
+    "jobs": [
+      {
+        "completed_at": "2026-11-01T04:11:09Z",
+        "conclusion": "success",
+        "id": 124745745389,
+        "labels": [
+          "macos-15"
+        ],
+        "name": "macos",
+        "started_at": "2026-11-01T04:06:12Z",
+        "status": "completed",
+        "steps": [
+          {
+            "completed_at": "2026-11-01T04:06:14Z",
+            "conclusion": "success",
+            "name": "Set up job",
+            "number": 1,
+            "started_at": "2026-11-01T04:06:13Z",
+            "status": "completed"
+          },
+          {
+            "completed_at": "2026-11-01T04:06:16Z",
+            "conclusion": "success",
+            "name": "Run actions/checkout@v4",
+            "number": 2,
+            "started_at": "2026-11-01T04:06:14Z",
+            "status": "completed"
+          },
+          {
+            "completed_at": "2026-11-01T04:06:17Z",
+            "conclusion": "success",
+            "name": "Verify safe AU installer in temporary directories",
+            "number": 3,
+            "started_at": "2026-11-01T04:06:16Z",
+            "status": "completed"
+          },
+          {
+            "completed_at": "2026-11-01T04:06:19Z",
+            "conclusion": "success",
+            "name": "Verify bounded GarageBand state inspection",
+            "number": 4,
+            "started_at": "2026-11-01T04:06:17Z",
+            "status": "completed"
+          },
+          {
+            "completed_at": "2026-11-01T04:06:31Z",
+            "conclusion": "success",
+            "name": "Initialize and verify pinned dependencies",
+            "number": 5,
+            "started_at": "2026-11-01T04:06:19Z",
+            "status": "completed"
+          },
+          {
+            "completed_at": "2026-11-01T04:06:31Z",
+            "conclusion": "success",
+            "name": "Run python3 scripts/bootstrap.py --check",
+            "number": 6,
+            "started_at": "2026-11-01T04:06:31Z",
+            "status": "completed"
+          },
+          {
+            "completed_at": "2026-11-01T04:06:41Z",
+            "conclusion": "success",
+            "name": "Run cmake --preset macos",
+            "number": 7,
+            "started_at": "2026-11-01T04:06:31Z",
+            "status": "completed"
+          },
+          {
+            "completed_at": "2026-11-01T04:09:38Z",
+            "conclusion": "success",
+            "name": "Run cmake --build --preset macos --parallel 4",
+            "number": 8,
+            "started_at": "2026-11-01T04:06:41Z",
+            "status": "completed"
+          },
+          {
+            "completed_at": "2026-11-01T04:09:49Z",
+            "conclusion": "success",
+            "name": "Run ctest --preset macos",
+            "number": 9,
+            "started_at": "2026-11-01T04:09:38Z",
+            "status": "completed"
+          },
+          {
+            "completed_at": "2026-11-01T04:09:56Z",
+            "conclusion": "success",
+            "name": "Install and validate the user AU",
+            "number": 10,
+            "started_at": "2026-11-01T04:09:49Z",
+            "status": "completed"
+          },
+          {
+            "completed_at": "2026-11-01T04:10:31Z",
+            "conclusion": "success",
+            "name": "Validate VST3",
+            "number": 11,
+            "started_at": "2026-11-01T04:09:56Z",
+            "status": "completed"
+          },
+          {
+            "completed_at": "2026-11-01T04:10:58Z",
+            "conclusion": "success",
+            "name": "Render and restore the actual VST3",
+            "number": 12,
+            "started_at": "2026-11-01T04:10:31Z",
+            "status": "completed"
+          },
+          {
+            "completed_at": "2026-11-01T04:11:01Z",
+            "conclusion": "success",
+            "name": "Restore embedded state in the actual AU",
+            "number": 13,
+            "started_at": "2026-11-01T04:10:58Z",
+            "status": "completed"
+          },
+          {
+            "completed_at": "2026-11-01T04:11:04Z",
+            "conclusion": "success",
+            "name": "Run actions/upload-artifact@v4",
+            "number": 14,
+            "started_at": "2026-11-01T04:11:01Z",
+            "status": "completed"
+          },
+          {
+            "completed_at": "2026-11-01T04:11:05Z",
+            "conclusion": "success",
+            "name": "Post Run actions/checkout@v4",
+            "number": 28,
+            "started_at": "2026-11-01T04:11:04Z",
+            "status": "completed"
+          },
+          {
+            "completed_at": "2026-11-01T04:11:07Z",
+            "conclusion": "success",
+            "name": "Complete job",
+            "number": 29,
+            "started_at": "2026-11-01T04:11:05Z",
+            "status": "completed"
+          }
+        ]
+      },
+      {
+        "completed_at": "2026-11-01T04:07:33Z",
+        "conclusion": "success",
+        "id": 124745745511,
+        "labels": [
+          "ubuntu-24.04"
+        ],
+        "name": "offline",
+        "started_at": "2026-11-01T04:06:12Z",
+        "status": "completed",
+        "steps": [
+          {
+            "completed_at": "2026-11-01T04:06:13Z",
+            "conclusion": "success",
+            "name": "Set up job",
+            "number": 1,
+            "started_at": "2026-11-01T04:06:13Z",
+            "status": "completed"
+          },
+          {
+            "completed_at": "2026-11-01T04:06:15Z",
+            "conclusion": "success",
+            "name": "Run actions/checkout@v4",
+            "number": 2,
+            "started_at": "2026-11-01T04:06:13Z",
+            "status": "completed"
+          },
+          {
+            "completed_at": "2026-11-01T04:06:15Z",
+            "conclusion": "success",
+            "name": "Verify safe AU installer in temporary directories",
+            "number": 3,
+            "started_at": "2026-11-01T04:06:15Z",
+            "status": "completed"
+          },
+          {
+            "completed_at": "2026-11-01T04:06:17Z",
+            "conclusion": "success",
+            "name": "Verify bounded GarageBand state inspection",
+            "number": 4,
+            "started_at": "2026-11-01T04:06:15Z",
+            "status": "completed"
+          },
+          {
+            "completed_at": "2026-11-01T04:06:21Z",
+            "conclusion": "success",
+            "name": "Initialize pinned native SDK and JSON header",
+            "number": 5,
+            "started_at": "2026-11-01T04:06:17Z",
+            "status": "completed"
+          },
+          {
+            "completed_at": "2026-11-01T04:06:24Z",
+            "conclusion": "success",
+            "name": "Run cmake --preset offline",
+            "number": 6,
+            "started_at": "2026-11-01T04:06:21Z",
+            "status": "completed"
+          },
+          {
+            "completed_at": "2026-11-01T04:07:20Z",
+            "conclusion": "success",
+            "name": "Run cmake --build --preset offline --parallel 4",
+            "number": 7,
+            "started_at": "2026-11-01T04:06:24Z",
+            "status": "completed"
+          },
+          {
+            "completed_at": "2026-11-01T04:07:30Z",
+            "conclusion": "success",
+            "name": "Run ctest --preset offline",
+            "number": 8,
+            "started_at": "2026-11-01T04:07:20Z",
+            "status": "completed"
+          },
+          {
+            "completed_at": "2026-11-01T04:07:30Z",
+            "conclusion": "success",
+            "name": "Post Run actions/checkout@v4",
+            "number": 16,
+            "started_at": "2026-11-01T04:07:30Z",
+            "status": "completed"
+          },
+          {
+            "completed_at": "2026-11-01T04:07:31Z",
+            "conclusion": "success",
+            "name": "Complete job",
+            "number": 17,
+            "started_at": "2026-11-01T04:07:30Z",
+            "status": "completed"
+          }
+        ]
+      }
+    ],
+    "artifacts": [
+      {
+        "created_at": "2026-11-01T04:11:04Z",
+        "digest": "sha256:a3857e0232f46086f080fdf45f14f34bf992ebbf2c268b1946b8fe351fcede29",
+        "expired": false,
+        "expires_at": "2027-01-30T04:06:08Z",
+        "id": 13069163186,
+        "name": "macos-development-bundles",
+        "size_in_bytes": 2663563,
+        "updated_at": "2026-11-01T04:11:04Z"
+      }
+    ],
+    "result": {
+      "successfulJobs": 2,
+      "failedSteps": [],
+      "allRecordedJobStepsCompletedSuccessfully": true
+    },
+    "logEvidence": {
+      "status": "not requested",
+      "reason": "Successful workflow/job/step metadata is retained. No job logs were needed; individual installer/CTest/auval/validator/audio PASS counts are not independently asserted from logs in this record."
+    }
+  },
+  "native_ci": {
+    "run_url": "https://github.com/kyorohiro/tetorica-soundchip-native/actions/runs/41269354131",
+    "passed": 12,
+    "tag_release_job": "skipped, no tag"
+  },
+  "standalone": {
+    "source": "final feature UI before wrapper carry / loading-status wording fix; controls and export behavior unchanged by those fixes",
+    "wav_bytes": 20971520,
+    "frames": 10485738,
+    "seconds": 237.77183673469386,
+    "software_label": true,
+    "physical_spu_ram_extension_explained": true,
+    "morph_unavailable": true,
+    "keyboard_morph_status": "N/A",
+    "root_C4_to_A4": true,
+    "entire_loop": true,
+    "save_web_file": "build/software-audio-cases/standalone-long-loop.spu.json",
+    "export_version": 2,
+    "export_loop": true,
+    "export_root_hz": 261.6255653005986,
+    "export_bytes": 27968626,
+    "export_sha256": "8b17f384fb8222c43d06a4b0415d90ecec5bad6b145317e87637140e6a221917",
+    "pcm16le_sha256": "d9b7a79dfeae60d6ede8154ed4fa14415ca54f6e3370434d5f88581857b8ca90",
+    "pcm_matches_original_wav_data": true,
+    "physical_listening": false
+  },
+  "au": {
+    "file_sha256": {
+      "Contents/Info.plist": "94a46fcfc638d76a05aca50d5deedaff2a7a934aee55a816d007b6dff9c9bbc4",
+      "Contents/MacOS/TetoricaSPU": "b46c3150a8c1b5a0c22ce41fce78bc04d38b39a8442f99392bf03ed5d585ea7f",
+      "Contents/PkgInfo": "d06a80ba92de0833d0ed03de1b02b7c8913f126d9e8c8931b190765dd5d83b11",
+      "Contents/Resources/Roboto-Regular.ttf": "b2efabca5ea4bc56eea829713706b5cd0788b82aca153bd4adde9b1573933b4f",
+      "Contents/Resources/THIRD_PARTY_NOTICES.txt": "d26ed5d113ec81968e0f1c41560491631e9c77c5bddf6ad6608dbf8697ce5dcf"
+    },
+    "source": "/Users/kyorohiro/development8/wfm/hello_ymfm/w/tetorica-spu-plugin/build/macos/out/TetoricaSPU.component",
+    "destination": "/Users/kyorohiro/Library/Audio/Plug-Ins/Components/TetoricaSPU.component",
+    "update_manifest": "/Users/kyorohiro/development8/wfm/hello_ymfm/w/tetorica-spu-plugin/build/au-backups/au-update-doadghp0/manifest.json",
+    "backup_component": "/Users/kyorohiro/development8/wfm/hello_ymfm/w/tetorica-spu-plugin/build/au-backups/au-update-doadghp0/previous.component",
+    "previous_file_sha256": {
+      "Contents/Info.plist": "94a46fcfc638d76a05aca50d5deedaff2a7a934aee55a816d007b6dff9c9bbc4",
+      "Contents/MacOS/TetoricaSPU": "ab32cbb34b23441053b92238fd3cd7e86fcc7ef379ab40371711725ee03d2055",
+      "Contents/PkgInfo": "d06a80ba92de0833d0ed03de1b02b7c8913f126d9e8c8931b190765dd5d83b11",
+      "Contents/Resources/Roboto-Regular.ttf": "b2efabca5ea4bc56eea829713706b5cd0788b82aca153bd4adde9b1573933b4f",
+      "Contents/Resources/THIRD_PARTY_NOTICES.txt": "d26ed5d113ec81968e0f1c41560491631e9c77c5bddf6ad6608dbf8697ce5dcf"
+    },
+    "archive_matches_backup": true,
+    "workspace_matches_installed": true,
+    "expected_previous_record": "docs/wav_import_20261101.json"
+  },
+  "garageband": {
+    "old_project": "build/spu-vab-check.band",
+    "original_unchanged_project": "build/spu-au-check.band",
+    "original_files_unchanged": 11,
+    "preupdate_copy_backup": "build/software-garageband-backup-jozarrje/spu-vab-check.band",
+    "ui_after_installed_update": {
+      "restored": true,
+      "program": 3,
+      "tone": 0,
+      "gain_percent": 99
+    },
+    "saved_vab_migration": {
+      "old": {
+        "file": "build/spu-vab-check.band/Alternatives/000/ProjectData",
+        "xml_offset": 118729,
+        "xml_end": 125744,
+        "xml_bytes": 7015,
+        "xml_sha256": "07b0aac7c0d103ff6da0cfb8fd4ef15f306406fd8a945667929917aaf26b0150",
+        "au_identity": {
+          "type": 1635085685,
+          "subtype": 1416851573,
+          "manufacturer": 1415935090
+        },
+        "au_version": 256,
+        "payload_bytes": 4768,
+        "payload_sha256": "477fd0b00a6b7170fb6ef6c6e525ddce80d9a664c21dd4622ad4efd84340e534",
+        "schema": 8,
+        "kind": "VAB",
+        "program": 3,
+        "tone": 0,
+        "gain_percent": 99.0,
+        "envelope": {
+          "enabled": false,
+          "live": true,
+          "adsr1": 15,
+          "adsr2": 8128
+        },
+        "reverb": {
+          "preset": 0,
+          "enabled": false,
+          "use_tone_send": false,
+          "volume_left": 0.25,
+          "volume_right": 0.25
+        },
+        "noise": {
+          "enabled": false,
+          "clock": 48
+        },
+        "pmon": {
+          "enabled": false,
+          "waveform": 0,
+          "ratio": 1.0,
+          "depth": 0.5,
+          "decay_ms": 500.0
+        },
+        "morph": {
+          "enabled": false,
+          "amount": 0.0,
+          "samples_per_endpoint": 112,
+          "a_sha256": "f3f9596f36e620c8f5df26fef003fac2f171e1e049941cfd0133f1e73927eeaa",
+          "b_sha256": "77e744eb44c7265565fa738c33e54b6997fe231e9c60bb61e3be20859ccf5264"
+        },
+        "adpcm_sample": null,
+        "bank_bytes": 3744,
+        "bank_sha256": "71a7de205c0ebe1b8743288d90cd3b0204da9bd81aed9159af31f404d7cf2be6",
+        "pcm_samples": null,
+        "pcm_sha256": null,
+        "matches_expected": true
+      },
+      "new": {
+        "file": "build/spu-vab-check.band/Alternatives/000/ProjectData",
+        "xml_offset": 118729,
+        "xml_end": 125744,
+        "xml_bytes": 7015,
+        "xml_sha256": "c34e84ce1aca29d62c2bea3420daab8daa6a3be2a942f99aeb34a0bf48c9eae2",
+        "au_identity": {
+          "type": 1635085685,
+          "subtype": 1416851573,
+          "manufacturer": 1415935090
+        },
+        "au_version": 256,
+        "payload_bytes": 4768,
+        "payload_sha256": "35a6b2cd76ff553bd121a87b5a46513cbb78b953da1f673cedd863447fb33e1c",
+        "schema": 9,
+        "kind": "VAB",
+        "program": 3,
+        "tone": 0,
+        "gain_percent": 99.0,
+        "envelope": {
+          "enabled": false,
+          "live": true,
+          "adsr1": 15,
+          "adsr2": 8128
+        },
+        "reverb": {
+          "preset": 0,
+          "enabled": false,
+          "use_tone_send": false,
+          "volume_left": 0.25,
+          "volume_right": 0.25
+        },
+        "noise": {
+          "enabled": false,
+          "clock": 48
+        },
+        "pmon": {
+          "enabled": false,
+          "waveform": 0,
+          "ratio": 1.0,
+          "depth": 0.5,
+          "decay_ms": 500.0
+        },
+        "morph": {
+          "enabled": false,
+          "amount": 0.0,
+          "samples_per_endpoint": 112,
+          "a_sha256": "f3f9596f36e620c8f5df26fef003fac2f171e1e049941cfd0133f1e73927eeaa",
+          "b_sha256": "77e744eb44c7265565fa738c33e54b6997fe231e9c60bb61e3be20859ccf5264"
+        },
+        "adpcm_sample": null,
+        "software_pcm_sample": null,
+        "bank_bytes": 3744,
+        "bank_sha256": "71a7de205c0ebe1b8743288d90cd3b0204da9bd81aed9159af31f404d7cf2be6",
+        "pcm_samples": null,
+        "pcm_sha256": null,
+        "matches_expected": true
+      },
+      "same_length": true,
+      "changed_byte_offsets": [
+        8
+      ]
+    },
+    "extra_owned_test_copy": "build/software-garageband-r9kkkh93/spu-software-check.band",
+    "extra_copy_source": "VAB Program3/Tone0/Gain99, not long audio",
+    "long_audio_custom_load_status": "AI click did not expose an operable file panel; no long-audio GarageBand GUI load/save claim",
+    "final_state": "GarageBand main window on extra owned copy, playback0/record0, AU editor closed, Standalone quit"
+  },
+  "pending_human": [
+    "GarageBand AU custom Load sound for WAV/Web v2, Root/Loop, save/restart with original file moved, and cancelled/invalid picker behavior",
+    "Physical listening: root/transposition, loop seam, PMON/Reverb and long real-time playback",
+    "DAW automation recording and tone/source-only dirty behavior"
+  ],
+  "log_evidence": {
+    "build/software-offline-ctest.log": {
+      "bytes": 2698,
+      "sha256": "6923d3d3e6abf46242d9f2670e46436579a92ebf2e8ee8e5826580f3928693ca"
+    },
+    "build/software-asan-ctest.log": {
+      "bytes": 2704,
+      "sha256": "1c077c389fcdcc94875ce153b1bf849db01dea2a0d790bb27989e5013e44074a"
+    },
+    "build/software-final-macos-ctest.log": {
+      "bytes": 2696,
+      "sha256": "4936a8aa6f9f30b47f93e63c403e648f5c1a1f60a4a4b6787f4be69169dbf50c"
+    },
+    "build/software-asan-final-core-ctest-compatible.log": {
+      "bytes": 291,
+      "sha256": "260158b160c2e9590240029cff9fe7c7615dbbf97bfc76eea44c7bbd0766c2f6"
+    },
+    "build/software-python-tests.log": {
+      "bytes": 2407,
+      "sha256": "035f00d7e12c605d628f954b80470721cd4aa23d583d9cc115884046a6fdb8e3"
+    },
+    "build/software-au-host-check.log": {
+      "bytes": 3780,
+      "sha256": "cee1b451573aa693e688dcaec2b577130d48004d6cda8253391c48ef41f0e3b1"
+    },
+    "build/software-vst3-host-check.log": {
+      "bytes": 13077,
+      "sha256": "12e3b2098a502a5e75f14ee8caa88f42074827f182ec36a770e9c5ef9945ad26"
+    },
+    "build/software-au-carry-final.log": {
+      "bytes": 307,
+      "sha256": "25786771670731f8cc220cbd2f9374e8ca07fa203452d7e0da648dee93a4e771"
+    },
+    "build/software-vst3-carry-final.log": {
+      "bytes": 1067,
+      "sha256": "e569b7bf3e70c143c13d1848c2b335dfe04e61d6baa9a72f8312a496c85ae971"
+    },
+    "build/software-final-vst3-validation.log": {
+      "bytes": 252137,
+      "sha256": "cb2c8f0ca4c67c8b71ce02f3fef34e37e903c473e2df1ac64760ee6583b60c04"
+    },
+    "build/software-auval.log": {
+      "bytes": 9427,
+      "sha256": "5873f078f343df275664590e83bb01d3a9d827f55983400ad6a3405f14e0d167"
+    },
+    "build/software-audio-web-report.json": {
+      "bytes": 18828,
+      "sha256": "f38444d594280c71f0cf0aca117dc39090c7c6a67d68b0f18f19a75f6008950c"
+    },
+    "build/software-garageband-migration.json": {
+      "bytes": 3166,
+      "sha256": "af7eba980368c1d11bf78dcd1f0bcd2490d8444577fb4019d4dd199fed42c204"
+    }
+  }
+}
