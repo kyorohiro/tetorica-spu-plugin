@@ -64,6 +64,57 @@ build/offline/spu_instrument_test --wav build/spu-demo.wav
 The VST3 checks load the actual bundle without registering it with a DAW or
 opening an audio device. The WAV demo contains an original C/E/G chord and release.
 
+## Preview candidates
+
+[Build Preview Candidates](https://github.com/kyorohiro/tetorica-spu-plugin/actions/workflows/preview.yml)
+produces ZIPs and SHA256 files in Actions artifacts. These are development
+candidates; no tag or public GitHub Release is created automatically.
+
+| Target | Candidate | Build and checks |
+| --- | --- | --- |
+| macOS 13+ | Universal APP / AUv2 / VST3, arm64 + x86_64 | Built on Mac; the same packaged AU/VST3 is checked on Apple Silicon and Intel runners |
+| Windows x64 | VST3 bundle | Built, rendered and validated on windows-2022 |
+| Linux | No DAW plugin candidate yet | Ubuntu core / offline renderer tests continue separately |
+
+The pinned iPlug2 Linux UI/APP/VST3 implementation is incomplete. Linux plugin
+work is a separate TODO; a passing Linux core test is not a plugin release.
+Windows Standalone compiles for internal checking but is excluded from the ZIP:
+its pinned ASIO source refers to separate SDK terms absent from the checkout.
+The VST3 does not link those APP/ASIO sources and uses the DAW's audio driver.
+
+For a local Mac candidate:
+
+```sh
+cmake --preset macos-release
+cmake --build --preset macos-release --parallel 4
+ctest --preset macos-release
+python3 scripts/package_preview.py build --platform macos --input build/macos-release/out --output release --ad-hoc-sign --report build/macos-preview.json
+python3 scripts/verify_preview_hosts.py --report build/macos-preview.json
+```
+
+Commit changes before packaging: each manifest records an exact source commit.
+Only staging copies are signed. macOS candidates have valid ad-hoc signatures,
+without Developer ID signing or notarization; Windows candidates are unsigned.
+ZIP verification checks the manifest, SHA256, executable permissions and safe
+paths. Each ZIP includes installation notes and third-party license notices.
+Extract safely with `python3 scripts/package_preview.py verify CANDIDATE.zip --extract-to build/preview`.
+The host-check command above does not install an AU or open an audio device.
+CI alone enables the extra ephemeral AU installation/auval step.
+
+On Windows, install Visual Studio 2022 with Desktop development with C++ and a
+Windows SDK. Build and package on Windows; the Mac workflow does not attempt a
+Windows cross-build:
+
+```sh
+cmake --preset windows
+cmake --build --preset windows --parallel 4
+ctest --preset windows
+python scripts/package_preview.py build --platform windows --input build/windows/out --output release --report build/windows-preview.json
+python scripts/verify_preview_hosts.py --report build/windows-preview.json
+```
+
+See [candidate verification and remaining checks](docs/preview_builds_20261102.md).
+
 ## MIDI performance
 
 All 16 MIDI channels have independent Pitch Bend and Sustain state.

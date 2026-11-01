@@ -1,5 +1,14 @@
 # 作業記録
 
+## 2026-11-02 JST — macOS Universal /Windows VST3配布候補・CI検証完了
+
+- 作業前TODO `cfaf621`の後、Universal APP /AU /VST3とWindows x64 VST3のZIP /SHA256 /source・file manifest /導入手順 /noticesを追加した。Linux Pluginはユーザーの回答により別TODO。
+- source `74903c5`の[Preview全3job](https://github.com/kyorohiro/tetorica-spu-plugin/actions/runs/41351695066)と[通常検証全2job](https://github.com/kyorohiro/tetorica-spu-plugin/actions/runs/41351695098)成功。Python64、Mac /Windows /Ubuntu CTest各29、同じMac ZIPのARM /Intel実AU /VST3 /auval、各公式validator47/0を確認した。
+- IntelのAU検出失敗はregistrarがSIGTERM後も生存していたため、一時CIの捕捉済みUID /完全一致名PIDだけを終了し、消失を確認する処理へ修正した。検出やauval失敗の無視・cache削除は行わない。
+- 両ZIPを取得してhash /manifest /同梱物を照合。Macは安全に展開して全architecture /署名 /実行権限 /依存先を再検査、Windowsは実CIのresourceとメモリ上PE構造を確認した。保存先`release/ci-41351695066/`。
+- [配布範囲・次の入口](preview_builds_20261102.md) /[source・ZIP・binary・CI・証跡hash](preview_builds_20261102.json)。音源 /schema10 /26params /依存pinは変更せず、installed AU全5filesも既存manifestと同一。
+- **残り:** 各OSの実DAW GUI /device /長時間、実macOS13、正式署名・公証・公開Release。Windows Standalone配布条件とLinux platform /UIは別作業。今回はtag /公開Release /手元AU更新を行っていない。
+
 ## 2026-10-31 JST — NoiseのCI成功・installed AU更新も完了
 
 - 実装`e43d031`とrunner移行`3c10dfd`をpush、

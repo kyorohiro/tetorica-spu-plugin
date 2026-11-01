@@ -1,0 +1,1057 @@
+{
+  "schema": 1,
+  "date": "2026-11-02",
+  "timezone": "Asia/Tokyo",
+  "start_commit": "85c8f4e3422b6b89723e69d18ec1a80f2b3e954b",
+  "todo_commit": "cfaf621359798942af99e7769a8c19423d1502d6",
+  "source_commit": "74903c55271b89dd3ec103efc08e3c6f584726f4",
+  "dependencies": {
+    "schema": 1,
+    "repositories": {
+      "vendor/iPlug2OOS": "9b214c1121a0da1e8db14b86a565c942a3bfea7e",
+      "vendor/iPlug2OOS/iPlug2": "b64192fe18afd9bc9a1fe324db5aceb48f4a0eee",
+      "vendor/tetorica-soundchip-native": "95cf71a857b15d0ea932ebf97d5fde80b5e80a95",
+      "vendor/vst3sdk": "9fad9770f2ae8542ab1a548a68c1ad1ac690abe0",
+      "vendor/vst3sdk/base": "3d2e82f8e6bff59c1d8b7a27491a29c2286b5206",
+      "vendor/vst3sdk/pluginterfaces": "31d6eeba6daaa3e2a8bfbe3e7a90ca0b7fbfbc1c",
+      "vendor/vst3sdk/public.sdk": "a3911a4615dabbfdfd9d181ee26b05c70c289a95",
+      "vendor/vst3sdk/cmake": "de6e54eeaaab35b7145f5c32c279b5e892146e04"
+    },
+    "notes": [
+      "Native SDK uses an immutable public commit after v0.1.6, including SPU Gaussian/headroom corrections, allocation-free reverb clear and live edits to two independent private host PCM banks, plus bounded long-host-PCM event distances and independent ADPCM loop flags; it is not a published v0.1.7 release.",
+      "VST3 SDK v3.8.0_build_66. Only base, pluginterfaces, public.sdk and cmake submodules are needed.",
+      "Gitlinks are authoritative. Never update a dependency to moving master as part of a normal build."
+    ]
+  },
+  "scope": {
+    "macos": "Universal APP/AUv2/VST3; minimum deployment13.0; identical ZIP executed on ARM and Intel",
+    "windows": "x64 VST3 distributed; APP built and resource-checked internally only",
+    "linux": "Native plugin deferred by user; Ubuntu core/offline29 tests remain supported",
+    "release": "Preview candidate only; no tag, public release, Developer ID/notarization or Authenticode",
+    "audio_state": "Audio C++ sources, schema10, 26parameter IDs and SDK pins unchanged"
+  },
+  "local_verification": {
+    "python": {
+      "passed": 64,
+      "failed": 0,
+      "seconds": 1.312,
+      "log": "build/preview-20261102/python-tests-restart.log"
+    },
+    "universal_build": {
+      "source_commit": "d4741a13d171cd60030faa01f1693e3ea04ca8a8",
+      "passed": true,
+      "ctest_passed": 29,
+      "ctest_failed": 0,
+      "log": "build/preview-20261102/macos-ctest.log"
+    },
+    "installed_au": {
+      "path": "/Users/kyorohiro/Library/Audio/Plug-Ins/Components/TetoricaSPU.component",
+      "expected_manifest": "docs/preset_split_vab_20261101.json",
+      "file_sha256": {
+        "Contents/Info.plist": "94a46fcfc638d76a05aca50d5deedaff2a7a934aee55a816d007b6dff9c9bbc4",
+        "Contents/MacOS/TetoricaSPU": "3f82bcff46f182c2bd370f92516759796aa72aa8d4cf3474716376037d94aa81",
+        "Contents/PkgInfo": "d06a80ba92de0833d0ed03de1b02b7c8913f126d9e8c8931b190765dd5d83b11",
+        "Contents/Resources/Roboto-Regular.ttf": "b2efabca5ea4bc56eea829713706b5cd0788b82aca153bd4adde9b1573933b4f",
+        "Contents/Resources/THIRD_PARTY_NOTICES.txt": "d26ed5d113ec81968e0f1c41560491631e9c77c5bddf6ad6608dbf8697ce5dcf"
+      },
+      "unchanged": true
+    },
+    "garageband_opened": false
+  },
+  "ci": {
+    "preview": {
+      "run": {
+        "conclusion": "success",
+        "created_at": "2026-11-01T21:22:38Z",
+        "event": "push",
+        "head_branch": "main",
+        "head_sha": "74903c55271b89dd3ec103efc08e3c6f584726f4",
+        "html_url": "https://github.com/kyorohiro/tetorica-spu-plugin/actions/runs/41351695066",
+        "id": 41351695066,
+        "name": "Build Preview Candidates",
+        "run_attempt": 1,
+        "run_started_at": "2026-11-01T21:22:38Z",
+        "status": "completed",
+        "updated_at": "2026-11-01T21:36:25Z"
+      },
+      "jobs": [
+        {
+          "completed_at": "2026-11-01T21:28:13Z",
+          "conclusion": "success",
+          "failed_steps": [],
+          "html_url": "https://github.com/kyorohiro/tetorica-spu-plugin/actions/runs/41351695066/job/124983074930",
+          "id": 124983074930,
+          "labels": [
+            "windows-2022"
+          ],
+          "name": "windows",
+          "runner_name": "GitHub Actions 1000011847",
+          "started_at": "2026-11-01T21:22:41Z",
+          "status": "completed",
+          "step_count": 17
+        },
+        {
+          "completed_at": "2026-11-01T21:30:39Z",
+          "conclusion": "success",
+          "failed_steps": [],
+          "html_url": "https://github.com/kyorohiro/tetorica-spu-plugin/actions/runs/41351695066/job/124983075097",
+          "id": 124983075097,
+          "labels": [
+            "macos-15"
+          ],
+          "name": "macos",
+          "runner_name": "GitHub Actions 1000011850",
+          "started_at": "2026-11-01T21:22:43Z",
+          "status": "completed",
+          "step_count": 16
+        },
+        {
+          "completed_at": "2026-11-01T21:36:25Z",
+          "conclusion": "success",
+          "failed_steps": [],
+          "html_url": "https://github.com/kyorohiro/tetorica-spu-plugin/actions/runs/41351695066/job/124985131393",
+          "id": 124985131393,
+          "labels": [
+            "macos-15-intel"
+          ],
+          "name": "macos-intel",
+          "runner_name": "GitHub Actions 1000011851",
+          "started_at": "2026-11-01T21:30:44Z",
+          "status": "completed",
+          "step_count": 10
+        }
+      ]
+    },
+    "verify": {
+      "run": {
+        "conclusion": "success",
+        "created_at": "2026-11-01T21:22:38Z",
+        "event": "push",
+        "head_branch": "main",
+        "head_sha": "74903c55271b89dd3ec103efc08e3c6f584726f4",
+        "html_url": "https://github.com/kyorohiro/tetorica-spu-plugin/actions/runs/41351695098",
+        "id": 41351695098,
+        "name": "Verify SPU Plugin",
+        "run_attempt": 1,
+        "run_started_at": "2026-11-01T21:22:38Z",
+        "status": "completed",
+        "updated_at": "2026-11-01T21:26:58Z"
+      },
+      "jobs": [
+        {
+          "completed_at": "2026-11-01T21:24:00Z",
+          "conclusion": "success",
+          "failed_steps": [],
+          "html_url": "https://github.com/kyorohiro/tetorica-spu-plugin/actions/runs/41351695098/job/124983074547",
+          "id": 124983074547,
+          "labels": [
+            "ubuntu-24.04"
+          ],
+          "name": "offline",
+          "runner_name": "GitHub Actions 1000011848",
+          "started_at": "2026-11-01T21:22:42Z",
+          "status": "completed",
+          "step_count": 10
+        },
+        {
+          "completed_at": "2026-11-01T21:26:58Z",
+          "conclusion": "success",
+          "failed_steps": [],
+          "html_url": "https://github.com/kyorohiro/tetorica-spu-plugin/actions/runs/41351695098/job/124983074825",
+          "id": 124983074825,
+          "labels": [
+            "macos-15"
+          ],
+          "name": "macos",
+          "runner_name": "GitHub Actions 1000011849",
+          "started_at": "2026-11-01T21:22:43Z",
+          "status": "completed",
+          "step_count": 16
+        }
+      ]
+    }
+  },
+  "arm_verification": {
+    "python": {
+      "passed": 64,
+      "seconds": 1.892
+    },
+    "ctest": {
+      "passed": 29,
+      "failed": 0,
+      "seconds": 15.74
+    },
+    "strict_auval": {
+      "discovered": true,
+      "validation_success": true,
+      "preset_name_warning_absent": true
+    },
+    "registrar": {
+      "captured_uid": 501,
+      "captured_pids": [
+        412
+      ],
+      "original_pids_gone": true,
+      "sigkill_only_captured": true,
+      "components_mtime_refreshed": true
+    },
+    "vst3": {
+      "pass_rows_total": 57,
+      "case_groups_excluding_final_summary": 56,
+      "final_summary_rows": 1,
+      "per_rate_groups": {
+        "44100": 18,
+        "48000": 18,
+        "96000": 18
+      },
+      "cross_rate_groups": 2
+    },
+    "au": {
+      "pass_rows_total": 19,
+      "case_groups_excluding_final_summary": 18,
+      "final_summary_rows": 1
+    },
+    "validator": {
+      "passed": 47,
+      "failed": 0
+    }
+  },
+  "ordinary_verification": {
+    "macos": {
+      "source_sha_seen_in_checkout_log": true,
+      "python": [
+        {
+          "count": 15,
+          "line": "2026-11-01T21:22:47.2252400Z Ran 15 tests in 0.209s"
+        },
+        {
+          "count": 8,
+          "line": "2026-11-01T21:22:48.3838530Z Ran 8 tests in 1.023s"
+        }
+      ],
+      "ctest": {
+        "passed": 29,
+        "failed": 0,
+        "lines": [
+          "2026-11-01T21:25:51.5159460Z 100% tests passed out of 29",
+          "2026-11-01T21:25:51.5160090Z Total Test time (real) =  12.79 sec"
+        ]
+      },
+      "auval": {
+        "success": true,
+        "lines": [
+          "2026-11-01T21:25:55.3066540Z AU VALIDATION SUCCEEDED."
+        ]
+      },
+      "actual_vst3": {
+        "native_harness_PASS_lines": 57,
+        "wrapper_dependency_PASS_lines": 1,
+        "combined_PASS_lines": 58,
+        "rates": [
+          44100,
+          48000,
+          96000
+        ],
+        "wide_measurements_per_rate": 72
+      },
+      "actual_au": {
+        "PASS_lines": 19
+      },
+      "official_validator": {
+        "passed": 47,
+        "failed": 0,
+        "lines": [
+          "2026-11-01T21:26:19.7915720Z Result: 47 tests passed, 0 tests failed"
+        ]
+      }
+    },
+    "offline": {
+      "source_sha_seen_in_checkout_log": true,
+      "python": [
+        {
+          "count": 15,
+          "line": "2026-11-01T21:22:44.8358949Z Ran 15 tests in 0.148s"
+        },
+        {
+          "count": 8,
+          "line": "2026-11-01T21:22:46.2836105Z Ran 8 tests in 1.344s"
+        }
+      ],
+      "ctest": {
+        "passed": 29,
+        "failed": 0,
+        "lines": [
+          "2026-11-01T21:23:58.7256018Z 100% tests passed, 0 tests failed out of 29",
+          "2026-11-01T21:23:58.7256743Z Total Test time (real) =  14.75 sec"
+        ]
+      }
+    }
+  },
+  "intel_verification": {
+    "log": "build/preview-20261102/ci-41351695066-intel.log",
+    "original_registrar_pids_exited": true,
+    "strict_auval_passed": true,
+    "vst3_harness_PASS_lines": 57,
+    "au_harness_PASS_lines": 19,
+    "validator": {
+      "passed": 47,
+      "failed": 0
+    },
+    "same_universal_zip_as_arm": true
+  },
+  "artifacts": {
+    "macos": {
+      "path": "release/ci-41351695066/macos/tetorica-spu-plugin-0.1.0-preview-74903c55271b-macos-universal.zip",
+      "bytes": 5202060,
+      "sha256": "ddbbac5e1143296de7dddcb3cd931c67f592406a038549a8c7fca75c04ecdc7f",
+      "sidecar_matches": true,
+      "manifest": {
+        "schema": 1,
+        "product": "tetorica-spu-plugin",
+        "version": "0.1.0",
+        "channel": "preview",
+        "source_commit": "74903c55271b89dd3ec103efc08e3c6f584726f4",
+        "platform": "macos",
+        "label": "macos-universal",
+        "bundles": [
+          "TetoricaSPU.app",
+          "TetoricaSPU.component",
+          "TetoricaSPU.vst3"
+        ],
+        "signing": "ad-hoc; not notarized",
+        "dependencies": {
+          "schema": 1,
+          "repositories": {
+            "vendor/iPlug2OOS": "9b214c1121a0da1e8db14b86a565c942a3bfea7e",
+            "vendor/iPlug2OOS/iPlug2": "b64192fe18afd9bc9a1fe324db5aceb48f4a0eee",
+            "vendor/tetorica-soundchip-native": "95cf71a857b15d0ea932ebf97d5fde80b5e80a95",
+            "vendor/vst3sdk": "9fad9770f2ae8542ab1a548a68c1ad1ac690abe0",
+            "vendor/vst3sdk/base": "3d2e82f8e6bff59c1d8b7a27491a29c2286b5206",
+            "vendor/vst3sdk/pluginterfaces": "31d6eeba6daaa3e2a8bfbe3e7a90ca0b7fbfbc1c",
+            "vendor/vst3sdk/public.sdk": "a3911a4615dabbfdfd9d181ee26b05c70c289a95",
+            "vendor/vst3sdk/cmake": "de6e54eeaaab35b7145f5c32c279b5e892146e04"
+          },
+          "notes": [
+            "Native SDK uses an immutable public commit after v0.1.6, including SPU Gaussian/headroom corrections, allocation-free reverb clear and live edits to two independent private host PCM banks, plus bounded long-host-PCM event distances and independent ADPCM loop flags; it is not a published v0.1.7 release.",
+            "VST3 SDK v3.8.0_build_66. Only base, pluginterfaces, public.sdk and cmake submodules are needed.",
+            "Gitlinks are authoritative. Never update a dependency to moving master as part of a normal build."
+          ]
+        },
+        "files": {
+          "INSTALL.txt": {
+            "kind": "file",
+            "mode": 420,
+            "bytes": 854,
+            "sha256": "a77193b1891f6ae067a670016f7e4a4801b7c1f563a887ae5abbd5f974fbd134"
+          },
+          "LICENSE.txt": {
+            "kind": "file",
+            "mode": 420,
+            "bytes": 1517,
+            "sha256": "d49c2f05a09d2d648c05a5af92240a5dc4059830bc29afbb8919c6d1ba76bf91"
+          },
+          "THIRD_PARTY_NOTICES.txt": {
+            "kind": "file",
+            "mode": 420,
+            "bytes": 58824,
+            "sha256": "d26ed5d113ec81968e0f1c41560491631e9c77c5bddf6ad6608dbf8697ce5dcf"
+          },
+          "TetoricaSPU.app/Contents/Info.plist": {
+            "kind": "file",
+            "mode": 420,
+            "bytes": 1146,
+            "sha256": "1fec046b5560e89705ce207b4372e154e72e7e97951f2e0c4a23789827cf58c6"
+          },
+          "TetoricaSPU.app/Contents/MacOS/TetoricaSPU": {
+            "kind": "file",
+            "mode": 493,
+            "bytes": 5007552,
+            "sha256": "8c1c1d4bf699084e2433a3de6f240549153ae49c6aecf37a514f245d3d3e02aa"
+          },
+          "TetoricaSPU.app/Contents/PkgInfo": {
+            "kind": "file",
+            "mode": 420,
+            "bytes": 8,
+            "sha256": "82502191c9484b04d685374f9879a0066069c49b8acae7a04b01d38d07e8eca0"
+          },
+          "TetoricaSPU.app/Contents/Resources/Roboto-Regular.ttf": {
+            "kind": "file",
+            "mode": 420,
+            "bytes": 145348,
+            "sha256": "b2efabca5ea4bc56eea829713706b5cd0788b82aca153bd4adde9b1573933b4f"
+          },
+          "TetoricaSPU.app/Contents/Resources/THIRD_PARTY_NOTICES.txt": {
+            "kind": "file",
+            "mode": 420,
+            "bytes": 58824,
+            "sha256": "d26ed5d113ec81968e0f1c41560491631e9c77c5bddf6ad6608dbf8697ce5dcf"
+          },
+          "TetoricaSPU.app/Contents/Resources/TetoricaSPU-macOS-MainMenu.nib": {
+            "kind": "file",
+            "mode": 420,
+            "bytes": 4232,
+            "sha256": "7ba57e13c5fdbc1f77eaf801fd49f7762dfbef93a2ce6526e547901f66d4719e"
+          },
+          "TetoricaSPU.app/Contents/_CodeSignature/CodeResources": {
+            "kind": "file",
+            "mode": 420,
+            "bytes": 2976,
+            "sha256": "e3925716575fe86bb1d7a9c07a6019f3d86e39d666c28044e124d2c485d708a7"
+          },
+          "TetoricaSPU.component/Contents/Info.plist": {
+            "kind": "file",
+            "mode": 420,
+            "bytes": 1541,
+            "sha256": "94a46fcfc638d76a05aca50d5deedaff2a7a934aee55a816d007b6dff9c9bbc4"
+          },
+          "TetoricaSPU.component/Contents/MacOS/TetoricaSPU": {
+            "kind": "file",
+            "mode": 493,
+            "bytes": 3940368,
+            "sha256": "f571257988210f8b1fd59f2232cc33d34836ef071122ecacfa10ad145e65aaa8"
+          },
+          "TetoricaSPU.component/Contents/PkgInfo": {
+            "kind": "file",
+            "mode": 420,
+            "bytes": 8,
+            "sha256": "d06a80ba92de0833d0ed03de1b02b7c8913f126d9e8c8931b190765dd5d83b11"
+          },
+          "TetoricaSPU.component/Contents/Resources/Roboto-Regular.ttf": {
+            "kind": "file",
+            "mode": 420,
+            "bytes": 145348,
+            "sha256": "b2efabca5ea4bc56eea829713706b5cd0788b82aca153bd4adde9b1573933b4f"
+          },
+          "TetoricaSPU.component/Contents/Resources/THIRD_PARTY_NOTICES.txt": {
+            "kind": "file",
+            "mode": 420,
+            "bytes": 58824,
+            "sha256": "d26ed5d113ec81968e0f1c41560491631e9c77c5bddf6ad6608dbf8697ce5dcf"
+          },
+          "TetoricaSPU.component/Contents/_CodeSignature/CodeResources": {
+            "kind": "file",
+            "mode": 420,
+            "bytes": 2710,
+            "sha256": "456d5af9f3294367f0cf8c74c80842d57e3088d07aecf3f14607fe2873cc0ee3"
+          },
+          "TetoricaSPU.vst3/Contents/Info.plist": {
+            "kind": "file",
+            "mode": 420,
+            "bytes": 930,
+            "sha256": "0fe9965eadefafb0be705d9e3bba5a6df3c6e2561b608bdbf267d7f831e5d644"
+          },
+          "TetoricaSPU.vst3/Contents/MacOS/TetoricaSPU": {
+            "kind": "file",
+            "mode": 493,
+            "bytes": 4550896,
+            "sha256": "f5658c9ce2e17187e0514b8500fc407405a19bc74ff25b5e18496a69ddd8b86c"
+          },
+          "TetoricaSPU.vst3/Contents/PkgInfo": {
+            "kind": "file",
+            "mode": 420,
+            "bytes": 8,
+            "sha256": "d06a80ba92de0833d0ed03de1b02b7c8913f126d9e8c8931b190765dd5d83b11"
+          },
+          "TetoricaSPU.vst3/Contents/Resources/Roboto-Regular.ttf": {
+            "kind": "file",
+            "mode": 420,
+            "bytes": 145348,
+            "sha256": "b2efabca5ea4bc56eea829713706b5cd0788b82aca153bd4adde9b1573933b4f"
+          },
+          "TetoricaSPU.vst3/Contents/Resources/THIRD_PARTY_NOTICES.txt": {
+            "kind": "file",
+            "mode": 420,
+            "bytes": 58824,
+            "sha256": "d26ed5d113ec81968e0f1c41560491631e9c77c5bddf6ad6608dbf8697ce5dcf"
+          },
+          "TetoricaSPU.vst3/Contents/_CodeSignature/CodeResources": {
+            "kind": "file",
+            "mode": 420,
+            "bytes": 2710,
+            "sha256": "456d5af9f3294367f0cf8c74c80842d57e3088d07aecf3f14607fe2873cc0ee3"
+          }
+        }
+      },
+      "audit": {
+        "schema": 1,
+        "checked_at": "2026-11-01T21:35:03.234988+00:00",
+        "ok": true,
+        "run_id": 41351695066,
+        "run_url": "https://github.com/kyorohiro/tetorica-spu-plugin/actions/runs/41351695066",
+        "source_commit": "74903c55271b89dd3ec103efc08e3c6f584726f4",
+        "arm_job": {
+          "id": 124983075097,
+          "status": "completed",
+          "conclusion": "success",
+          "html_url": "https://github.com/kyorohiro/tetorica-spu-plugin/actions/runs/41351695066/job/124983075097"
+        },
+        "github_artifact": {
+          "id": 13101985659,
+          "node_id": "MDg6QXJ0aWZhY3QxMzEwMTk4NTY1OQ==",
+          "name": "preview-macos-universal",
+          "size_in_bytes": 5187859,
+          "url": "https://api.github.com/repos/kyorohiro/tetorica-spu-plugin/actions/artifacts/13101985659",
+          "archive_download_url": "https://api.github.com/repos/kyorohiro/tetorica-spu-plugin/actions/artifacts/13101985659/zip",
+          "expired": false,
+          "digest": "sha256:3dba36e79eba295078d500681f0bfc443b6d4a94454355328bd13fd918cb5723",
+          "created_at": "2026-11-01T21:30:33Z",
+          "updated_at": "2026-11-01T21:30:33Z",
+          "expires_at": "2027-01-30T21:22:38Z",
+          "workflow_run": {
+            "id": 41351695066,
+            "repository_id": 1440604693,
+            "head_repository_id": 1440604693,
+            "head_branch": "main",
+            "head_sha": "74903c55271b89dd3ec103efc08e3c6f584726f4"
+          }
+        },
+        "github_artifact_digest_scope": "API-only digest of GitHub outer artifact container; not recomputed from the delivered product ZIP",
+        "github_report_artifact": {
+          "id": 13102105460,
+          "node_id": "MDg6QXJ0aWZhY3QxMzEwMjEwNTQ2MA==",
+          "name": "preview-macos-report",
+          "size_in_bytes": 1551,
+          "url": "https://api.github.com/repos/kyorohiro/tetorica-spu-plugin/actions/artifacts/13102105460",
+          "archive_download_url": "https://api.github.com/repos/kyorohiro/tetorica-spu-plugin/actions/artifacts/13102105460/zip",
+          "expired": false,
+          "digest": "sha256:87e53fa980e9b74f0b19189752aa9cdc189bf6861f5d3cbe6858073c35ebbb7b",
+          "created_at": "2026-11-01T21:30:34Z",
+          "updated_at": "2026-11-01T21:30:34Z",
+          "expires_at": "2027-01-30T21:22:38Z",
+          "workflow_run": {
+            "id": 41351695066,
+            "repository_id": 1440604693,
+            "head_repository_id": 1440604693,
+            "head_branch": "main",
+            "head_sha": "74903c55271b89dd3ec103efc08e3c6f584726f4"
+          }
+        },
+        "package": {
+          "path": "release/ci-41351695066/macos/tetorica-spu-plugin-0.1.0-preview-74903c55271b-macos-universal.zip",
+          "bytes": 5202060,
+          "sha256": "ddbbac5e1143296de7dddcb3cd931c67f592406a038549a8c7fca75c04ecdc7f",
+          "sha256_recomputed": true,
+          "sidecar_matches": true,
+          "downloaded_ci_report_matches": true,
+          "manifest_files_verified": 22
+        },
+        "extraction_report": "build/preview-20261102/ci-41351695066-macos-report/extraction.json",
+        "inspection_report": "build/preview-20261102/ci-41351695066-macos-report/inspection.json",
+        "arm_log_audit": "build/preview-20261102/ci-41351695066-macos-report/arm-log-audit.json",
+        "checks": {
+          "safe_manifest_extraction": true,
+          "all_bundle_binaries_universal": true,
+          "architectures": [
+            "arm64",
+            "x86_64"
+          ],
+          "minimum_macos": "13.0",
+          "system_only_dylibs": true,
+          "source_font_and_notices_match": true,
+          "modes_verified": true,
+          "all_architecture_code_and_bundle_resources_verified": true,
+          "signatures": "ad-hoc",
+          "notarization": "not-checked"
+        },
+        "local_audio_hosts_executed": false,
+        "local_install_performed": false,
+        "local_services_modified": false,
+        "signatures_modified": false,
+        "scope": "Downloaded macOS package integrity and ARM CI-log audit. Overall CI/Intel host status is recorded separately by root."
+      }
+    },
+    "windows": {
+      "path": "release/ci-41351695066/windows/tetorica-spu-plugin-0.1.0-preview-74903c55271b-windows-x64-vst3.zip",
+      "bytes": 840780,
+      "sha256": "23b63739741a46df3cd69302648394759cd55a97ad728e27a4e322229d02c0d1",
+      "sidecar_matches": true,
+      "manifest": {
+        "schema": 1,
+        "product": "tetorica-spu-plugin",
+        "version": "0.1.0",
+        "channel": "preview",
+        "source_commit": "74903c55271b89dd3ec103efc08e3c6f584726f4",
+        "platform": "windows",
+        "label": "windows-x64-vst3",
+        "bundles": [
+          "TetoricaSPU.vst3"
+        ],
+        "signing": "unsigned",
+        "dependencies": {
+          "schema": 1,
+          "repositories": {
+            "vendor/iPlug2OOS": "9b214c1121a0da1e8db14b86a565c942a3bfea7e",
+            "vendor/iPlug2OOS/iPlug2": "b64192fe18afd9bc9a1fe324db5aceb48f4a0eee",
+            "vendor/tetorica-soundchip-native": "95cf71a857b15d0ea932ebf97d5fde80b5e80a95",
+            "vendor/vst3sdk": "9fad9770f2ae8542ab1a548a68c1ad1ac690abe0",
+            "vendor/vst3sdk/base": "3d2e82f8e6bff59c1d8b7a27491a29c2286b5206",
+            "vendor/vst3sdk/pluginterfaces": "31d6eeba6daaa3e2a8bfbe3e7a90ca0b7fbfbc1c",
+            "vendor/vst3sdk/public.sdk": "a3911a4615dabbfdfd9d181ee26b05c70c289a95",
+            "vendor/vst3sdk/cmake": "de6e54eeaaab35b7145f5c32c279b5e892146e04"
+          },
+          "notes": [
+            "Native SDK uses an immutable public commit after v0.1.6, including SPU Gaussian/headroom corrections, allocation-free reverb clear and live edits to two independent private host PCM banks, plus bounded long-host-PCM event distances and independent ADPCM loop flags; it is not a published v0.1.7 release.",
+            "VST3 SDK v3.8.0_build_66. Only base, pluginterfaces, public.sdk and cmake submodules are needed.",
+            "Gitlinks are authoritative. Never update a dependency to moving master as part of a normal build."
+          ]
+        },
+        "files": {
+          "INSTALL.txt": {
+            "kind": "file",
+            "mode": 438,
+            "bytes": 794,
+            "sha256": "69982880fb30faba072b35dbfbc415634db484a66756806c1b50a5b3a33dae99"
+          },
+          "LICENSE.txt": {
+            "kind": "file",
+            "mode": 438,
+            "bytes": 1547,
+            "sha256": "fdba951f9a16bad45ed81b3b8548e43aff938c07008d97fdcccfb3e61a56735b"
+          },
+          "TetoricaSPU.vst3/Contents/x86_64-win/TetoricaSPU.vst3": {
+            "kind": "file",
+            "mode": 438,
+            "bytes": 1738240,
+            "sha256": "02462aa7c20b8200cdc846b478686595401cff480cc6bbd5dafa47d11bcaecf4"
+          },
+          "THIRD_PARTY_NOTICES.txt": {
+            "kind": "file",
+            "mode": 438,
+            "bytes": 60096,
+            "sha256": "bad8cdbb48c494d2c949c8f7377d873261f8ad6a344302eddc2a132c637c5650"
+          },
+          "WINDOWS_THIRD_PARTY_NOTICES.txt": {
+            "kind": "file",
+            "mode": 438,
+            "bytes": 4228,
+            "sha256": "c0308109ed72da4d8007840bee2d7563c83d41d245f52a1622d6460766af2c85"
+          }
+        }
+      },
+      "audit": {
+        "ok": true,
+        "run_id": 41351695066,
+        "job_id": 124983074930,
+        "job_url": "https://github.com/kyorohiro/tetorica-spu-plugin/actions/runs/41351695066/job/124983074930",
+        "source_commit": "74903c55271b89dd3ec103efc08e3c6f584726f4",
+        "job_result": "success",
+        "job_started_at": "2026-11-01T21:22:41Z",
+        "job_completed_at": "2026-11-01T21:28:13Z",
+        "steps": [
+          {
+            "name": "Set up job",
+            "status": "completed",
+            "conclusion": "success",
+            "started_at": "2026-11-01T21:22:42Z",
+            "completed_at": "2026-11-01T21:22:43Z"
+          },
+          {
+            "name": "Run actions/checkout@v4",
+            "status": "completed",
+            "conclusion": "success",
+            "started_at": "2026-11-01T21:22:43Z",
+            "completed_at": "2026-11-01T21:22:49Z"
+          },
+          {
+            "name": "Run actions/setup-python@v5",
+            "status": "completed",
+            "conclusion": "success",
+            "started_at": "2026-11-01T21:22:49Z",
+            "completed_at": "2026-11-01T21:22:49Z"
+          },
+          {
+            "name": "Verify portable Windows tooling",
+            "status": "completed",
+            "conclusion": "success",
+            "started_at": "2026-11-01T21:22:49Z",
+            "completed_at": "2026-11-01T21:22:55Z"
+          },
+          {
+            "name": "Run python scripts/bootstrap.py",
+            "status": "completed",
+            "conclusion": "success",
+            "started_at": "2026-11-01T21:22:55Z",
+            "completed_at": "2026-11-01T21:23:11Z"
+          },
+          {
+            "name": "Run python scripts/bootstrap.py --check",
+            "status": "completed",
+            "conclusion": "success",
+            "started_at": "2026-11-01T21:23:11Z",
+            "completed_at": "2026-11-01T21:23:12Z"
+          },
+          {
+            "name": "Run cmake --preset windows",
+            "status": "completed",
+            "conclusion": "success",
+            "started_at": "2026-11-01T21:23:12Z",
+            "completed_at": "2026-11-01T21:23:59Z"
+          },
+          {
+            "name": "Run cmake --build --preset windows --parallel 4",
+            "status": "completed",
+            "conclusion": "success",
+            "started_at": "2026-11-01T21:23:59Z",
+            "completed_at": "2026-11-01T21:26:43Z"
+          },
+          {
+            "name": "Run ctest --preset windows",
+            "status": "completed",
+            "conclusion": "success",
+            "started_at": "2026-11-01T21:26:43Z",
+            "completed_at": "2026-11-01T21:26:59Z"
+          },
+          {
+            "name": "Check built Windows resources (EXE is not distributed)",
+            "status": "completed",
+            "conclusion": "success",
+            "started_at": "2026-11-01T21:26:59Z",
+            "completed_at": "2026-11-01T21:27:00Z"
+          },
+          {
+            "name": "Package VST3 candidate",
+            "status": "completed",
+            "conclusion": "success",
+            "started_at": "2026-11-01T21:27:00Z",
+            "completed_at": "2026-11-01T21:27:01Z"
+          },
+          {
+            "name": "Verify exact packaged VST3",
+            "status": "completed",
+            "conclusion": "success",
+            "started_at": "2026-11-01T21:27:01Z",
+            "completed_at": "2026-11-01T21:28:04Z"
+          },
+          {
+            "name": "Run actions/upload-artifact@v4",
+            "status": "completed",
+            "conclusion": "success",
+            "started_at": "2026-11-01T21:28:04Z",
+            "completed_at": "2026-11-01T21:28:06Z"
+          },
+          {
+            "name": "Run actions/upload-artifact@v4",
+            "status": "completed",
+            "conclusion": "success",
+            "started_at": "2026-11-01T21:28:06Z",
+            "completed_at": "2026-11-01T21:28:07Z"
+          },
+          {
+            "name": "Post Run actions/setup-python@v5",
+            "status": "completed",
+            "conclusion": "success",
+            "started_at": "2026-11-01T21:28:07Z",
+            "completed_at": "2026-11-01T21:28:07Z"
+          },
+          {
+            "name": "Post Run actions/checkout@v4",
+            "status": "completed",
+            "conclusion": "success",
+            "started_at": "2026-11-01T21:28:07Z",
+            "completed_at": "2026-11-01T21:28:11Z"
+          },
+          {
+            "name": "Complete job",
+            "status": "completed",
+            "conclusion": "success",
+            "started_at": "2026-11-01T21:28:11Z",
+            "completed_at": "2026-11-01T21:28:11Z"
+          }
+        ],
+        "scope": "Windows ZIP verified in place on macOS; no extraction, DLL execution, GUI, audio device or installed plugin changes.",
+        "archive": {
+          "path": "release/ci-41351695066/windows/tetorica-spu-plugin-0.1.0-preview-74903c55271b-windows-x64-vst3.zip",
+          "bytes": 840780,
+          "sha256": "23b63739741a46df3cd69302648394759cd55a97ad728e27a4e322229d02c0d1",
+          "sidecar_matches": true,
+          "manifest_files": 5,
+          "no_standalone_exe": true
+        },
+        "vst3": {
+          "member": "TetoricaSPU.vst3/Contents/x86_64-win/TetoricaSPU.vst3",
+          "bytes": 1738240,
+          "sha256": "02462aa7c20b8200cdc846b478686595401cff480cc6bbd5dafa47d11bcaecf4",
+          "native_ci_report_matches": true,
+          "pe": {
+            "machine": "AMD64",
+            "PE32Plus": true,
+            "dll": true,
+            "sections": 7
+          }
+        },
+        "font_native_ci": {
+          "name": "\"ROBOTO-REGULAR.TTF\"",
+          "requested_name": "Roboto-Regular.ttf",
+          "enumerated_names": [
+            "\"ROBOTO-REGULAR.TTF\""
+          ],
+          "type": "TTF",
+          "bytes": 145348,
+          "sha256": "b2efabca5ea4bc56eea829713706b5cd0788b82aca153bd4adde9b1573933b4f",
+          "exact_source_match": true,
+          "inspection": "LoadLibraryExW AS_DATAFILE|AS_IMAGE_RESOURCE; pinned iPlug LocateResource enumeration; FindResourceW"
+        },
+        "verification": {
+          "python_portable_test_lines": [
+            "2026-11-01T21:22:55.5746667Z Ran 27 tests in 1.752s"
+          ],
+          "ctest": {
+            "passed": 29,
+            "failed": 0,
+            "lines": [
+              "2026-11-01T21:26:59.7204725Z 100% tests passed, 0 tests failed out of 29",
+              "2026-11-01T21:26:59.7205002Z Total Test time (real) =  15.68 sec"
+            ]
+          },
+          "actual_vst3": {
+            "native_harness_PASS_lines": 57,
+            "with_final_packaged_check_PASS_lines": 58,
+            "rates": [
+              44100,
+              48000,
+              96000
+            ],
+            "wide_pitch_measurements_per_rate": 72,
+            "note": "58 here adds the final packaged-check success line; the actual VST3 harness emits57."
+          },
+          "official_validator": {
+            "passed": 47,
+            "failed": 0
+          }
+        },
+        "github_artifacts": [
+          {
+            "id": 13101960318,
+            "name": "preview-windows-x64-vst3",
+            "size_in_bytes": 838459,
+            "digest": "sha256:3b0dfca401e1671db1795c780333f3a331711e17ce8c3998b05942786ba41559",
+            "created_at": "2026-11-01T21:28:06Z",
+            "updated_at": "2026-11-01T21:28:06Z",
+            "expired": false
+          },
+          {
+            "id": 13101815891,
+            "name": "preview-windows-report",
+            "size_in_bytes": 1944,
+            "digest": "sha256:b64cd342abf46a774266b49006e3d3c7f55bbc9988c868ad8306a4d6e043efc9",
+            "created_at": "2026-11-01T21:28:07Z",
+            "updated_at": "2026-11-01T21:28:07Z",
+            "expired": false
+          }
+        ],
+        "evidence": {
+          "build/preview-20261102/ci-41351695066-windows-job-api.json": {
+            "bytes": 3834,
+            "sha256": "043ce5fd34311a6a4a2c464c37f1e864da1f0d637d81ef96eeb97171312d95c4"
+          },
+          "build/preview-20261102/ci-41351695066-windows-artifacts-api.json": {
+            "bytes": 2865,
+            "sha256": "5b976a274b42696317a775502536ebc5dfa65aba4f98a87ab22ee2aec4d8a008"
+          },
+          "build/preview-20261102/ci-41351695066-windows.log": {
+            "bytes": 462329,
+            "sha256": "6c97b786940403a0dab2fc8b928e236e0cbc596ca5e5fca43a80518976768f8a"
+          },
+          "build/preview-20261102/ci-41351695066-windows-pass.log": {
+            "bytes": 19474,
+            "sha256": "84d12c356190f107a25772dc94448c4211ceea2e604b6bca428c1c0b3e21226c"
+          },
+          "build/preview-20261102/ci-41351695066-windows-report/windows-inspection.json": {
+            "bytes": 2407,
+            "sha256": "56fead471204232486d547eab1ecd73049b2ad4882caba854c15f276d533ddf1"
+          },
+          "build/preview-20261102/ci-41351695066-windows-report/windows-preview.json": {
+            "bytes": 2163,
+            "sha256": "4439714075851b5b4ac1fd732a1e828c7ee71afa12fa7db01f3c5ef4e7379212"
+          },
+          "build/preview-20261102/ci-41351695066-windows-verify.json": {
+            "bytes": 234,
+            "sha256": "860df241cda70917f36e668e17e3e6111b48c635aaefc19ae9da5154cdcc996d"
+          }
+        }
+      }
+    }
+  },
+  "prior_failed_preview_runs": [
+    {
+      "id": 41344961610,
+      "source": "d4741a13d171cd60030faa01f1693e3ea04ca8a8",
+      "reason": "AU copy destination already exists after host configure; Windows font checker differed from pinned runtime lookup"
+    },
+    {
+      "id": 41347591104,
+      "source": "384df15fc3a764eee090e11458aead62cbe889ca",
+      "reason": "Intel global AU discovery timed out after actual direct AU/VST3/validator passed"
+    },
+    {
+      "id": 41350143700,
+      "source": "de989647d3c78ce914e8719153d7ada3187f50b5",
+      "reason": "Intel discovery still timed out; log proved original PID409 continued serving after SIGTERM; EnablePressuredExit service ignores SIGTERM by default"
+    }
+  ],
+  "remaining": [
+    "Real-device listening and latency",
+    "GUI/native file panels and long DAW sessions on each OS",
+    "Actual macOS13 playback",
+    "Developer ID signing/notarization and Windows signing",
+    "Windows Standalone redistribution conditions",
+    "Linux platform/Timer/UI design",
+    "Optional local AU backup/update and GarageBand restoration",
+    "Official version/tag/release publication"
+  ],
+  "evidence": {
+    "build/preview-20261102/ci-41351695066-arm.log": {
+      "bytes": 535900,
+      "sha256": "c2461a863b49176d83034901a6d9380c3b2c683223049b474aa8b1033be68fff"
+    },
+    "build/preview-20261102/ci-41351695066-intel.log": {
+      "bytes": 448174,
+      "sha256": "4680a6cd0c498abb592dbe6faa5dd24db709296126faa30bc9daf2fe16134b8b"
+    },
+    "build/preview-20261102/ci-41351695066-jobs.json": {
+      "bytes": 1338,
+      "sha256": "04e6d214fa3d0f560170fa4acbdcb558773224a937a97b31238394a2a19c0765"
+    },
+    "build/preview-20261102/ci-41351695066-run.json": {
+      "bytes": 451,
+      "sha256": "7be75d959c88a856ff31f138a3ffb2b1308955761bc03c20883dd30d81585614"
+    },
+    "build/preview-20261102/ci-41351695066-windows-artifacts-api.json": {
+      "bytes": 2865,
+      "sha256": "5b976a274b42696317a775502536ebc5dfa65aba4f98a87ab22ee2aec4d8a008"
+    },
+    "build/preview-20261102/ci-41351695066-windows-job-api.json": {
+      "bytes": 3834,
+      "sha256": "043ce5fd34311a6a4a2c464c37f1e864da1f0d637d81ef96eeb97171312d95c4"
+    },
+    "build/preview-20261102/ci-41351695066-windows-jobs-api.json": {
+      "bytes": 6545,
+      "sha256": "277278f90c9a291d14393e664f4f4ab82d290e9874c483fb28a14ca8a9ddd324"
+    },
+    "build/preview-20261102/ci-41351695066-windows-pass.log": {
+      "bytes": 19474,
+      "sha256": "84d12c356190f107a25772dc94448c4211ceea2e604b6bca428c1c0b3e21226c"
+    },
+    "build/preview-20261102/ci-41351695066-windows-summary.json": {
+      "bytes": 7892,
+      "sha256": "a536fa7f10619a4edbe72e5cf2234fa0ea1a1440bf52b7fabcd883a699a7e400"
+    },
+    "build/preview-20261102/ci-41351695066-windows-verify.json": {
+      "bytes": 234,
+      "sha256": "860df241cda70917f36e668e17e3e6111b48c635aaefc19ae9da5154cdcc996d"
+    },
+    "build/preview-20261102/ci-41351695066-windows.log": {
+      "bytes": 462329,
+      "sha256": "6c97b786940403a0dab2fc8b928e236e0cbc596ca5e5fca43a80518976768f8a"
+    },
+    "build/preview-20261102/ci-41351695098-jobs-api.json": {
+      "bytes": 6346,
+      "sha256": "4de3badf66c166892aad99c38c8b9d57244327a5dab82582783a1c13a9f741f3"
+    },
+    "build/preview-20261102/ci-41351695098-jobs.json": {
+      "bytes": 887,
+      "sha256": "c29a2fe264ec3ff4bb5435b07ea8633e146475d32a89fb11e70f71bf0a0b36fc"
+    },
+    "build/preview-20261102/ci-41351695098-macos-pass.log": {
+      "bytes": 26399,
+      "sha256": "4e73cc8ef9b6bf3ee3606af0ca8de5ee4bb384dc78fd3631f436df9643039a93"
+    },
+    "build/preview-20261102/ci-41351695098-macos.log": {
+      "bytes": 476524,
+      "sha256": "0547157f77624864e3bf3e6ae87dfe7e0bd567f45054da1b5b645b6940112914"
+    },
+    "build/preview-20261102/ci-41351695098-offline-pass.log": {
+      "bytes": 241,
+      "sha256": "bcef81c86b2634ca195b2d093ec2184043fea7d0449d4ba3ce886b3497ab0cd9"
+    },
+    "build/preview-20261102/ci-41351695098-offline.log": {
+      "bytes": 45796,
+      "sha256": "2c9693e04f5377d2d53d19bbe4ce7d2c563de4bf746a3aa5bdce202ce0596983"
+    },
+    "build/preview-20261102/ci-41351695098-run.json": {
+      "bytes": 444,
+      "sha256": "f5e6facba8a1f968b042d3a5f6efb79b4df68b601027da82a55729a7750f8d15"
+    },
+    "build/preview-20261102/ci-41351695098-summary.json": {
+      "bytes": 3889,
+      "sha256": "21e9cb03407997c1c84b8601bf4ec7bc50209ba7a5756a152cdc7f5caa4406fe"
+    },
+    "build/preview-20261102/ci-first-failed.log": {
+      "bytes": 530830,
+      "sha256": "d5c55095c498ba75d1ce48522530e98a45d92a4f0d752dcc941a62e6e70a7eb1"
+    },
+    "build/preview-20261102/ci-second-failed.log": {
+      "bytes": 554787,
+      "sha256": "397dea431b40b25f6f12dde9bb11c82809e720ead67fa81085f0d428544bcf5e"
+    },
+    "build/preview-20261102/ci-third-intel.log": {
+      "bytes": 69307,
+      "sha256": "97691142fef2588de61d4366b8130ba34f7b9d5c41ee4086b8ad0a893f860239"
+    },
+    "build/preview-20261102/installed-au-after-preview.json": {
+      "bytes": 715,
+      "sha256": "51fcc98f211cdf83e85e80ee9de49abe8fa3c5a1546b17502562a1ede040d223"
+    },
+    "build/preview-20261102/local-package.json": {
+      "bytes": 9597,
+      "sha256": "49c1fe2264df907c5186b4a3cf96bb0e112f58e035a1506cff13328aafb2cadf"
+    },
+    "build/preview-20261102/local-packaged-hosts.log": {
+      "bytes": 305942,
+      "sha256": "ecac23ae714449db04eef8529c242b9b7aabf227470c2149f903f6cc35249c91"
+    },
+    "build/preview-20261102/macos-build.log": {
+      "bytes": 37499,
+      "sha256": "727447fc5518cb540445175be3b5833b2d01a4cfac75dc9474e2f4da15cb3fce"
+    },
+    "build/preview-20261102/macos-configure.log": {
+      "bytes": 4056,
+      "sha256": "104c341be47f99a6f6b6da64e7904e2772ce0dc2a847f9391b9f5c6bce38980c"
+    },
+    "build/preview-20261102/macos-ctest.log": {
+      "bytes": 3235,
+      "sha256": "876dac1605da47d96ecc746e6e727f1eefbdf03fdbf588ee4c6dbc89b0e2d882"
+    },
+    "build/preview-20261102/python-tests-restart.log": {
+      "bytes": 9998,
+      "sha256": "62e83f40717e97c7632375a7b709022887fc92c50915378e20c88f56c3d3fab6"
+    },
+    "build/preview-20261102/ci-41351695066-macos-report/api-arm-job.json": {
+      "bytes": 3720,
+      "sha256": "19741ed0cbdd0969062051919f5b176b7aa7037c874613f0301058eeac0bd762"
+    },
+    "build/preview-20261102/ci-41351695066-macos-report/api-artifacts.json": {
+      "bytes": 2865,
+      "sha256": "5b976a274b42696317a775502536ebc5dfa65aba4f98a87ab22ee2aec4d8a008"
+    },
+    "build/preview-20261102/ci-41351695066-macos-report/arm-log-audit.json": {
+      "bytes": 26873,
+      "sha256": "8422f7f1ab9b0731e1ce165ad124a1fcf2396eb9888e39c78405af626ca3acf0"
+    },
+    "build/preview-20261102/ci-41351695066-macos-report/audit.json": {
+      "bytes": 3656,
+      "sha256": "2ef2901b6d4e481b3e82f69feab7c09ca85100049fde3644d340e16b8177412e"
+    },
+    "build/preview-20261102/ci-41351695066-macos-report/extraction.json": {
+      "bytes": 430,
+      "sha256": "2d57d3792a066b4129725295db2c3a0cf643d95b7f20ef61eb33099b6211baaa"
+    },
+    "build/preview-20261102/ci-41351695066-macos-report/inspection.json": {
+      "bytes": 8683,
+      "sha256": "ddfcf2fbe23827981e2fc02f117ebd614be1f4bbe8bdaeae2256b786ab33f634"
+    },
+    "build/preview-20261102/ci-41351695066-macos-report/macos-preview.json": {
+      "bytes": 9573,
+      "sha256": "d5e623d48826883be9fa51b5e3d788316b1f02ba31bfdfb404a5fece3ce25146"
+    },
+    "build/preview-20261102/ci-41351695066-windows-report/windows-inspection.json": {
+      "bytes": 2407,
+      "sha256": "56fead471204232486d547eab1ecd73049b2ad4882caba854c15f276d533ddf1"
+    },
+    "build/preview-20261102/ci-41351695066-windows-report/windows-preview.json": {
+      "bytes": 2163,
+      "sha256": "4439714075851b5b4ac1fd732a1e828c7ee71afa12fa7db01f3c5ef4e7379212"
+    }
+  },
+  "digest_scope": "Product ZIP SHA256 recomputed and matched sidecar/manifest; GitHub outer artifact digests are API metadata, not locally recomputed."
+}
