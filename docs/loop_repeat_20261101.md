@@ -11,7 +11,7 @@ Native SDKを `95cf71a857b15d0ea932ebf97d5fde80b5e80a95` に固定した。
 LOOP STARTのflag4だけを持つpacketと、markerがなく明示repeat addressを使うpacketを、
 元ADPCM bytesのままループ再生できるようにした。repeat先packetにflag2を要求しない。
 END側のRepeat指定でループするかを決め、one-shotとの区別を維持する。
-SDKはmarker bit4を独立して検出し、cache更新時にもENDのRepeat状態を更新する。
+SDKはSTART flag4（bit2）を独立して検出し、cache更新時にもENDのRepeat状態を更新する。
 pluginは `validateTone` の今回の拒否条件だけを除いた。
 
 VAB / raw ADPCM / Web v1 / DAW埋込stateの元bytes、root、loop位置、ADSRとsendを保持する。
@@ -34,7 +34,7 @@ state schema9、旧schema互換、26parameter ID、容量上限とUIは変えて
 | 公式VST3 validator | 47成功、0失敗 |
 
 VAB / Rawそれぞれのmarker4とmarkerless0、非zero repeat位置、非自明なfilter2素材を使い、
-同じbytesへtarget Repeat bit2だけを加えたflags6 /2対照と比較した。
+同じbytesへtarget Repeat flag2（bit1）だけを加えたflags6 /2対照と比較した。
 先頭blockとENDを何度も通過した後の左右PCMが完全一致し、元ADPCM bytesは不変だった。
 全26設定、埋込stateからの新instance復元、Web export/import、Noise / PMON / Morphからの復帰も確認した。
 長sample・全RAM・分割render・rate変更・callback内C++ new/delete0と、
