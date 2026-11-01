@@ -47,6 +47,19 @@ AUプリセット名warning解消と分割VH/VBのLoad sound対応も完了し�
 [最新の実装・配置・復元記録](../preset_split_vab_20261101.md) /[current installed AU manifest](../preset_split_vab_20261101.json)を参照。
 内蔵Sineの広域化も実装・CI成功した。[新build検証記録](../builtin_sine_range_20261102.md)を参照。手元installed AUは上のmanifestから変更していない。
 
+### macOS Developer ID署名・公証の今回の区切り（2026-11-02、開始）
+
+開始Plugin `d83ed67`、Native SDK `95cf71a`。ユーザーが署名 /公証用Secretsを登録したため、実装前に今回のTODOを保存する。
+
+- [ ] 必要な5つのRepository secretsの名前だけを確認し、値や秘密鍵をログ /artifact /gitへ出さない。
+- [ ] Developer ID /hardened runtime /timestamp署名、公証、ticket付与に対応した配布形式をAppleの仕様で確認し、既存のad-hoc Previewを維持して追加する。
+- [ ] mainからの手動実行だけで動く署名用Actionsを追加する。証明書 /秘密鍵 /公証資格情報は一時keychainへ入れ、失敗時も削除する。公開Release /tagは作らない。
+- [ ] Universal APP /AU /VST3をstaging copyだけで署名・検査する。音源 /schema10 /parameter ID0〜25 /依存pin /installed AUを変更しない。
+- [ ] Actionsで署名 /公証済みartifactを生成し、signature /Team ID /hardened runtime /timestamp /notarization /manifest /SHA256、同じ成果物のARM /Intel実AU /VST3 /auvalを検証する。
+- [ ] 失敗時の再開点・Apple submission ID・公開可能な検査証跡・残る実機確認を記録し、TODO /READMEを更新してcommit /pushする。
+
+秘密鍵のローカル書き出し・追加Secretsの値の取得、手元AU /GarageBandの操作、正式公開は行わない。
+
 ### macOS /Windows配布候補の今回の区切り（2026-11-02、配布候補・CI完了）
 
 開始Plugin `85c8f4e`、Native SDK `95cf71a`。ユーザーの指示で配布物作成と各OSのActions検証を進める。
