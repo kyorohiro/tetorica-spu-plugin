@@ -25,6 +25,9 @@ PMONの12音pair、4変調波形、live Ratio / Depth、Decayも実装・検証�
 Software MorphもA/B/Resultの単一canvas、endpointのdraft / Apply、live Amountを実装した。
 core・実AU/VST3・Standalone操作・installed AU更新・GarageBand旧state復元・両repo CIを確認した。
 [Morphの検証記録](morph_20261101.md)と[保存・更新記録](morph_20261101.json)を参照。
+新規Builtin Sineは5-zone ADPCMへ広げ、MIDI0〜127・±2半音を検証した。
+旧kind0はLegacyのまま保持する。[仕様・検証](builtin_sine_range_20261102.md)を参照。
+新buildの実装・CIは完了し、手元installed AUへの配置更新は次の区切りとする。
 Gainは現在0〜100%。WebのMaster 200%とは異なる。
 
 実DAWでの確認済み範囲と残るProgram操作・dirty判定は、
@@ -41,7 +44,7 @@ Gainは現在0〜100%。WebのMaster 200%とは異なる。
 | 実装済み：Noise | Noise clock、Sample切替 | 共有Clock0〜63のlive変更、元音源・draft保持、19params/state5と旧形式互換。実AU/VST3とStandaloneを検証。実DAW独自操作等は残る。 |
 | 実装済み：PMON | 変調波形・Ratio・Depth・Decay | 隣接voiceの12組、4変調波形、live Ratio / Depth、次NoteのDecay、24params / state6を追加した。元音源保持・Noise優先・旧state互換をcore / 実AU・VST3で検証。Standalone操作・installed AU更新・CIも完了。実聴・実DAW automation録音等は残る。 |
 | 実装済み：Software Morph | A/B/Resultを同じcanvasへ表示し、編集対象を切替。保持音を再発音せずblend変更 | 元sourceとA/B原本を保つ26params / state7を実装。endpointはdraft / Apply、Amountだけlive。初期Off、A=Sine / B=Saw（振幅0.8）、Amount0。Offは元sourceへ戻す。PMON併用・Noise優先・実AU/VST3・Standalone・旧state復元・CIを検証。実聴・実DAW独自UIとautomation録音は残る。 |
-| 音色・素材の入力 | `.spu.json`、audio、PSF1/MiniPSFからの静的VAB抽出、VH+VB | `.spu.json` v1/v2とPCM16 / Float32 mono/stereo WAVをimportする。短いWAVはmono /44.1kHz ADPCM、RAMを超えるWAVはSoftware PCMとしてschema9へ保持し、C4 / One shotからRootと全体loopを編集できる。Save WebはADPCM等をv1、Software PCMをv2として書き出す。実Web reader / Chromium / WebKitで読み戻しを検証。Gainや全VAB bankは含めず、Morph等の形式差を説明する。長いAudio v2は32MiB PCM /48MiB JSONの範囲で実装（schema9、Software機能の明示、Root/全体loop、Morph使用不可・設定保持）。他Audio format・PSF抽出・VH/VB file pickerと既知Native loop制限は後続。 |
+| 音色・素材の入力 | `.spu.json`、audio、PSF1/MiniPSFからの静的VAB抽出、VH+VB | `.spu.json` v1/v2とPCM16 / Float32 mono/stereo WAVをimportする。短いWAVはmono /44.1kHz ADPCM、RAMを超えるWAVはSoftware PCMとしてschema9へ保持し、C4 / One shotからRootと全体loopを編集できる。Save WebはADPCM等をv1、Software PCMをv2として書き出す。実Web reader / Chromium / WebKitで読み戻しを検証。Gainや全VAB bankは含めず、Morph等の形式差を説明する。長いAudio v2は32MiB PCM /48MiB JSONの範囲で実装（schema9、Software機能の明示、Root/全体loop、Morph使用不可・設定保持）。分割VH/VB file pickerとNative repeat flag互換は後続作業で実装・検証済み。他Audio format・PSF抽出は後続。 |
 | monitor・演奏UI | Envelope/Waveform/Spectrum、Guitar/Bass/Ukulele、Octave、Pitch/Morph wheel、Master 200% | Morph AmountはSourceとkeyboard横へ実装済み。残るmonitor・Pitch wheel・Octave等はDAWの代替機能とStandaloneの利便性を考慮して追加する。 |
 
 各段階で、音の変化だけでなく、演奏中の編集・保存直後の復元・不正入力時の現音源保持を確認する。
@@ -81,11 +84,11 @@ SPUのGaussian / ADSR / PMON / Reverbを通す。元4bit ADPCMとのbit一致は
 この区別はpluginの画面と説明にも引き継ぐ。
 
 WebのAudio入力は短い録音をSPU ADPCMへ変換し、長い録音をSoftware audioへ切り替える。
-pluginのschema9はBuiltin/VAB/PCM cycle/AdpcmSample/SoftwarePcmの5種類。VAB上限1 MiB、
+pluginのschema10はLegacy Builtin /wide Builtin /VAB /PCM cycle /AdpcmSample /SoftwarePcmの6種類。VAB上限1 MiB、
 ADPCM上限520192bytesを維持し、Software PCMだけ32MiBまで保持する。
 state全体上限は33,555,840bytes（固定1024＋header64＋PCM32MiB＋name320）。
 AdpcmSampleはWeb v1の元ADPCMとroot/loop/signed volume/ADSR/send/name/任意PCMを保持する。
-Noise / PMON / Morphは元音源と独立した共有parameterとして保存する。旧schema1〜8も読み込む。
+Noise / PMON / Morphは元音源と独立した共有parameterとして保存する。旧schema1〜9も読み込み、Builtinの再生はLegacyとして保つ。
 各Enabledが同時Onのhost tupleは保持し、実効modeはNoise優先にする。SampleではMorphとPMONを併用できる。
 PCM cycleは112 Float32、448bytesの元波形を保持し、prepared ADPCMは保存しない。
 MorphはA/B各112 Float32の原本とEnabled / Amountを保存する。旧stateはMorph Off / Amount0 / default A/Bへ移行する。

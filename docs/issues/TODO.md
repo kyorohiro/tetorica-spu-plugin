@@ -45,19 +45,27 @@ CC120のチャンネル別停止も実装・検証・[CI全2job成功](https://g
 [CC120版の配置・復元記録](../au_cc120_update_20261101.md)を参照。
 AUプリセット名warning解消と分割VH/VBのLoad sound対応も完了した。
 [最新の実装・配置・復元記録](../preset_split_vab_20261101.md) /[current installed AU manifest](../preset_split_vab_20261101.json)を参照。
+内蔵Sineの広域化も実装・CI成功した。[新build検証記録](../builtin_sine_range_20261102.md)を参照。手元installed AUは上のmanifestから変更していない。
 
-### 内蔵Sine高音域対応の今回の区切り（2026-11-02、作業中）
+### 内蔵Sine高音域対応の今回の区切り（2026-11-02、実装・CI完了）
 
 開始Plugin `33bed02`、Native SDK `95cf71a`。ユーザーの続行指示で、実装前にTODOを保存する。
 
-- [ ] MIDI92以上とPitch Bend両端で、現在の約1,575Hzの頭打ちを再現・数値記録する。
-- [ ] 内蔵Sine専用の高域用波形と事前準備を追加し、MIDI0〜127・±2半音を演奏できるようにする。Note On /Bend /renderで確保・解放・RAM upload・cache準備を行わない。
-- [ ] 既存音域のPCMと旧projectの再生を保つ。旧builtinのclampも含む保存互換を設計し、新規音色との区別を永続化する。既存parameter ID0〜25を維持する。
-- [ ] 高音域の周波数・境界・Bend・polyphony /sustain /release /PMON・Noise・Morph切替・block分割・state往復・Web exportの対応範囲を検証する。任意VAB /PCM /Morphの実機PITCH上限は別の制約として扱う。
-- [ ] Offline /macOS /sanitizer、実AU /VST3・validatorと実装head CIを確認し、結果・互換性・制限・再開TODOを記録してcommit /pushする。
+- [x] MIDI92以上とPitch Bend両端で、現在の約1,575Hzの頭打ちを再現・数値記録する。
+- [x] 内蔵Sine専用の高域用波形と事前準備を追加し、MIDI0〜127・±2半音を演奏できるようにする。Note On /Bend /renderで確保・解放・RAM upload・cache準備を行わない。
+- [x] 同じ演奏履歴のMIDI0〜89のPCMと旧project全音域の再生を保つ。旧builtinのclampも含む保存互換を設計し、新規音色との区別を永続化する。既存parameter ID0〜25を維持する。
+- [x] 高音域の周波数・境界・Bend・polyphony /sustain /release /PMON・Noise・Morph切替・block分割・state往復・Web exportの対応範囲を検証する。任意VAB /PCM /Morphの実機PITCH上限は別の制約として扱う。
+- [x] Offline /macOS /ASan+UBSan各29件、実AU 19 /VST3 58 PASS行、validator47/0、Python inspector8件、[実装head CI全2job成功](https://github.com/kyorohiro/tetorica-spu-plugin/actions/runs/41336715428)を確認し、記録してcommit /pushする。
 
 この区切りではWeb /Tauri /npm /SDK pin /version /tag /公開releaseを変更しない。
 手元installed AUは既知manifestのまま保持し、新buildの自動host検証と配置更新を区別する。
+
+実装`6229311`、[仕様・検証](../builtin_sine_range_20261102.md) /[source・bundle・証跡hash](../builtin_sine_range_20261102.json)。
+新規Sineはwide、旧schema1〜9のkind0とGain-onlyはLegacyを維持し、新保存はschema10とする。
+Web exportは元単一sampleへの投影となり、range損失を結果tooltipへ記録する。
+
+- [ ] known manifest（`docs/preset_split_vab_20261101.json`）でinstalled AUを退避更新し、新wide Sineと旧GarageBand projectの保存再起動を確認する。新buildの自動host検証とは区別する。
+- [ ] 実聴で高域、zone境界、cross-zone voice再利用時の過渡音を確認する。新0〜89の同じzone0履歴のPCM一致と、旧project全音域のLegacy保持は検証済み。
 
 ### AUプリセット名・分割VH/VB読込の今回の区切り（2026-11-01、完了）
 
@@ -529,7 +537,7 @@ complete `.vab`を最初の対象とする。分割VH/VBの複数file dialogは�
 
 ## 初期版の既知の制約・後続改善
 
-- [ ] 内蔵112標本Sineは約1,575HzでSPU PITCH上限。MIDI92以降も演奏できる波形構成を用意する。
+- [x] 新規Builtin Sineを5-zone ADPCMへ広げ、MIDI0〜127・±2半音を検証した。旧kind0の112標本・PITCH上限・過渡PCMを保持する（[記録](../builtin_sine_range_20261102.md)）。
 - [ ] sample rate変換の品質・遅延報告を検討する。44.1kHz未満のanti-alias filterは未実装。
 - [x] Pitch Bend / Sustainを追加する（[検証記録](../midi_expression_20261031.md)）。
 - [x] CC120をチャンネル別の即時停止にする。CC123はpedalを尊重するchannel release、UI All sound offは全停止として区別する。

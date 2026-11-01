@@ -729,3 +729,10 @@
 - 最終AUを`au-update-260st6dc`でCC120版から退避更新。新binary `3f82bcff…` /旧退避2組 `d9c6033f…`は各manifestと一致。auvalは26params・warning消失・exit0、実installed AU48kHz全16 PASS行が成功した。
 - 新しいGarageBand copyを保存・完全終了・再起動し、実画面のEmbedded VAB /P3/T0/G99 /Project sound restoredを確認。schema9 payload4768bytes /VAB3744bytesと、保護原本11files /known7files /開始時退避11filesが一致した。
 - [操作・配置・戻し方](preset_split_vab_20261101.md) /[current installed manifest・source/log/CI](preset_split_vab_20261101.json)。実DAW独自split panel /途中restore-close /実聴 /長時間 /automation等は未確認TODOに残した。最終AU editorを新copy上に表示、再生・録音停止。Web /Tauri /npm /version /tag /公開releaseは変更していない。
+
+## 2026-11-02 JST — 内蔵Sineの高音域対応
+
+- 作業前TODO `df9be26`、開始`33bed02`。旧MIDI92以降の約1,574.9Hz clampを測定し、元static libraryとheaderをローカル退避した。
+- `6229311`で5-zoneのsoftware-authored ADPCM Builtin Sineを追加。新規instance /Builtinボタンがwide、kind0 /旧schema /Gain-onlyはLegacyのまま。全zone/voice cacheをconstructorでprimeし、Bendはlatched zoneのPITCHだけ更新する。
+- Offline /macOS /ASan+UBSan各29件、実AU 19 /VST3 58 PASS行、公式validator47/0、Python inspector8件成功。旧全128音のPCM hashと測定は修正前後で完全一致した。実装head `6229311`の[CI全2job・全step成功](https://github.com/kyorohiro/tetorica-spu-plugin/actions/runs/41336715428)も確認した。artifact metadataだけを保存し、配布archiveはdownloadしていない。
+- [仕様・互換性・検証](builtin_sine_range_20261102.md)。旧projectと手元installed AUは変更せず、新buildへ直接一時host検証した。実聴と配置更新・実DAWの新source復元は次の区切り。

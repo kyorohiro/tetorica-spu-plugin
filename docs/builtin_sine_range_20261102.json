@@ -1,0 +1,630 @@
+{
+  "schema": 1,
+  "date": "2026-11-02",
+  "timezone": "Asia/Tokyo",
+  "start_commit": "33bed02bcfacc504d87675e89fcbb7b6ba31ea24",
+  "todo_commit": "df9be26e164fb3ad0e502deb0181eb4f49b8a1e5",
+  "source_commit": "6229311311ed43ad0babb7384627f45f3a77ccc6",
+  "native_sdk_commit": "95cf71a857b15d0ea932ebf97d5fde80b5e80a95",
+  "spec": {
+    "fresh_and_builtin_button": "BuiltinSineWide kind5",
+    "legacy_kind0": "fixed original112-frame sine with old PITCH clamp, source-transition and controller behavior retained",
+    "schema": 10,
+    "old_schema_reader": "1..9; AU8-byte and VST3 rawGain12-byte remain legacy",
+    "state_fixed_bytes": 1024,
+    "parameter_ids": [
+      0,
+      1,
+      2,
+      3,
+      4,
+      5,
+      6,
+      7,
+      8,
+      9,
+      10,
+      11,
+      12,
+      13,
+      14,
+      15,
+      16,
+      17,
+      18,
+      19,
+      20,
+      21,
+      22,
+      23,
+      24,
+      25
+    ],
+    "zone_factors": [
+      1,
+      2,
+      4,
+      8,
+      16
+    ],
+    "zone_notes": [
+      [
+        0,
+        89
+      ],
+      [
+        90,
+        101
+      ],
+      [
+        102,
+        113
+      ],
+      [
+        114,
+        125
+      ],
+      [
+        126,
+        127
+      ]
+    ],
+    "bend_semitones": [
+      -2,
+      2
+    ],
+    "zone_selection": "nominal Note only, latched per voice; upper bend headroom reserved at NoteOn",
+    "runtime": "constructor finishes all RAM uploads then primes every zone on all24voice; NoteOn/Bend/render do no RAM upload or cache preparation",
+    "pmon": "carrier wide; modulator keeps original112-frame PITCH limit",
+    "noise_morph": "mask wide; effective Off restores original source on next NoteOn",
+    "web": "canonical original64-byte single-sample ADPCM projection plus export-result tooltip notes; full-range mapping not represented; reimport is ordinary ADPCM"
+  },
+  "verification": {
+    "offline": {
+      "total": 29,
+      "failed": 0,
+      "log": "build/builtin-wide-20261102/offline-ctest-final.log",
+      "seconds": 25.74
+    },
+    "macos": {
+      "total": 29,
+      "failed": 0,
+      "log": "build/builtin-wide-20261102/macos-ctest-final.log",
+      "seconds": 25.57
+    },
+    "asan_ubsan": {
+      "total": 29,
+      "failed": 0,
+      "log": "build/builtin-wide-20261102/asan-ctest.log",
+      "seconds": 46.05
+    },
+    "unit_pitch_grid": {
+      "notes": 128,
+      "bends": [
+        0,
+        8192,
+        16383
+      ],
+      "rates": [
+        44100,
+        48000,
+        96000
+      ],
+      "cases": 1152
+    },
+    "actual_au": {
+      "pass_lines": 19,
+      "wide_suite_rates": [
+        44100,
+        48000,
+        96000
+      ],
+      "wide_measurements_per_rate": 72,
+      "direct_local_bundle": true,
+      "audio_device_editor_install": false,
+      "sandbox_registration_retry": "sandbox factory registration refused; same command succeeded with approved escalation"
+    },
+    "actual_vst3": {
+      "pass_lines": 58,
+      "wide_suite_rates": [
+        44100,
+        48000,
+        96000
+      ],
+      "wide_measurements_per_rate": 72,
+      "direct_local_bundle": true
+    },
+    "vst3_validator": {
+      "passed": 47,
+      "failed": 0
+    },
+    "python_inspector": {
+      "tests": 8,
+      "failed": 0
+    },
+    "legacy_old_binary_comparison": {
+      "old_static_libraries_copied_before_edit": true,
+      "pcm_hash_all128_rates": [
+        44100,
+        48000,
+        96000
+      ],
+      "frequency_cases": 24,
+      "logs_byte_equal": true
+    },
+    "cxx_allocations_frees": {
+      "ordinary": 0,
+      "aligned": 0,
+      "scope": "fresh FullRange instance; allzone/all24physicalvoice first-use, steals/retriggers, PMON/Morph return; C++ operators only"
+    }
+  },
+  "source_files": {
+    "CMakeLists.txt": {
+      "bytes": 12277,
+      "sha256": "1b62dd32402db4aabecb62456f0321c67e6cd99556e05774096a16f2c820e8db"
+    },
+    "CMakePresets.json": {
+      "bytes": 2551,
+      "sha256": "d679fda3c63593f3efc42402ff0b1377b2a30feed7b47478be6978eb08f3f6ca"
+    },
+    "plugin/InstrumentUI.cpp": {
+      "bytes": 84930,
+      "sha256": "2399aab32a30abb8c573ac3830af28b0a41e2dccf7cc91b35423c3c7c18c293b"
+    },
+    "scripts/check_garageband_vab_state.py": {
+      "bytes": 19175,
+      "sha256": "ff4afc2b858b23604d4f167e389da54c979386ef9625c295278e44d2f2dc70b6"
+    },
+    "src/InstrumentState.cpp": {
+      "bytes": 23163,
+      "sha256": "be5faf23cd06e5c13eff884b284784fea7ac9b7c75c2feed687dc8b124f40abb"
+    },
+    "src/InstrumentState.h": {
+      "bytes": 4992,
+      "sha256": "2f6c9c8c01b59301333b7cbb3aca574ff53839aa5cbd724c2629389e49f21266"
+    },
+    "src/SpuBuiltin.h": {
+      "bytes": 2378,
+      "sha256": "29192a846143f86dac617086f6d04d6d14a254ed765c4b0df0f7b32e818df3d2"
+    },
+    "src/SpuEngineExchange.cpp": {
+      "bytes": 10072,
+      "sha256": "60f221abdcc678d96d9e74ba1142e9d8ca8811f725942f877693ebb611551527"
+    },
+    "src/SpuExportSource.cpp": {
+      "bytes": 1724,
+      "sha256": "d39b8e7c015d0c34e7b5a36aa7e185a89a224034642c808da2eb9bb7888667fd"
+    },
+    "src/SpuInstrument.cpp": {
+      "bytes": 32467,
+      "sha256": "26f95e89ca8a739b87eb63311f6535d8a90dbc5b63325a099caa57828a98f194"
+    },
+    "src/SpuInstrument.h": {
+      "bytes": 9890,
+      "sha256": "51a02e07786a60fb7e6d98d643c5f443ec82e11193649985fc8946ea05ff638a"
+    },
+    "src/VabLoader.cpp": {
+      "bytes": 14444,
+      "sha256": "eb7b3e015f33a6e32f9edef2201c12b1f7094cac8fc511e68b11e3a0a5ebae11"
+    },
+    "src/WebInstrumentExport.cpp": {
+      "bytes": 9874,
+      "sha256": "87baf37ff85622ff393e95a3a8512a864eea318eec478fb931204546f4db498c"
+    },
+    "tests/instrument_state_test.cpp": {
+      "bytes": 36700,
+      "sha256": "fed008ab37b7ea872d33b0f5ce0fba1e141a497e5373f4ffc78c91b997413fbc"
+    },
+    "tests/software_pcm_state_test.cpp": {
+      "bytes": 13288,
+      "sha256": "87ea74a9634eb2cc073253a4d8ce9e559055456eba55ad3e6c6f11fa244fc4a5"
+    },
+    "tests/spu_builtin_wide_test.cpp": {
+      "bytes": 9482,
+      "sha256": "85f58bd04bafd01be254e21f9979216c3c25213fc645b2354ccf9da6a679207d"
+    },
+    "tests/spu_engine_exchange_test.cpp": {
+      "bytes": 49416,
+      "sha256": "d8c71e87d38c5c2114f227272e9e1f72b19265db1c3059b8bdae3a1c79d24390"
+    },
+    "tests/spu_export_source_test.cpp": {
+      "bytes": 6880,
+      "sha256": "59e33a846d98f394522ac34c280322dc8cd183b7c6cb97c203b4d88943f902df"
+    },
+    "tests/test_garageband_vab_state.py": {
+      "bytes": 10958,
+      "sha256": "536ff3fa78d9093160cfd452f3d5056668922fc143e6b7126a4b2e26f8534d4a"
+    },
+    "tests/web_instrument_export_test.cpp": {
+      "bytes": 13597,
+      "sha256": "b340c2340a2ab2e544d1ec33d259ef582fb01b5b5b0e5cf34c8188934993f280"
+    },
+    "tools/au-state-check.cpp": {
+      "bytes": 33268,
+      "sha256": "aac6299b715024160e567f336b7b22d829b2d7d593856fa9abeefb1bccd9010b"
+    },
+    "tools/vst3-host/builtin-wide-checks.h": {
+      "bytes": 13193,
+      "sha256": "efd8d62f3aaccdb4cfef59902043961bc8e88f33ebffb2be05b0c4f7296866d9"
+    },
+    "tools/vst3-host/main.cpp": {
+      "bytes": 45769,
+      "sha256": "94e96509c4d1ab63f5112853752968336755782cc9bf458dd0fd23a8707fa3be"
+    },
+    "tools/vst3-host/pcm-cycle-checks.h": {
+      "bytes": 5769,
+      "sha256": "e0fc734d62c14b0b649431bd59658d040c8a583dfda5e22cd7d229590ea418b3"
+    }
+  },
+  "built_bundles": {
+    "TetoricaSPU.app": {
+      "path": "build/macos/out/TetoricaSPU.app",
+      "files": {
+        "Contents/Info.plist": {
+          "bytes": 1146,
+          "sha256": "1fec046b5560e89705ce207b4372e154e72e7e97951f2e0c4a23789827cf58c6"
+        },
+        "Contents/MacOS/TetoricaSPU": {
+          "bytes": 2417128,
+          "sha256": "e8ec940f6145c6e7ce8e024d360b43fbb14f815cfebc3f0c8e1792238d24f8ae"
+        },
+        "Contents/PkgInfo": {
+          "bytes": 8,
+          "sha256": "82502191c9484b04d685374f9879a0066069c49b8acae7a04b01d38d07e8eca0"
+        },
+        "Contents/Resources/Roboto-Regular.ttf": {
+          "bytes": 145348,
+          "sha256": "b2efabca5ea4bc56eea829713706b5cd0788b82aca153bd4adde9b1573933b4f"
+        },
+        "Contents/Resources/THIRD_PARTY_NOTICES.txt": {
+          "bytes": 58824,
+          "sha256": "d26ed5d113ec81968e0f1c41560491631e9c77c5bddf6ad6608dbf8697ce5dcf"
+        },
+        "Contents/Resources/TetoricaSPU-macOS-MainMenu.nib": {
+          "bytes": 4232,
+          "sha256": "7ba57e13c5fdbc1f77eaf801fd49f7762dfbef93a2ce6526e547901f66d4719e"
+        }
+      }
+    },
+    "TetoricaSPU.component": {
+      "path": "build/macos/out/TetoricaSPU.component",
+      "files": {
+        "Contents/Info.plist": {
+          "bytes": 1541,
+          "sha256": "94a46fcfc638d76a05aca50d5deedaff2a7a934aee55a816d007b6dff9c9bbc4"
+        },
+        "Contents/MacOS/TetoricaSPU": {
+          "bytes": 1873912,
+          "sha256": "97c4f968e125689430b8a6491bcaf85e2229c345ed66ac963f0c200e816e8889"
+        },
+        "Contents/PkgInfo": {
+          "bytes": 8,
+          "sha256": "d06a80ba92de0833d0ed03de1b02b7c8913f126d9e8c8931b190765dd5d83b11"
+        },
+        "Contents/Resources/Roboto-Regular.ttf": {
+          "bytes": 145348,
+          "sha256": "b2efabca5ea4bc56eea829713706b5cd0788b82aca153bd4adde9b1573933b4f"
+        },
+        "Contents/Resources/THIRD_PARTY_NOTICES.txt": {
+          "bytes": 58824,
+          "sha256": "d26ed5d113ec81968e0f1c41560491631e9c77c5bddf6ad6608dbf8697ce5dcf"
+        }
+      }
+    },
+    "TetoricaSPU.vst3": {
+      "path": "build/macos/out/TetoricaSPU.vst3",
+      "files": {
+        "Contents/Info.plist": {
+          "bytes": 930,
+          "sha256": "0fe9965eadefafb0be705d9e3bba5a6df3c6e2561b608bdbf267d7f831e5d644"
+        },
+        "Contents/MacOS/TetoricaSPU": {
+          "bytes": 2173528,
+          "sha256": "84c84e15d1690209e91bbba95b8dad0baf1b98e2e87fe6a99b9215501c9546bb"
+        },
+        "Contents/PkgInfo": {
+          "bytes": 8,
+          "sha256": "d06a80ba92de0833d0ed03de1b02b7c8913f126d9e8c8931b190765dd5d83b11"
+        },
+        "Contents/Resources/Roboto-Regular.ttf": {
+          "bytes": 145348,
+          "sha256": "b2efabca5ea4bc56eea829713706b5cd0788b82aca153bd4adde9b1573933b4f"
+        },
+        "Contents/Resources/THIRD_PARTY_NOTICES.txt": {
+          "bytes": 58824,
+          "sha256": "d26ed5d113ec81968e0f1c41560491631e9c77c5bddf6ad6608dbf8697ce5dcf"
+        }
+      }
+    }
+  },
+  "installed_au": {
+    "changed": false,
+    "path": "/Users/kyorohiro/Library/Audio/Plug-Ins/Components/TetoricaSPU.component",
+    "expected_manifest": "docs/preset_split_vab_20261101.json",
+    "before_and_after_files": {
+      "Contents/Info.plist": {
+        "bytes": 1541,
+        "sha256": "94a46fcfc638d76a05aca50d5deedaff2a7a934aee55a816d007b6dff9c9bbc4"
+      },
+      "Contents/MacOS/TetoricaSPU": {
+        "bytes": 1872632,
+        "sha256": "3f82bcff46f182c2bd370f92516759796aa72aa8d4cf3474716376037d94aa81"
+      },
+      "Contents/PkgInfo": {
+        "bytes": 8,
+        "sha256": "d06a80ba92de0833d0ed03de1b02b7c8913f126d9e8c8931b190765dd5d83b11"
+      },
+      "Contents/Resources/Roboto-Regular.ttf": {
+        "bytes": 145348,
+        "sha256": "b2efabca5ea4bc56eea829713706b5cd0788b82aca153bd4adde9b1573933b4f"
+      },
+      "Contents/Resources/THIRD_PARTY_NOTICES.txt": {
+        "bytes": 58824,
+        "sha256": "d26ed5d113ec81968e0f1c41560491631e9c77c5bddf6ad6608dbf8697ce5dcf"
+      }
+    }
+  },
+  "evidence": {
+    "build/builtin-wide-20261102/before.json": {
+      "bytes": 1996,
+      "sha256": "3ae2cd8302e7edea3307ff46da15990c3b4e1b93ee8fc109b752e2370e11b15a"
+    },
+    "build/builtin-wide-20261102/dependencies.log": {
+      "bytes": 52,
+      "sha256": "2127e3152068d46e3abd67d8595e100f2eb62782a5c49c5c7d6c0f70d3d689f5"
+    },
+    "build/builtin-wide-20261102/baseline.cpp": {
+      "bytes": 1289,
+      "sha256": "bfb46cf97a60b090cff04dcf9e4fda3b8ce9f40450a6e8c67b3e13cb158ac312"
+    },
+    "build/builtin-wide-20261102/baseline.log": {
+      "bytes": 1640,
+      "sha256": "5368df89651cdd082fa1776bde76e2e62f89303a2ab3f64a20b161b856436e42"
+    },
+    "build/builtin-wide-20261102/baseline-core.a": {
+      "bytes": 641344,
+      "sha256": "e38f89cd6732562e323ced948ef2608d1d127373231f02ae287347f592f192b2"
+    },
+    "build/builtin-wide-20261102/baseline-native.a": {
+      "bytes": 86224,
+      "sha256": "6d43990adbf525fbf1ef2a15ed7b11514e07e3159094133a13358ab5e506741e"
+    },
+    "build/builtin-wide-20261102/baseline-vab.a": {
+      "bytes": 23784,
+      "sha256": "afe52ad286d874bd3f9432c7563da29693e627d878eb98d75bb0fead56e1f4b8"
+    },
+    "build/builtin-wide-20261102/legacy-after.log": {
+      "bytes": 1640,
+      "sha256": "5368df89651cdd082fa1776bde76e2e62f89303a2ab3f64a20b161b856436e42"
+    },
+    "build/builtin-wide-20261102/wide-probe.cpp": {
+      "bytes": 1361,
+      "sha256": "c369bdbc33b1c6ed49acc5f237c6cae1142501dee385069c229059691a2cf4ad"
+    },
+    "build/builtin-wide-20261102/wide-probe.log": {
+      "bytes": 1589,
+      "sha256": "512a29a50f3aadcddf3ef95fbd6e1d32553b66a9dd86ee77499cd6e347d2dbb5"
+    },
+    "build/builtin-wide-20261102/offline-configure.log": {
+      "bytes": 171,
+      "sha256": "a1e71df2c48c396faa477a4be02543fd833af8a2c48f0a8ac0036cb68f67b6b7"
+    },
+    "build/builtin-wide-20261102/offline-build-final.log": {
+      "bytes": 8433,
+      "sha256": "8ad2559a57a00e029107c73c64ece15e028cbe2eaa248f5624a727f98c2980e8"
+    },
+    "build/builtin-wide-20261102/offline-ctest-final.log": {
+      "bytes": 3229,
+      "sha256": "9322e03d3c3f95f7ee8e7ee3772e274c49ef1cf3745af876091fdf3f4e60a639"
+    },
+    "build/builtin-wide-20261102/macos-configure.log": {
+      "bytes": 772,
+      "sha256": "d5a7e0225ea8206ada00d268e22f28fd9ccf0c3106c64a0db02c87cd6f483069"
+    },
+    "build/builtin-wide-20261102/macos-build-final.log": {
+      "bytes": 11029,
+      "sha256": "b0bb8477ce4959947acefbb8c2949847a0ae20bbb9029c541af878983ca9e535"
+    },
+    "build/builtin-wide-20261102/macos-ctest-final.log": {
+      "bytes": 3227,
+      "sha256": "b5e8243ed00610c670aeab53d2830574a79a0f49f28aa02b41b81cbfef35b0eb"
+    },
+    "build/builtin-wide-20261102/asan-configure.log": {
+      "bytes": 2927,
+      "sha256": "f8d1745062a4aed8fb156fda0b530286d567a33214873be890b1ede19f2559c7"
+    },
+    "build/builtin-wide-20261102/asan-build.log": {
+      "bytes": 8164,
+      "sha256": "c5ba9722a6241353847f0f76825cd26d4aa74dc75c2cbfa355ea365fb2d59a20"
+    },
+    "build/builtin-wide-20261102/asan-ctest.log": {
+      "bytes": 3239,
+      "sha256": "033ccca45162614559fa1f2ac716c3db6018c1180c8c1967960f25b8658a578e"
+    },
+    "build/builtin-wide-20261102/vst3-host.log": {
+      "bytes": 24381,
+      "sha256": "b0121a8709893f209460bf46a886eb7f927edd409674a5e87360382bb3047055"
+    },
+    "build/builtin-wide-20261102/au-host.log": {
+      "bytes": 6327,
+      "sha256": "52ec704d660a34bd3b7bb7dc307ebe72f6809af8684f3bb3b0b197efd2410172"
+    },
+    "build/builtin-wide-20261102/vst3-validator.log": {
+      "bytes": 263078,
+      "sha256": "e016af91065d7a89b90e13d1b8f9e7f5817bec1dfb751da84364a0cbc9467642"
+    },
+    "build/builtin-wide-20261102/python-inspector.log": {
+      "bytes": 1328,
+      "sha256": "d7e77c3b83c434841f27655d28bb8e894bf760830d2be45b4751319963de7ee9"
+    },
+    "build/builtin-fullrange-core/generate.cpp": {
+      "bytes": 928,
+      "sha256": "2b4675a09c7cdfc8672840aab5b1b91e5e2d5a96f92be8b70a812c21b8220c29"
+    },
+    "build/builtin-fullrange-core/generate.log": {
+      "bytes": 1202,
+      "sha256": "76e7ecf0acd60f4553904b17c58cf1314b1ae18e2c361cc535b2aa8596c03ecd"
+    },
+    "build/builtin-wide-20261102/ci.json": {
+      "bytes": 25402,
+      "sha256": "c6e7015458198c2a023947ae92dbded74ba555dfabd9f58f7d28bab41e92751f"
+    }
+  },
+  "ci": {
+    "run_id": 41336715428,
+    "url": "https://github.com/kyorohiro/tetorica-spu-plugin/actions/runs/41336715428",
+    "status": "completed",
+    "conclusion": "success",
+    "head_sha": "6229311311ed43ad0babb7384627f45f3a77ccc6",
+    "jobs": [
+      {
+        "id": 124937982967,
+        "name": "macos",
+        "conclusion": "success",
+        "steps": [
+          {
+            "name": "Set up job",
+            "conclusion": "success"
+          },
+          {
+            "name": "Run actions/checkout@v4",
+            "conclusion": "success"
+          },
+          {
+            "name": "Verify safe AU installer in temporary directories",
+            "conclusion": "success"
+          },
+          {
+            "name": "Verify bounded GarageBand state inspection",
+            "conclusion": "success"
+          },
+          {
+            "name": "Initialize and verify pinned dependencies",
+            "conclusion": "success"
+          },
+          {
+            "name": "Run python3 scripts/bootstrap.py --check",
+            "conclusion": "success"
+          },
+          {
+            "name": "Run cmake --preset macos",
+            "conclusion": "success"
+          },
+          {
+            "name": "Run cmake --build --preset macos --parallel 4",
+            "conclusion": "success"
+          },
+          {
+            "name": "Run ctest --preset macos",
+            "conclusion": "success"
+          },
+          {
+            "name": "Install and validate the user AU",
+            "conclusion": "success"
+          },
+          {
+            "name": "Validate VST3",
+            "conclusion": "success"
+          },
+          {
+            "name": "Render and restore the actual VST3",
+            "conclusion": "success"
+          },
+          {
+            "name": "Restore embedded state in the actual AU",
+            "conclusion": "success"
+          },
+          {
+            "name": "Run actions/upload-artifact@v4",
+            "conclusion": "success"
+          },
+          {
+            "name": "Post Run actions/checkout@v4",
+            "conclusion": "success"
+          },
+          {
+            "name": "Complete job",
+            "conclusion": "success"
+          }
+        ]
+      },
+      {
+        "id": 124937983175,
+        "name": "offline",
+        "conclusion": "success",
+        "steps": [
+          {
+            "name": "Set up job",
+            "conclusion": "success"
+          },
+          {
+            "name": "Run actions/checkout@v4",
+            "conclusion": "success"
+          },
+          {
+            "name": "Verify safe AU installer in temporary directories",
+            "conclusion": "success"
+          },
+          {
+            "name": "Verify bounded GarageBand state inspection",
+            "conclusion": "success"
+          },
+          {
+            "name": "Initialize pinned native SDK and JSON header",
+            "conclusion": "success"
+          },
+          {
+            "name": "Run cmake --preset offline",
+            "conclusion": "success"
+          },
+          {
+            "name": "Run cmake --build --preset offline --parallel 4",
+            "conclusion": "success"
+          },
+          {
+            "name": "Run ctest --preset offline",
+            "conclusion": "success"
+          },
+          {
+            "name": "Post Run actions/checkout@v4",
+            "conclusion": "success"
+          },
+          {
+            "name": "Complete job",
+            "conclusion": "success"
+          }
+        ]
+      }
+    ],
+    "artifacts": [
+      {
+        "id": 13095428703,
+        "name": "macos-development-bundles",
+        "bytes": 2693656,
+        "digest": "sha256:fb0fe66b879278f79269a6124ea6158cb873288db6b7c219f2da654f23e94c86"
+      }
+    ],
+    "artifact_or_log_archive_downloaded": false
+  },
+  "limits": [
+    "No local AU installation/update, GarageBand GUI/source selection or project save/reopen this stage.",
+    "New schema10 saves require new plugin; old builds reject them.",
+    "New0..89 PCM equivalence assumes same zone0 performance history; cross-zone physicalvoice reuse freshly keys source and128-native-frame fade-in, unlike Legacy fade/restart.",
+    "Zone ADPCM quantization/timbre and high-frequency spectra differ; no anti-alias or rate conversion quality improvement.",
+    "Default128-note/Bend promise uses native44.1k and normal output rates; low-rate Nyquist and existing adapter limits remain.",
+    "No direct GUI verification of new legacy-label/export tooltip; source/data path reviewed and actual state sound APIs tested.",
+    "No physical listening, real-time long-run use, DAW automation recording, release/signing/publication."
+  ],
+  "unchanged": [
+    "Native SDK/dependency pins",
+    "Web/Tauri/npm",
+    "version/tag/release",
+    "physical installed AU",
+    "existing26parameter IDs"
+  ],
+  "next": [
+    "known-manifest AU backup/update and old/new GarageBand restoration",
+    "physical listening of high notes, zone boundaries and cross-zone transient",
+    "existing manual file/popup/automation/long-run TODO"
+  ]
+}

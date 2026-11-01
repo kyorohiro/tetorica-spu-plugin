@@ -3,7 +3,7 @@
 PS1 SPU instrument for DAWs, using iPlug2 and tetorica-soundchip-native.
 Initial development targets macOS Standalone, AUv2 and VST3. Not a published release.
 
-Current prototype: original built-in Sine, MIDI Note On/Off and velocity,
+Current prototype: full-range built-in Sine with legacy project playback, MIDI Note On/Off and velocity,
 24 voices, channel-aware note ownership, Pitch Bend, Sustain, All sound off,
 Gain, a PCM waveform editor, Software Morph, SPU Noise, paired PMON, custom ADSR editing, shared SPU Reverb and mouse keyboard.
 Load a complete VAB from the editor and select a Program and Tone to audition.
@@ -72,6 +72,22 @@ It updates held notes and release tails without restarting samples and also
 affects subsequent notes. The SPU's PITCH register still limits the available
 range for a given sample. RPN bend-range changes are not implemented yet.
 
+New instances and the **Builtin Sine** button use a five-zone, software-authored
+ADPCM Sine covering MIDI 0–127 with ±2-semitone Bend at normal 44.1 kHz or higher
+host rates. Each key reserves upward Bend headroom when choosing its zone;
+held-note bends change only PITCH, retaining phase and ADSR. The original
+112-frame source is used for keys 0–89, then 2/4/8/16-period sources for
+90–101 / 102–113 / 114–125 / 126–127. SPU Gaussian interpolation, ADSR, PMON and
+Reverb still supply the sound. Zone quantization and timbre can differ.
+
+Old Builtin projects restore as **Builtin Sine (legacy)**, preserving the original
+sample, transitions and high-note ceiling. Clicking **Builtin Sine** explicitly
+selects the new source. Authored PCM, Morph, VAB and the PMON modulator retain
+their existing sample-dependent PITCH limits; PMON's Builtin carrier can use the
+new zones. Web export contains the original single Sine sample and explains the
+lost high-range mapping in the export-details tooltip. Reimporting that file
+does not recover the multi-zone source. See [range and compatibility verification](docs/builtin_sine_range_20261102.md).
+
 CC64 values 64–127 hold released keys; values 0–63 release only those deferred
 notes, leaving physically held keys playing. Sustain postpones Note Off rather
 than extending a one-shot sample or overriding its authored ADSR.
@@ -137,8 +153,8 @@ Tone reverb-send flag; use **Send: all notes** to send them to Reverb.
 Applied cycles are stored as 112 Float32 samples in the project and encoded
 again when restored. No external file is needed. Shape selection and drawing
 are instrument edits rather than host automation parameters; the existing
-17 pre-existing parameter IDs remain unchanged. **Builtin Sine** still restores the original
-fixed sample. Editing a VAB does not rewrite its sample bank: Apply replaces
+17 pre-existing parameter IDs remain unchanged. **Builtin Sine** selects the full-range
+multisample source. Editing a VAB does not rewrite its sample bank: Apply replaces
 the current source with the authored PCM cycle.
 
 ## Software Morph
@@ -339,7 +355,7 @@ Reading, parsing and sample-cache preparation run on a worker. Initial loading
 selects the first playable Tone. **Program** chooses the first playable Tone
 within that Program; **Tone** chooses an exact entry. Both menus use the bank's
 original IDs. This auditions one Tone at a time.
-**Built-in Sine** returns to the original instrument.
+**Builtin Sine** explicitly selects the full-range multisample instrument.
 
 The status distinguishes preparation from audio adoption. A prepared instrument
 can wait for the next audio block when processing is stopped. A failed load keeps
@@ -475,7 +491,7 @@ Gain, custom ADSR/Apply, Reverb, Noise, PMON and Morph settings, including both 
 Restoring a project prepares a fresh SPU synchronously before reporting
 success; it does not need an external sample path. Malformed or unsupported state
 keeps the current sound, parameters and an already prepared pending replacement.
-Previous Gain-only AU/VST3 state remains readable and migrates to Built-in Sine.
+Previous Gain-only AU/VST3 state remains readable and migrates to legacy Built-in Sine.
 Schema 1 VAB/Gain states also remain readable and use their original Tone ADSR.
 Schema 2 keeps the original bank bytes and adds the custom ADSR settings.
 Schema 3 adds the shared Reverb settings. Schema 1/2 and Gain-only states restore
@@ -501,6 +517,10 @@ PCM16 and a bounded UTF-8 name. The 1024-byte fixed tail and all 26 parameter
 IDs are unchanged. Schemas 1–8 retain their earlier kinds and small-source caps.
 Source metadata edits and export snapshots share immutable PCM; actual project
 save/restore creates bounded serialized data off the audio thread.
+Schema 10 adds source kind 5 for full-range Builtin Sine, without a sample payload
+or Program/Tone selection. All 26 parameters and the 1024-byte fixed layout remain
+unchanged. Builtin kind 0 from all supported schemas retains legacy Sine playback. New saves use schema
+10, which earlier plugin builds reject; keep earlier project copies for rollback.
 
 The actual AU and VST3 have been tested for embedded-bank round-trip, separate
 instances, immediate first-render MIDI/PCM and malformed-state rejection. VST3
@@ -569,13 +589,15 @@ still need a direct user check; the verified host-preset route is separate.
 
 ## Prototype limits
 
-- The 112-frame Sine and authored PCM cycles reach the SPU PITCH ceiling at about 1,575 Hz;
-  MIDI notes 92 and above clamp. Full-range multisampling is follow-up work.
+- Legacy 112-frame Sine, authored PCM and Morph cycles reach the SPU PITCH ceiling
+  at about 1,575 Hz; notes 92 and above clamp. New Builtin Sine uses prepared
+  multisample zones for the full MIDI/Bend range. This does not change the
+  sample-dependent limits of VAB, imported sources or the PMON modulator.
 - Host rate conversion uses continuous linear interpolation. Anti-alias filtering
   below 44.1 kHz and improved conversion quality remain follow-up work.
-- State schema 9 stores a built-in instrument, one selected VAB Tone, one
+- State schema 10 stores a legacy or full-range built-in instrument, one selected VAB Tone, one
   authored 112-sample PCM cycle, one imported ADPCM sample or one Software PCM recording.
-  VAB is limited to 1 MiB, ADPCM to 520192 bytes and Software PCM to 32 MiB. Key zones, layers and game-driver performance state are
+  VAB is limited to 1 MiB, ADPCM to 520192 bytes and Software PCM to 32 MiB. VAB key zones, layers and game-driver performance state are
   not reconstructed. Held notes, release tails, decoder caches and host rate
   are not saved.
 - Configurable Pitch Bend range remains TODO.
