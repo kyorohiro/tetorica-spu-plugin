@@ -715,3 +715,10 @@
 - Load soundのpartner panelはOnIdleでロック解放後に開き、両選択までworkerへ要求しない。StandaloneでVB→VH /VH→VB、2枚目取消、不正pair保持、再読込の成功を画面確認した。lifetime /serial /restoreガードも静的レビュー済み。
 - Offline/macOS/ASan+UBSanのCTest各28件成功、実AU48kHz16 PASS行 /実VST3全3rate55 PASS行 /validator47/0。初回の新unit Web send期待値とAU harnessのCFString関数名を修正し、最終検査が成功した。production export仕様は変更していない。
 - 次は実装push後のCIとknown manifest付きAU更新。実DAW独自split panel /途中restore-close /実聴等の未確認範囲は残す。
+
+## 2026-11-01 JST — auvalのユーザープリセット名経路を追加修正
+
+- 初回候補`7c1c411`は実AU property検査に成功したが、実auvalのwarningが残った。公開PresentPresetへ負番号とユーザー名を設定するred回帰で、pinned frameworkが名前を無視する経路を再現した。候補は`au-update-hh1zg247`から条件付きrollbackし、CC120版の既知manifestへ戻した。
+- plugin専用の64bit AudioComponent LookupでPresent/Current presetだけを扱い、他selectorはMIDIを含め公式factoryへ委譲する。名前・番号・ClassInfoを揃え、メタデータ変更では発音を保持し、factory0 recallは既定音源へ戻す。
+- 独立レビューでSetPropertyのsize引数はApple APIのUInt32値渡しと確認・修正し、Get/Set両方に公式typedefとのstatic_assertを追加した。malformed property /scope /element /size /name /factory番号とPCM不変の実AU回帰が成功、macOS buildとCTest28件も成功した。
+- auvalがexit0でも当warningを検出すればvalidation scriptを失敗にし、旧AUでredを確認した。次は最終候補の退避配置・auval greenと旧GarageBand復元・新head CIを確認する。legacy ComponentManager経路は今回拡張していない。

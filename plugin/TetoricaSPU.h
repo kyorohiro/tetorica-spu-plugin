@@ -132,6 +132,10 @@ public:
   OSStatus SetState(CFPropertyListRef state) override;
   OSStatus GetState(CFPropertyListRef* state) override;
   void OnRestoreState() override;
+  static OSStatus AuGetProperty(void* instance, AudioUnitPropertyID property,
+    AudioUnitScope scope, AudioUnitElement element, void* data, UInt32* size);
+  static OSStatus AuSetProperty(void* instance, AudioUnitPropertyID property,
+    AudioUnitScope scope, AudioUnitElement element, const void* data, UInt32 size);
 #endif
 
 #if IPLUG_DSP
@@ -212,6 +216,7 @@ private:
   // It is owned off the render thread and guarded by mStateMutex.
   using AuStateName = std::unique_ptr<const struct __CFString, decltype(&CFRelease)>;
   AuStateName mAuStateName{nullptr, &CFRelease};
+  SInt32 mAuPresetNumber = 0;
 #endif
   // Destruction joins the non-RT worker before destroying the exchange.
   tetorica::VabLoader mLoader{mEngines};
@@ -250,3 +255,11 @@ private:
   std::array<float, kScratchFrames> mRight{};
 #endif
 };
+
+#if defined(AU_API)
+namespace iplug {
+// The pinned property methods are nonvirtual. Specialize only this plug-in's
+// modern AudioComponent dispatch; every other selector uses the official base.
+template<> AudioComponentMethod IPlugAUFactory<TetoricaSPU, true>::Lookup(SInt16 selector);
+}
+#endif

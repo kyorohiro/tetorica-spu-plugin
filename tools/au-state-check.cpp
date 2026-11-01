@@ -145,11 +145,11 @@ public:
       "AU factory-presets property is not an owned CFArray");
     return Cf<CFArrayRef>(presets);
   }
-  AUPreset presentPreset() const
+  AUPreset presentPreset(AudioUnitPropertyID property = kAudioUnitProperty_PresentPreset) const
   {
     AUPreset preset{-1, nullptr};
     UInt32 size = sizeof(preset);
-    ok(AudioUnitGetProperty(mUnit, kAudioUnitProperty_PresentPreset, kAudioUnitScope_Global,
+    ok(AudioUnitGetProperty(mUnit, property, kAudioUnitScope_Global,
       0, &preset, &size), "AU present-preset property rejected");
     require(size == sizeof(preset) && preset.presetName &&
       CFGetTypeID(preset.presetName) == CFStringGetTypeID(), "AU present preset lacks its owned name");
@@ -160,6 +160,22 @@ public:
     const AUPreset preset{number, CFSTR("The factory number selects its sound")};
     ok(AudioUnitSetProperty(mUnit, kAudioUnitProperty_PresentPreset, kAudioUnitScope_Global,
       0, &preset, sizeof(preset)), "AU factory preset recall rejected");
+  }
+  OSStatus setPresentPreset(int number, CFStringRef name)
+  {
+    const AUPreset preset{number, name};
+    return AudioUnitSetProperty(mUnit, kAudioUnitProperty_PresentPreset, kAudioUnitScope_Global,
+      0, &preset, sizeof(preset));
+  }
+  OSStatus setPresetProperty(AudioUnitPropertyID property, AudioUnitScope scope,
+    AudioUnitElement element, const void* value, UInt32 bytes)
+  {
+    return AudioUnitSetProperty(mUnit, property, scope, element, value, bytes);
+  }
+  OSStatus getPresetProperty(AudioUnitPropertyID property, AudioUnitScope scope,
+    AudioUnitElement element, void* value, UInt32& bytes) const
+  {
+    return AudioUnitGetProperty(mUnit, property, scope, element, value, &bytes);
   }
   float gain() const
   {
@@ -263,6 +279,18 @@ void checkPresetNames(AudioComponent component, const std::vector<std::uint8_t>&
     CFEqual(factory->presetName, CFSTR("TetoricaSPU")) && present.presetNumber == 0 &&
     CFEqual(presentName.get(), factory->presetName) && CFEqual(stateName(initial.get()), presentName.get()),
     "AU FactoryPresets/PresentPreset/ClassInfo default names disagree");
+  // AU hosts also assign a descriptive user name through PresentPreset, with
+  // a negative number. This must rename metadata without recalling a sound.
+  ok(named.setPresentPreset(-1, CFSTR("User name from PresentPreset")), "AU rejected a user preset name");
+  const auto userPropertyState = named.save();
+  require(CFEqual(stateName(userPropertyState.get()), CFSTR("User name from PresentPreset")) &&
+    body(userPropertyState.get()) == defaultBody && named.gain() == 100.f,
+    "AU PresentPreset user name was not retained in retrieved ClassInfo data");
+  const auto userProperty = named.presentPreset();
+  const Cf<CFStringRef> userPropertyName(userProperty.presetName);
+  require(userProperty.presetNumber == -1 && CFEqual(userPropertyName.get(), stateName(userPropertyState.get())),
+    "AU PresentPreset did not retain its user number/name");
+  named.restoreFactoryPreset(0);
 
   const auto encoded = tetorica::encodeState(tetorica::InstrumentDefinition::fromVab(bank, 3, 1), 37);
   const Cf<CFStringRef> unicode(CFStringCreateWithCString(kCFAllocatorDefault,
@@ -293,14 +321,13 @@ void checkPresetNames(AudioComponent component, const std::vector<std::uint8_t>&
   CFDictionarySetValue(referenceState.get(), CFSTR(kAUPresetNameKey), CFSTR("Independent instance"));
   ok(reference.restore(referenceState.get()), "AU reference name restore failed");
   require(CFEqual(stateName(named.save().get()), unicode.get()), "AU names leaked between instances");
-  // The pinned framework publishes its single factory index even after user
-  // ClassInfo loading. Preserve that existing contract rather than fabricating
-  // a negative user-preset index that its GetProperty/RestorePreset cannot own.
+  // ClassInfo loading is a user-preset restore. Its descriptive name/negative
+  // number must agree with PresentPreset without changing the factory menu.
   const auto afterUser = named.presentPreset();
   const Cf<CFStringRef> afterUserName(afterUser.presetName);
-  require(afterUser.presetNumber == 0 && CFEqual(afterUserName.get(), CFSTR("TetoricaSPU")) &&
+  require(afterUser.presetNumber == -1 && CFEqual(afterUserName.get(), unicode.get()) &&
     CFEqual(stateName(named.save().get()), unicode.get()),
-    "User ClassInfo metadata changed the pinned factory PresentPreset contract");
+    "User ClassInfo metadata disagrees with PresentPreset");
 
   const auto badType = withData(initial.get(), encoded);
   CFDictionarySetValue(badType.get(), CFSTR(kAUPresetNameKey), kCFBooleanTrue);
@@ -327,8 +354,53 @@ void checkPresetNames(AudioComponent component, const std::vector<std::uint8_t>&
     const auto saved = named.save();
     require(CFEqual(stateName(saved.get()), unicode.get()), "Rejected AU state changed its descriptive name");
   };
+  const auto assertMetadataPreserved = [&] {
+    const auto saved = named.save();
+    require(body(saved.get()) == encoded && named.gain() == 37.f &&
+      CFEqual(stateName(saved.get()), unicode.get()), "Invalid AU preset property changed name/Gain/source");
+    const auto current = named.presentPreset();
+    const Cf<CFStringRef> currentName(current.presetName);
+    require(current.presetNumber == -1 && CFEqual(currentName.get(), unicode.get()),
+      "Invalid AU preset property changed its current number/name");
+  };
+  const auto malformedProperties = [&] {
+    const AUPreset validUser{-1, CFSTR("Must not replace name through invalid property")};
+    const AUPreset invalidFactory{1, CFSTR("Unknown factory number")};
+    const AUPreset nullName{-1, nullptr};
+    const AUPreset wrongName{-1, reinterpret_cast<CFStringRef>(kCFBooleanTrue)};
+    const AUPreset tooLong{-1, oversizedName.get()};
+    const auto fail = [&](AudioUnitPropertyID property, AudioUnitScope scope, AudioUnitElement element,
+                          const void* input, UInt32 bytes) {
+      require(named.setPresetProperty(property, scope, element, input, bytes) != noErr,
+        "Malformed AU preset property was accepted");
+      assertMetadataPreserved();
+    };
+    for(const auto property : std::array<AudioUnitPropertyID, 2>{kAudioUnitProperty_PresentPreset, kAudioUnitProperty_CurrentPreset})
+    {
+      for(const auto input : {&invalidFactory, &nullName, &wrongName, &tooLong})
+        fail(property, kAudioUnitScope_Global, 0, input, sizeof(*input));
+      fail(property, kAudioUnitScope_Global, 0, nullptr, sizeof(validUser));
+      fail(property, kAudioUnitScope_Global, 0, &validUser, sizeof(validUser)-1);
+      const std::array<std::uint8_t, sizeof(AUPreset)+1> oversizedInput{};
+      fail(property, kAudioUnitScope_Global, 0, oversizedInput.data(), oversizedInput.size());
+      fail(property, kAudioUnitScope_Input, 0, &validUser, sizeof(validUser));
+      fail(property, kAudioUnitScope_Global, 1, &validUser, sizeof(validUser));
+      AUPreset output{31337, nullptr};
+      UInt32 bytes=sizeof(output)-1;
+      require(named.getPresetProperty(property, kAudioUnitScope_Global, 0, &output, bytes) != noErr &&
+        output.presetNumber == 31337 && !output.presetName, "Short AU preset getter overwrote its output");
+      bytes=sizeof(output);
+      require(named.getPresetProperty(property, kAudioUnitScope_Global, 0, nullptr, bytes) != noErr,
+        "Null AU preset getter output was accepted");
+      require(named.getPresetProperty(property, kAudioUnitScope_Input, 0, &output, bytes) != noErr &&
+        named.getPresetProperty(property, kAudioUnitScope_Global, 1, &output, bytes) != noErr &&
+        output.presetNumber == 31337 && !output.presetName, "Invalid AU preset getter scope/element was accepted");
+      assertMetadataPreserved();
+    }
+  };
   for(const auto bad : {badType.get(), missing.get(), oversized.get(), invalidBody.get(), wrongIdentity.get()})
     assertRejected(bad); // Pending engine/name remain intact before first audio.
+  malformedProperties();
   require(named.renderMidi({tetorica::test::on(0, 60, 37)}) ==
     reference.renderMidi({tetorica::test::on(0, 60, 37)}), "Named restore changed first-render source/Gain PCM");
   for(const auto bad : {badType.get(), missing.get(), oversized.get(), invalidBody.get(), wrongIdentity.get()})
@@ -337,6 +409,23 @@ void checkPresetNames(AudioComponent component, const std::vector<std::uint8_t>&
     require(named.renderMidi({}) == reference.renderMidi({}) && named.right() == reference.right(),
       "Rejected AU name/state interrupted active PCM");
   }
+
+  malformedProperties();
+  require(named.renderMidi({}) == reference.renderMidi({}) && named.right() == reference.right(),
+    "Invalid AU preset properties interrupted active PCM");
+  // The deprecated CurrentPreset alias follows the same bounded metadata path.
+  const AUPreset alias{-7, unicode.get()};
+  ok(named.setPresetProperty(kAudioUnitProperty_CurrentPreset, kAudioUnitScope_Global, 0, &alias, sizeof(alias)),
+    "AU rejected the CurrentPreset user-name alias");
+  const auto aliasPresent = named.presentPreset();
+  const auto aliasCurrent = named.presentPreset(kAudioUnitProperty_CurrentPreset);
+  const Cf<CFStringRef> aliasPresentName(aliasPresent.presetName), aliasCurrentName(aliasCurrent.presetName);
+  require(aliasPresent.presetNumber == -7 && aliasCurrent.presetNumber == -7 &&
+    CFEqual(aliasPresentName.get(), unicode.get()) && CFEqual(aliasCurrentName.get(), unicode.get()) &&
+    CFEqual(stateName(named.save().get()), unicode.get()) && body(named.save().get()) == encoded,
+    "AU CurrentPreset/PresentPreset/ClassInfo user metadata disagree");
+  require(named.renderMidi({}) == reference.renderMidi({}) && named.right() == reference.right(),
+    "AU user-property rename recalled or interrupted the active sound");
 
   // Public factory recall must restore its immutable default chunk and name,
   // replacing the user name without overwriting the factory menu entry.
@@ -355,8 +444,8 @@ void checkPresetNames(AudioComponent component, const std::vector<std::uint8_t>&
     "AU named factory recall did not restore fresh builtin audio");
   std::cout << "PASS AU preset names factoryPresentClassInfoConsistent=true userUnicodeEmpty1024=true "
     "mutableInputCopied=true instanceNamesIndependent=true noRecallByName=true "
-    "userNameKeepsFactoryIndex=true invalidNameIdentityBodyAtomic=true "
-    "pendingActivePCMPreserved=true factoryRecallDefaultPCM=true\n";
+    "userPresentCurrentClassInfo=true invalidNameIdentityBodyAtomic=true malformedPropertyAtomic=true "
+    "pendingActivePCMPreserved=true renameKeepsActivePCM=true factoryRecallDefaultPCM=true\n";
 }
 } // namespace
 

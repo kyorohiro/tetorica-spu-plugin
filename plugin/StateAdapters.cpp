@@ -8,6 +8,8 @@
 
 #include <array>
 #include <cstdint>
+#include <cstring>
+#include <type_traits>
 #include <vector>
 
 #if defined(VST3_API)
@@ -114,7 +116,14 @@ Steinberg::tresult PLUGIN_API TetoricaSPU::setState(Steinberg::IBStream* stream)
 #endif
 
 #if defined(AU_API)
+static_assert(std::is_same_v<decltype(&TetoricaSPU::AuGetProperty), AudioUnitGetPropertyProc>);
+static_assert(std::is_same_v<decltype(&TetoricaSPU::AuSetProperty), AudioUnitSetPropertyProc>);
 namespace {
+bool auPresetProperty(AudioUnitPropertyID property)
+{
+  return property == kAudioUnitProperty_PresentPreset || property == kAudioUnitProperty_CurrentPreset;
+}
+
 bool auNumber(CFDictionaryRef dictionary, CFStringRef key, std::int32_t& value)
 {
   const auto entry = CFDictionaryGetValue(dictionary, key);
@@ -132,6 +141,96 @@ bool putAuNumber(CFMutableDictionaryRef dictionary, CFStringRef key, std::int32_
   return true;
 }
 } // namespace
+
+template<> AudioComponentMethod iplug::IPlugAUFactory<TetoricaSPU, true>::Lookup(SInt16 selector)
+{
+  if (selector == kAudioUnitGetPropertySelect)
+    return reinterpret_cast<AudioComponentMethod>(&TetoricaSPU::AuGetProperty);
+  if (selector == kAudioUnitSetPropertySelect)
+    return reinterpret_cast<AudioComponentMethod>(&TetoricaSPU::AuSetProperty);
+  return IPlugAUFactory<IPlugAU, true>::Lookup(selector);
+}
+
+OSStatus TetoricaSPU::AuGetProperty(void* instance, AudioUnitPropertyID property,
+  AudioUnitScope scope, AudioUnitElement element, void* data, UInt32* size)
+{
+  if (!auPresetProperty(property))
+  {
+    using GetProperty = OSStatus (*)(void*, AudioUnitPropertyID, AudioUnitScope, AudioUnitElement, void*, UInt32*);
+    const auto forward = reinterpret_cast<GetProperty>(
+      iplug::IPlugAUFactory<iplug::IPlugAU, true>::Lookup(kAudioUnitGetPropertySelect));
+    return forward(instance, property, scope, element, data, size);
+  }
+  if (scope != kAudioUnitScope_Global) return kAudioUnitErr_InvalidScope;
+  if (element != 0) return kAudioUnitErr_InvalidElement;
+  if (!instance || !data || !size || *size < sizeof(AUPreset))
+    return kAudioUnitErr_InvalidPropertyValue;
+  try
+  {
+    // This is the public factory storage layout used by the pinned GetPlug.
+    auto* plug = reinterpret_cast<TetoricaSPU*>(
+      &static_cast<iplug::AudioComponentPlugInInstance*>(instance)->mInstanceStorage);
+    AUPreset preset{0, nullptr};
+    {
+      std::lock_guard<std::mutex> lock(plug->mStateMutex);
+      preset.presetNumber = plug->mAuPresetNumber;
+      preset.presetName = plug->mAuStateName ? CFStringCreateCopy(kCFAllocatorDefault, plug->mAuStateName.get()) :
+        CFStringCreateWithCString(kCFAllocatorDefault, plug->GetPresetName(plug->GetCurrentPresetIdx()), kCFStringEncodingUTF8);
+    }
+    if (!preset.presetName) return kAudioUnitErr_InvalidPropertyValue;
+    std::memcpy(data, &preset, sizeof(preset));
+    *size = sizeof(preset);
+    return noErr; // As in the pinned API, the host owns the returned +1 name.
+  }
+  catch (...) { return kAudioUnitErr_InvalidPropertyValue; }
+}
+
+OSStatus TetoricaSPU::AuSetProperty(void* instance, AudioUnitPropertyID property,
+  AudioUnitScope scope, AudioUnitElement element, const void* data, UInt32 size)
+{
+  if (!auPresetProperty(property))
+  {
+    // The Apple ABI passes size by value. The pinned entry's declaration uses
+    // a pointer but only forwards its bits, so call it with the official type.
+    const auto forward = reinterpret_cast<AudioUnitSetPropertyProc>(
+      iplug::IPlugAUFactory<iplug::IPlugAU, true>::Lookup(kAudioUnitSetPropertySelect));
+    return forward(instance, property, scope, element, data, size);
+  }
+  if (scope != kAudioUnitScope_Global) return kAudioUnitErr_InvalidScope;
+  if (element != 0) return kAudioUnitErr_InvalidElement;
+  if (!instance || !data || size != sizeof(AUPreset))
+    return kAudioUnitErr_InvalidPropertyValue;
+  auto* plug = reinterpret_cast<TetoricaSPU*>(
+    &static_cast<iplug::AudioComponentPlugInInstance*>(instance)->mInstanceStorage);
+  try
+  {
+    AUPreset preset;
+    std::memcpy(&preset, data, sizeof(preset));
+    if (!preset.presetName || CFGetTypeID(preset.presetName) != CFStringGetTypeID() ||
+        CFStringGetLength(preset.presetName) > 1024)
+      return kAudioUnitErr_InvalidPropertyValue;
+    if (preset.presetNumber >= 0)
+    {
+      if (preset.presetNumber >= plug->NPresets() || !plug->RestorePreset(preset.presetNumber))
+        return kAudioUnitErr_InvalidPropertyValue;
+      // RestorePreset calls our OnRestoreState after its validated default
+      // chunk commits, resetting user metadata to the factory number/name.
+    }
+    else
+    {
+      AuStateName nextName{CFStringCreateCopy(kCFAllocatorDefault, preset.presetName), &CFRelease};
+      if (!nextName) return kAudioUnitErr_InvalidPropertyValue;
+      std::lock_guard<std::mutex> lock(plug->mStateMutex);
+      plug->mAuStateName.swap(nextName);
+      plug->mAuPresetNumber = preset.presetNumber;
+    }
+  }
+  catch (...) { return kAudioUnitErr_InvalidPropertyValue; }
+  // Metadata-only user renames do not recall a sound or reset live MIDI. Host
+  // callbacks are after the complete commit and outside every state lock.
+  try { plug->InformHostOfPresetChange(); } catch (...) {}
+  return noErr;
+}
 
 OSStatus TetoricaSPU::GetState(CFPropertyListRef* output)
 {
@@ -227,6 +326,7 @@ OSStatus TetoricaSPU::SetState(CFPropertyListRef propertyList)
     {
       std::lock_guard<std::mutex> lock(mStateMutex);
       mAuStateName.swap(nextName); // No allocation after the sound commits.
+      mAuPresetNumber = -1;
     }
   }
   catch (...)
@@ -244,9 +344,10 @@ void TetoricaSPU::OnRestoreState()
   {
     std::lock_guard<std::mutex> lock(mStateMutex);
     mAuStateName.reset();
+    mAuPresetNumber = GetCurrentPresetIdx();
   }
   // Host/editor callbacks can synchronously re-enter ClassInfo serialization.
   // Do not retain the state mutex while forwarding the framework notification.
-  iplug::Plugin::OnRestoreState();
+  try { iplug::Plugin::OnRestoreState(); } catch (...) {}
 }
 #endif

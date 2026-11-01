@@ -5,6 +5,7 @@ import getpass
 import os
 import re
 import subprocess
+import sys
 import time
 
 
@@ -36,7 +37,17 @@ def main():
                 r'^\s*aumu\s+Tspu\s+Tetr\b', listing.stdout, re.MULTILINE):
             print('PASS: TetoricaSPU was discovered by the Audio Component service', flush=True)
             # Discovery retries do not turn a real API/render/MIDI failure green.
-            raise SystemExit(subprocess.run(['/usr/bin/auval', '-v', 'aumu', 'Tspu', 'Tetr']).returncode)
+            validation = subprocess.run(['/usr/bin/auval', '-v', 'aumu', 'Tspu', 'Tetr'],
+                                        capture_output=True, text=True)
+            print(validation.stdout, end='', flush=True)
+            print(validation.stderr, end='', file=sys.stderr, flush=True)
+            if validation.returncode:
+                raise SystemExit(validation.returncode)
+            # auval returns success for this warning. Treat it as a regression
+            # so CI verifies the host's preset-name update path too.
+            if 'Preset name is not retained in retrieved class data' in validation.stdout + validation.stderr:
+                raise SystemExit('AU preset-name validation failed despite auval exit 0')
+            raise SystemExit(0)
         time.sleep(1)
     detail = 'listing timed out'
     if listing:
