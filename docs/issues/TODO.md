@@ -46,6 +46,19 @@ CC120のチャンネル別停止も実装・検証・[CI全2job成功](https://g
 AUプリセット名warning解消と分割VH/VBのLoad sound対応も完了した。
 [最新の実装・配置・復元記録](../preset_split_vab_20261101.md) /[current installed AU manifest](../preset_split_vab_20261101.json)を参照。
 
+### 内蔵Sine高音域対応の今回の区切り（2026-11-02、作業中）
+
+開始Plugin `33bed02`、Native SDK `95cf71a`。ユーザーの続行指示で、実装前にTODOを保存する。
+
+- [ ] MIDI92以上とPitch Bend両端で、現在の約1,575Hzの頭打ちを再現・数値記録する。
+- [ ] 内蔵Sine専用の高域用波形と事前準備を追加し、MIDI0〜127・±2半音を演奏できるようにする。Note On /Bend /renderで確保・解放・RAM upload・cache準備を行わない。
+- [ ] 既存音域のPCMと旧projectの再生を保つ。旧builtinのclampも含む保存互換を設計し、新規音色との区別を永続化する。既存parameter ID0〜25を維持する。
+- [ ] 高音域の周波数・境界・Bend・polyphony /sustain /release /PMON・Noise・Morph切替・block分割・state往復・Web exportの対応範囲を検証する。任意VAB /PCM /Morphの実機PITCH上限は別の制約として扱う。
+- [ ] Offline /macOS /sanitizer、実AU /VST3・validatorと実装head CIを確認し、結果・互換性・制限・再開TODOを記録してcommit /pushする。
+
+この区切りではWeb /Tauri /npm /SDK pin /version /tag /公開releaseを変更しない。
+手元installed AUは既知manifestのまま保持し、新buildの自動host検証と配置更新を区別する。
+
 ### AUプリセット名・分割VH/VB読込の今回の区切り（2026-11-01、完了）
 
 開始Plugin `56f6403`、Native SDK `95cf71a`。ユーザーの続行指示で、作業前TODOを保存する。
