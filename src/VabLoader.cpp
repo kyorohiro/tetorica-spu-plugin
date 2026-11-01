@@ -260,7 +260,7 @@ void VabLoader::run() {
         job->bytes=job->source->bankBytes();
       }
       if(!current(job->generation)){finish(job->generation,nullptr,kSuperseded);continue;}
-      if(job->kind==Job::Kind::Builtin)definition=InstrumentDefinition::builtin();
+      if(job->kind==Job::Kind::Builtin)definition=InstrumentDefinition::builtinWide();
       else if(job->kind==Job::Kind::PcmCycle)definition=InstrumentDefinition::fromPcmCycle(job->cycle);
       else if(job->kind==Job::Kind::MorphEndpoints)
         definition=InstrumentDefinition::withMorphEndpoints(job->source,job->endpoints);

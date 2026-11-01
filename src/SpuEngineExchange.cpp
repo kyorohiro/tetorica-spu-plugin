@@ -1,6 +1,7 @@
 // SPDX-License-Identifier: BSD-3-Clause
 // Copyright (c) 2026 kyorohiro
 #include "SpuEngineExchange.h"
+#include "SpuBuiltin.h"
 #include <limits>
 #include <stdexcept>
 #include <type_traits>
@@ -16,7 +17,7 @@ struct SpuEngineExchange::Node {
 };
 
 SpuEngineExchange::SpuEngineExchange()
-  : mActive(new Node{0,std::make_unique<SpuInstrument>(),InstrumentDefinition::builtin(),std::nullopt}) {
+  : mActive(new Node{0,std::make_unique<SpuInstrument>(BuiltinSineMode::FullRange),InstrumentDefinition::builtinWide(),std::nullopt}) {
   static_assert(std::atomic<Generation>::is_always_lock_free,
                 "Audio generation counters must be lock-free");
   static_assert(std::atomic<Node*>::is_always_lock_free,
@@ -188,6 +189,7 @@ void SpuEngineExchange::collectRetired() {
 std::unique_ptr<SpuInstrument> prepareDefinition(const InstrumentDefinition& definition) {
   std::unique_ptr<SpuInstrument> prepared;
   if(definition.kind()==InstrumentDefinition::Kind::Builtin)prepared=std::make_unique<SpuInstrument>();
+  else if(definition.kind()==InstrumentDefinition::Kind::BuiltinSineWide)prepared=std::make_unique<SpuInstrument>(BuiltinSineMode::FullRange);
   else if(definition.kind()==InstrumentDefinition::Kind::PcmCycle)prepared=std::make_unique<SpuInstrument>(definition.pcmCycle());
   else if(definition.kind()==InstrumentDefinition::Kind::AdpcmSample)prepared=std::make_unique<SpuInstrument>(definition.rawAdpcmSample());
   else if(definition.kind()==InstrumentDefinition::Kind::SoftwarePcm)prepared=std::make_unique<SpuInstrument>(definition.softwarePcmSample());

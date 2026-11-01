@@ -3,6 +3,7 @@
 #include "InstrumentState.h"
 #include "SpuEngineExchange.h"
 #include "VabLoader.h"
+#include "SpuBuiltin.h"
 #include <algorithm>
 #include <array>
 #include <atomic>
@@ -177,6 +178,48 @@ void malformed(){
   for(auto bits:{0x7ff0000000000000ull,0x7ff8000000000000ull,0xbff0000000000000ull,0x4059400000000000ull}){
     bad=good;for(unsigned i=0;i<8;++i)bad[32+bankLength(bad)+i]=static_cast<std::uint8_t>(bits>>(i*8));
     rejects([&]{decode(bad);});
+  }
+}
+void builtinWideCompatibility(){
+  const auto wide=Def::builtinWide(),legacy=Def::builtin();
+  CHECK(wide!=legacy&&wide==Def::builtinWide()&&wide->kind()==Def::Kind::BuiltinSineWide);
+  CHECK(wide->bankBytes().empty()&&wide->program()==0&&wide->tone()==0);
+  const auto wire=encodeState(wide,37);
+  CHECK(wire.size()==kStateFixedBytes&&wire[8]==10&&wire[16]==5&&bankLength(wire)==0);
+  CHECK(decode(wire).definition==wide&&encodeState(decode(wire).definition,37)==wire);
+  CHECK(Def::withMorphEndpoints(wide,{})==wide);
+  MorphEndpoints endpoints;endpoints.a[9]=-.12345f;endpoints.b[11]=.54321f;
+  const auto edited=Def::withMorphEndpoints(wide,endpoints);
+  const EnvelopeSettings envelope{{0xa937,0xd7bb},true,false};
+  const ReverbSettings effects{ReverbPreset::Room,true,true,.375,.625};
+  const NoiseSettings noise{true,37};const PmonSettings pmon{true,WaveformShape::Saw,2.5,.375,1250};
+  const MorphSettings morph{true,.625};
+  const auto full=encodeState(edited,99,envelope,effects,noise,pmon,morph);const auto saved=decode(full);
+  CHECK(saved.definition->kind()==Def::Kind::BuiltinSineWide&&sameMorphEndpoints(saved.definition->morphEndpoints(),endpoints));
+  CHECK(encodeState(saved.definition,saved.gainPercent,saved.envelope,saved.reverb,saved.noise,saved.pmon,saved.morph)==full);
+  for(const auto field:{20u,24u,28u}) {
+    auto bad=wire;word(bad,field,1);rejects([&]{decode(bad);});
+  }
+  {auto bad=wire;bad.push_back(0);word(bad,12,static_cast<std::uint32_t>(bad.size()));word(bad,28,1);rejects([&]{decode(bad);});}
+  for(unsigned version=1;version<=9;++version) {
+    rejects([&]{decode(oldSchema(wire,version));});
+    const auto previous=decode(oldSchema(encodeState(legacy,37),version));
+    CHECK(previous.definition==legacy); // Old kind0 never upgrades implicitly.
+    for(double rate:{44100.,48000.})for(int note:{60,108}) {
+      auto restored=prepareDefinition(*previous.definition);SpuInstrument expected;
+      CHECK(restored->prepare(rate)&&expected.prepare(rate));
+      restored->noteOn(note,127);expected.noteOn(note,127);
+      Stereo a(4096),b(4096);render(*restored,a);render(expected,b);
+      CHECK(a.left==b.left&&a.right==b.right); // Includes the historical high clamp.
+    }
+  }
+  for(double rate:{44100.,48000.}) {
+    auto restored=prepareDefinition(*decode(wire).definition);
+    SpuInstrument expected(BuiltinSineMode::FullRange),old;
+    CHECK(restored->prepare(rate)&&expected.prepare(rate)&&old.prepare(rate));
+    restored->noteOn(108,127);expected.noteOn(108,127);old.noteOn(108,127);
+    Stereo a(4096),b(4096),c(4096);render(*restored,a);render(expected,b);render(old,c);
+    CHECK(a.left==b.left&&a.right==b.right&&a.left!=c.left);
   }
 }
 void pcmCycles(){
@@ -410,7 +453,7 @@ void immediateRestore(){
 }
 void snapshotsAndAtomicFailure(){
   SpuEngineExchange exchange;
-  CHECK(exchange.snapshotDefinition()->kind()==Def::Kind::Builtin);
+  CHECK(exchange.snapshotDefinition()->kind()==Def::Kind::BuiltinSineWide);
   auto plain=Def::fromVab(fixture(),3,0),fine=Def::fromVab(fixture(),3,1);
   auto generation=exchange.beginRequest();
   CHECK(exchange.publish(generation,prepareDefinition(*plain),plain));
@@ -477,7 +520,7 @@ void loaderMetadata(){
   for(int i=0;i<2000&&loader.status().state==VabLoader::State::Loading;++i)
     std::this_thread::sleep_for(std::chrono::milliseconds(1));
   CHECK(loader.status().state==VabLoader::State::Ready);
-  CHECK(exchange.snapshotDefinition()->kind()==Def::Kind::Builtin);
+  CHECK(exchange.snapshotDefinition()->kind()==Def::Kind::BuiltinSineWide);
 }
 void concurrentSnapshots(){
   SpuEngineExchange exchange;
@@ -501,7 +544,7 @@ void concurrentSnapshots(){
 }
 }
 int main(){
-  codec();malformed();pcmCycles();noiseSettings();pmonSettings();morphSettings();rawSources();immediateRestore();snapshotsAndAtomicFailure();
+  codec();malformed();builtinWideCompatibility();pcmCycles();noiseSettings();pmonSettings();morphSettings();rawSources();immediateRestore();snapshotsAndAtomicFailure();
   callbackAndDefinitionLifetime();loaderMetadata();concurrentSnapshots();
   std::puts("PASS immutable VAB/PCM/rawADPCM current-state metadata/signedvolumes/tuning/source preservation; legacy schema migration; strict codec, immediate restore, snapshots, failure atomicity, RT lifetime and concurrent collection");
 }

@@ -37,7 +37,7 @@ template<class Factory> void checkPcmCycles(Factory make,double rate,const char*
     requirePCM(std::abs(frequency(sound,rate)-261.625565)<1.,"PCM cycle note pitch/loop period is incorrect");
     requirePCM(first->stateBodyForTest()==wire,"Playback mutated editable PCM authoring data");
     requirePCM(maximum(isolated->renderMidi({}))==0&&
-      envelope_detail::saved(*isolated).definition->kind()==InstrumentDefinition::Kind::Builtin,
+      envelope_detail::saved(*isolated).definition->kind()==InstrumentDefinition::Kind::BuiltinSineWide,
       "PCM cycle restore affected a separate instance");
     shapes.push_back(std::move(sound));
   }

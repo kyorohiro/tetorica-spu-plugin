@@ -579,7 +579,7 @@ void workerPcmCycles(const std::vector<std::uint8_t>& bytes) {
   const auto imported=loader.request(bytes,0);waitStatus(loader,imported,Loader::State::Ready);
   CHECK(begin(exchange)&&exchange.snapshotDefinition()->kind()==Definition::Kind::Vab);
   const auto builtin=loader.requestBuiltin();waitStatus(loader,builtin,Loader::State::Ready);
-  CHECK(begin(exchange)&&exchange.snapshotDefinition()->kind()==Definition::Kind::Builtin);
+  CHECK(begin(exchange)&&exchange.snapshotDefinition()->kind()==Definition::Kind::BuiltinSineWide);
 }
 
 void pcmCycleSupersession(const std::vector<std::uint8_t>&) {
@@ -639,7 +639,7 @@ void workerMorphEndpoints(const std::vector<std::uint8_t>& bytes) {
   // A second request must capture the current pending definition BEFORE its
   // generation invalidates it; falling back to the active source loses A/B.
   auto gen=loader.requestBuiltin();waitStatus(loader,gen,Loader::State::Ready);
-  CHECK(exchange.snapshotDefinition()->kind()==Definition::Kind::Builtin&&equal(exchange.snapshotDefinition()->morphEndpoints(),original));
+  CHECK(exchange.snapshotDefinition()->kind()==Definition::Kind::BuiltinSineWide&&equal(exchange.snapshotDefinition()->morphEndpoints(),original));
   CHECK(begin(exchange)&&equal(exchange.instrument().morphEndpoints(),original));
   const auto inspect=[&](Exchange::Generation value,Definition::Kind kind) {
     waitStatus(loader,value,Loader::State::Ready);const auto snapshot=exchange.snapshotDefinition();
@@ -652,7 +652,7 @@ void workerMorphEndpoints(const std::vector<std::uint8_t>& bytes) {
   inspect(loader.requestPcmCycle(tetorica::makePcmCycle(Shape::Triangle)),Definition::Kind::PcmCycle);
   inspect(loader.requestFile(files.write("morph preserved.vab",bytes)),Definition::Kind::Vab);
   inspect(loader.requestFile(files.write("morph exact.vab",bytes),1),Definition::Kind::Vab);
-  inspect(loader.requestBuiltin(),Definition::Kind::Builtin);
+  inspect(loader.requestBuiltin(),Definition::Kind::BuiltinSineWide);
   {
     Gate gate;const auto old=loader.requestMorphEndpoints(exchange.snapshotDefinition(),original);gate.wait();
     auto newer=original;newer.b[9]=-.456789f;
@@ -689,7 +689,7 @@ void importedParameterPublication(const std::vector<std::uint8_t>&) {
   Exchange exchange;
   CHECK(!exchange.adoptedImportState());
   const auto initial=exchange.snapshotAuthoring();
-  CHECK(initial.generation==0&&initial.definition->kind()==Definition::Kind::Builtin&&!initial.importedState);
+  CHECK(initial.generation==0&&initial.definition->kind()==Definition::Kind::BuiltinSineWide&&!initial.importedState);
   const auto* original=&exchange.instrument();
   {RtProbe probe;exchange.instrument().noteOn(60,127);}
   const auto generation=exchange.commitPreparedImport(tetorica::prepareDefinition(*first.definition),first);

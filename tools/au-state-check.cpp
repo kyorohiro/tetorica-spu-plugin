@@ -14,6 +14,7 @@
 #include "vst3-host/loop-repeat-checks.h"
 #include "vst3-host/gain-smoothing-checks.h"
 #include "vst3-host/cc120-checks.h"
+#include "vst3-host/builtin-wide-checks.h"
 #include <AudioToolbox/AudioToolbox.h>
 #include <CoreFoundation/CoreFoundation.h>
 #include <algorithm>
@@ -81,13 +82,13 @@ CFStringRef stateName(CFPropertyListRef state)
 
 class Instance final {
 public:
-  explicit Instance(AudioComponent component)
+  explicit Instance(AudioComponent component,double sampleRate=48000)
   {
     ok(AudioComponentInstanceNew(component, &mUnit), "Cannot instantiate local AU");
     try
     {
       AudioStreamBasicDescription format{};
-      format.mSampleRate = 48000;
+      format.mSampleRate = sampleRate;
       format.mFormatID = kAudioFormatLinearPCM;
       format.mFormatFlags = kAudioFormatFlagsNativeFloatPacked | kAudioFormatFlagIsNonInterleaved;
       format.mBytesPerPacket = 4;
@@ -96,7 +97,7 @@ public:
       format.mChannelsPerFrame = 2;
       format.mBitsPerChannel = 32;
       ok(AudioUnitSetProperty(mUnit, kAudioUnitProperty_StreamFormat, kAudioUnitScope_Output,
-        0, &format, sizeof(format)), "AU rejected 48 kHz Float32 stereo");
+        0, &format, sizeof(format)), "AU rejected requested-rate Float32 stereo");
       UInt32 maximumFrames = 256;
       ok(AudioUnitSetProperty(mUnit, kAudioUnitProperty_MaximumFramesPerSlice,
         kAudioUnitScope_Global, 0, &maximumFrames, sizeof(maximumFrames)), "AU rejected block size");
@@ -182,6 +183,27 @@ public:
     AudioUnitParameterValue result = 0;
     ok(AudioUnitGetParameter(mUnit, 0, kAudioUnitScope_Global, 0, &result), "Cannot read AU Gain");
     return result;
+  }
+  std::array<double,26> soundParametersForBuiltinTest() const
+  {
+    UInt32 bytes=0;Boolean writable=false;
+    ok(AudioUnitGetPropertyInfo(mUnit,kAudioUnitProperty_ParameterList,kAudioUnitScope_Global,
+      0,&bytes,&writable),"Cannot inspect AU sound-parameter list");
+    require(bytes==26*sizeof(AudioUnitParameterID),"AU changed the 26 public sound parameters");
+    std::array<AudioUnitParameterID,26> ids{};
+    ok(AudioUnitGetProperty(mUnit,kAudioUnitProperty_ParameterList,kAudioUnitScope_Global,
+      0,ids.data(),&bytes),"Cannot read AU sound-parameter list");
+    require(bytes==sizeof(ids),"AU returned a truncated sound-parameter list");
+    std::sort(ids.begin(),ids.end());std::array<double,26> values{};
+    for(unsigned i=0;i<values.size();++i)
+    {
+      require(ids[i]==i,"AU public sound-parameter IDs changed");
+      AudioUnitParameterValue value=0;
+      ok(AudioUnitGetParameter(mUnit,ids[i],kAudioUnitScope_Global,0,&value),
+        "Cannot read AU sound parameter");
+      values[i]=value;
+    }
+    return values;
   }
   void setGainForTest(double normalized) {
     require(std::isfinite(normalized)&&normalized>=0&&normalized<=1,"Invalid test Gain");
@@ -270,6 +292,8 @@ void checkPresetNames(AudioComponent component, const std::vector<std::uint8_t>&
   Instance named(component), reference(component);
   const auto initial = named.save();
   const auto defaultBody = body(initial.get());
+  require(tetorica::decodeState({defaultBody.data(),defaultBody.size()}).definition->kind()==
+    tetorica::InstrumentDefinition::Kind::BuiltinSineWide,"AU factory default is not full-range builtin Sine");
   const auto present = named.presentPreset();
   const Cf<CFStringRef> presentName(present.presetName);
   const auto factories = named.factoryPresets();
@@ -488,6 +512,9 @@ int main(int argc, char** argv)
       return 0;
     }
     checkPresetNames(component, bank);
+    for(const auto rate:{44100.,48000.,96000.})
+      tetorica::test::checkBuiltinWide([&]{return std::make_unique<Instance>(component,rate);},
+        rate,"AU state/MIDIEvent");
     const auto definition = tetorica::InstrumentDefinition::fromVab(bank, 3, 1);
     const auto encoded = tetorica::encodeState(definition, 37);
 

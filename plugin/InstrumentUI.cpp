@@ -796,7 +796,8 @@ void TetoricaSPU::prepareWebExportFromUI()
         name=softwareAudio(state.definition)?state.definition->softwarePcmSample().name:state.definition->rawAdpcmSample().name;
         if(name.empty())name="Imported sound";
         break;
-      case tetorica::InstrumentDefinition::Kind::Builtin:break;
+      case tetorica::InstrumentDefinition::Kind::Builtin:name="Builtin Sine (legacy)";break;
+      case tetorica::InstrumentDefinition::Kind::BuiltinSineWide:break;
     }
     if(revision!=mInstrumentUIRevision.load(std::memory_order_acquire)||
        generation!=mEngines.latestGeneration())
@@ -1178,6 +1179,8 @@ void TetoricaSPU::OnIdle()
       ui.morphDraft.refresh(definition ? definition->morphEndpoints() : tetorica::MorphEndpoints{},
         mEngines.latestGeneration(), restored);
       ui.definition = std::move(definition);
+      if(restored && ui.definition && ui.definition->kind()==tetorica::InstrumentDefinition::Kind::Builtin)
+        ui.status="Legacy Sine restored. Builtin Sine selects full range.";
     }
     catch (const std::exception& error)
     {
@@ -1248,6 +1251,8 @@ void TetoricaSPU::updateInstrumentControls()
       ui.definition && ui.definition->kind() == tetorica::InstrumentDefinition::Kind::PcmCycle ?
         (noise ? "PCM cycle / Noise" : pmon ? "PCM cycle / PMON" : "Embedded PCM cycle") :
         (noise ? "Builtin Sine / Noise" : pmon ? "Builtin Sine / PMON" : "Builtin Sine");
+    if(ui.definition&&ui.definition->kind()==tetorica::InstrumentDefinition::Kind::Builtin)
+      label=noise?"Builtin Sine (legacy) / Noise":pmon?"Builtin Sine (legacy) / PMON":"Builtin Sine (legacy)";
     if(ui.definition&&ui.definition->kind()==tetorica::InstrumentDefinition::Kind::AdpcmSample)
     {
       label=ui.definition->rawAdpcmSample().name;
@@ -1483,6 +1488,8 @@ void TetoricaSPU::updateInstrumentControls()
       vab ? "VAB sound kept. This independent draft replaces it only when you Apply PCM." :
       ui.definition&&ui.definition->kind()==tetorica::InstrumentDefinition::Kind::AdpcmSample ?
       "ADPCM sample kept. This independent draft replaces it only when you Apply PCM." :
+      ui.definition&&ui.definition->kind()==tetorica::InstrumentDefinition::Kind::Builtin ?
+      "Legacy Sine kept. Builtin Sine selects full range. Apply PCM replaces this sound." :
       "Builtin Sine kept. Apply PCM creates an editable sound. Unapplied drafts are not saved.";
     auto* text = static_cast<ITextControl*>(control);
     if (std::strcmp(text->GetStr(), message)) text->SetStr(message);

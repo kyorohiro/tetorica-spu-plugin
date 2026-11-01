@@ -138,8 +138,12 @@ void validateTone(const vab::PreparedTone& tone) {
 }
 }
 
-SpuInstrument::SpuInstrument() : mChip(ps1_spu_create()) {
+SpuInstrument::SpuInstrument() : SpuInstrument(BuiltinSineMode::Legacy) {}
+SpuInstrument::SpuInstrument(BuiltinSineMode mode) : mBuiltinSineMode(mode) {
+  if(mode!=BuiltinSineMode::Legacy&&mode!=BuiltinSineMode::FullRange)
+    throw std::invalid_argument("Unknown builtin Sine mode");
   mPitchBend.fill(8192);
+  mChip=ps1_spu_create();
   if (!mChip) throw std::runtime_error("Could not create Native SPU");
   try { initialize();initializeNoiseCache(); }
   catch (...) { ps1_spu_destroy(mChip); mChip = nullptr; throw; }
@@ -190,9 +194,18 @@ bool SpuInstrument::renderNative(float* left, float* right, unsigned count) noex
 }
 void SpuInstrument::initialize() {
   if (ps1_spu_sample_rate() != kNativeSampleRate ||
-      !ps1_spu_set_mix_headroom(mChip, 4) ||
-      !ps1_spu_load_ram(mChip, kSampleAddress, kBuiltinSineAdpcm.data(), kBuiltinSineAdpcm.size()))
+      !ps1_spu_set_mix_headroom(mChip, 4))
     throw std::runtime_error("Could not prepare Native SPU sine");
+  const unsigned zones=mBuiltinSineMode==BuiltinSineMode::FullRange?
+    static_cast<unsigned>(kBuiltinSineZoneAdpcm.size()):1;
+  // load_ram currently invalidates the entire native decoded-cache map, even
+  // for nonoverlapping uploads. Finish every RAM upload before priming any
+  // zone: an upload on NoteOn would invalidate our callback memory guarantee.
+  for(unsigned zone=0;zone<zones;++zone){
+    const auto& data=kBuiltinSineZoneAdpcm[zone];
+    if(!ps1_spu_load_ram(mChip,kSampleAddress+zone*data.size(),data.data(),data.size()))
+      throw std::runtime_error("Could not load Native SPU sine zone");
+  }
   write(0x180, 0x3fff); write(0x182, 0x3fff); write(0x1aa, 0xc000);
   for (unsigned voice = 0; voice < kVoiceCount; ++voice) {
     const unsigned base = voice * 16;
@@ -201,13 +214,21 @@ void SpuInstrument::initialize() {
     write(base+10, mEnvelope.adsr2); write(base+14, kSampleAddress/8);
   }
   // RAM key-on and loop transitions lazily allocate inside the SDK. Exercise
-  // every voice and several complete loops now, keeping this immutable sample
-  // cache alive afterward. Changing samples/resetting the SDK invalidates this
-  // guarantee and must be prepared off the audio thread in a future bank loader.
-  write(0x188, 0xffff); write(0x18a, 0x00ff);
-  renderNative(mNativeLeft.data(), mNativeRight.data(), 1024);
-  write(0x18c, 0xffff); write(0x18e, 0x00ff);
-  renderNative(mNativeLeft.data(), mNativeRight.data(), 1024);
+  // every zone on every voice and several complete loops now. Both sample and
+  // loop caches remain native-owned until RAM writes/reset invalidate them.
+  for(unsigned zone=0;zone<zones;++zone){
+    if(zone)for(unsigned voice=0;voice<kVoiceCount;++voice){
+      const auto address=(kSampleAddress+zone*kBuiltinSineAdpcm.size())/8;
+      write(voice*16+6,address);write(voice*16+14,address);
+    }
+    write(0x188, 0xffff); write(0x18a, 0x00ff);
+    renderNative(mNativeLeft.data(), mNativeRight.data(), 1024);
+    write(0x18c, 0xffff); write(0x18e, 0x00ff);
+    renderNative(mNativeLeft.data(), mNativeRight.data(), 1024);
+  }
+  if(zones>1)for(unsigned voice=0;voice<kVoiceCount;++voice){
+    write(voice*16+6,kSampleAddress/8);write(voice*16+14,kSampleAddress/8);
+  }
   panic();
   mNativeFrames = 0;
   if (!mHealthy) throw std::runtime_error("Could not prime Native SPU caches");
@@ -313,11 +334,13 @@ void SpuInstrument::noteOn(int note, int velocity, int channel) noexcept {
     slot = 0;
     for (unsigned i=1; i<limit; ++i) if (mVoices[i].order < mVoices[slot].order) slot=i;
   }
-  const auto pitch = pitchFor(note,channel);
+  const unsigned zone=builtinZoneForNote(note);
+  const auto pitch = pitchFor(note,channel,zone);
   const unsigned volumeLeft = mVolumeLeft * static_cast<unsigned>(velocity) / 127;
   const unsigned volumeRight = mVolumeRight * static_cast<unsigned>(velocity) / 127;
   const unsigned carrier=carrierFor(static_cast<unsigned>(slot));
   const unsigned base = carrier*16;
+  if(fullRangeCarrier())bindBuiltinZone(carrier,zone);
   if(mPmon.enabled){
     const unsigned mod=carrier-1,modBase=mod*16;
     write(modBase,0);write(modBase+2,0);write(modBase+4,modulatorPitchFor(note,channel));
@@ -332,11 +355,36 @@ void SpuInstrument::noteOn(int note, int velocity, int channel) noexcept {
     write(reg,ps1_spu_read(mChip,reg)|(1u<<(carrier%16)));
   }
   keyOn(carrier);
-  mVoices[slot] = {note, channel, true, false, ++mOrder};
+  mVoices[slot] = {note, channel, true, false, ++mOrder, zone};
   mCursor = (static_cast<unsigned>(slot)+1)%limit;
 }
 unsigned SpuInstrument::carrierFor(unsigned slot) const noexcept {
   return mPmon.enabled?slot*2+1:slot;
+}
+bool SpuInstrument::fullRangeCarrier() const noexcept {
+  return mBuiltinSineMode==BuiltinSineMode::FullRange&&!mSoftwarePcm&&
+    !mNoise.enabled&&!mMorph.enabled;
+}
+unsigned SpuInstrument::builtinZoneForNote(int note) const noexcept {
+  if(!fullRangeCarrier()||note<=89)return 0;
+  if(note<=101)return 1;
+  if(note<=113)return 2;
+  if(note<=125)return 3;
+  return 4;
+}
+void SpuInstrument::bindBuiltinZone(unsigned carrier,unsigned zone) noexcept {
+  const unsigned address=(kSampleAddress+zone*kBuiltinSineAdpcm.size())/8;
+  if(ps1_spu_read(mChip,carrier*16+6)!=address){
+    // A normal audition retrigger fades the old decoder before restarting.
+    // Across zones its old sample would receive the new root's PITCH and its
+    // END could rewrite Repeat. Fresh KON latches the selected cache first,
+    // then audition On supplies the usual128-frame fade-in of the new source.
+    // Keep PMON's modulator in phase with that fresh carrier rearticulation.
+    mFreshSource[carrier]=true;
+    if(mPmon.enabled)mFreshSource[carrier-1]=true;
+    write(carrier*16+6,address);
+  }
+  mSampleRepeatAddresses[carrier]=static_cast<std::uint16_t>(address);
 }
 void SpuInstrument::keyOn(unsigned physicalVoice) noexcept {
   if(mFreshSource[physicalVoice]){
@@ -361,12 +409,13 @@ void SpuInstrument::noteOff(int note, int channel) noexcept {
     }
   }
 }
-unsigned SpuInstrument::pitchFor(int note,int channel) const noexcept {
+unsigned SpuInstrument::pitchFor(int note,int channel,unsigned builtinZone) const noexcept {
   if(mNoise.enabled)return 4096;
   const int delta=mPitchBend[channel]-8192;
   const double semitones=2.0*delta/(delta<0?8192.0:8191.0);
   const double frequency=440*std::exp2((note-69+semitones)/12.0);
-  const double root=mMorph.enabled&&!mSoftwarePcm?44100./112:mRootFrequencyHz;
+  double root=mMorph.enabled&&!mSoftwarePcm?44100./112:mRootFrequencyHz;
+  if(fullRangeCarrier())root*=kBuiltinSineZoneFactors[builtinZone];
   return static_cast<unsigned>(std::lround(std::clamp(4096*frequency/root,1.0,16383.0)));
 }
 unsigned SpuInstrument::modulatorPitchFor(int note,int channel) const noexcept {
@@ -389,7 +438,7 @@ void SpuInstrument::setPitchBend(int value14,int channel) noexcept {
   for(unsigned i=0;i<kVoiceCount;++i)
     if(mVoices[i].note>=0&&mVoices[i].channel==channel){
       const unsigned carrier=carrierFor(i);
-      write(carrier*16+4,pitchFor(mVoices[i].note,channel));
+      write(carrier*16+4,pitchFor(mVoices[i].note,channel,mVoices[i].builtinZone));
       if(mPmon.enabled)write((carrier-1)*16+4,modulatorPitchFor(mVoices[i].note,channel));
     }
 }

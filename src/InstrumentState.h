@@ -21,7 +21,7 @@ namespace tetorica {
 
 inline constexpr std::size_t kStateHeaderBytes=32;
 inline constexpr std::array<std::uint8_t,8> kStateMagic{{'T','S','P','U','S','T','0','1'}};
-inline constexpr std::uint32_t kStateSchemaVersion=9;
+inline constexpr std::uint32_t kStateSchemaVersion=10;
 inline constexpr std::size_t kStateFixedBytes=1024;
 inline constexpr std::size_t kMaxStateBytes=kMaxSoftwarePcmBytes+64+kMaxSoftwarePcmNameBytes+kStateFixedBytes;
 
@@ -29,8 +29,10 @@ inline constexpr std::size_t kMaxStateBytes=kMaxSoftwarePcmBytes+64+kMaxSoftware
 // Full bank bytes are owned so saved projects never require the original path.
 class InstrumentDefinition final {
 public:
-  enum class Kind : std::uint32_t { Builtin=0,Vab=1,PcmCycle=2,AdpcmSample=3,SoftwarePcm=4 };
+  enum class Kind : std::uint32_t { Builtin=0,Vab=1,PcmCycle=2,AdpcmSample=3,SoftwarePcm=4,BuiltinSineWide=5 };
+  // Kind0 remains the original112-sample/clamped instrument for saved projects.
   static std::shared_ptr<const InstrumentDefinition> builtin();
+  static std::shared_ptr<const InstrumentDefinition> builtinWide();
   static std::shared_ptr<const InstrumentDefinition> fromVab(
       std::vector<std::uint8_t> bytes,std::uint32_t sparseProgram,std::uint32_t toneIndex);
   static std::shared_ptr<const InstrumentDefinition> fromVabFlatIndex(

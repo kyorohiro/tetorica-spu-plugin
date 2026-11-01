@@ -175,15 +175,15 @@ def decode_payload(payload):
     if len(payload) < 40 or payload[:8] != b'TSPUST01':
         raise ValueError('Expected complete TSPUST01 custom state or legacy Gain')
     schema, total, kind, program, tone, size = struct.unpack_from('<6I', payload, 8)
-    fixed = {1: 40, 2: 48, 3: 72, 4: 72, 5: 80, 6: 112, 7: 1024, 8: 1024, 9: 1024}.get(schema)
+    fixed = {1: 40, 2: 48, 3: 72, 4: 72, 5: 80, 6: 112, 7: 1024, 8: 1024, 9: 1024, 10: 1024}.get(schema)
     if fixed is None or total != len(payload) or total != fixed + size:
         raise ValueError('Invalid state schema, total or source length')
-    if kind not in ((0, 1, 2, 3, 4) if schema >= 9 else (0, 1, 2, 3) if schema >= 8 else (0, 1, 2) if schema >= 4 else (0, 1)) or program > 127 or tone > 15:
+    if kind not in ((0, 1, 2, 3, 4, 5) if schema >= 10 else (0, 1, 2, 3, 4) if schema >= 9 else (0, 1, 2, 3) if schema >= 8 else (0, 1, 2) if schema >= 4 else (0, 1)) or program > 127 or tone > 15:
         raise ValueError('Invalid state kind or sparse selection')
-    maximum = MAX_SOFTWARE_PCM + 64 + 320 if schema == 9 and kind == 4 else MAX_BANK
+    maximum = MAX_SOFTWARE_PCM + 64 + 320 if schema >= 9 and kind == 4 else MAX_BANK
     if size > maximum:
         raise ValueError('State source exceeds its schema/kind bound')
-    if kind == 0 and (size or program or tone):
+    if kind in (0, 5) and (size or program or tone):
         raise ValueError('Builtin state has an unexpected bank or selection')
     if kind == 1 and not size:
         raise ValueError('VAB state has no embedded bank')
@@ -223,7 +223,7 @@ def decode_payload(payload):
         raise ValueError('PCM cycle samples must be finite in [-1, 1]')
     raw = decode_raw_sample(bank) if kind == 3 else None
     software = decode_software_sample(bank) if kind == 4 else None
-    return dict(result, schema=schema, kind={0: 'Builtin', 1: 'VAB', 2: 'PcmCycle', 3: 'AdpcmSample', 4: 'SoftwarePcm'}[kind],
+    return dict(result, schema=schema, kind={0: 'Builtin', 1: 'VAB', 2: 'PcmCycle', 3: 'AdpcmSample', 4: 'SoftwarePcm', 5: 'BuiltinSineWide'}[kind],
                 program=program, tone=tone, gain_percent=gain,
                 envelope={'enabled': bool(flags & 1), 'live': bool(flags & 2),
                           'adsr1': packed & 65535, 'adsr2': packed >> 16},

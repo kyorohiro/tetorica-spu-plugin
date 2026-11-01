@@ -104,7 +104,7 @@ SavedInstrumentState authored(){
 }
 void codecAndMalformed(){
   const auto state=authored();const auto wire=encode(state);const auto n=word(wire,28);
-  check(word(wire,8)==9&&word(wire,16)==4&&word(wire,20)==0&&word(wire,24)==0,"software schema9 header wrong");
+  check(word(wire,8)==kStateSchemaVersion&&word(wire,16)==4&&word(wire,20)==0&&word(wire,24)==0,"software current-schema header wrong");
   check(n==64+state.definition->softwarePcmSample().pcm->samples().size()*2+state.definition->softwarePcmSample().name.size(),"software payload length wrong");
   const auto restored=decode(wire);
   check(sameSoftwarePcmSample(restored.definition->softwarePcmSample(),state.definition->softwarePcmSample())&&
@@ -117,7 +117,7 @@ void codecAndMalformed(){
     auto bad=wire;for(unsigned i=0;i<8;++i)bad[32+offset+i]=static_cast<std::uint8_t>(0x7ff8000000000000ull>>(i*8));rejects([&]{decode(bad);});
   }
   for(unsigned version=1;version<=8;++version){auto bad=wire;word(bad,8,version);rejects([&]{decode(bad);});}
-  {auto bad=wire;word(bad,8,10);rejects([&]{decode(bad);});}
+  {auto bad=wire;word(bad,8,kStateSchemaVersion+1);rejects([&]{decode(bad);});}
   {auto bad=wire;bad[32+64+state.definition->softwarePcmSample().pcm->samples().size()*2]=0;rejects([&]{decode(bad);});}
   {auto bad=wire;word(bad,44+n,4);rejects([&]{decode(bad);});}
   {auto bad=wire;word(bad,72+n,2);rejects([&]{decode(bad);});}

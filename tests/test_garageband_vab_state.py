@@ -30,7 +30,7 @@ def software(pcm=b'\x00\x80\xff\xff\x00\x00\xff\x7f', name=b'Software source', l
 def state(schema=9, kind=4, source=None, program=0, tone=0, gain=37.):
     if source is None:
         source = software() if kind == 4 else b''
-    fixed = {1: 40, 2: 48, 3: 72, 4: 72, 5: 80, 6: 112, 7: 1024, 8: 1024, 9: 1024}[schema]
+    fixed = {1: 40, 2: 48, 3: 72, 4: 72, 5: 80, 6: 112, 7: 1024, 8: 1024, 9: 1024, 10: 1024}[schema]
     result = bytearray(fixed + len(source))
     result[:8] = b'TSPUST01'
     struct.pack_into('<6I', result, 8, schema, len(result), kind, program, tone, len(source))
@@ -115,9 +115,27 @@ class GarageBandStateTests(unittest.TestCase):
         with self.assertRaises(ValueError):
             INSPECT.decode_payload(state(9, 1, bytes(INSPECT.MAX_BANK + 1)))
         with self.assertRaises(ValueError):
-            INSPECT.decode_payload(change(state(), 8, 10))
+            INSPECT.decode_payload(change(state(), 8, 11))
         with self.assertRaises(ValueError):
             INSPECT.decode_payload(change(state(), 16, 5))
+
+    def test_schema10_builtin_wide_is_explicit_and_old_builtin_stays_legacy(self):
+        fields, bank = INSPECT.decode_payload(state(10, 5))
+        self.assertEqual((fields['schema'], fields['kind'], fields['program'], fields['tone'], bank),
+                         (10, 'BuiltinSineWide', 0, 0, b''))
+        self.assertEqual(fields['payload_bytes'], 1024)
+        for schema in range(1, 10):
+            with self.subTest(schema=schema):
+                old, _ = INSPECT.decode_payload(state(schema, 0))
+                self.assertEqual(old['kind'], 'Builtin')
+                with self.assertRaises(ValueError):
+                    INSPECT.decode_payload(state(schema, 5))
+        for invalid in (state(10, 5, source=b'x'), state(10, 5, program=1),
+                        state(10, 5, tone=1), state(10, 6)):
+            with self.assertRaises(ValueError):
+                INSPECT.decode_payload(invalid)
+        software_state, _ = INSPECT.decode_payload(state(10, 4))
+        self.assertEqual(software_state['kind'], 'SoftwarePcm')
 
     def test_bad_lengths_flags_metadata_and_loop_minimum(self):
         good = state()

@@ -68,6 +68,9 @@ std::vector<Case> cases() {
   auto gain=raw;gain.gainPercent=0;result.push_back({"gain-zero",gain});gain.gainPercent=37;result.push_back({"gain37",gain});
   auto zero=raw;auto zeroSample=zero.definition->rawAdpcmSample();zeroSample.volumeLeft=-0.;zero.definition=InstrumentDefinition::fromAdpcmSample(zeroSample);
   result.push_back({"negative-zero-volume",zero});
+  auto wide=builtin;wide.definition=InstrumentDefinition::builtinWide();result.push_back({"builtin-wide-projection",wide});
+  wide.morph={true,.375};result.push_back({"builtin-wide-morph",wide});
+  wide.noise.enabled=true;result.push_back({"builtin-wide-noise-masked-morph",wide});
   return result;
 }
 Json sourceJson(const RawAdpcmSample& sample) {
@@ -106,6 +109,9 @@ void matrix(const std::vector<Case>& values) {
       parsed.state.pmon.ratio==state.pmon.ratio&&parsed.state.pmon.depth==state.pmon.depth&&parsed.state.pmon.decayMs==state.pmon.decayMs,
       "Noise priority lost retained PMON authoring settings");
     const bool effectiveMorph=state.morph.enabled&&!state.noise.enabled;
+    if(state.definition->kind()==InstrumentDefinition::Kind::BuiltinSineWide)
+      require(note(value,"note-dependent zones")==!effectiveMorph,
+        "Full-range Builtin Sine projection loss was not disclosed independently of Morph/Noise");
     require(parsed.state.morph.enabled==effectiveMorph&&parsed.state.morph.amount==state.morph.amount&&
       parsed.state.definition->morphEndpoints().a==state.definition->morphEndpoints().a&&
       parsed.state.definition->morphEndpoints().b==state.definition->morphEndpoints().b,"Morph priority lost amount/endpoints");

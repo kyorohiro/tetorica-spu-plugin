@@ -10,7 +10,7 @@ RawAdpcmSample extractAdpcmSource(const InstrumentDefinition& definition){
   using Kind=InstrumentDefinition::Kind;
   if(definition.kind()==Kind::AdpcmSample)return definition.rawAdpcmSample();
   RawAdpcmSample source;source.volumeLeft=source.volumeRight=1;
-  if(definition.kind()==Kind::Builtin){
+  if(definition.kind()==Kind::Builtin||definition.kind()==Kind::BuiltinSineWide){
     source.adpcm.assign(kBuiltinSineAdpcm.begin(),kBuiltinSineAdpcm.end());
     source.loopStartSamples=0;
   }else if(definition.kind()==Kind::PcmCycle){

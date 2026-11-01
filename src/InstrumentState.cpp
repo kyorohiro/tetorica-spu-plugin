@@ -157,7 +157,8 @@ void validateFields(const InstrumentDefinition& definition,double gainPercent,
   validateMorphEndpoints(definition.morphEndpoints());
   if(definition.bankBytes().size()>vab::kMaxFileBytes)fail("SPU state: VAB exceeds 1 MiB");
   switch(definition.kind()){
-    case InstrumentDefinition::Kind::Builtin:break;
+    case InstrumentDefinition::Kind::Builtin:
+    case InstrumentDefinition::Kind::BuiltinSineWide:break;
     case InstrumentDefinition::Kind::Vab:break;
     case InstrumentDefinition::Kind::PcmCycle:validatePcmCycle(definition.pcmCycle());break;
     case InstrumentDefinition::Kind::AdpcmSample:validateRawAdpcmSample(definition.rawAdpcmSample());break;
@@ -174,6 +175,12 @@ InstrumentDefinition::InstrumentDefinition(Kind kind,std::vector<std::uint8_t> b
 std::shared_ptr<const InstrumentDefinition> InstrumentDefinition::builtin() {
   static const std::shared_ptr<const InstrumentDefinition> definition(
       new InstrumentDefinition(Kind::Builtin,{},0,0));
+  return definition;
+}
+
+std::shared_ptr<const InstrumentDefinition> InstrumentDefinition::builtinWide() {
+  static const std::shared_ptr<const InstrumentDefinition> definition(
+      new InstrumentDefinition(Kind::BuiltinSineWide,{},0,0));
   return definition;
 }
 
@@ -293,10 +300,10 @@ SavedInstrumentState decodeState(vab::BytesView bytes) {
   if(word(bytes.data+12)!=bytes.size)fail("SPU state: declared length differs");
   const auto kind=word(bytes.data+16),program=word(bytes.data+20),tone=word(bytes.data+24),n=word(bytes.data+28);
   const auto fixed=version==1?40:version==2?48:version<=4?72:version==5?80:version==6?112:kStateFixedBytes;
-  if(kind>(version>=9?4u:version>=8?3u:version>=4?2u:1u))fail("SPU state: unsupported instrument kind");
+  if(kind>(version>=10?5u:version>=9?4u:version>=8?3u:version>=4?2u:1u))fail("SPU state: unsupported instrument kind");
   const auto maximum=version>=9&&kind==4?kMaxStateBytes-kStateFixedBytes:vab::kMaxFileBytes;
   if(n>maximum||std::uint64_t(n)+fixed!=bytes.size)fail("SPU state: invalid source length");
-  if(kind==0&&(n||program||tone))fail("SPU state: builtin must not contain a bank or selection");
+  if((kind==0||kind==5)&&(n||program||tone))fail("SPU state: builtin must not contain a bank or selection");
   if(kind==1&&(!n||program>127||tone>15))fail("SPU state: invalid VAB selection");
   if(kind==2&&(n!=sizeof(float)*PcmCycle{}.size()||program||tone))fail("SPU state: invalid PCM cycle length or selection");
   if(kind==3&&(n<kRawHeaderBytes||program||tone))fail("SPU state: invalid raw source length or selection");
@@ -346,6 +353,7 @@ SavedInstrumentState decodeState(vab::BytesView bytes) {
     validateMorphEndpoints(endpoints);
   }
   if(kind==0)return {InstrumentDefinition::withMorphEndpoints(InstrumentDefinition::builtin(),endpoints),gainPercent,settings,effects,generator,modulation,blend};
+  if(kind==5)return {InstrumentDefinition::withMorphEndpoints(InstrumentDefinition::builtinWide(),endpoints),gainPercent,settings,effects,generator,modulation,blend};
   if(kind==2) {
     PcmCycle cycle{};
     for(std::size_t i=0;i<cycle.size();++i)cycle[i]=readSample(bytes.data+kStateHeaderBytes+i*4);

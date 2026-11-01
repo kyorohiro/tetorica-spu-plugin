@@ -23,6 +23,7 @@
 #include "loop-repeat-checks.h"
 #include "gain-smoothing-checks.h"
 #include "cc120-checks.h"
+#include "builtin-wide-checks.h"
 #include "pluginterfaces/vst/ivstmidicontrollers.h"
 
 #include <algorithm>
@@ -157,6 +158,27 @@ public:
     parameterForTest(bypass,bypassed?1.:0.,0);
   }
   double gain() const { return controller->getParamNormalized(gainId); }
+  std::array<double,26> soundParametersForBuiltinTest() const {
+    std::array<bool,26> found{};std::array<double,26> values{};
+    FUnknownPtr<IMidiMapping> mapping(controller);require(bool(mapping),"Missing parameter-list MIDI mapping");
+    ParamID midiStart=0;
+    ok(mapping->getMidiControllerAssignment(0,0,kCtrlBankSelectMSB,midiStart),
+      "Cannot locate the existing reserved VST3 parameter range");
+    require(midiStart>values.size()+2,"Invalid reserved VST3 parameter range");
+    for(int32 index=0;index<controller->getParameterCount();++index) {
+      ParameterInfo parameter{};
+      ok(controller->getParameterInfo(index,parameter),"Cannot inspect VST3 sound parameters");
+      if(parameter.id>=midiStart-2)continue; // Framework's reserved preset/bypass/MIDI IDs.
+      require(parameter.id<values.size(),"VST3 added a public sound-parameter ID");
+      require(!found[parameter.id],"VST3 public sound-parameter ID is duplicated");
+      found[parameter.id]=true;
+      values[parameter.id]=controller->normalizedParamToPlain(parameter.id,
+        controller->getParamNormalized(parameter.id));
+    }
+    require(std::all_of(found.begin(),found.end(),[](bool present){return present;}),
+      "VST3 lost one of the 26 public sound-parameter IDs");
+    return values;
+  }
   void allowAsymmetric() { symmetricExpected=false; }
   const std::vector<float>& right() const { return lastRight; }
   std::vector<std::uint8_t> savedBytes() {
@@ -786,6 +808,9 @@ int main(int argc, char** argv) {
           checkRate(factory, info, rate);
           checkScheduler(factory, info, rate);
           checkEmbeddedState(factory,info,rate);
+          tetorica::test::checkBuiltinWide([&] {
+            auto instance=std::make_unique<Instance>(factory,info,rate);instance->start();return instance;
+          },rate,"VST3 state/IMidiMapping");
           tetorica::test::checkGainSmoothing([&] {
             auto instance=std::make_unique<Instance>(factory,info,rate);instance->start();return instance;
           },rate,"VST3 parameters/events");

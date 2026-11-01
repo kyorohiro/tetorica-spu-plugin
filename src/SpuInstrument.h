@@ -2,6 +2,7 @@
 // Copyright (c) 2026 kyorohiro
 #pragma once
 
+#include "SpuBuiltin.h"
 #include "SpuEnvelope.h"
 #include "SpuReverb.h"
 #include "SpuWaveform.h"
@@ -30,6 +31,11 @@ public:
   static constexpr int kNativeSampleRate = 44100;
 
   SpuInstrument();
+  // Explicit software multisample Sine. Legacy remains the default so old
+  // projects retain their original fixed sample and PITCH-limit behavior.
+  // FullRange latches a prepared RAM zone at NoteOn, reserving +/-2st bend
+  // headroom. Bends only change PITCH, including held and releasing voices.
+  explicit SpuInstrument(BuiltinSineMode mode);
   // Prepare a validated immutable VAB Tone away from the audio thread. Throws
   // on invalid metadata; retains original packet flags and sample bytes.
   // Imported reverb send is retained, with shared reverb still Off initially.
@@ -51,7 +57,10 @@ public:
   // resets controllers and adapter phase/history, retaining warmed SDK caches.
   bool prepare(double hostSampleRate) noexcept;
   // MIDI0--127 accepted; tuning saturates the hardware14-bit PITCH register.
-  // Built-in112-sample sine reaches its limit above~1.575kHz (notes92+).
+  // Legacy112-sample Sine reaches its limit above~1.575kHz (notes92+).
+  // FullRange's latched zones cover notes0--127 with +/-2st bend headroom;
+  // PMON retains this carrier range, but its modulator still has the old limit.
+  // Morph uses its authored112-point source and retains that source's ceiling.
   // Imported range depends on rootFrequencyHz. Velocity0 is NoteOff.
   void noteOn(int note, int velocity, int channel = 0) noexcept;
   void noteOff(int note, int channel = 0) noexcept;
@@ -113,6 +122,7 @@ public:
 
   int activeVoiceCount() const noexcept; // Physically held keys; pedal-held/releasing excluded.
   bool healthy() const noexcept { return mHealthy; }
+  BuiltinSineMode builtinSineMode() const noexcept { return mBuiltinSineMode; }
   double sampleRate() const noexcept { return mHostRate; }
   std::uint64_t nativeFramesRendered() const noexcept { return mNativeFrames; }
 
@@ -123,10 +133,14 @@ private:
     bool held = false;
     bool deferred = false;
     std::uint64_t order = 0;
+    unsigned builtinZone = 0;
   };
   bool write(unsigned offset, unsigned value) noexcept;
   bool renderNative(float* left, float* right, unsigned count) noexcept;
-  unsigned pitchFor(int note, int channel) const noexcept;
+  unsigned pitchFor(int note, int channel, unsigned builtinZone=0) const noexcept;
+  bool fullRangeCarrier() const noexcept;
+  unsigned builtinZoneForNote(int note) const noexcept;
+  void bindBuiltinZone(unsigned carrier,unsigned zone) noexcept;
   unsigned modulatorPitchFor(int note,int channel) const noexcept;
   unsigned carrierFor(unsigned slot) const noexcept;
   void keyOn(unsigned physicalVoice) noexcept;
@@ -140,6 +154,7 @@ private:
   void initializeNoiseCache();
 
   void* mChip = nullptr;
+  BuiltinSineMode mBuiltinSineMode = BuiltinSineMode::Legacy;
   bool mHealthy = true;
   std::array<Voice, kVoiceCount> mVoices{};
   std::array<bool,kVoiceCount> mFreshSource{};

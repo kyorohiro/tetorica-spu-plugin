@@ -40,6 +40,10 @@ void builtinAndPcm() {
   // engine and source extraction share the fixed literal, independent of a
   // future encoder revision; the existing engine WAV remains the PCM oracle.
   CHECK(encodePcmCycle(makePcmCycle(WaveformShape::Sine))==kBuiltinSineAdpcm);
+  // Wide note-dependent zones cannot fit one Web sample. Extraction supplies
+  // the immutable original base projection; the writer discloses that loss.
+  const auto projection=extractAdpcmSource(*Def::builtinWide());defaults(projection);
+  CHECK(sameRawAdpcmSample(raw,projection));
   raw.adpcm[2]^=1;CHECK(!sameRawAdpcmSample(raw,extractAdpcmSource(*builtin)));
 
   for(auto shape:{WaveformShape::Sine,WaveformShape::Triangle,WaveformShape::Saw,WaveformShape::Square}) {

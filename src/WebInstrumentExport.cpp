@@ -41,6 +41,9 @@ ExportedWebInstrument writeWebInstrument(const SavedInstrumentState& state,std::
   ExportedWebInstrument exported;
   exported.notes.emplace_back("This is a single Web instrument snapshot, not a complete plugin project. Host bypass, live controllers, sounding notes, effect history and unapplied drafts are not exported.");
   exported.notes.emplace_back("Plugin Gain is not exported or baked into voice volumes. Authored signed volumes are preserved. Web Master and its calibration differ, so playback level can change; a muted plugin can export an audible instrument.");
+  if(state.definition->kind()==InstrumentDefinition::Kind::BuiltinSineWide&&
+     (!state.morph.enabled||state.noise.enabled))
+    exported.notes.emplace_back("Full-range Builtin Sine uses note-dependent zones that a single Web sample cannot represent. This file contains its original112-sample sine projection: high notes can reach the original SPU pitch clamp instead of retaining the plugin's extended range. The plugin's source version is not retained.");
   if(state.definition->kind()==InstrumentDefinition::Kind::Vab)
     exported.notes.emplace_back("Only the selected VAB Tone is exported, through its first END packet. The full bank, Program/Tone identity, other samples and driver settings are not included.");
   if(state.envelope.enabled) {
