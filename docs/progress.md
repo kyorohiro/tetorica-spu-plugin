@@ -563,3 +563,13 @@
 - StandaloneでMorph/PMON/Reverb反映・単一canvas・v2エラー時の元音保持、最終buildでNoise clock8を確認。AUを退避更新してGarageBand旧schema7 P3/T0/Gain99とLoad soundを復元した。saved payload / VABは不変、原本11files不変。
 - [操作・制限・rollback](web_instrument_import_20261101.md) / [source hash・現在のinstalled AU manifest・CI metadata](web_instrument_import_20261101.json)。実聴・長時間使用・実DAW独自Web file操作とautomation録音は未確認。
 - 次の区切りはWeb向け書き出しと往復仕様の整理。長いAudio v2 / VH+VB UI / PSF抽出は後続。Native SDK・Web/Tauri配布とversion/tag/releaseは変更していない。
+
+## 2026-11-01 JST — Web音色ファイルv1 export完了
+
+- 実装前TODOを`c84dfe3`、実装を`fe24f25`へcommit / pushした。共通Save WebからBuiltin / 選択中VAB Tone / PCM cycle / import済みADPCMを`.spu.json` v1へ保存できる。
+- click時点のcoherent saved snapshotをworkerでJSONへ変換し、native Save dialogで選んだ先へatomic replaceする。Cancel / 書込失敗は既存fileを保持し、未承認callbackはeditor close / source変更 / host restoreで破棄する。受理済みwriteはeditor close後も完了する。
+- Gainは除外してvoice volumeへ焼き込まない。Custom ADSR / sendは実効値、Reverb bypassはOff、Noise優先のmasked flagsはOffへ変換する。MorphはA/B/Amountと現在blendを保存し、元VAB bankやDAW全stateのbackupとはしない。
+- Offline / macOS / ASanは各17/17、strict検査成功。実Web Node reader/writer20件、Chromium20件、WebKit20件で公開file load→実engine→Save downloadを検証した。実AU48k / VST3 44.1・48・96k、公式validator47/0、auval26paramsも成功。初期Sine WAV hashは不変。
+- [CI41260258393](https://github.com/kyorohiro/tetorica-spu-plugin/actions/runs/41260258393)は実装commitで両job・全step成功。Standaloneのnative保存・実Web reader読み戻し・Cancelを確認した。
+- installed AUをknown manifest照合・退避付きで更新し、GarageBand旧schema8 P3/T0/Gain99と新Save Webを復元した。saved payload / VABは一致、原本11files不変。26parameter ID / state schema8 / SDK固定commitは維持した。
+- [操作・制限・rollback](web_instrument_export_20261101.md) / [source hash・現在のinstalled AU manifest・CI metadata](web_instrument_export_20261101.json)。実聴・長時間使用・実DAW独自Save Web操作とautomation録音は未確認としてTODOへ残す。

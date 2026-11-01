@@ -1,0 +1,1165 @@
+{
+  "started_on": "2026-11-01",
+  "completed_on": "2026-11-01",
+  "timezone": "Asia/Tokyo",
+  "start_commit": "b8c2e3b",
+  "start_todo_commit": "c84dfe3",
+  "production_commit": "fe24f25ea7d1bdfa8ca09a1edebf119037bd4974",
+  "native_sdk_commit": "d0e0324a56d0b2fe92c4367e69ddee11971a7892",
+  "features": {
+    "export": "tetorica-spu-synth.instrument version1",
+    "ui": "Save Web...",
+    "source_kinds": [
+      "Builtin Sine",
+      "selected VAB Tone",
+      "112 PCM cycle",
+      "imported ADPCM"
+    ],
+    "capture": "Coherent SerializeState/decodeState snapshot at button click; no engine, parameter or pending mutation",
+    "state_schema_written": 8,
+    "parameter_count": 26,
+    "existing_parameter_ids_preserved": [
+      0,
+      25
+    ],
+    "retained": [
+      "original ADPCM unless effective Morph",
+      "rootFrequencyHz",
+      "loopStartSamples",
+      "signed L/R voice volume",
+      "name",
+      "optional authored PCM",
+      "Morph A/B/Amount"
+    ],
+    "custom_adsr": "effective words with original source ADSR2 reserved bit13 merged",
+    "reverb_send": "resolve All notes / source Tone send into one voice flag",
+    "reverb_bypass": "export preset Off, retain returns; dormant selected preset absent",
+    "noise_priority": "clear masked PMON/Morph enabled flags only; retain their other settings",
+    "effective_morph": "current112Float32 blend and canonical ADPCM, root44100/112, loop0; pre-Morph source absent from Web file",
+    "gain": "excluded, never baked into voice volumes; Gain0 can export audible sound; Web Master/calibration differs",
+    "scope": "one saved instrument snapshot for next Note, including accepted pending source; not whole VAB bank or lossless DAW project backup",
+    "exact_web_output_pcm_claimed": false,
+    "limits": {
+      "json_bytes": 8388608,
+      "name_utf16_units": 80,
+      "fresh_web_arbitrary_adpcm_bytes": 518656,
+      "with_active_pmon_bytes": 518592
+    },
+    "worker": "JSON preparation/self-read and file IO on dedicated worker",
+    "file_write": "private same-filesystem temporary directory, complete flush/close, atomic replacement; failure preserves destination",
+    "lifecycle": "revision/generation/weak editor token guard unaccepted callbacks; accepted write finishes after editor close; destructor joins",
+    "excluded": [
+      "unapplied drafts",
+      "held notes/tails",
+      "live MIDI controller state",
+      "version2 long Software audio",
+      "PSF extraction",
+      "VH/VB picker",
+      "Morph LFO",
+      "external-input Reverb"
+    ]
+  },
+  "production_source_sha256": {
+    "CMakeLists.txt": "99d11b6aefc5d2dd2e61f6a179a3e66a3294351f150c621495f02b07c496769b",
+    "CMakePresets.json": "610eeb21ce20b78d22981cf32cc1e241c3f4e7bf8d61dd163a91919ae5ba2de4",
+    "plugin/InstrumentUI.cpp": "4e04ce5e0b29b05cd39c36e2a50cca9537c033ae5009b17399fdad5ce0f8ba5c",
+    "plugin/TetoricaSPU.h": "15e510f92b1bde85522271c27ecb1116f1b5cd987eca5f220b6ea576e897bc27",
+    "scripts/check_web_instrument_export.mjs": "be5f385b7e0a8cedf56fb66a57fd7e3057b11cbe98f82170a6aa8e690ea4b01f",
+    "src/SpuBuiltin.h": "3881cc9fd0f95bd8bb6674d8f2ac9993f434278432b9d807ce72904e5fc64309",
+    "src/SpuExportSource.cpp": "36eb91400e7590ba05a4d6b5201764e99a85cfb6e56800a35a8d9d6e131bf6ad",
+    "src/SpuExportSource.h": "be358b53d38940b55ce378f4266e31c3ab583df96c127157e91ec4331de65c5f",
+    "src/SpuInstrument.cpp": "392854d37060d535223e9afe4db22da961524ca4d7f9a57ab4c105a9e9d1bb53",
+    "src/WebInstrumentExport.cpp": "c4d8908b65f83e3d3d868080c5fba6c7891f12ebaab16bb5df9bf57f6bc34896",
+    "src/WebInstrumentExport.h": "efe1016b92f2b27e8a03ec75bb4e0fd16a19b74d403ca3a7374fe9b0fc7d61ed",
+    "src/WebInstrumentExporter.cpp": "7cf0f46c24a283295e247760fc767ff7923595e87ae97236b8bbdb8f9d43863f",
+    "src/WebInstrumentExporter.h": "df771a33f147bd2bff2291d1ce7e35863c942da1679ad83fe026973607e5c7e0",
+    "tests/spu_export_source_test.cpp": "1431c6314dcff3c6043f770e775d2ba2bf6b16bfdb5aac0ca7a99454d1c942fd",
+    "tests/web_instrument_export_test.cpp": "85fce37267f078010f0a12f8f2ad5f0abaada1b304bf9b7f699e9af256ac1416",
+    "tests/web_instrument_exporter_test.cpp": "027a2f9fe81d7d7ea90b11f3b8dae51e07c6cc3ada282dec98822be57d8e8953",
+    "tools/vst3-host/CMakeLists.txt": "200712330a16cb01cda9df0458cb1d13f5c6d3819eab47debf2e0762f1d0f8ef"
+  },
+  "dependency_lock": {
+    "path": "dependencies.lock.json",
+    "bytes": 1096,
+    "sha256": "3a326880d35bdf3108628b43bef254c22c910e4658c305c484314ad6f02d5569"
+  },
+  "local_verification": {
+    "offline": {
+      "passed": 17,
+      "failed": 0,
+      "seconds": 7.63,
+      "log": {
+        "path": "build/web-export-ctest-offline.log",
+        "bytes": 1935,
+        "sha256": "926317f4ed6efa01510d6e20f8ef5e80c698cbf34731f227885792ad5b9fc0b8"
+      }
+    },
+    "macos": {
+      "passed": 17,
+      "failed": 0,
+      "seconds": 7.96,
+      "log": {
+        "path": "build/web-export-ctest-macos.log",
+        "bytes": 1933,
+        "sha256": "30443b0ae58491dbea7a1d605ac8577079ba81d7f2fc5546aed94d9dc0452622"
+      }
+    },
+    "asan": {
+      "passed": 17,
+      "failed": 0,
+      "seconds": 59.88,
+      "log": {
+        "path": "build/export-asan-ctest.log",
+        "bytes": 1939,
+        "sha256": "d43c409d69e79cea27f5682288eb64e19e2cdc2f0e190f4cdbbd9a3aeae6606d"
+      },
+      "full_test_log": {
+        "path": "build/export-asan/Testing/Temporary/LastTest.log",
+        "bytes": 14860,
+        "sha256": "981ab1ee79e011713941905a3c791d0423332e474868bb34d6b5b163e5bd035c"
+      }
+    },
+    "strict_cpp": {
+      "passed": true,
+      "diagnostics": 0,
+      "log": {
+        "path": "build/export-asan-strict.log",
+        "bytes": 0,
+        "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+      }
+    },
+    "source_and_golden": {
+      "path": "build/export-core/verification/source_and_golden.log",
+      "bytes": 3459,
+      "sha256": "7cbe1ed0a56b8803a3ab0e0290b495d2be337b44ee94205c6697a071befb27ec"
+    },
+    "actual_au": {
+      "passed": true,
+      "rates": [
+        48000
+      ],
+      "log": {
+        "path": "build/web-export-au-state.log",
+        "bytes": 6170,
+        "sha256": "efe7048f9d46d52216a65bd6a8ab664bd271d5e5bbff29cddadcea7bc0b8c9cf"
+      }
+    },
+    "actual_vst3": {
+      "passed": true,
+      "rates": [
+        44100,
+        48000,
+        96000
+      ],
+      "log": {
+        "path": "build/web-export-vst3-audio.log",
+        "bytes": 12421,
+        "sha256": "1b0d9538adf6f28f04bd453dfea48665d8e116af160314e5822a7b723a2d2541"
+      }
+    },
+    "host_scope": "full previous state/MIDI/ADSR/Reverb/PCM/Noise/PMON/Morph/Web import regressions; export pure/worker tested separately",
+    "vst3_validator": {
+      "passed": 47,
+      "failed": 0,
+      "log": {
+        "path": "build/web-export-vst3-validator.log",
+        "bytes": 252137,
+        "sha256": "fddb4fb4a7d3793b60703d00b87af09f4544a417b6e93abff1d1eb4ac0570509"
+      }
+    },
+    "auval": {
+      "passed": true,
+      "params": 26,
+      "known_warning": "preset name",
+      "log": {
+        "path": "build/web-export-auval.log",
+        "bytes": 9427,
+        "sha256": "a78f676621d293bfad4509eceb8d8b494420709436564401f2f1d89a9c50e323"
+      }
+    },
+    "default_sine_wav": {
+      "path": "/private/tmp/tetorica-spu-export-demo.wav",
+      "bytes": 576044,
+      "sha256": "7a61b56d356ac198c35808b503cf0b61b55a9547b21770eb2a67c97d0cc4aef3"
+    }
+  },
+  "web_interoperability": {
+    "report_file": {
+      "path": "build/web-export-browser-report.json",
+      "bytes": 13050,
+      "sha256": "0946b48345d3a475b5f451897b3107451db2a08ec7dfc71e7250c32e550651f6"
+    },
+    "report": {
+      "startedAt": "2026-11-01T01:09:56.976Z",
+      "scope": "Actual Web reader, writer, and optional public file-load/save UI. No physical listening or cross-runtime PCM identity claim.",
+      "sources": [
+        {
+          "path": "docs/synth-spu/spu_synth_instrument.js",
+          "sha256": "f18d97276abd98468135e6da3ba5bc191f5286b5fae8e5e2eb52d544b8b5fa5b"
+        },
+        {
+          "path": "docs/synth-spu/spu_synth_morph.js",
+          "sha256": "15cf1302bb619c39a179620967e8be2cfefd18aaf17c86c262c51ea216971d05"
+        },
+        {
+          "path": "docs/js/ps1_waveform.js",
+          "sha256": "5ca293b60ea15b87dc895c51d806ef54887efe4e961ef479f59d562d0d5dd820"
+        }
+      ],
+      "pure": [
+        {
+          "id": "builtin",
+          "sourceKind": 0,
+          "bytes": 7321,
+          "adpcmBytes": 64,
+          "sha256": "3e765c07462b190a403343c0506cd060bef9d16e7b30f46a15465b20d67d2ef7",
+          "passed": true
+        },
+        {
+          "id": "pcm",
+          "sourceKind": 2,
+          "bytes": 10079,
+          "adpcmBytes": 64,
+          "sha256": "7fd3faeab050afc981cea330ba5a7c8e8ebfc56d1ca9cd8a43f9f8ab04dd433c",
+          "passed": true
+        },
+        {
+          "id": "vab",
+          "sourceKind": 1,
+          "bytes": 7346,
+          "adpcmBytes": 64,
+          "sha256": "8e2ae3ffe3d5e964249f3388a95cd4c7078ba6d7c5c3d23c6f317d50586a14e8",
+          "passed": true
+        },
+        {
+          "id": "raw",
+          "sourceKind": 3,
+          "bytes": 7143,
+          "adpcmBytes": 48,
+          "sha256": "e211ea8953030c4f46856b73cc742613e5cb988495ca601a1696a2ce919763aa",
+          "passed": true
+        },
+        {
+          "id": "legacy-pcm",
+          "sourceKind": 3,
+          "bytes": 10116,
+          "adpcmBytes": 64,
+          "sha256": "611017896f49d1de01f3008fe2defb5e11a3f7efe7d01644c78e01f406e1fa68",
+          "passed": true
+        },
+        {
+          "id": "imported-morph",
+          "sourceKind": 3,
+          "bytes": 10193,
+          "adpcmBytes": 64,
+          "sha256": "b0e84452213e4f8f5339e1021bc12156ade5d05b50dd77335a7913639d5d3931",
+          "passed": true
+        },
+        {
+          "id": "builtin-morph",
+          "sourceKind": 0,
+          "bytes": 10126,
+          "adpcmBytes": 64,
+          "sha256": "44013ce8c45b4d492f72764c1ee13db73472035678c5c4606760a0a907f7f890",
+          "passed": true
+        },
+        {
+          "id": "pcm-morph",
+          "sourceKind": 2,
+          "bytes": 10122,
+          "adpcmBytes": 64,
+          "sha256": "0c266c21d38289da488001fb8060c8731a08d8a2641b783d4d79ba3c6e473577",
+          "passed": true
+        },
+        {
+          "id": "vab-morph",
+          "sourceKind": 1,
+          "bytes": 10145,
+          "adpcmBytes": 64,
+          "sha256": "11ed47a88597fab918d5d2c992367fc782d1e1e3a0898b0e91d0e53992aafd7e",
+          "passed": true
+        },
+        {
+          "id": "raw-morph",
+          "sourceKind": 3,
+          "bytes": 10190,
+          "adpcmBytes": 64,
+          "sha256": "a8c4479211bbd00fc6c7c1822f17cf74de623ebff4020beb688538d87bb79906",
+          "passed": true
+        },
+        {
+          "id": "custom-adsr",
+          "sourceKind": 3,
+          "bytes": 7150,
+          "adpcmBytes": 48,
+          "sha256": "8ecba1b92d86b92580efafe7d94b041239a7ae149c5486dbc47a472caabe8564",
+          "passed": true
+        },
+        {
+          "id": "inactive-adsr",
+          "sourceKind": 3,
+          "bytes": 7153,
+          "adpcmBytes": 48,
+          "sha256": "b22ba075199629811a7ac0215b19c92fb10cba4ed5ca93f7ef6cc533ed759c36",
+          "passed": true
+        },
+        {
+          "id": "noise-masked-pmon-morph",
+          "sourceKind": 3,
+          "bytes": 7170,
+          "adpcmBytes": 48,
+          "sha256": "9bafa6da353fa18a3b3b83ecc51f8680de53147c1d7f070b7927504faa1adfc3",
+          "passed": true
+        },
+        {
+          "id": "disabled-reverb",
+          "sourceKind": 3,
+          "bytes": 7148,
+          "adpcmBytes": 48,
+          "sha256": "06c14339adea7ac835515a8a4198a5c1f54deb5dede62df507e26544e79e425c",
+          "passed": true
+        },
+        {
+          "id": "all-notes-send",
+          "sourceKind": 3,
+          "bytes": 7119,
+          "adpcmBytes": 48,
+          "sha256": "c51abeeb94ac81a8651b1ccd68cb91704b71a9fea03ee343c12762a588aa1738",
+          "passed": true
+        },
+        {
+          "id": "tone-send-off",
+          "sourceKind": 3,
+          "bytes": 7119,
+          "adpcmBytes": 48,
+          "sha256": "767fba507179840aff4e6683cd2c7d82ec5f2488311e2299b7305047a05afb5c",
+          "passed": true
+        },
+        {
+          "id": "enabled-off-preset",
+          "sourceKind": 3,
+          "bytes": 7151,
+          "adpcmBytes": 48,
+          "sha256": "6782f85df92ec8decd5edc6d2e841153b45a08e0b52d3237abbaf9a3fb1ac0c2",
+          "passed": true
+        },
+        {
+          "id": "gain-zero",
+          "sourceKind": 3,
+          "bytes": 7149,
+          "adpcmBytes": 48,
+          "sha256": "856ccf2b9855cb4f1b4fd186faad34b2ff628d356b8ef56476c8c0f521277dbd",
+          "passed": true
+        },
+        {
+          "id": "gain37",
+          "sourceKind": 3,
+          "bytes": 7146,
+          "adpcmBytes": 48,
+          "sha256": "0f0aa7bf838b352df40a2bb2f226deec8d93c0d2ecd7aae9d71e2d7677abfb5f",
+          "passed": true
+        },
+        {
+          "id": "negative-zero-volume",
+          "sourceKind": 3,
+          "bytes": 7131,
+          "adpcmBytes": 48,
+          "sha256": "357ab9e8265704a4c967ccf5b930b13c5adbaf0103bcdaf553a1fb818df9228c",
+          "passed": true
+        }
+      ],
+      "browsers": [
+        {
+          "engine": "chromium",
+          "id": "builtin",
+          "passed": true,
+          "physicalOutputMuted": true,
+          "savedFromActualEngine": true,
+          "legacyBytesCanonicalized": false
+        },
+        {
+          "engine": "chromium",
+          "id": "pcm",
+          "passed": true,
+          "physicalOutputMuted": true,
+          "savedFromActualEngine": true,
+          "legacyBytesCanonicalized": false
+        },
+        {
+          "engine": "chromium",
+          "id": "vab",
+          "passed": true,
+          "physicalOutputMuted": true,
+          "savedFromActualEngine": true,
+          "legacyBytesCanonicalized": false
+        },
+        {
+          "engine": "chromium",
+          "id": "raw",
+          "passed": true,
+          "physicalOutputMuted": true,
+          "savedFromActualEngine": true,
+          "legacyBytesCanonicalized": false
+        },
+        {
+          "engine": "chromium",
+          "id": "legacy-pcm",
+          "passed": true,
+          "physicalOutputMuted": true,
+          "savedFromActualEngine": true,
+          "legacyBytesCanonicalized": true
+        },
+        {
+          "engine": "chromium",
+          "id": "imported-morph",
+          "passed": true,
+          "physicalOutputMuted": true,
+          "savedFromActualEngine": true,
+          "legacyBytesCanonicalized": false
+        },
+        {
+          "engine": "chromium",
+          "id": "builtin-morph",
+          "passed": true,
+          "physicalOutputMuted": true,
+          "savedFromActualEngine": true,
+          "legacyBytesCanonicalized": false
+        },
+        {
+          "engine": "chromium",
+          "id": "pcm-morph",
+          "passed": true,
+          "physicalOutputMuted": true,
+          "savedFromActualEngine": true,
+          "legacyBytesCanonicalized": false
+        },
+        {
+          "engine": "chromium",
+          "id": "vab-morph",
+          "passed": true,
+          "physicalOutputMuted": true,
+          "savedFromActualEngine": true,
+          "legacyBytesCanonicalized": false
+        },
+        {
+          "engine": "chromium",
+          "id": "raw-morph",
+          "passed": true,
+          "physicalOutputMuted": true,
+          "savedFromActualEngine": true,
+          "legacyBytesCanonicalized": false
+        },
+        {
+          "engine": "chromium",
+          "id": "custom-adsr",
+          "passed": true,
+          "physicalOutputMuted": true,
+          "savedFromActualEngine": true,
+          "legacyBytesCanonicalized": false
+        },
+        {
+          "engine": "chromium",
+          "id": "inactive-adsr",
+          "passed": true,
+          "physicalOutputMuted": true,
+          "savedFromActualEngine": true,
+          "legacyBytesCanonicalized": false
+        },
+        {
+          "engine": "chromium",
+          "id": "noise-masked-pmon-morph",
+          "passed": true,
+          "physicalOutputMuted": true,
+          "savedFromActualEngine": true,
+          "legacyBytesCanonicalized": false
+        },
+        {
+          "engine": "chromium",
+          "id": "disabled-reverb",
+          "passed": true,
+          "physicalOutputMuted": true,
+          "savedFromActualEngine": true,
+          "legacyBytesCanonicalized": false
+        },
+        {
+          "engine": "chromium",
+          "id": "all-notes-send",
+          "passed": true,
+          "physicalOutputMuted": true,
+          "savedFromActualEngine": true,
+          "legacyBytesCanonicalized": false
+        },
+        {
+          "engine": "chromium",
+          "id": "tone-send-off",
+          "passed": true,
+          "physicalOutputMuted": true,
+          "savedFromActualEngine": true,
+          "legacyBytesCanonicalized": false
+        },
+        {
+          "engine": "chromium",
+          "id": "enabled-off-preset",
+          "passed": true,
+          "physicalOutputMuted": true,
+          "savedFromActualEngine": true,
+          "legacyBytesCanonicalized": false
+        },
+        {
+          "engine": "chromium",
+          "id": "gain-zero",
+          "passed": true,
+          "physicalOutputMuted": true,
+          "savedFromActualEngine": true,
+          "legacyBytesCanonicalized": false
+        },
+        {
+          "engine": "chromium",
+          "id": "gain37",
+          "passed": true,
+          "physicalOutputMuted": true,
+          "savedFromActualEngine": true,
+          "legacyBytesCanonicalized": false
+        },
+        {
+          "engine": "chromium",
+          "id": "negative-zero-volume",
+          "passed": true,
+          "physicalOutputMuted": true,
+          "savedFromActualEngine": true,
+          "legacyBytesCanonicalized": false
+        },
+        {
+          "engine": "webkit",
+          "id": "builtin",
+          "passed": true,
+          "physicalOutputMuted": true,
+          "savedFromActualEngine": true,
+          "legacyBytesCanonicalized": false
+        },
+        {
+          "engine": "webkit",
+          "id": "pcm",
+          "passed": true,
+          "physicalOutputMuted": true,
+          "savedFromActualEngine": true,
+          "legacyBytesCanonicalized": false
+        },
+        {
+          "engine": "webkit",
+          "id": "vab",
+          "passed": true,
+          "physicalOutputMuted": true,
+          "savedFromActualEngine": true,
+          "legacyBytesCanonicalized": false
+        },
+        {
+          "engine": "webkit",
+          "id": "raw",
+          "passed": true,
+          "physicalOutputMuted": true,
+          "savedFromActualEngine": true,
+          "legacyBytesCanonicalized": false
+        },
+        {
+          "engine": "webkit",
+          "id": "legacy-pcm",
+          "passed": true,
+          "physicalOutputMuted": true,
+          "savedFromActualEngine": true,
+          "legacyBytesCanonicalized": true
+        },
+        {
+          "engine": "webkit",
+          "id": "imported-morph",
+          "passed": true,
+          "physicalOutputMuted": true,
+          "savedFromActualEngine": true,
+          "legacyBytesCanonicalized": false
+        },
+        {
+          "engine": "webkit",
+          "id": "builtin-morph",
+          "passed": true,
+          "physicalOutputMuted": true,
+          "savedFromActualEngine": true,
+          "legacyBytesCanonicalized": false
+        },
+        {
+          "engine": "webkit",
+          "id": "pcm-morph",
+          "passed": true,
+          "physicalOutputMuted": true,
+          "savedFromActualEngine": true,
+          "legacyBytesCanonicalized": false
+        },
+        {
+          "engine": "webkit",
+          "id": "vab-morph",
+          "passed": true,
+          "physicalOutputMuted": true,
+          "savedFromActualEngine": true,
+          "legacyBytesCanonicalized": false
+        },
+        {
+          "engine": "webkit",
+          "id": "raw-morph",
+          "passed": true,
+          "physicalOutputMuted": true,
+          "savedFromActualEngine": true,
+          "legacyBytesCanonicalized": false
+        },
+        {
+          "engine": "webkit",
+          "id": "custom-adsr",
+          "passed": true,
+          "physicalOutputMuted": true,
+          "savedFromActualEngine": true,
+          "legacyBytesCanonicalized": false
+        },
+        {
+          "engine": "webkit",
+          "id": "inactive-adsr",
+          "passed": true,
+          "physicalOutputMuted": true,
+          "savedFromActualEngine": true,
+          "legacyBytesCanonicalized": false
+        },
+        {
+          "engine": "webkit",
+          "id": "noise-masked-pmon-morph",
+          "passed": true,
+          "physicalOutputMuted": true,
+          "savedFromActualEngine": true,
+          "legacyBytesCanonicalized": false
+        },
+        {
+          "engine": "webkit",
+          "id": "disabled-reverb",
+          "passed": true,
+          "physicalOutputMuted": true,
+          "savedFromActualEngine": true,
+          "legacyBytesCanonicalized": false
+        },
+        {
+          "engine": "webkit",
+          "id": "all-notes-send",
+          "passed": true,
+          "physicalOutputMuted": true,
+          "savedFromActualEngine": true,
+          "legacyBytesCanonicalized": false
+        },
+        {
+          "engine": "webkit",
+          "id": "tone-send-off",
+          "passed": true,
+          "physicalOutputMuted": true,
+          "savedFromActualEngine": true,
+          "legacyBytesCanonicalized": false
+        },
+        {
+          "engine": "webkit",
+          "id": "enabled-off-preset",
+          "passed": true,
+          "physicalOutputMuted": true,
+          "savedFromActualEngine": true,
+          "legacyBytesCanonicalized": false
+        },
+        {
+          "engine": "webkit",
+          "id": "gain-zero",
+          "passed": true,
+          "physicalOutputMuted": true,
+          "savedFromActualEngine": true,
+          "legacyBytesCanonicalized": false
+        },
+        {
+          "engine": "webkit",
+          "id": "gain37",
+          "passed": true,
+          "physicalOutputMuted": true,
+          "savedFromActualEngine": true,
+          "legacyBytesCanonicalized": false
+        },
+        {
+          "engine": "webkit",
+          "id": "negative-zero-volume",
+          "passed": true,
+          "physicalOutputMuted": true,
+          "savedFromActualEngine": true,
+          "legacyBytesCanonicalized": false
+        }
+      ],
+      "completedAt": "2026-11-01T01:10:12.478Z",
+      "passed": true
+    },
+    "node_reader_writer_cases": 20,
+    "chromium_public_load_save_cases": 20,
+    "webkit_public_load_save_cases": 20,
+    "physical_output_muted": true,
+    "page_exceptions": 0,
+    "legacy_pcm": "Web UI canonicalizes only legacy ADPCM bytes; settings and Float32 PCM retained"
+  },
+  "standalone_ui": {
+    "verified": [
+      "common header button/layout",
+      "native Save panel and default filename",
+      "successful save status",
+      "real Web reader readback of actual saved file",
+      "second Save cancelled; source/Gain100/ReverbOff retained; no extra file"
+    ],
+    "saved_file": {
+      "path": "build/web-export-ui-yv0v6i7n/standalone.spu.json",
+      "bytes": 7319,
+      "sha256": "7807a4913b7e5264797abd545d8ffd03b10ba2bc3154f3c69dc3ebfeff046989"
+    },
+    "readback_file": {
+      "path": "build/web-export-ui-readback.json",
+      "bytes": 332,
+      "sha256": "2c582bd69a50c9ab9005276069a1a9f8ff8670bcc3d768e3e88607330980a648"
+    },
+    "readback": {
+      "passed": true,
+      "name": "Builtin Sine",
+      "version": 1,
+      "adpcmBytes": 64,
+      "preset": {
+        "volumeLeft": 1,
+        "volumeRight": 1,
+        "adsr1": 15,
+        "adsr2": 8128,
+        "pitch": 4096,
+        "reverb": true
+      },
+      "reverb": {
+        "preset": "off",
+        "volumeLeft": 0.25,
+        "volumeRight": 0.25
+      },
+      "morphEnabled": false
+    },
+    "final_state": "quit",
+    "physical_hearing_verified": false
+  },
+  "bundles": {
+    "standalone": {
+      "path": "build/macos/out/TetoricaSPU.app",
+      "file_sha256": {
+        "Contents/Info.plist": "1fec046b5560e89705ce207b4372e154e72e7e97951f2e0c4a23789827cf58c6",
+        "Contents/MacOS/TetoricaSPU": "7ddca11e97e114a3486155fb420ffa3cc4afcc4affc12ccc83fb72f8b960d631",
+        "Contents/PkgInfo": "82502191c9484b04d685374f9879a0066069c49b8acae7a04b01d38d07e8eca0",
+        "Contents/Resources/Roboto-Regular.ttf": "b2efabca5ea4bc56eea829713706b5cd0788b82aca153bd4adde9b1573933b4f",
+        "Contents/Resources/THIRD_PARTY_NOTICES.txt": "d26ed5d113ec81968e0f1c41560491631e9c77c5bddf6ad6608dbf8697ce5dcf",
+        "Contents/Resources/TetoricaSPU-macOS-MainMenu.nib": "7ba57e13c5fdbc1f77eaf801fd49f7762dfbef93a2ce6526e547901f66d4719e"
+      }
+    },
+    "au": {
+      "path": "build/macos/out/TetoricaSPU.component",
+      "file_sha256": {
+        "Contents/Info.plist": "94a46fcfc638d76a05aca50d5deedaff2a7a934aee55a816d007b6dff9c9bbc4",
+        "Contents/MacOS/TetoricaSPU": "351cb7a01fb9e6c5d20eb2cd683245b1d4cde2bc4beb5411c1fef75b4e815fb8",
+        "Contents/PkgInfo": "d06a80ba92de0833d0ed03de1b02b7c8913f126d9e8c8931b190765dd5d83b11",
+        "Contents/Resources/Roboto-Regular.ttf": "b2efabca5ea4bc56eea829713706b5cd0788b82aca153bd4adde9b1573933b4f",
+        "Contents/Resources/THIRD_PARTY_NOTICES.txt": "d26ed5d113ec81968e0f1c41560491631e9c77c5bddf6ad6608dbf8697ce5dcf"
+      }
+    },
+    "vst3": {
+      "path": "build/macos/out/TetoricaSPU.vst3",
+      "file_sha256": {
+        "Contents/Info.plist": "0fe9965eadefafb0be705d9e3bba5a6df3c6e2561b608bdbf267d7f831e5d644",
+        "Contents/MacOS/TetoricaSPU": "ca4a230d9b69dd1eb3df751a2e59ee978f3bf4f07dc403a20385afdbea260674",
+        "Contents/PkgInfo": "d06a80ba92de0833d0ed03de1b02b7c8913f126d9e8c8931b190765dd5d83b11",
+        "Contents/Resources/Roboto-Regular.ttf": "b2efabca5ea4bc56eea829713706b5cd0788b82aca153bd4adde9b1573933b4f",
+        "Contents/Resources/THIRD_PARTY_NOTICES.txt": "d26ed5d113ec81968e0f1c41560491631e9c77c5bddf6ad6608dbf8697ce5dcf"
+      }
+    }
+  },
+  "au": {
+    "installed_path": "/Users/kyorohiro/Library/Audio/Plug-Ins/Components/TetoricaSPU.component",
+    "file_sha256": {
+      "Contents/Info.plist": "94a46fcfc638d76a05aca50d5deedaff2a7a934aee55a816d007b6dff9c9bbc4",
+      "Contents/MacOS/TetoricaSPU": "351cb7a01fb9e6c5d20eb2cd683245b1d4cde2bc4beb5411c1fef75b4e815fb8",
+      "Contents/PkgInfo": "d06a80ba92de0833d0ed03de1b02b7c8913f126d9e8c8931b190765dd5d83b11",
+      "Contents/Resources/Roboto-Regular.ttf": "b2efabca5ea4bc56eea829713706b5cd0788b82aca153bd4adde9b1573933b4f",
+      "Contents/Resources/THIRD_PARTY_NOTICES.txt": "d26ed5d113ec81968e0f1c41560491631e9c77c5bddf6ad6608dbf8697ce5dcf"
+    },
+    "update_journal": "build/au-backups/au-update-_0yi1f1v/manifest.json",
+    "update": {
+      "schema": 1,
+      "operation": "au-update",
+      "state": "installed",
+      "created_utc": "2026-11-01T01:15:34.211709+00:00",
+      "source": "/Users/kyorohiro/development8/wfm/hello_ymfm/w/tetorica-spu-plugin/build/macos/out/TetoricaSPU.component",
+      "destination": "/Users/kyorohiro/Library/Audio/Plug-Ins/Components/TetoricaSPU.component",
+      "backup_directory": "/Users/kyorohiro/development8/wfm/hello_ymfm/w/tetorica-spu-plugin/build/au-backups/au-update-_0yi1f1v",
+      "backup_component": "/Users/kyorohiro/development8/wfm/hello_ymfm/w/tetorica-spu-plugin/build/au-backups/au-update-_0yi1f1v/previous.component",
+      "staged_component": "/Users/kyorohiro/development8/wfm/hello_ymfm/w/tetorica-spu-plugin/build/au-backups/au-update-_0yi1f1v/staged.component",
+      "old_archive": "/Users/kyorohiro/development8/wfm/hello_ymfm/w/tetorica-spu-plugin/build/au-backups/au-update-_0yi1f1v/original.component",
+      "component": {
+        "type": "aumu",
+        "subtype": "Tspu",
+        "manufacturer": "Tetr",
+        "version": 256
+      },
+      "old_sha256": {
+        "Contents/Info.plist": "94a46fcfc638d76a05aca50d5deedaff2a7a934aee55a816d007b6dff9c9bbc4",
+        "Contents/MacOS/TetoricaSPU": "9ce3c1efba6a7fafc2121f699d14dc5bbf2c2692bd933296842c6f5ffeaa9088",
+        "Contents/PkgInfo": "d06a80ba92de0833d0ed03de1b02b7c8913f126d9e8c8931b190765dd5d83b11",
+        "Contents/Resources/Roboto-Regular.ttf": "b2efabca5ea4bc56eea829713706b5cd0788b82aca153bd4adde9b1573933b4f",
+        "Contents/Resources/THIRD_PARTY_NOTICES.txt": "d26ed5d113ec81968e0f1c41560491631e9c77c5bddf6ad6608dbf8697ce5dcf"
+      },
+      "new_sha256": {
+        "Contents/Info.plist": "94a46fcfc638d76a05aca50d5deedaff2a7a934aee55a816d007b6dff9c9bbc4",
+        "Contents/MacOS/TetoricaSPU": "351cb7a01fb9e6c5d20eb2cd683245b1d4cde2bc4beb5411c1fef75b4e815fb8",
+        "Contents/PkgInfo": "d06a80ba92de0833d0ed03de1b02b7c8913f126d9e8c8931b190765dd5d83b11",
+        "Contents/Resources/Roboto-Regular.ttf": "b2efabca5ea4bc56eea829713706b5cd0788b82aca153bd4adde9b1573933b4f",
+        "Contents/Resources/THIRD_PARTY_NOTICES.txt": "d26ed5d113ec81968e0f1c41560491631e9c77c5bddf6ad6608dbf8697ce5dcf"
+      }
+    },
+    "source_installed_all_five_match": true,
+    "both_old_backups_all_five_match": true,
+    "rollback_executed": false,
+    "local_registrar_force_terminated": false
+  },
+  "garageband": {
+    "verification_project": "build/spu-vab-check.band",
+    "backup": {
+      "backup": "build/web-export-update-project-zlez3fvd",
+      "files": 7,
+      "file_sha256": {
+        "Alternatives/000/DisplayState.plist": "824ff7482c5e30045b9aa7195666163e2f01d745d79fe7920ce9ef0c298ac1c7",
+        "Alternatives/000/DisplayStateArchive": "8b6323bf1ba21cb516977631eef404795f48cc24c7ce144b33232e40bf4fc2e9",
+        "Alternatives/000/MetaData.plist": "e828be6d50e93a28908aba862e511f1e3c736fe8ed01b1923e3250282c6ad4fb",
+        "Alternatives/000/ProjectData": "402c79a814523d993a0023629e3ac09c14cb56ae8df77b4b57b444bc9fb866d4",
+        "Alternatives/000/WindowImage.jpg": "7e54a5a0340a564640c5f79f8d382614506774d347c45656568cfdf1078737ba",
+        "Resources/ProjectInformation.plist": "078f82c873d78abb6a1c7acb7fadf0b877ba605a40a84c52929db0fedc430b15",
+        "projectData": "b8abb99c1c6e208293ced2a8246573331794a31a4ee0dbdbd8e313ba8f3eae66"
+      },
+      "saved_schema": 8,
+      "payload_bytes": 4768,
+      "payload_sha256": "477fd0b00a6b7170fb6ef6c6e525ddce80d9a664c21dd4622ad4efd84340e534",
+      "bank_sha256": "71a7de205c0ebe1b8743288d90cd3b0204da9bd81aed9159af31f404d7cf2be6",
+      "installed_au_all_five_match": true,
+      "original_project_all_eleven_unchanged": true
+    },
+    "before": {
+      "path": "build/web-export-au-project-before.json",
+      "bytes": 3272,
+      "sha256": "21cc1358a38d97b604814e99ee1d7d44dfb3e3a157a4c40f0c8a990891d1105f"
+    },
+    "after": {
+      "path": "build/web-export-au-project-after.json",
+      "bytes": 3004,
+      "sha256": "e3a12bacf4eebf22d515897f057ef0714499d634f77b92f2f7b4302da98b613f"
+    },
+    "saved_schema": 8,
+    "payload_bytes": 4768,
+    "payload_sha256": "477fd0b00a6b7170fb6ef6c6e525ddce80d9a664c21dd4622ad4efd84340e534",
+    "bank_bytes": 3744,
+    "bank_sha256": "71a7de205c0ebe1b8743288d90cd3b0204da9bd81aed9159af31f404d7cf2be6",
+    "saved_payload_and_bank_unchanged": true,
+    "gui_reopen": {
+      "embedded_vab": true,
+      "program": 3,
+      "tone": 0,
+      "gain_percent": 99,
+      "status": "Project sound restored.",
+      "reverb_enabled": false,
+      "returns_percent": [
+        25,
+        25
+      ],
+      "keyboard_morph": "Off",
+      "save_web_button": true
+    },
+    "playback": false,
+    "recording": false,
+    "saved_after_update": false,
+    "left_editor_open": true,
+    "original_project": "build/spu-au-check.band",
+    "original_file_sha256": {
+      "Alternatives/000/Autosave/.dummy": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+      "Alternatives/000/Autosave/2026-10-31 10:12:23Z.displayData": "c2b29c82b187b6da04daaf17dbef530296859a95f39bac812a3261fe6c70d7ed",
+      "Alternatives/000/Autosave/2026-10-31 10:12:23Z.eventData": "0c7d3cd92b56d8c216b0b9663c58ef3692eee4ea739e19d1d9d20f0cfb98f63d",
+      "Alternatives/000/Autosave/2026-10-31 10:12:23Z.songData": "fc19d5172a5a19db59c790fb8bc06e922a5b157b44f99798d77dc7f9cc6e4515",
+      "Alternatives/000/DisplayState.plist": "fe2af1ddf457b06a4d47e4f34e17773d62963bdc54926a3f8dbd4777a5a56ed1",
+      "Alternatives/000/DisplayStateArchive": "cc3008d309493456ddac4c78d0597ce13d554f0a35d815edaa14d255db6144f3",
+      "Alternatives/000/MetaData.plist": "e828be6d50e93a28908aba862e511f1e3c736fe8ed01b1923e3250282c6ad4fb",
+      "Alternatives/000/ProjectData": "95061279acf172082d2f37e03f5ad9d64067f940c5c2c9abc99adda613e76931",
+      "Alternatives/000/WindowImage.jpg": "6176a5b9e9790b722392e0d80622fa9e4c4fa9087bf99c255cbc6a46159b3bcd",
+      "Resources/ProjectInformation.plist": "2dd01b478b456764e72ddeaaf05479c1f41bf9ab370f2b85bbe0c575430515ab",
+      "projectData": "b8abb99c1c6e208293ced2a8246573331794a31a4ee0dbdbd8e313ba8f3eae66"
+    },
+    "original_all_eleven_unchanged": true,
+    "scope": "Saved AU bytes inspected separately from GUI active instrument reopen; custom Save Web in GarageBand not performed"
+  },
+  "ci": {
+    "metadata": {
+      "path": "build/web-export-ci-summary.json",
+      "bytes": 8307,
+      "sha256": "46138be44c15a902e2ef97f0e5f53fa30f523e5178c6cdad082b470cc8914da6"
+    },
+    "run": {
+      "conclusion": "success",
+      "created_at": "2026-11-01T01:14:41Z",
+      "head_sha": "fe24f25ea7d1bdfa8ca09a1edebf119037bd4974",
+      "html_url": "https://github.com/kyorohiro/tetorica-spu-plugin/actions/runs/41260258393",
+      "id": 41260258393,
+      "run_attempt": 1,
+      "run_started_at": "2026-11-01T01:14:41Z",
+      "status": "completed",
+      "updated_at": "2026-11-01T01:19:29Z"
+    },
+    "jobs": [
+      {
+        "completed_at": "2026-11-01T01:15:49Z",
+        "conclusion": "success",
+        "id": 124711879146,
+        "labels": [
+          "ubuntu-24.04"
+        ],
+        "name": "offline",
+        "started_at": "2026-11-01T01:14:44Z",
+        "status": "completed",
+        "steps": [
+          {
+            "completed_at": "2026-11-01T01:14:45Z",
+            "conclusion": "success",
+            "name": "Set up job",
+            "number": 1,
+            "started_at": "2026-11-01T01:14:44Z",
+            "status": "completed"
+          },
+          {
+            "completed_at": "2026-11-01T01:14:46Z",
+            "conclusion": "success",
+            "name": "Run actions/checkout@v4",
+            "number": 2,
+            "started_at": "2026-11-01T01:14:45Z",
+            "status": "completed"
+          },
+          {
+            "completed_at": "2026-11-01T01:14:46Z",
+            "conclusion": "success",
+            "name": "Verify safe AU installer in temporary directories",
+            "number": 3,
+            "started_at": "2026-11-01T01:14:46Z",
+            "status": "completed"
+          },
+          {
+            "completed_at": "2026-11-01T01:14:49Z",
+            "conclusion": "success",
+            "name": "Initialize pinned native SDK and JSON header",
+            "number": 4,
+            "started_at": "2026-11-01T01:14:46Z",
+            "status": "completed"
+          },
+          {
+            "completed_at": "2026-11-01T01:14:53Z",
+            "conclusion": "success",
+            "name": "Run cmake --preset offline",
+            "number": 5,
+            "started_at": "2026-11-01T01:14:49Z",
+            "status": "completed"
+          },
+          {
+            "completed_at": "2026-11-01T01:15:40Z",
+            "conclusion": "success",
+            "name": "Run cmake --build --preset offline --parallel 4",
+            "number": 6,
+            "started_at": "2026-11-01T01:14:53Z",
+            "status": "completed"
+          },
+          {
+            "completed_at": "2026-11-01T01:15:47Z",
+            "conclusion": "success",
+            "name": "Run ctest --preset offline",
+            "number": 7,
+            "started_at": "2026-11-01T01:15:40Z",
+            "status": "completed"
+          },
+          {
+            "completed_at": "2026-11-01T01:15:48Z",
+            "conclusion": "success",
+            "name": "Post Run actions/checkout@v4",
+            "number": 14,
+            "started_at": "2026-11-01T01:15:47Z",
+            "status": "completed"
+          },
+          {
+            "completed_at": "2026-11-01T01:15:48Z",
+            "conclusion": "success",
+            "name": "Complete job",
+            "number": 15,
+            "started_at": "2026-11-01T01:15:48Z",
+            "status": "completed"
+          }
+        ]
+      },
+      {
+        "completed_at": "2026-11-01T01:19:28Z",
+        "conclusion": "success",
+        "id": 124711879310,
+        "labels": [
+          "macos-15"
+        ],
+        "name": "macos",
+        "started_at": "2026-11-01T01:14:45Z",
+        "status": "completed",
+        "steps": [
+          {
+            "completed_at": "2026-11-01T01:14:47Z",
+            "conclusion": "success",
+            "name": "Set up job",
+            "number": 1,
+            "started_at": "2026-11-01T01:14:46Z",
+            "status": "completed"
+          },
+          {
+            "completed_at": "2026-11-01T01:14:49Z",
+            "conclusion": "success",
+            "name": "Run actions/checkout@v4",
+            "number": 2,
+            "started_at": "2026-11-01T01:14:47Z",
+            "status": "completed"
+          },
+          {
+            "completed_at": "2026-11-01T01:14:50Z",
+            "conclusion": "success",
+            "name": "Verify safe AU installer in temporary directories",
+            "number": 3,
+            "started_at": "2026-11-01T01:14:49Z",
+            "status": "completed"
+          },
+          {
+            "completed_at": "2026-11-01T01:15:03Z",
+            "conclusion": "success",
+            "name": "Initialize and verify pinned dependencies",
+            "number": 4,
+            "started_at": "2026-11-01T01:14:50Z",
+            "status": "completed"
+          },
+          {
+            "completed_at": "2026-11-01T01:15:03Z",
+            "conclusion": "success",
+            "name": "Run python3 scripts/bootstrap.py --check",
+            "number": 5,
+            "started_at": "2026-11-01T01:15:03Z",
+            "status": "completed"
+          },
+          {
+            "completed_at": "2026-11-01T01:15:12Z",
+            "conclusion": "success",
+            "name": "Run cmake --preset macos",
+            "number": 6,
+            "started_at": "2026-11-01T01:15:03Z",
+            "status": "completed"
+          },
+          {
+            "completed_at": "2026-11-01T01:17:49Z",
+            "conclusion": "success",
+            "name": "Run cmake --build --preset macos --parallel 4",
+            "number": 7,
+            "started_at": "2026-11-01T01:15:12Z",
+            "status": "completed"
+          },
+          {
+            "completed_at": "2026-11-01T01:17:59Z",
+            "conclusion": "success",
+            "name": "Run ctest --preset macos",
+            "number": 8,
+            "started_at": "2026-11-01T01:17:49Z",
+            "status": "completed"
+          },
+          {
+            "completed_at": "2026-11-01T01:18:07Z",
+            "conclusion": "success",
+            "name": "Install and validate the user AU",
+            "number": 9,
+            "started_at": "2026-11-01T01:17:59Z",
+            "status": "completed"
+          },
+          {
+            "completed_at": "2026-11-01T01:18:46Z",
+            "conclusion": "success",
+            "name": "Validate VST3",
+            "number": 10,
+            "started_at": "2026-11-01T01:18:07Z",
+            "status": "completed"
+          },
+          {
+            "completed_at": "2026-11-01T01:19:17Z",
+            "conclusion": "success",
+            "name": "Render and restore the actual VST3",
+            "number": 11,
+            "started_at": "2026-11-01T01:18:46Z",
+            "status": "completed"
+          },
+          {
+            "completed_at": "2026-11-01T01:19:20Z",
+            "conclusion": "success",
+            "name": "Restore embedded state in the actual AU",
+            "number": 12,
+            "started_at": "2026-11-01T01:19:17Z",
+            "status": "completed"
+          },
+          {
+            "completed_at": "2026-11-01T01:19:22Z",
+            "conclusion": "success",
+            "name": "Run actions/upload-artifact@v4",
+            "number": 13,
+            "started_at": "2026-11-01T01:19:20Z",
+            "status": "completed"
+          },
+          {
+            "completed_at": "2026-11-01T01:19:24Z",
+            "conclusion": "success",
+            "name": "Post Run actions/checkout@v4",
+            "number": 26,
+            "started_at": "2026-11-01T01:19:22Z",
+            "status": "completed"
+          },
+          {
+            "completed_at": "2026-11-01T01:19:25Z",
+            "conclusion": "success",
+            "name": "Complete job",
+            "number": 27,
+            "started_at": "2026-11-01T01:19:24Z",
+            "status": "completed"
+          }
+        ]
+      }
+    ],
+    "artifacts": [
+      {
+        "created_at": "2026-11-01T01:19:23Z",
+        "digest": "sha256:7294f6b89763ee92dfec2bb404592f1db8ab1ed3fd67cb1e7ca70cb5774ebb8f",
+        "expired": false,
+        "expires_at": "2027-01-30T01:14:41Z",
+        "id": 13065420254,
+        "name": "macos-development-bundles",
+        "size_in_bytes": 2556743,
+        "updated_at": "2026-11-01T01:19:23Z"
+      }
+    ],
+    "failed_steps": 0,
+    "scope": "Run/job/step/artifact metadata; no job logs or artifact archives downloaded"
+  },
+  "not_verified": [
+    "physical hearing",
+    "long real-time use",
+    "GarageBand custom Save Web file picker operation",
+    "real DAW automation recording",
+    "Windows plugin",
+    "CI artifact execution elsewhere",
+    "Native/Web bit-identical PCM"
+  ],
+  "publication": {
+    "source_pushed": true,
+    "sdk_changed": false,
+    "web_tauri_changed": false,
+    "version_changed": false,
+    "tag_created": false,
+    "release_published": false
+  }
+}

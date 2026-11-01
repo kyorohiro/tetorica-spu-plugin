@@ -1,7 +1,8 @@
 # Web SPU instrument export — 2026-11-01
 
 開始は`b8c2e3b`、実装前TODOを`c84dfe3`へcommit / pushした。
-この記録は検証中。完了した範囲と未確認範囲を追記する。
+実装は`fe24f25`。ローカル検証、実Webとの往復、CI、installed AU更新と旧GarageBand復元を完了した。
+source / bundle hash、検査ログ、現在のinstalled AU manifestは[検証JSON](web_instrument_export_20261101.json)に保存した。
 
 ## Save Web
 
@@ -48,7 +49,7 @@ DAW stateはschema8、26parameterのIDと初期値も維持する。
 Native SDK / Web / Tauri配布物、長いAudio v2、VH/VB picker、PSF抽出、
 Morph LFO、外部入力Reverb、version/tag/release公開は今回変更しない。
 
-## 検証の進捗
+## 検証結果
 
 - pure source helperの全4Kinds・元bytes/metadata独立所有とstrict compile成功。
 - 初期Sine WAV `/private/tmp/tetorica-spu-export-demo.wav` は従来SHA256 `7a61b56d356ac198c35808b503cf0b61b55a9547b21770eb2a67c97d0cc4aef3`と一致。
@@ -56,8 +57,23 @@ Morph LFO、外部入力Reverb、version/tag/release公開は今回変更しな�
 - Offline全17成功（7.63s）、macOS全17成功（7.96s）、ASan全17成功（59.88s）。pure module / 新3testsのstrict検査も成功した。
 - 実Web Node reader/writer20件、Chromium20件、WebKit20件の公開file load→実engine→Save download round tripを検証した。physical outputはgain0でmute、page exceptionなし。legacy PCMだけWeb仕様どおりcanonical bytesへ変わり、PCMと設定は保持した。
 - StandaloneのSave Webから`build/web-export-ui-yv0v6i7n/standalone.spu.json`を生成し、実Web readerでBuiltin Sine / v1 / 64bytes / volume各1を確認した。2回目のSave dialogをCancelし、BuiltinとGain100%保持・Web save cancelled表示を確認して終了した。
-- 実AU48k、実VST3 44.1 / 48 / 96kの既存全suite、公式VST3 validator47/0成功。CIとinstalled AU更新は継続中。
+- 実AU48k、実VST3 44.1 / 48 / 96kの既存全suite、公式VST3 validator47/0成功。
+- [CI41260258393](https://github.com/kyorohiro/tetorica-spu-plugin/actions/runs/41260258393)は実装commit `fe24f25`のoffline / macOS両job・全記録step成功。metadataを保存し、job log / artifact downloadと別環境実行は行っていない。
+- installed AUを既知manifest照合・退避付きで更新し、auval26params成功。GarageBandの旧schema8保存projectを再openしてEmbedded VAB / Program3 / Tone0 / Gain99% / Project sound restored / Reverb Off / return25%ずつ / Morph Offと新Save Webボタンを確認した。再生・録音は停止し、editorを開いた状態で残した。
+- 保存済みpayload4768bytesのSHA256は`477fd0b00a6b7170fb6ef6c6e525ddce80d9a664c21dd4622ad4efd84340e534`で前後一致。埋込VAB3744bytesも一致。更新前project7filesのbackupを照合し、別の原本project11filesも不変。更新後projectは再保存していない。
 - 実聴・長時間使用・DAW独自Save Web UIは未確認。
 
-更新前installed AU manifestは[import記録](web_instrument_import_20261101.json)。
-この時点ではinstalled AUの更新は行っていない。
+## AU更新・退避
+
+更新前installed AU manifestは[import記録](web_instrument_import_20261101.json)、現在のmanifestは[export JSON](web_instrument_export_20261101.json)の`au.file_sha256`。
+更新journalは`build/au-backups/au-update-_0yi1f1v/manifest.json`。
+source / installedの全5files、新旧backupの全5filesをそれぞれ照合した。
+AU binary SHA256は`351cb7a01fb9e6c5d20eb2cd683245b1d4cde2bc4beb5411c1fef75b4e815fb8`。
+local registrarの強制終了とrollbackは行っていない。
+
+戻す必要がある場合はGarageBand等のhostを終了してから、次を実行する。
+installerは更新後の既知hashと一致する場合だけ退避済みAUへ戻す。
+
+```sh
+python3 scripts/install_au.py --rollback build/au-backups/au-update-_0yi1f1v/manifest.json
+```

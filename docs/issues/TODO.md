@@ -30,8 +30,10 @@ PCMの4波形・自由描画・Apply / Revertも実装し、実AU/VST3とStandal
 [Noiseの記録](../noise_20261031.md)を参照。PMONも実装・検証・AU更新・CI成功済み。
 [PMONの記録](../pmon_20261031.md)を参照。Software Morphも実装・検証・AU更新・旧state復元・両repo CI成功済み。
 [Morphの記録](../morph_20261101.md)と[保存・更新記録](../morph_20261101.json)を参照。
+Web音色v1の[import](../web_instrument_import_20261101.md)と[export](../web_instrument_export_20261101.md)も完了した。
+現在のinstalled AU manifestは[export検証JSON](../web_instrument_export_20261101.json)。
 
-### Web音色ファイル書き出しの今回の区切り（2026-11-01、実装前）
+### Web音色ファイル書き出しの今回の区切り（2026-11-01、完了）
 
 - [x] 現在の保存対象音色をWeb `.spu.json` v1へ書き出す。Builtin / 選択中VAB Tone / PCM cycle / import済みADPCMを対象にし、未Apply draft・保持音・decoder状態・Bend / Sustainは出力しない。
 - [x] 元ADPCM・root・loop・signed左右volumeを保持し、Custom ADSRはsource reserved bit13をmergeした実効word、Reverb sendはAll notes / Tone指定を解決した値を出す。VAB全bankではなく現在選択Toneのsnapshotと説明する。
@@ -41,9 +43,13 @@ PCMの4波形・自由描画・Apply / Revertも実装し、実AU/VST3とStandal
 - [x] pure writerは全tupleを検証し、元bytesを保った新JSONだけを作る。Web実readerによるreadbackとC++ read/write/read、全kind・Morph / Noise優先 / Reverb / ADSRのmatrixで検証する。
 - [x] 共通Save Web操作を追加し、既存720×620・3pages・鍵盤を維持する。現在のcoherent saved snapshotを使い、JSON生成とfile I/Oはworkerで実行する。file dialog中のeditor close / host restoreで古いcallbackを使わない。
 - [x] native Save dialogで選ばれたfileへ、同一filesystemの一時fileからatomic replaceする。キャンセル・不正path・書込失敗で既存fileを壊さず、UTF8 path / 既存file更新 / latest / worker joinを検証する。
-- [ ] Offline / macOS / ASan / 実AU・VST3 / validator / CI、Standalone save dialogと実Web readerでの読み戻しを確認し、既知AU退避更新・旧GarageBand復元・記録をcommit / pushする。
+- [x] Offline / macOS / ASan / 実AU・VST3 / validator / CI、Standalone save dialogと実Web readerでの読み戻しを確認し、既知AU退避更新・旧GarageBand復元・記録をcommit / pushする。
+- [ ] 人の実聴・長時間使用、実DAW独自Save Web dialog操作とautomation録音を確認する。Standaloneの保存・Cancel、Web両browserの公開load/save、実AU/VST3の自動state検査とは別に記録する。
 
 開始は`b8c2e3b`、main / origin同期・clean tree。更新前installed AU manifestは[import記録](../web_instrument_import_20261101.json)。
+実装`fe24f25`、[CI両job成功](https://github.com/kyorohiro/tetorica-spu-plugin/actions/runs/41260258393)。通常 / macOS / ASanは各17/17、実Web Node / Chromium / WebKitは各20件成功。
+installed AUを退避更新し、auval26paramsとGarageBand旧schema8 P3/T0/Gain99・Save Web表示を確認した。saved payload4768bytes / VABと原本11filesは不変。
+操作・制限・rollbackは[export記録](../web_instrument_export_20261101.md)、現在のinstalled AU manifest・source hash・CI metadataは[JSON](../web_instrument_export_20261101.json)。
 長いAudio v2・VH+VB UI・PSF抽出・Morph LFO・外部入力Reverb・Web/Tauri配布変更・version/tag/release公開は今回追加しない。
 
 ### Web音色ファイル読み込みの今回の区切り（2026-11-01、完了）
@@ -56,13 +62,13 @@ PCMの4波形・自由描画・Apply / Revertも実装し、実AU/VST3とStandal
 - [x] 既存ID0〜25とsource kind0〜2を維持し、state schema8で新sourceを保存する。旧1〜7 / Gain-onlyを読み、不正state・未対応loop時のatomic failureと元fileなし復元を検証する。
 - [x] 共通file操作から`.vab`と`.spu.json`を読み込めるようにし、import名・状態・エラーを表示する。Source / ADSR / Reverbと720×620を保ち、file dialog/editor closeやpending中の世代管理を検証する。
 - [x] Webの実writerで作るreference fixtureとC++ parser/coreの対応、実AU/VST3のstate・first block・MIDI / FX回帰、sanitizer / validator / CI、Standalone読込UIを検証し、記録をcommit / pushする。
-- [ ] Web向け書き出し・往復は次の区切りで扱う。Morph OnでWebが現在blendをsampleとして保存する仕様と、pluginの元source保持仕様、Noise+PMONのraw flag差を先に整理する。長いAudio / PSF抽出 / VH+VB UIは今回追加しない。
+- [x] Web向け書き出し・往復は[次の区切り](../web_instrument_export_20261101.md)で完了した。Morph Onの現在blend保存・元source保持、Noise+PMONのraw flag差を整理し、実Web readerと両browserで検証した。長いAudio / PSF抽出 / VH+VB UIは後続。
 
 開始は`883c3d7`、main / origin同期・clean tree。更新前installed AU manifestは[Morph記録](../morph_20261101.json)。
 まずv1読み込みを完成させる。Web / Tauri配布物、Morph LFO、外部入力Reverb、version / tag / release公開は変更しない。
 実装`81eb78b`、[CI全job成功](https://github.com/kyorohiro/tetorica-spu-plugin/actions/runs/41255456421)。
 installed AUをknown hash照合・退避付きで更新し、auval26paramsとGarageBand旧schema7のP3/T0/Gain99・Load sound表示を確認した。saved payload4768bytesとVABは不変、原本11files不変。
-操作・制限・rollbackは[import記録](../web_instrument_import_20261101.md)、現在のAU manifest・source hash・CI metadataは[JSON](../web_instrument_import_20261101.json)。
+操作・制限・rollbackは[import記録](../web_instrument_import_20261101.md)、import時点のAU manifest・source hash・CI metadataは[JSON](../web_instrument_import_20261101.json)。現在のinstalled AU manifestは上のexport記録。
 
 ### Software Morphの今回の区切り（2026-11-01、完了）
 
@@ -80,7 +86,7 @@ installed AUをknown hash照合・退避付きで更新し、auval26paramsとGar
 開始は`091fd42`、main / origin同期・clean tree。更新前installed AU manifestは[PMON記録](../pmon_20261031.json)。
 実装は`65b6daf`、Native SDKは`d0e0324`へ固定した。[plugin CI](https://github.com/kyorohiro/tetorica-spu-plugin/actions/runs/41250360041)・[SDK CI](https://github.com/kyorohiro/tetorica-soundchip-native/actions/runs/41249290598)は成功。
 installed AUを退避更新し、`auval`成功、GarageBandのP3/T0/Gain99/Morph Offと旧schema6 payload（SHA256 `7feadeb5…`）一致を確認した。
-現在のinstalled AU manifestは[Morph記録](../morph_20261101.json)。実聴・長時間リアルタイム・実DAW独自Morph UIとautomation録音は未確認。
+この区切り終了時のinstalled AU manifestは[Morph記録](../morph_20261101.json)。実聴・長時間リアルタイム・実DAW独自Morph UIとautomation録音は未確認。
 Morph LFO、外部入力Reverb、長いAudioへのMorph、Web / Tauri配布変更は追加しない。
 
 ### PMONの今回の区切り（2026-10-31、実装前）
@@ -98,7 +104,7 @@ Morph LFO、外部入力Reverb、長いAudioへのMorph、Web / Tauri配布変�
 
 開始時点は`d73a05e`、main / origin同期・clean tree。更新前AU manifestは[Noise記録](../noise_20261031.json)。
 実装`d4698d5`、[CI全job成功](https://github.com/kyorohiro/tetorica-spu-plugin/actions/runs/41212257829)。
-2026-11-01 JSTに検証を完了し、現在のinstalled AU manifestは[PMON記録](../pmon_20261031.json)。
+2026-11-01 JSTに検証を完了し、この区切り終了時のinstalled AU manifestは[PMON記録](../pmon_20261031.json)。
 任意voice間の配線、Morph LFO、外部入力Reverb、Web / Tauri配布変更は今回の範囲に含めない。
 
 ### Noiseモードの今回の区切り（2026-10-31、実装前）

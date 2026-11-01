@@ -337,8 +337,8 @@ Invalid files preserve the current sound and valid pending work. Closing the
 editor or restoring a project cancels unfinished import preparation.
 
 The import is bounded to 8 MiB JSON and 520192 ADPCM bytes. The existing Native
-repeat-packet flag restriction still applies. Version 2 long Software audio,
-Web preset export and PSF extraction are follow-up work.
+repeat-packet flag restriction still applies. Version 2 long Software audio
+and PSF extraction are follow-up work. Web export is available below.
 
 Web saves the current Morph blend as the base sample; turning Morph Off after
 import returns to that saved sample. It cannot recover a pre-Morph VAB absent
@@ -349,7 +349,7 @@ See the [import verification record](docs/web_instrument_import_20261101.md).
 ## Save a sound for the Web Synth
 
 Choose **Save Web...** in the common header, then choose a `.spu.json` filename.
-The applied sound at the time you press the button is prepared on a worker and
+The saved sound snapshot at the time you press the button is prepared on a worker and
 saved through the native file dialog. The current instrument and any pending
 sound change keep their state. Cancellation or a failed write preserves an
 existing destination file.
@@ -446,12 +446,12 @@ The ordinary `--install` still refuses a different existing bundle.
 ```sh
 python3 -m unittest discover -s tests -p 'test_install_au.py' -v
 python3 scripts/install_au.py --update \
-  --expected docs/web_instrument_import_20261101.json --backup-root build/au-backups
+  --expected docs/web_instrument_export_20261101.json --backup-root build/au-backups
 # Use the printed manifest path to roll back; refuses an altered installation:
 python3 scripts/install_au.py --rollback build/au-backups/au-update-REPLACE/manifest.json
 ```
 
-The [Web instrument import record](docs/web_instrument_import_20261101.md) contains the
+The [Web instrument export record](docs/web_instrument_export_20261101.md) contains the
 current installed manifest, backup report and GarageBand restoration result.
 
 The destination is `~/Library/Audio/Plug-Ins/Components/TetoricaSPU.component`.
