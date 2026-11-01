@@ -34,6 +34,23 @@ Web音色v1の[import](../web_instrument_import_20261101.md)と[export](../web_i
 WAV素材の読み込み・Root / Playback編集も完了した。[操作・検証記録](../wav_import_20261101.md)を参照。
 現在のinstalled AU manifestは[WAV検証JSON](../wav_import_20261101.json)。
 
+### 長いAudio / Software PCMの今回の区切り（2026-11-01、実装前）
+
+- [ ] 既存WAVの入力32MiBを維持し、通常SPU ADPCM容量以内は従来bytesを保つ。超過する素材はmono / 44.1kHz / signed PCM16のSoftware audioへ自動切替し、20MiB級WAVを途中切捨てなく演奏できるようにする。
+- [ ] 保持PCMは32MiB（16,777,216frames、約6分20秒）、Web v2 JSONは48MiBを独立上限にする。Web側の30分 / 224MiBより小さい対応範囲として明示し、入力サイズ・再標本化後frames・state/base64長を確保前に検証する。
+- [ ] Software audioはPS1物理RAM外のソフト拡張とUIに表示する。Root / One shot / Loop entire sample、元PCM16・signed volume・ADSR / send / nameを保持し、Gaussian / envelope / PMON / ReverbはSPU coreで処理する。
+- [ ] bank0はNoise / PMON、bank1は長PCMへ使う。長PCM中はcycle Morphを実効OffとしてUIから使用不可にし、A/B / Amountとraw authored設定は保持する。Noise優先とPMON12組、Sample24音を維持し、callback内で大PCMを書き換えない。
+- [ ] Native SDKの長音源・低PITCHでEND距離がuint32 overflowする問題を修正し、境界1,048,576frames / PITCH1・one-shot / loopを回帰検証する。SDKをcommit / pushして依存lockとsubmoduleを公開commitへ固定する。新bank API・version/tag/releaseは追加しない。
+- [ ] private immutable PCM storageを共有し、Root / Loop / A/B変更やauthoring snapshotで音声全量をコピーしない。worker以外でdecode / resample / Native大cache準備を行わず、検証目的だけのstate全量encodeとUIのSerialize→decode snapshotを除く。
+- [ ] source kind4 / state schema9へPCM16LEとmetadataを埋め込み、元fileなしでDAW復元する。旧schema1〜8 / legacy、26parameter IDと旧小source上限を維持し、不正入力でactive / pending / scalar値を壊さない。
+- [ ] Web `.spu.json` v2のbase64 PCM16LEを読み書きする。v1は従来8MiB / ADPCM制約を維持する。v2のroot範囲・loop最低4frames・waveform / enabled Morph禁止、名前・JSON深さ / node上限 / duplicate / unknown key・canonical base64を確保前に検証する。
+- [ ] Software sourceのv2 exportは元のPCM16を保持しGainを焼き込まない。Noise / PMON / Morphのmask表現を説明し、長い録音と112cycle Morphを混同しない。file dialog / Cancel / editor close / host restore / latest ticketの既存保証を保つ。
+- [ ] build内に決定的な20MiB fixtureを生成して検証し、大きな録音をgitへ入れない。RT new/delete0・全音源切替・MIDI / FX・state9 / 旧互換・不正入力保持、実AU/VST3の元fileなし復元、実Web reader / Chromium / WebKit往復・ASan・両repo CIを検証する。
+- [ ] StandaloneのSoftware表示 / Root / Loop / 保存 / エラー時保持、installed AUのknown hash退避更新と既存GarageBand保存データを確認し、検証記録と再開TODOをcommit / pushする。AI入力が届かない実DAW独自UI・実聴 / 長時間確認は人のTODOへ区別して残す。
+
+開始は`a08f670`、main / origin同期・clean tree。更新前installed AU manifestは[WAV記録](../wav_import_20261101.json)。
+AIFF / 圧縮音声 / streaming再生・Morph LFO・外部入力Reverb・Web/Tauri配布とnpm公開は今回追加しない。
+
 ### WAV素材読み込みの今回の区切り（2026-11-01、完了）
 
 - [x] RIFF/WAVEのPCM16 / IEEE Float32、mono / stereoをboundedなpure decoderで読む。未知chunkとpaddingを処理し、不正サイズ・format・NaN/Inf・空音声を変更前に拒否する。入力上限32MiB、出力は既存SPU sample RAM内に限定し、黙って切り捨てない。
