@@ -348,6 +348,7 @@ The editor shows the embedded bank after project restoration without reopening
 the source file. Split input is embedded as the original VH bytes followed by
 the original VB bytes, so both source files can be moved after saving. Program /
 Tone selection and selected-Tone Web export work as with a complete VAB.
+See the [split VAB and AU preset verification record](docs/preset_split_vab_20261101.md).
 
 The prepared-engine exchange is now connected at plugin block boundaries.
 `src/VabLoader.h` supplies a non-audio-thread API to prepare a complete VAB Tone
@@ -534,19 +535,23 @@ The ordinary `--install` still refuses a different existing bundle.
 ```sh
 python3 -m unittest discover -s tests -p 'test_install_au.py' -v
 python3 scripts/install_au.py --update \
-  --expected docs/au_cc120_update_20261101.json --backup-root build/au-backups
+  --expected docs/preset_split_vab_20261101.json --backup-root build/au-backups
 # Use the printed manifest path to roll back; refuses an altered installation:
 python3 scripts/install_au.py --rollback build/au-backups/au-update-REPLACE/manifest.json
 ```
 
-The [CC120 AU update record](docs/au_cc120_update_20261101.md) contains the
-[current installed manifest](docs/au_cc120_update_20261101.json), retained backup
+The [preset-name and split VAB record](docs/preset_split_vab_20261101.md) contains the
+[current installed manifest](docs/preset_split_vab_20261101.json), retained backup
 and rollback procedure. The installed AU passed auval and the full AU host
 regressions, including channel-only CC120, preserved shared Reverb tails,
 PMON pair reuse, live Gain ramps and restore/reset/reactivation/bypass,
 as well as the [loop compatibility fix](docs/loop_repeat_20261101.md).
 A copied GarageBand project also restored its embedded VAB, Program 3, Tone 0
 and Gain 99% after save, full host exit and reopen.
+AU validation now passes without the preset-name warning. Host user-preset names
+round-trip independently of the embedded sound; selecting factory preset 0
+restores the named built-in default. The validation script treats a returning
+preset-name warning as a failure even when auval exits successfully.
 
 The destination is `~/Library/Audio/Plug-Ins/Components/TetoricaSPU.component`.
 This is an explicit test installation; the normal build still does not deploy.

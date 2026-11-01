@@ -42,9 +42,11 @@ Gain版installed AUへの退避更新・旧VABの保存再起動も完了した�
 [Gain版AU更新・復元記録](../au_gain_update_20261101.md)を参照。
 CC120のチャンネル別停止も実装・検証・[CI全2job成功](https://github.com/kyorohiro/tetorica-spu-plugin/actions/runs/41299598667)まで完了した。
 [仕様](../cc120_20261101.md)を参照。CC120版installed AUへの退避更新とGarageBand旧VABの保存再起動も完了した。
-[現在の配置・復元記録](../au_cc120_update_20261101.md) /[current installed AU manifest](../au_cc120_update_20261101.json)を参照。
+[CC120版の配置・復元記録](../au_cc120_update_20261101.md)を参照。
+AUプリセット名warning解消と分割VH/VBのLoad sound対応も完了した。
+[最新の実装・配置・復元記録](../preset_split_vab_20261101.md) /[current installed AU manifest](../preset_split_vab_20261101.json)を参照。
 
-### AUプリセット名・分割VH/VB読込の今回の区切り（2026-11-01、作業中）
+### AUプリセット名・分割VH/VB読込の今回の区切り（2026-11-01、完了）
 
 開始Plugin `56f6403`、Native SDK `95cf71a`。ユーザーの続行指示で、作業前TODOを保存する。
 
@@ -53,9 +55,16 @@ CC120のチャンネル別停止も実装・検証・[CI全2job成功](https://g
 - [x] workerへ分割VH/VB file読込を追加し、既存parserのbytes・容量検証を再利用する。元VH+VBをbyte-exactに連結したembedded bankとし、元fileなしで保存復元・Web exportできるようにする。
 - [x] Load soundでVHまたはVBを選び、対応するもう一方を選択できるようにする。取消 /error /古いdialog callback /editor close時の保全を実装し、file読込と準備をaudio thread外で行う（lifetime /serial /revision /generationを静的レビュー）。
 - [x] split fixtureと不正 /世代競合 /容量上限 /embedded保存をunit、既存実AU/VST3回帰を検証する（CTest各28件×3構成、validator47/0成功）。Standaloneで両選択順・2枚目取消・不正pair保持・再試行を確認した。実DAW独自split panelと途中restore /closeの直接操作は未確認。
-- [ ] 実装headのGitHub Actions全jobとartifact metadataを確認する。
-- [ ] 検証後にknown manifest付きAU退避更新とauval warning消失・GarageBand旧project保存再起動を確認する。実DAW独自file panelへAI入力が届かない範囲は未確認として区別する。
-- [ ] 仕様 /制限 /source・binary・log /配置manifestと再開TODOを記録してcommit /pushする。
+- [x] 最終head `9e64eac`の[GitHub Actions全2job成功](https://github.com/kyorohiro/tetorica-spu-plugin/actions/runs/41308675010)とartifact metadataを確認する。artifact /log archiveのdownloadや実行は行っていない。
+- [x] 検証後にknown manifest付きAU退避更新とauval warning消失・GarageBand旧project保存再起動を確認する（最終`au-update-260st6dc`、26params /16 PASS行 /P3/T0/G99 /payload4768bytes一致）。実DAW独自file panelは未確認として区別する。
+- [x] 仕様 /制限 /source・binary・log /配置manifestと再開TODOを記録してcommit /pushする。
+
+初回候補は負番号PresentPresetの名前更新を無視する経路が残り、`au-update-hh1zg247`でrollbackした。
+公開API red→greenとApple ABI static_assertを追加し、最終headでwarning消失・CI成功を確認した。
+[記録](../preset_split_vab_20261101.md)。次回updateのexpectedは`docs/preset_split_vab_20261101.json`。
+GarageBandは`build/preset-split-20261101/spu-preset-split-restore-check.band`のAU editorを表示、再生・録音停止。
+
+- [ ] 実DAW独自Load soundでVH/VB両順序・取消・不正pairを追試する。選択途中のhost restore /editor closeも確認する。Standalone両順序 /取消 /error /retry、workerとstaleガードの検証は完了済み。
 
 既存parameter ID0〜25 /state schema9 /Gain範囲 /SDK pinを維持する。
 Web /Tauri /npm /version /tag /公開releaseは今回変更しない。
@@ -514,7 +523,7 @@ complete `.vab`を最初の対象とする。分割VH/VBの複数file dialogは�
 - [x] Gain変更を約5msで滑らかにする。sampleごとの出力補間と、既存block単位targetの違いを説明する。
 - [ ] 通常parameter automationの各pointをsample offsetで処理する拡張を検討する（現在のGain smoothingはblock targetからの補間）。
 - [ ] AUでrender thread以外から届くMIDIのbounded ingressを検証・対応する。現状のhost MIDI / lifecycle操作は単一consumerとして直列化される前提。
-- [ ] AU factory preset名の初期化とClassInfo名保持を実装済み。配置更新後にauvalのpreset-name warning消失を確認する。
+- [x] AU factory preset名とPresent/Current/ClassInfoのユーザー名保持を実装し、配置済みAUのauvalでpreset-name warning消失を確認した（[記録](../preset_split_vab_20261101.md)）。
 - [x] AU更新時は既存bundleと前回配置したhashを照合し、退避・更新できる手順を用意する（explicit update / 条件付きrollback、11 tests、実更新済み）。
 
 ## Phase 3: VAB楽器と音作り

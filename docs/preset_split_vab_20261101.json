@@ -1,0 +1,994 @@
+{
+  "schema": 1,
+  "date_jst": "2026-11-01",
+  "recorded_at_utc": "2026-11-01T13:09:11.457084+00:00",
+  "source_commit": "9e64eacda7e7fe1fc8c37eecfc97729c1181643c",
+  "initial_implementation_commit": "7c1c4112e05992a4219ee5b43802f2cd85d52cf3",
+  "todo_commit": "6a83f8a4c6612edf0ce4d6e5d608b7affa227bc9",
+  "starting_commit": "56f64030a84222fc6c6c8a87c5e48b676e21a943",
+  "native_commit": "95cf71a857b15d0ea932ebf97d5fde80b5e80a95",
+  "scope": "AU preset-name consistency across factory/PresentPreset/CurrentPreset/ClassInfo; split VH/VB file worker and editor flow; local guarded AU deployment and old GarageBand VAB save/reopen. No parameter/state-schema/SDK/Web/Tauri/npm/version/tag/release changes.",
+  "specification": {
+    "preset_names": "One initialized TetoricaSPU factory preset. Public Present/Current user names and numbers are copied and retained; ClassInfo restore commits a descriptive user name with number -1 only after complete sound validation. Names never trigger source recall. Factory number 0 recalls the immutable default sound and name.",
+    "name_limit_utf16_units": 1024,
+    "name_inputs": "Unicode, empty, mutable and bounded names accepted; invalid CF types/identity/body/names/property sizes/scope/element/factory number rejected without changing saved or active sound.",
+    "au_dispatch": "Plugin-only modern 64-bit AudioComponent Lookup specialization intercepts Present/Current property Get/Set; all other selectors including MIDI forward to the pinned official factory. ABI signatures statically match Apple AudioUnitGetPropertyProc and AudioUnitSetPropertyProc. Legacy ComponentManager path not expanded.",
+    "threading": "Existing serialized host ingress and quiescent state-restore contract. Preset metadata and preparation are non-RT; notifications occur outside state locks.",
+    "split_api": "VabLoader::requestSplitFiles(vhPath,vbPath[,flatTone]); missing index selects first playable Tone, explicit index is exact.",
+    "split_limits": {
+      "versions": [
+        6,
+        7
+      ],
+      "header_bytes": 68128,
+      "body_bytes": 524288,
+      "combined_bytes": 1048576
+    },
+    "split_storage": "Exact original VH bytes followed by original VB bytes after split parser validation; no ADPCM re-encoding or metadata reconstruction. Standard embedded VAB/state9/selected-Tone Web export, original padding and Morph A/B retained.",
+    "pair_identity_limit": "No pair checksum exists; a structurally valid unrelated body of the same layout cannot be distinguished.",
+    "editor": "Load sound accepts either VH or VB first; matching partner dialog is deferred to OnIdle without state/lifetime locks, starts in same directory and filters opposite extension. No request/cancellation of prior pending work until both selections complete. Cancel, stale revision/generation/serial or closed lifetime cannot submit a load.",
+    "failure_semantics": "Cancelled selection preserves pending work. A submitted failed worker request retains active audio but supersedes older pending generations, as for complete VAB input. Already accepted worker work follows the normal exchange even if the editor closes.",
+    "parameter_ids": [
+      0,
+      1,
+      2,
+      3,
+      4,
+      5,
+      6,
+      7,
+      8,
+      9,
+      10,
+      11,
+      12,
+      13,
+      14,
+      15,
+      16,
+      17,
+      18,
+      19,
+      20,
+      21,
+      22,
+      23,
+      24,
+      25
+    ],
+    "state_schema": 9,
+    "gain_percent_range": [
+      0,
+      100
+    ]
+  },
+  "verification": {
+    "ctest": {
+      "offline": {
+        "passed": 28,
+        "failed": 0,
+        "log": "build/preset-split-20261101/offline-ctest-final.log",
+        "seconds": 9.4
+      },
+      "macos": {
+        "passed": 28,
+        "failed": 0,
+        "log": "build/preset-split-20261101/macos-ctest-accepted.log",
+        "seconds": 7.79
+      },
+      "ASan+UBSan": {
+        "passed": 28,
+        "failed": 0,
+        "log": "build/preset-split-20261101/asan-ctest-final.log",
+        "seconds": 155.8
+      }
+    },
+    "unit_coverage": "3Tone x44100/48000/96000 exact full-VAB PCM; v6/first-playable/exact Tone/UTF8; file removal then state/Web restore; original padding/Morph A/B; malformed and bounds; both files grow/shrink; latest/host-restore supersession; first audio callback ordinary/aligned new/delete zero.",
+    "actual_au": {
+      "sample_rate": 48000,
+      "pass_lines": 16,
+      "fail_lines": 0,
+      "exit_code": 0,
+      "log": "build/preset-split-20261101/installed-au-host-final.log",
+      "new_public_property_test": "Factory/Present/Current/ClassInfo consistency; negative user rename, Unicode/empty/1024, mutable input ownership, instance isolation, malformed metadata/body/identity atomicity, pending/active PCM, rename does not reset audio, factory recall restores fresh defaults."
+    },
+    "actual_vst3": {
+      "sample_rates": [
+        44100,
+        48000,
+        96000
+      ],
+      "pass_lines": 55,
+      "fail_lines": 0,
+      "exit_code": 0
+    },
+    "validator": {
+      "passed": 47,
+      "failed": 0,
+      "exit_code": 0
+    },
+    "auval": {
+      "exit_code": 0,
+      "parameter_count": 26,
+      "preset_name_warning_present": false,
+      "script_rejects_warning_even_if_auval_exit_zero": true,
+      "forced_local_registry_refresh": false
+    },
+    "red_green": "Old candidate fails new public negative-PresentPreset name test. Old known AU exits auval0 but new validation script fails on warning; final installed AU and script both pass.",
+    "reused_coverage": "Core/loader/sanitizer and VST3/Standalone results originate in the initial implementation. AU-only follow-up leaves all core-library and CTest source files and the entire VST3/App bundles byte-identical. Final macOS build/CTest, installed AU tests/auval and CI use the corrected source head.",
+    "standalone_ui": {
+      "verified": [
+        "VB then VH loads P3/T0",
+        "VH then VB loads P3/T0",
+        "second picker cancel keeps Builtin Sine",
+        "truncated VB error keeps P3/T0",
+        "correct pair retry after error succeeds"
+      ],
+      "bundle_unchanged_after_au_followup": true,
+      "app_quit_after_check": true
+    },
+    "not_directly_verified": [
+      "Actual DAW split file dialogs",
+      "host restore/editor close while native partner picker is open",
+      "physical listening/long realtime use/DAW automation recording",
+      "actual DAW All sound off button"
+    ],
+    "first_build_notes": "Initial unit Web send oracle was aligned with useToneSend=true; no export production behavior changed. AU harness CFString function and mixed-enum test declarations corrected. ABI pointer-size issue was caught in review and fixed before green hook execution; static_assert now prevents signature drift."
+  },
+  "source_file_sha256": {
+    "CMakeLists.txt": "817ee8c03c3c801d33c4a89e6e38748b912c9573c328c7f60a1060913c74f150",
+    "CMakePresets.json": "a09c744f1d2f8db8fff55898e9f57cbce053281a3dcccb3d4bc75c6d3a3d98dc",
+    "plugin/InstrumentUI.cpp": "4e77d2120fa6462861aa2cc08c71dd5e9d6737a4eb75b94b7d3ab48143335330",
+    "plugin/StateAdapters.cpp": "522792854e2b8a7c4624a17f229628c7f6d58948e7afcace95cbe00c0f881628",
+    "plugin/TetoricaSPU.cpp": "c423d7c7f1f04087dea09f33e0cdf03787819615f0c0ed04d0663e8459e8fa1c",
+    "plugin/TetoricaSPU.h": "e571ab54b9bc6460232e0025f89c6e217f2a6e1f7592bcedd27b43a40b08fba8",
+    "scripts/validate_au.py": "daaed0d6d8e48478e9d90672ac26a35d391a52f3dc7ad3ca10519769eb80d27b",
+    "src/VabLoader.cpp": "8902c012399ffc85b35e31bc35966c28ee3e04f2642e3a54d12fa2b3f609d9cd",
+    "src/VabLoader.h": "91cae8e8ae3e95da3bbc07870a18b7917728b5a4578624da538e63c35263ae6b",
+    "tests/vab_loader_test.cpp": "035a4c9040c1a9658172216e9c8f82c6a35c2339a0b0a539df7bd420e2789455",
+    "tools/au-state-check.cpp": "5704b5c839cc989d7f45f14084458567648b5c62571dbb7a9e245d29b37f5426"
+  },
+  "dependency_pins": {
+    "vendor/iPlug2OOS": "9b214c1121a0da1e8db14b86a565c942a3bfea7e",
+    "vendor/iPlug2OOS/iPlug2": "b64192fe18afd9bc9a1fe324db5aceb48f4a0eee",
+    "vendor/tetorica-soundchip-native": "95cf71a857b15d0ea932ebf97d5fde80b5e80a95",
+    "vendor/vst3sdk": "9fad9770f2ae8542ab1a548a68c1ad1ac690abe0",
+    "vendor/vst3sdk/base": "3d2e82f8e6bff59c1d8b7a27491a29c2286b5206",
+    "vendor/vst3sdk/pluginterfaces": "31d6eeba6daaa3e2a8bfbe3e7a90ca0b7fbfbc1c",
+    "vendor/vst3sdk/public.sdk": "a3911a4615dabbfdfd9d181ee26b05c70c289a95",
+    "vendor/vst3sdk/cmake": "de6e54eeaaab35b7145f5c32c279b5e892146e04"
+  },
+  "build_bundles": {
+    "TetoricaSPU.component": {
+      "path": "/Users/kyorohiro/development8/wfm/hello_ymfm/w/tetorica-spu-plugin/build/macos/out/TetoricaSPU.component",
+      "files": {
+        "Contents/Info.plist": {
+          "bytes": 1541,
+          "sha256": "94a46fcfc638d76a05aca50d5deedaff2a7a934aee55a816d007b6dff9c9bbc4"
+        },
+        "Contents/MacOS/TetoricaSPU": {
+          "bytes": 1872632,
+          "sha256": "3f82bcff46f182c2bd370f92516759796aa72aa8d4cf3474716376037d94aa81"
+        },
+        "Contents/PkgInfo": {
+          "bytes": 8,
+          "sha256": "d06a80ba92de0833d0ed03de1b02b7c8913f126d9e8c8931b190765dd5d83b11"
+        },
+        "Contents/Resources/Roboto-Regular.ttf": {
+          "bytes": 145348,
+          "sha256": "b2efabca5ea4bc56eea829713706b5cd0788b82aca153bd4adde9b1573933b4f"
+        },
+        "Contents/Resources/THIRD_PARTY_NOTICES.txt": {
+          "bytes": 58824,
+          "sha256": "d26ed5d113ec81968e0f1c41560491631e9c77c5bddf6ad6608dbf8697ce5dcf"
+        }
+      }
+    },
+    "TetoricaSPU.vst3": {
+      "path": "/Users/kyorohiro/development8/wfm/hello_ymfm/w/tetorica-spu-plugin/build/macos/out/TetoricaSPU.vst3",
+      "files": {
+        "Contents/Info.plist": {
+          "bytes": 930,
+          "sha256": "0fe9965eadefafb0be705d9e3bba5a6df3c6e2561b608bdbf267d7f831e5d644"
+        },
+        "Contents/MacOS/TetoricaSPU": {
+          "bytes": 2172264,
+          "sha256": "d089027f4d65382d7b13b7f572ecdf3f9f6af1c75c85feae14407c2be7ff2ffa"
+        },
+        "Contents/PkgInfo": {
+          "bytes": 8,
+          "sha256": "d06a80ba92de0833d0ed03de1b02b7c8913f126d9e8c8931b190765dd5d83b11"
+        },
+        "Contents/Resources/Roboto-Regular.ttf": {
+          "bytes": 145348,
+          "sha256": "b2efabca5ea4bc56eea829713706b5cd0788b82aca153bd4adde9b1573933b4f"
+        },
+        "Contents/Resources/THIRD_PARTY_NOTICES.txt": {
+          "bytes": 58824,
+          "sha256": "d26ed5d113ec81968e0f1c41560491631e9c77c5bddf6ad6608dbf8697ce5dcf"
+        }
+      }
+    },
+    "TetoricaSPU.app": {
+      "path": "/Users/kyorohiro/development8/wfm/hello_ymfm/w/tetorica-spu-plugin/build/macos/out/TetoricaSPU.app",
+      "files": {
+        "Contents/Info.plist": {
+          "bytes": 1146,
+          "sha256": "1fec046b5560e89705ce207b4372e154e72e7e97951f2e0c4a23789827cf58c6"
+        },
+        "Contents/MacOS/TetoricaSPU": {
+          "bytes": 2399336,
+          "sha256": "b77b03a1563955610845ff8199a04c4a903bc13999cfe80ffd688642ba1410d8"
+        },
+        "Contents/PkgInfo": {
+          "bytes": 8,
+          "sha256": "82502191c9484b04d685374f9879a0066069c49b8acae7a04b01d38d07e8eca0"
+        },
+        "Contents/Resources/Roboto-Regular.ttf": {
+          "bytes": 145348,
+          "sha256": "b2efabca5ea4bc56eea829713706b5cd0788b82aca153bd4adde9b1573933b4f"
+        },
+        "Contents/Resources/THIRD_PARTY_NOTICES.txt": {
+          "bytes": 58824,
+          "sha256": "d26ed5d113ec81968e0f1c41560491631e9c77c5bddf6ad6608dbf8697ce5dcf"
+        },
+        "Contents/Resources/TetoricaSPU-macOS-MainMenu.nib": {
+          "bytes": 4232,
+          "sha256": "7ba57e13c5fdbc1f77eaf801fd49f7762dfbef93a2ce6526e547901f66d4719e"
+        }
+      }
+    }
+  },
+  "au": {
+    "file_sha256": {
+      "Contents/Info.plist": "94a46fcfc638d76a05aca50d5deedaff2a7a934aee55a816d007b6dff9c9bbc4",
+      "Contents/MacOS/TetoricaSPU": "3f82bcff46f182c2bd370f92516759796aa72aa8d4cf3474716376037d94aa81",
+      "Contents/PkgInfo": "d06a80ba92de0833d0ed03de1b02b7c8913f126d9e8c8931b190765dd5d83b11",
+      "Contents/Resources/Roboto-Regular.ttf": "b2efabca5ea4bc56eea829713706b5cd0788b82aca153bd4adde9b1573933b4f",
+      "Contents/Resources/THIRD_PARTY_NOTICES.txt": "d26ed5d113ec81968e0f1c41560491631e9c77c5bddf6ad6608dbf8697ce5dcf"
+    },
+    "file_bytes": {
+      "Contents/Info.plist": 1541,
+      "Contents/MacOS/TetoricaSPU": 1872632,
+      "Contents/PkgInfo": 8,
+      "Contents/Resources/Roboto-Regular.ttf": 145348,
+      "Contents/Resources/THIRD_PARTY_NOTICES.txt": 58824
+    },
+    "file_count": 5,
+    "total_bytes": 2078353,
+    "source": "/Users/kyorohiro/development8/wfm/hello_ymfm/w/tetorica-spu-plugin/build/macos/out/TetoricaSPU.component",
+    "destination": "/Users/kyorohiro/Library/Audio/Plug-Ins/Components/TetoricaSPU.component",
+    "updated_this_task": true,
+    "update_journal_created_utc": "2026-11-01T12:54:53.303679+00:00",
+    "expected_previous_record": "docs/au_cc120_update_20261101.json",
+    "previous_file_sha256": {
+      "Contents/Info.plist": "94a46fcfc638d76a05aca50d5deedaff2a7a934aee55a816d007b6dff9c9bbc4",
+      "Contents/MacOS/TetoricaSPU": "d9c6033f221c7f32e3efbd4c01762b15f378132cc0426ff08088246e54985e04",
+      "Contents/PkgInfo": "d06a80ba92de0833d0ed03de1b02b7c8913f126d9e8c8931b190765dd5d83b11",
+      "Contents/Resources/Roboto-Regular.ttf": "b2efabca5ea4bc56eea829713706b5cd0788b82aca153bd4adde9b1573933b4f",
+      "Contents/Resources/THIRD_PARTY_NOTICES.txt": "d26ed5d113ec81968e0f1c41560491631e9c77c5bddf6ad6608dbf8697ce5dcf"
+    },
+    "update_manifest": "/Users/kyorohiro/development8/wfm/hello_ymfm/w/tetorica-spu-plugin/build/au-backups/au-update-260st6dc/manifest.json",
+    "backup_component": "/Users/kyorohiro/development8/wfm/hello_ymfm/w/tetorica-spu-plugin/build/au-backups/au-update-260st6dc/previous.component",
+    "old_archive": "/Users/kyorohiro/development8/wfm/hello_ymfm/w/tetorica-spu-plugin/build/au-backups/au-update-260st6dc/original.component",
+    "workspace_matches_installed": true,
+    "previous_and_archive_match_previous_manifest": true,
+    "hosts_stopped_before_update": true,
+    "rollback_command": "python3 scripts/install_au.py --rollback build/au-backups/au-update-260st6dc/manifest.json",
+    "rollback_executed_for_final_update": false,
+    "rollback_scope": "Save/quit hosts first. Conditional rollback checks exact current new files. Retain this journal and both old CC120 bundles locally."
+  },
+  "initial_candidate": {
+    "source_commit": "7c1c4112e05992a4219ee5b43802f2cd85d52cf3",
+    "binary_sha256": "27a8e550f67ac06aa5ab469d5e7212a5c5bb00618e1fcfa91c499340374cfbd3",
+    "auval_exit_code": 0,
+    "preset_name_warning_present": true,
+    "public_property_red_exit_code": 1,
+    "journal": "/Users/kyorohiro/development8/wfm/hello_ymfm/w/tetorica-spu-plugin/build/au-backups/au-update-hh1zg247/manifest.json",
+    "state": "rolled_back",
+    "rollback_executed": true,
+    "baseline_restored_before_final_update": true,
+    "retained_bundle": "/Users/kyorohiro/development8/wfm/hello_ymfm/w/tetorica-spu-plugin/build/au-backups/au-update-hh1zg247/rolled-back-new.component"
+  },
+  "garageband": {
+    "trial_project": "/Users/kyorohiro/development8/wfm/hello_ymfm/w/tetorica-spu-plugin/build/preset-split-20261101/spu-preset-split-restore-check.band",
+    "trial_copied_from": "/Users/kyorohiro/development8/wfm/hello_ymfm/w/tetorica-spu-plugin/build/spu-vab-check.band",
+    "ui_restore_before_save": true,
+    "saved_then_fully_quit_and_relaunched": true,
+    "ui_restore_after_reopen": true,
+    "visually_observed": [
+      "Embedded VAB",
+      "Program 3",
+      "Tone 0",
+      "Gain 99.0%",
+      "Project sound restored",
+      "Reverb Off",
+      "Morph Off"
+    ],
+    "transport_observed": {
+      "playing": false,
+      "recording": false
+    },
+    "editor_left_open_on_trial": true,
+    "payload_unchanged": true,
+    "embedded_vab_unchanged": true,
+    "saved_candidate": {
+      "file": "/Users/kyorohiro/development8/wfm/hello_ymfm/w/tetorica-spu-plugin/build/preset-split-20261101/spu-preset-split-restore-check.band/Alternatives/000/ProjectData",
+      "xml_offset": 118729,
+      "xml_end": 125744,
+      "xml_bytes": 7015,
+      "xml_sha256": "c34e84ce1aca29d62c2bea3420daab8daa6a3be2a942f99aeb34a0bf48c9eae2",
+      "au_identity": {
+        "type": 1635085685,
+        "subtype": 1416851573,
+        "manufacturer": 1415935090
+      },
+      "au_version": 256,
+      "payload_bytes": 4768,
+      "payload_sha256": "35a6b2cd76ff553bd121a87b5a46513cbb78b953da1f673cedd863447fb33e1c",
+      "schema": 9,
+      "kind": "VAB",
+      "program": 3,
+      "tone": 0,
+      "gain_percent": 99.0,
+      "envelope": {
+        "enabled": false,
+        "live": true,
+        "adsr1": 15,
+        "adsr2": 8128
+      },
+      "reverb": {
+        "preset": 0,
+        "enabled": false,
+        "use_tone_send": false,
+        "volume_left": 0.25,
+        "volume_right": 0.25
+      },
+      "noise": {
+        "enabled": false,
+        "clock": 48
+      },
+      "pmon": {
+        "enabled": false,
+        "waveform": 0,
+        "ratio": 1.0,
+        "depth": 0.5,
+        "decay_ms": 500.0
+      },
+      "morph": {
+        "enabled": false,
+        "amount": 0.0,
+        "samples_per_endpoint": 112,
+        "a_sha256": "f3f9596f36e620c8f5df26fef003fac2f171e1e049941cfd0133f1e73927eeaa",
+        "b_sha256": "77e744eb44c7265565fa738c33e54b6997fe231e9c60bb61e3be20859ccf5264"
+      },
+      "adpcm_sample": null,
+      "software_pcm_sample": null,
+      "bank_bytes": 3744,
+      "bank_sha256": "71a7de205c0ebe1b8743288d90cd3b0204da9bd81aed9159af31f404d7cf2be6",
+      "pcm_samples": null,
+      "pcm_sha256": null,
+      "matches_expected": true
+    },
+    "protected_projects": {
+      "known-project": {
+        "project": "/Users/kyorohiro/development8/wfm/hello_ymfm/w/tetorica-spu-plugin/build/spu-vab-check.band",
+        "fileCount": 7,
+        "allFilesAndHashesMatchBefore": true,
+        "files": {
+          "Alternatives/000/DisplayState.plist": {
+            "bytes": 3167,
+            "sha256": "c805602913d032aa63a6436b3daf7912727a4d1c7e85d79a9731e993b76b2d0b"
+          },
+          "Alternatives/000/DisplayStateArchive": {
+            "bytes": 5610,
+            "sha256": "43dbcef56d1a66504503d5f86dd22337682d0ec7f49d1c8573e7f2aa6e94b672"
+          },
+          "Alternatives/000/MetaData.plist": {
+            "bytes": 733,
+            "sha256": "e828be6d50e93a28908aba862e511f1e3c736fe8ed01b1923e3250282c6ad4fb"
+          },
+          "Alternatives/000/ProjectData": {
+            "bytes": 288953,
+            "sha256": "06e788696a268255a6812742db07bcf741d9f45d804975e232a4896cf72e78ee"
+          },
+          "Alternatives/000/WindowImage.jpg": {
+            "bytes": 132573,
+            "sha256": "4ef57d58f29ae1774cf130aa8189c3889bb198cf3e0dc41708588f560bffc83c"
+          },
+          "Resources/ProjectInformation.plist": {
+            "bytes": 218,
+            "sha256": "078f82c873d78abb6a1c7acb7fadf0b877ba605a40a84c52929db0fedc430b15"
+          },
+          "projectData": {
+            "bytes": 169544,
+            "sha256": "b8abb99c1c6e208293ced2a8246573331794a31a4ee0dbdbd8e313ba8f3eae66"
+          }
+        }
+      },
+      "original-project": {
+        "project": "/Users/kyorohiro/development8/wfm/hello_ymfm/w/tetorica-spu-plugin/build/spu-au-check.band",
+        "fileCount": 11,
+        "allFilesAndHashesMatchBefore": true,
+        "files": {
+          "Alternatives/000/Autosave/.dummy": {
+            "bytes": 0,
+            "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+          },
+          "Alternatives/000/Autosave/2026-10-31 10:12:23Z.displayData": {
+            "bytes": 4884,
+            "sha256": "c2b29c82b187b6da04daaf17dbef530296859a95f39bac812a3261fe6c70d7ed"
+          },
+          "Alternatives/000/Autosave/2026-10-31 10:12:23Z.eventData": {
+            "bytes": 392,
+            "sha256": "0c7d3cd92b56d8c216b0b9663c58ef3692eee4ea739e19d1d9d20f0cfb98f63d"
+          },
+          "Alternatives/000/Autosave/2026-10-31 10:12:23Z.songData": {
+            "bytes": 61340,
+            "sha256": "fc19d5172a5a19db59c790fb8bc06e922a5b157b44f99798d77dc7f9cc6e4515"
+          },
+          "Alternatives/000/DisplayState.plist": {
+            "bytes": 2683,
+            "sha256": "fe2af1ddf457b06a4d47e4f34e17773d62963bdc54926a3f8dbd4777a5a56ed1"
+          },
+          "Alternatives/000/DisplayStateArchive": {
+            "bytes": 4884,
+            "sha256": "cc3008d309493456ddac4c78d0597ce13d554f0a35d815edaa14d255db6144f3"
+          },
+          "Alternatives/000/MetaData.plist": {
+            "bytes": 733,
+            "sha256": "e828be6d50e93a28908aba862e511f1e3c736fe8ed01b1923e3250282c6ad4fb"
+          },
+          "Alternatives/000/ProjectData": {
+            "bytes": 234709,
+            "sha256": "95061279acf172082d2f37e03f5ad9d64067f940c5c2c9abc99adda613e76931"
+          },
+          "Alternatives/000/WindowImage.jpg": {
+            "bytes": 132958,
+            "sha256": "6176a5b9e9790b722392e0d80622fa9e4c4fa9087bf99c255cbc6a46159b3bcd"
+          },
+          "Resources/ProjectInformation.plist": {
+            "bytes": 217,
+            "sha256": "2dd01b478b456764e72ddeaaf05479c1f41bf9ab370f2b85bbe0c575430515ab"
+          },
+          "projectData": {
+            "bytes": 169544,
+            "sha256": "b8abb99c1c6e208293ced2a8246573331794a31a4ee0dbdbd8e313ba8f3eae66"
+          }
+        }
+      }
+    },
+    "initially_open_project": {
+      "project": "/Users/kyorohiro/development8/wfm/hello_ymfm/w/tetorica-spu-plugin/build/au-cc120-update-v1d1boac/spu-cc120-restore-check.band",
+      "backup": "/Users/kyorohiro/development8/wfm/hello_ymfm/w/tetorica-spu-plugin/build/preset-split-20261101/pre-save-open-project.band",
+      "backup_file_count": 11,
+      "backup_files": {
+        "Alternatives/000/Autosave/.dummy": {
+          "bytes": 0,
+          "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+        },
+        "Alternatives/000/Autosave/2026-11-01 12:29:38Z.displayData": {
+          "bytes": 5610,
+          "sha256": "16eb7642e19a95ebad523239f296d29659d169378b642b03540901d5d8c1469f"
+        },
+        "Alternatives/000/Autosave/2026-11-01 12:29:38Z.eventData": {
+          "bytes": 388,
+          "sha256": "0087eee341e7815f3c639d6d2f745bc12818a7bb90dec60213acd433ae702c38"
+        },
+        "Alternatives/000/Autosave/2026-11-01 12:29:38Z.songData": {
+          "bytes": 85648,
+          "sha256": "80822f2dc6238acc634efd6132182eb63427260754e45eeb5a109ab87b982f9e"
+        },
+        "Alternatives/000/DisplayState.plist": {
+          "bytes": 2683,
+          "sha256": "71c7a2392ec114335d7f93f33f26b4a80840888903ed44d0d62aa1e723133a32"
+        },
+        "Alternatives/000/DisplayStateArchive": {
+          "bytes": 4884,
+          "sha256": "4c156a3a1caf989c1fe99c5ffad1b68d5a487fd14d3ec17f0a67549c35f2e183"
+        },
+        "Alternatives/000/MetaData.plist": {
+          "bytes": 733,
+          "sha256": "e828be6d50e93a28908aba862e511f1e3c736fe8ed01b1923e3250282c6ad4fb"
+        },
+        "Alternatives/000/ProjectData": {
+          "bytes": 288963,
+          "sha256": "f19697e25841f4a46c63f03242613ffa2d19163bcb03589732a46469920d7903"
+        },
+        "Alternatives/000/WindowImage.jpg": {
+          "bytes": 133282,
+          "sha256": "53f1c512861004fcf016e9b6f026364ff5ee1de3ade500e90e9820a92661bee8"
+        },
+        "Resources/ProjectInformation.plist": {
+          "bytes": 230,
+          "sha256": "2b761763a1291b833afbdda355deaff46f35fc2c7683d2a896146af975c6c7ba"
+        },
+        "projectData": {
+          "bytes": 169544,
+          "sha256": "b8abb99c1c6e208293ced2a8246573331794a31a4ee0dbdbd8e313ba8f3eae66"
+        }
+      },
+      "backup_unchanged": true,
+      "payload_unchanged": true,
+      "intentional_save_may_change_ui_and_project_files": true
+    },
+    "state_inspector_scope": "Saved matching AU XML candidates and embedded bytes only; active binding verified separately by exact trial URL and actual AU editor after full host restart. Known original/source were not overwritten. No GarageBand audition/record/export or split Load sound operation performed."
+  },
+  "ci": {
+    "run": {
+      "id": 41308675010,
+      "html_url": "https://github.com/kyorohiro/tetorica-spu-plugin/actions/runs/41308675010",
+      "head_sha": "9e64eacda7e7fe1fc8c37eecfc97729c1181643c",
+      "head_branch": "main",
+      "status": "completed",
+      "conclusion": "success",
+      "created_at": "2026-11-01T12:54:16Z",
+      "run_started_at": "2026-11-01T12:54:16Z",
+      "updated_at": "2026-11-01T12:58:08Z"
+    },
+    "jobs": [
+      {
+        "id": 124854290812,
+        "name": "macos",
+        "html_url": "https://github.com/kyorohiro/tetorica-spu-plugin/actions/runs/41308675010/job/124854290812",
+        "status": "completed",
+        "conclusion": "success",
+        "started_at": "2026-11-01T12:54:19Z",
+        "completed_at": "2026-11-01T12:58:07Z",
+        "steps": [
+          {
+            "name": "Set up job",
+            "status": "completed",
+            "conclusion": "success",
+            "number": 1,
+            "started_at": "2026-11-01T12:54:19Z",
+            "completed_at": "2026-11-01T12:54:20Z"
+          },
+          {
+            "name": "Run actions/checkout@v4",
+            "status": "completed",
+            "conclusion": "success",
+            "number": 2,
+            "started_at": "2026-11-01T12:54:20Z",
+            "completed_at": "2026-11-01T12:54:21Z"
+          },
+          {
+            "name": "Verify safe AU installer in temporary directories",
+            "status": "completed",
+            "conclusion": "success",
+            "number": 3,
+            "started_at": "2026-11-01T12:54:21Z",
+            "completed_at": "2026-11-01T12:54:22Z"
+          },
+          {
+            "name": "Verify bounded GarageBand state inspection",
+            "status": "completed",
+            "conclusion": "success",
+            "number": 4,
+            "started_at": "2026-11-01T12:54:22Z",
+            "completed_at": "2026-11-01T12:54:23Z"
+          },
+          {
+            "name": "Initialize and verify pinned dependencies",
+            "status": "completed",
+            "conclusion": "success",
+            "number": 5,
+            "started_at": "2026-11-01T12:54:23Z",
+            "completed_at": "2026-11-01T12:54:39Z"
+          },
+          {
+            "name": "Run python3 scripts/bootstrap.py --check",
+            "status": "completed",
+            "conclusion": "success",
+            "number": 6,
+            "started_at": "2026-11-01T12:54:39Z",
+            "completed_at": "2026-11-01T12:54:39Z"
+          },
+          {
+            "name": "Run cmake --preset macos",
+            "status": "completed",
+            "conclusion": "success",
+            "number": 7,
+            "started_at": "2026-11-01T12:54:39Z",
+            "completed_at": "2026-11-01T12:54:45Z"
+          },
+          {
+            "name": "Run cmake --build --preset macos --parallel 4",
+            "status": "completed",
+            "conclusion": "success",
+            "number": 8,
+            "started_at": "2026-11-01T12:54:45Z",
+            "completed_at": "2026-11-01T12:57:03Z"
+          },
+          {
+            "name": "Run ctest --preset macos",
+            "status": "completed",
+            "conclusion": "success",
+            "number": 9,
+            "started_at": "2026-11-01T12:57:03Z",
+            "completed_at": "2026-11-01T12:57:14Z"
+          },
+          {
+            "name": "Install and validate the user AU",
+            "status": "completed",
+            "conclusion": "success",
+            "number": 10,
+            "started_at": "2026-11-01T12:57:14Z",
+            "completed_at": "2026-11-01T12:57:20Z"
+          },
+          {
+            "name": "Validate VST3",
+            "status": "completed",
+            "conclusion": "success",
+            "number": 11,
+            "started_at": "2026-11-01T12:57:20Z",
+            "completed_at": "2026-11-01T12:57:40Z"
+          },
+          {
+            "name": "Render and restore the actual VST3",
+            "status": "completed",
+            "conclusion": "success",
+            "number": 12,
+            "started_at": "2026-11-01T12:57:40Z",
+            "completed_at": "2026-11-01T12:57:59Z"
+          },
+          {
+            "name": "Restore embedded state in the actual AU",
+            "status": "completed",
+            "conclusion": "success",
+            "number": 13,
+            "started_at": "2026-11-01T12:57:59Z",
+            "completed_at": "2026-11-01T12:58:02Z"
+          },
+          {
+            "name": "Run actions/upload-artifact@v4",
+            "status": "completed",
+            "conclusion": "success",
+            "number": 14,
+            "started_at": "2026-11-01T12:58:02Z",
+            "completed_at": "2026-11-01T12:58:03Z"
+          },
+          {
+            "name": "Post Run actions/checkout@v4",
+            "status": "completed",
+            "conclusion": "success",
+            "number": 28,
+            "started_at": "2026-11-01T12:58:03Z",
+            "completed_at": "2026-11-01T12:58:04Z"
+          },
+          {
+            "name": "Complete job",
+            "status": "completed",
+            "conclusion": "success",
+            "number": 29,
+            "started_at": "2026-11-01T12:58:04Z",
+            "completed_at": "2026-11-01T12:58:05Z"
+          }
+        ]
+      },
+      {
+        "id": 124854290943,
+        "name": "offline",
+        "html_url": "https://github.com/kyorohiro/tetorica-spu-plugin/actions/runs/41308675010/job/124854290943",
+        "status": "completed",
+        "conclusion": "success",
+        "started_at": "2026-11-01T12:54:19Z",
+        "completed_at": "2026-11-01T12:55:16Z",
+        "steps": [
+          {
+            "name": "Set up job",
+            "status": "completed",
+            "conclusion": "success",
+            "number": 1,
+            "started_at": "2026-11-01T12:54:20Z",
+            "completed_at": "2026-11-01T12:54:20Z"
+          },
+          {
+            "name": "Run actions/checkout@v4",
+            "status": "completed",
+            "conclusion": "success",
+            "number": 2,
+            "started_at": "2026-11-01T12:54:20Z",
+            "completed_at": "2026-11-01T12:54:21Z"
+          },
+          {
+            "name": "Verify safe AU installer in temporary directories",
+            "status": "completed",
+            "conclusion": "success",
+            "number": 3,
+            "started_at": "2026-11-01T12:54:21Z",
+            "completed_at": "2026-11-01T12:54:21Z"
+          },
+          {
+            "name": "Verify bounded GarageBand state inspection",
+            "status": "completed",
+            "conclusion": "success",
+            "number": 4,
+            "started_at": "2026-11-01T12:54:21Z",
+            "completed_at": "2026-11-01T12:54:22Z"
+          },
+          {
+            "name": "Initialize pinned native SDK and JSON header",
+            "status": "completed",
+            "conclusion": "success",
+            "number": 5,
+            "started_at": "2026-11-01T12:54:22Z",
+            "completed_at": "2026-11-01T12:54:26Z"
+          },
+          {
+            "name": "Run cmake --preset offline",
+            "status": "completed",
+            "conclusion": "success",
+            "number": 6,
+            "started_at": "2026-11-01T12:54:26Z",
+            "completed_at": "2026-11-01T12:54:27Z"
+          },
+          {
+            "name": "Run cmake --build --preset offline --parallel 4",
+            "status": "completed",
+            "conclusion": "success",
+            "number": 7,
+            "started_at": "2026-11-01T12:54:27Z",
+            "completed_at": "2026-11-01T12:55:06Z"
+          },
+          {
+            "name": "Run ctest --preset offline",
+            "status": "completed",
+            "conclusion": "success",
+            "number": 8,
+            "started_at": "2026-11-01T12:55:06Z",
+            "completed_at": "2026-11-01T12:55:14Z"
+          },
+          {
+            "name": "Post Run actions/checkout@v4",
+            "status": "completed",
+            "conclusion": "success",
+            "number": 16,
+            "started_at": "2026-11-01T12:55:14Z",
+            "completed_at": "2026-11-01T12:55:14Z"
+          },
+          {
+            "name": "Complete job",
+            "status": "completed",
+            "conclusion": "success",
+            "number": 17,
+            "started_at": "2026-11-01T12:55:14Z",
+            "completed_at": "2026-11-01T12:55:14Z"
+          }
+        ]
+      }
+    ],
+    "artifacts": [
+      {
+        "id": 13084461801,
+        "name": "macos-development-bundles",
+        "size_in_bytes": 2686589,
+        "digest": "sha256:875c4274d4d301241e47cc64199f6c53f8c30f50660328a2b366b11c968b7d3d",
+        "expired": false,
+        "created_at": "2026-11-01T12:58:04Z",
+        "expires_at": "2027-01-30T12:54:16Z"
+      }
+    ],
+    "artifact_downloaded_or_run": false,
+    "ci_log_archive_downloaded": false,
+    "scope": "Exact final source run/job/all-step success and artifact metadata; counts above refer to local logs."
+  },
+  "evidence": {
+    "build/preset-split-20261101/dependencies.log": {
+      "path": "build/preset-split-20261101/dependencies.log",
+      "bytes": 52,
+      "sha256": "2127e3152068d46e3abd67d8595e100f2eb62782a5c49c5c7d6c0f70d3d689f5"
+    },
+    "build/preset-split-20261101/offline-configure.log": {
+      "path": "build/preset-split-20261101/offline-configure.log",
+      "bytes": 171,
+      "sha256": "a1e71df2c48c396faa477a4be02543fd833af8a2c48f0a8ac0036cb68f67b6b7"
+    },
+    "build/preset-split-20261101/offline-build-final.log": {
+      "path": "build/preset-split-20261101/offline-build-final.log",
+      "bytes": 4484,
+      "sha256": "deb1fae1223bb20fe27ab4ae88555c5d9962a0ceea11de776a41cd4b935b81eb"
+    },
+    "build/preset-split-20261101/offline-ctest-final.log": {
+      "path": "build/preset-split-20261101/offline-ctest-final.log",
+      "bytes": 3124,
+      "sha256": "85213fdd351bb2e82d99c9a1494164f666fe77c4799f52635bf2d0a21a55120b"
+    },
+    "build/preset-split-20261101/macos-configure.log": {
+      "path": "build/preset-split-20261101/macos-configure.log",
+      "bytes": 772,
+      "sha256": "3bdd0a73bec6d25970b33dcadbc937128209c5f07e8d898085366bbf7f7b1e76"
+    },
+    "build/preset-split-20261101/macos-build-abi-checked.log": {
+      "path": "build/preset-split-20261101/macos-build-abi-checked.log",
+      "bytes": 5794,
+      "sha256": "1107ebb55e1165c3a444e11d52d9b24c0cd92a06238f3decc744e6d80399b32a"
+    },
+    "build/preset-split-20261101/macos-ctest-accepted.log": {
+      "path": "build/preset-split-20261101/macos-ctest-accepted.log",
+      "bytes": 3122,
+      "sha256": "aa70aa52e3a81f59e478951141a2f001bc6534cfdc16cef453d7d8a91f0c7827"
+    },
+    "build/preset-split-20261101/asan-configure-final.log": {
+      "path": "build/preset-split-20261101/asan-configure-final.log",
+      "bytes": 177,
+      "sha256": "26a235fd4ea2b48fe244824114c90318e798f7220d2214b8161e84500cd09ab2"
+    },
+    "build/preset-split-20261101/asan-build.log": {
+      "path": "build/preset-split-20261101/asan-build.log",
+      "bytes": 3243,
+      "sha256": "12ff122ebcaee8ae0f2831ef38d28feac7a2f7de7c44f06a65ecabb173c844fd"
+    },
+    "build/preset-split-20261101/asan-ctest-final.log": {
+      "path": "build/preset-split-20261101/asan-ctest-final.log",
+      "bytes": 3130,
+      "sha256": "b7a83a2398c0c99ef9f81407ea590df7be2543a94754e5e4e0ce1e6c39ec4cf0"
+    },
+    "build/preset-split-20261101/vst3-host.log": {
+      "path": "build/preset-split-20261101/vst3-host.log",
+      "bytes": 23259,
+      "sha256": "d71758cbf7460406ac2a8b4f3fc629eb8ceb9a47e33e48422f9f0f9099f90549"
+    },
+    "build/preset-split-20261101/vst3-validator.log": {
+      "path": "build/preset-split-20261101/vst3-validator.log",
+      "bytes": 263078,
+      "sha256": "268062c4163846b3fc25580b8aefd169bd0540b290cb9e87631aae14bc4e8f32"
+    },
+    "build/preset-split-20261101/au-host-preset-final.log": {
+      "path": "build/preset-split-20261101/au-host-preset-final.log",
+      "bytes": 5220,
+      "sha256": "3dd4ee579733ff70b75d3759a04c93d069b1fcfcfd5bf4236b3d051c999a02b7"
+    },
+    "build/preset-split-20261101/installed-au-host-final.log": {
+      "path": "build/preset-split-20261101/installed-au-host-final.log",
+      "bytes": 5220,
+      "sha256": "3dd4ee579733ff70b75d3759a04c93d069b1fcfcfd5bf4236b3d051c999a02b7"
+    },
+    "build/preset-split-20261101/auval-final.log": {
+      "path": "build/preset-split-20261101/auval-final.log",
+      "bytes": 9410,
+      "sha256": "efbb3d844f4e45efbcd9719a24453319e7ec6edbaeaaf3d3c4f163b65f8664f1"
+    },
+    "build/preset-split-20261101/au-preset-red.log": {
+      "path": "build/preset-split-20261101/au-preset-red.log",
+      "bytes": 78,
+      "sha256": "14f79b01d3eb9ceada9c6cf38fe58a218ee9c99b71f09a26777fe889f69eae37"
+    },
+    "build/preset-split-20261101/auval-warning-red.log": {
+      "path": "build/preset-split-20261101/auval-warning-red.log",
+      "bytes": 9481,
+      "sha256": "a2d997c207705c3f732d96aa1318a6d5bf5cb2be7c9ce34440ee30cd5bc536d0"
+    },
+    "build/preset-split-20261101/install-final.log": {
+      "path": "build/preset-split-20261101/install-final.log",
+      "bytes": 185,
+      "sha256": "cb9e80a4b4b879b266e639c3fc32d6949429c0bf947dbb2fcf578735741a3bd9"
+    },
+    "build/preset-split-20261101/before.json": {
+      "path": "build/preset-split-20261101/before.json",
+      "bytes": 10973,
+      "sha256": "b1616f87dbf5f326292a94d34f0769a36f10b6d2a42d4b643376d5ee6f0543b0"
+    },
+    "build/preset-split-20261101/final-build.json": {
+      "path": "build/preset-split-20261101/final-build.json",
+      "bytes": 4449,
+      "sha256": "fc9615770a10a3b8df4f383a430b205c9d2e5fd14e3639385f342f4887b2f89e"
+    },
+    "build/preset-split-20261101/ci-final.json": {
+      "path": "build/preset-split-20261101/ci-final.json",
+      "bytes": 25471,
+      "sha256": "e7757a53fcc8fd498e8b6c1f87b49044d3c0a6612059c1e086a68382f8734829"
+    },
+    "build/preset-split-20261101/host-exit.json": {
+      "path": "build/preset-split-20261101/host-exit.json",
+      "bytes": 530,
+      "sha256": "e57e9f11a2bf17911e7b2e4fe0c5acb7514757af10aea26e0ba319eb8918f84e"
+    },
+    "build/preset-split-20261101/project-integrity.json": {
+      "path": "build/preset-split-20261101/project-integrity.json",
+      "bytes": 81,
+      "sha256": "78c538b1d1d7552751a6e79873584b77bd34ef84e16be23222f0f4ca3790c563"
+    },
+    "build/preset-split-20261101/fixture.json": {
+      "path": "build/preset-split-20261101/fixture.json",
+      "bytes": 187,
+      "sha256": "3092680b508cf376e8fa38cf688460b1bba3e425cab26df7db52612699ace970"
+    },
+    "build/preset-split-20261101/open-before-save-state.json": {
+      "path": "build/preset-split-20261101/open-before-save-state.json",
+      "bytes": 3544,
+      "sha256": "a96f30942cd0f73ae2adb443b6f786a0475dc52eb65aa23b33736e79f110606b"
+    },
+    "build/preset-split-20261101/open-after-final-save-state.json": {
+      "path": "build/preset-split-20261101/open-after-final-save-state.json",
+      "bytes": 3544,
+      "sha256": "0ac06a2fa82021417f7be9e10391ee36e0899ee8d97060b7731cbe61bd074b4d"
+    },
+    "build/preset-split-20261101/trial-before-open-state.json": {
+      "path": "build/preset-split-20261101/trial-before-open-state.json",
+      "bytes": 3560,
+      "sha256": "36b57a0e03d61c28115fc1be09cb6766a38c977dc5fe7abb28374f1964952dc3"
+    },
+    "build/preset-split-20261101/trial-after-save-state.json": {
+      "path": "build/preset-split-20261101/trial-after-save-state.json",
+      "bytes": 3560,
+      "sha256": "776fed38bf14d9f3948fdcdcb8de9241b0fccaef536c19307abcdfbe6ed9ce1a"
+    },
+    "build/preset-split-20261101/trial-after-reopen-state.json": {
+      "path": "build/preset-split-20261101/trial-after-reopen-state.json",
+      "bytes": 3560,
+      "sha256": "776fed38bf14d9f3948fdcdcb8de9241b0fccaef536c19307abcdfbe6ed9ce1a"
+    },
+    "build/preset-split-20261101/open-before-save.ax.txt": {
+      "path": "build/preset-split-20261101/open-before-save.ax.txt",
+      "bytes": 21149,
+      "sha256": "80fc64957fcec25f27eae8ce5d5c6057997f489ce4935c71cd535e6f7d3c69f3"
+    },
+    "build/preset-split-20261101/ui-partner-picker.ax.txt": {
+      "path": "build/preset-split-20261101/ui-partner-picker.ax.txt",
+      "bytes": 10912,
+      "sha256": "ca138e398ce3b6dae06d84243265b24861858c51e2ab69f780a67eab0da4828f"
+    },
+    "build/preset-split-20261101/ui-partner-cancel.png": {
+      "path": "build/preset-split-20261101/ui-partner-cancel.png",
+      "bytes": 182123,
+      "sha256": "4441eb80a455e294c7ba6198cf9513f33a8b4efb0a4134e5d9ffa3fe71cc0c2a"
+    },
+    "build/preset-split-20261101/ui-vb-first-loaded.png": {
+      "path": "build/preset-split-20261101/ui-vb-first-loaded.png",
+      "bytes": 181146,
+      "sha256": "6c3d8920a67b083f3b21bf1bc15b70f2940afa8d7ca6140f671699dd08f91e67"
+    },
+    "build/preset-split-20261101/ui-bad-pair-keeps-vab.png": {
+      "path": "build/preset-split-20261101/ui-bad-pair-keeps-vab.png",
+      "bytes": 190975,
+      "sha256": "cc95f5ca48c3c1af6543a36f3560afa1597a6ea655201d8ebf164e9627d8b2ea"
+    },
+    "build/preset-split-20261101/ui-vh-first-loaded-after-error.png": {
+      "path": "build/preset-split-20261101/ui-vh-first-loaded-after-error.png",
+      "bytes": 181017,
+      "sha256": "cf3bd6feab7f37405a419f39f6420011298e6e0a2aece859c5569553752d4fca"
+    },
+    "build/preset-split-20261101/gb-restored-before-save.ax.txt": {
+      "path": "build/preset-split-20261101/gb-restored-before-save.ax.txt",
+      "bytes": 697,
+      "sha256": "9fbaa8a5b9bc71ba5d22a94d31a7db33776210668a124c6a73733835b9602b83"
+    },
+    "build/preset-split-20261101/gb-restored-before-save.png": {
+      "path": "build/preset-split-20261101/gb-restored-before-save.png",
+      "bytes": 188206,
+      "sha256": "66e2d70f5076c614651cfcfbe9baa697cc4aacf8795fd5bd2a3db6c129a0bdf0"
+    },
+    "build/preset-split-20261101/gb-trial-before-save.ax.txt": {
+      "path": "build/preset-split-20261101/gb-trial-before-save.ax.txt",
+      "bytes": 21385,
+      "sha256": "ff9d07c510aef32875488f4ea16496b664aa2a2f4fe94ac0ffb977ac4beb4009"
+    },
+    "build/preset-split-20261101/gb-trial-after-reopen.ax.txt": {
+      "path": "build/preset-split-20261101/gb-trial-after-reopen.ax.txt",
+      "bytes": 21192,
+      "sha256": "ed5773082929d18aa012c62c7f9833267c7733ce1452d2f18ca3ae89451052c7"
+    },
+    "build/preset-split-20261101/gb-restored-after-reopen.ax.txt": {
+      "path": "build/preset-split-20261101/gb-restored-after-reopen.ax.txt",
+      "bytes": 697,
+      "sha256": "9fbaa8a5b9bc71ba5d22a94d31a7db33776210668a124c6a73733835b9602b83"
+    },
+    "build/preset-split-20261101/gb-restored-after-reopen.png": {
+      "path": "build/preset-split-20261101/gb-restored-after-reopen.png",
+      "bytes": 199923,
+      "sha256": "3b72e526772b0fd2c4810395d4525928ea4f534e7e5037bbfe9a3b610c8db8cf"
+    },
+    "build/au-backups/au-update-260st6dc/manifest.json": {
+      "path": "build/au-backups/au-update-260st6dc/manifest.json",
+      "bytes": 2094,
+      "sha256": "93532e5daa7c9255ad033207c66c5640b40972ed8794317d8d03dc00d6e37a77"
+    },
+    "build/au-backups/au-update-hh1zg247/manifest.json": {
+      "path": "build/au-backups/au-update-hh1zg247/manifest.json",
+      "bytes": 2249,
+      "sha256": "ab7758a05b8d3838b181748125e58164de700a9c4f0dab30ff8aab9219016e98"
+    }
+  },
+  "evidence_scope": "Logs/screens/project copies/backup bundles remain ignored local build evidence. This JSON saves hashes, not the underlying artifacts; retain local journals/bundles for rollback."
+}

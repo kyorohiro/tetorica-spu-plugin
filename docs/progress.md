@@ -722,3 +722,10 @@
 - plugin専用の64bit AudioComponent LookupでPresent/Current presetだけを扱い、他selectorはMIDIを含め公式factoryへ委譲する。名前・番号・ClassInfoを揃え、メタデータ変更では発音を保持し、factory0 recallは既定音源へ戻す。
 - 独立レビューでSetPropertyのsize引数はApple APIのUInt32値渡しと確認・修正し、Get/Set両方に公式typedefとのstatic_assertを追加した。malformed property /scope /element /size /name /factory番号とPCM不変の実AU回帰が成功、macOS buildとCTest28件も成功した。
 - auvalがexit0でも当warningを検出すればvalidation scriptを失敗にし、旧AUでredを確認した。次は最終候補の退避配置・auval greenと旧GarageBand復元・新head CIを確認する。legacy ComponentManager経路は今回拡張していない。
+
+## 2026-11-01 JST — プリセット名・分割VH/VBと最終AU配置の区切り完了
+
+- 最終`9e64eac`の[CI 41308675010](https://github.com/kyorohiro/tetorica-spu-plugin/actions/runs/41308675010)はoffline /macos全2job・全step成功。metadata /artifact digestを保存し、artifactやlog archiveはdownloadしていない。
+- 最終AUを`au-update-260st6dc`でCC120版から退避更新。新binary `3f82bcff…` /旧退避2組 `d9c6033f…`は各manifestと一致。auvalは26params・warning消失・exit0、実installed AU48kHz全16 PASS行が成功した。
+- 新しいGarageBand copyを保存・完全終了・再起動し、実画面のEmbedded VAB /P3/T0/G99 /Project sound restoredを確認。schema9 payload4768bytes /VAB3744bytesと、保護原本11files /known7files /開始時退避11filesが一致した。
+- [操作・配置・戻し方](preset_split_vab_20261101.md) /[current installed manifest・source/log/CI](preset_split_vab_20261101.json)。実DAW独自split panel /途中restore-close /実聴 /長時間 /automation等は未確認TODOに残した。最終AU editorを新copy上に表示、再生・録音停止。Web /Tauri /npm /version /tag /公開releaseは変更していない。
