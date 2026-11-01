@@ -9,6 +9,7 @@
 #include "vst3-host/pcm-cycle-checks.h"
 #include "vst3-host/morph-checks.h"
 #include "vst3-host/web-instrument-checks.h"
+#include "vst3-host/wav-import-checks.h"
 #include <AudioToolbox/AudioToolbox.h>
 #include <CoreFoundation/CoreFoundation.h>
 #include <algorithm>
@@ -310,6 +311,7 @@ int main(int argc, char** argv)
     tetorica::test::checkPmon([&] { return std::make_unique<Instance>(component); },48000,"AU parameters/MIDIEvent",bank);
     tetorica::test::checkMorph([&] { return std::make_unique<Instance>(component); },48000,"AU parameters/MIDIEvent",bank);
     tetorica::test::checkWebInstruments([&] { return std::make_unique<Instance>(component); },48000,"AU state/MIDIEvent",bank);
+    tetorica::test::checkWavImports([&] { return std::make_unique<Instance>(component); },48000,"AU state/MIDIEvent");
     std::cout << "PASS: local AU embedded VAB/Gain round-trip, first-render MIDI/PCM, separate instance, "
       "malformed CF/state rejection with pending/active preservation, legacy AU migration; no audio device/editor/install\n";
   }

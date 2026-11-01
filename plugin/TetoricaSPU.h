@@ -11,6 +11,7 @@
 #include "VabLoader.h"
 #include "WebInstrumentLoader.h"
 #include "WebInstrumentExporter.h"
+#include "AudioFileLoader.h"
 #include <array>
 #include <atomic>
 #include <cstddef>
@@ -153,6 +154,10 @@ private:
   void prepareWebExportFromUI();
   void promptForWebExport();
   void requestBuiltinFromUI();
+  void requestAdpcmEditFromUI(
+    std::shared_ptr<const tetorica::InstrumentDefinition> source,
+    std::uint64_t revision, tetorica::SpuEngineExchange::Generation generation,
+    int rootMidiNote, int playback);
   void requestProgramFromUI(
     std::shared_ptr<const tetorica::InstrumentDefinition> source,
     std::uint64_t revision, tetorica::SpuEngineExchange::Generation generation,
@@ -197,6 +202,7 @@ private:
   tetorica::VabLoader mLoader{mEngines};
   tetorica::WebInstrumentLoader mWebLoader;
   tetorica::WebInstrumentExporter mWebExporter;
+  tetorica::AudioFileLoader mAudioLoader;
   // The render thread installs a prepared import tuple together with its
   // engine. Serialization uses the accepted tuple until this release marker.
   std::atomic<tetorica::SpuEngineExchange::Generation> mImportAppliedGeneration{0};

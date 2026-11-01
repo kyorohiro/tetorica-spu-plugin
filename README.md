@@ -346,6 +346,36 @@ from the file. The plugin uses its existing voice-level calibration and private
 16-bit Morph carrier, so Web/plugin output PCM is not promised bit-identical.
 See the [import verification record](docs/web_instrument_import_20261101.md).
 
+## Load a WAV recording
+
+Choose **Load sound...** and select a `.wav` file. Classic little-endian RIFF/WAVE
+PCM16 and IEEE Float32, mono or stereo, at 8–384 kHz are supported. Stereo is
+averaged to mono and other rates use a band-limited conversion to 44.1 kHz.
+There is no automatic normalization. Float samples must be finite and within
+[-1, 1]. The software then encodes the recording as ordinary SPU ADPCM.
+
+The initial **Root: C4 (MIDI 60)** plays the recording at its original speed;
+other keys transpose it. The Root and **Playback: One shot** menus occupy the
+Program/Tone row for ADPCM samples. Choose **Loop entire sample** to repeat the
+recording, including up to 27 zero padding frames. Recording boundaries can
+produce a loop click. These changes replace the prepared sound and stop held
+notes and reverb tails. Morph uses its own cycle tuning.
+
+A successful WAV load selects Sample with Morph Off so the new material is
+audible. Gain, ADSR, Reverb and dormant Noise/PMON/Morph settings are retained,
+including the Morph endpoints captured when the file was selected. Root and
+Playback edits retain the current sound settings. The result is embedded in
+the DAW project as ADPCM with its root and loop, so reopening needs no original
+WAV. This is a converted instrument, not a lossless copy of the recording.
+
+File reading, conversion and native engine preparation run on a worker. A
+failed load keeps the current sound and a valid pending change. The input is
+bounded to 32 MiB and the converted sample must fit SPU sample RAM; oversized
+recordings are rejected without truncation. Compressed WAV, extensible WAV,
+AIFF, RF64/RIFX and long Software audio are follow-up work. The status tooltip
+shows the input rate, frame counts and packet padding.
+See the [WAV import record](docs/wav_import_20261101.md).
+
 ## Save a sound for the Web Synth
 
 Choose **Save Web...** in the common header, then choose a `.spu.json` filename.

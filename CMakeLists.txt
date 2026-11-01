@@ -22,7 +22,8 @@ add_library(tetorica_spu_instrument STATIC
   src/SpuInstrument.cpp src/SpuWaveform.cpp src/SpuMorph.cpp src/SpuAdpcm.cpp
   src/SpuEngineExchange.cpp src/VabLoader.cpp src/InstrumentState.cpp
   src/WebInstrument.cpp src/WebInstrumentLoader.cpp src/SpuExportSource.cpp
-  src/WebInstrumentExport.cpp src/WebInstrumentExporter.cpp)
+  src/WebInstrumentExport.cpp src/WebInstrumentExporter.cpp
+  src/WavImport.cpp src/AdpcmPlayback.cpp src/AudioFileLoader.cpp)
 target_include_directories(tetorica_spu_instrument PUBLIC src)
 target_include_directories(tetorica_spu_instrument SYSTEM PRIVATE
   vendor/iPlug2OOS/iPlug2/Dependencies/Extras)
@@ -30,15 +31,26 @@ target_link_libraries(tetorica_spu_instrument PUBLIC tetorica::ps1_spu tetorica_
 # Keep cyclic encoder scoring and Morph blending equivalent to the Web's
 # separate IEEE754 operations on supported toolchains.
 if(MSVC)
-  set_source_files_properties(src/SpuWaveform.cpp src/SpuMorph.cpp src/WebInstrument.cpp PROPERTIES COMPILE_OPTIONS "/fp:strict")
+  set_source_files_properties(src/SpuWaveform.cpp src/SpuMorph.cpp src/WebInstrument.cpp src/WavImport.cpp PROPERTIES COMPILE_OPTIONS "/fp:strict")
 elseif(CMAKE_CXX_COMPILER_ID MATCHES "GNU|Clang")
-  set_source_files_properties(src/SpuWaveform.cpp src/SpuMorph.cpp src/WebInstrument.cpp PROPERTIES COMPILE_OPTIONS "-ffp-contract=off")
+  set_source_files_properties(src/SpuWaveform.cpp src/SpuMorph.cpp src/WebInstrument.cpp src/WavImport.cpp PROPERTIES COMPILE_OPTIONS "-ffp-contract=off")
 endif()
 
 add_executable(spu_vab_render tools/spu-vab-render.cpp)
 target_link_libraries(spu_vab_render PRIVATE tetorica_spu_instrument)
 
 if(BUILD_TESTING)
+  add_executable(wav_import_test tests/wav_import_test.cpp)
+  target_link_libraries(wav_import_test PRIVATE tetorica_spu_instrument)
+  add_test(NAME spu.wav.import COMMAND wav_import_test)
+  set_tests_properties(spu.wav.import PROPERTIES TIMEOUT 120)
+  add_executable(adpcm_playback_test tests/adpcm_playback_test.cpp)
+  target_link_libraries(adpcm_playback_test PRIVATE tetorica_spu_instrument)
+  add_test(NAME spu.adpcm.playback COMMAND adpcm_playback_test)
+  add_executable(audio_file_loader_test tests/audio_file_loader_test.cpp)
+  target_link_libraries(audio_file_loader_test PRIVATE tetorica_spu_instrument)
+  add_test(NAME spu.wav.loader COMMAND audio_file_loader_test)
+  set_tests_properties(spu.wav.loader PROPERTIES TIMEOUT 120)
   add_executable(spu_export_source_test tests/spu_export_source_test.cpp)
   target_link_libraries(spu_export_source_test PRIVATE tetorica_spu_instrument)
   target_compile_definitions(spu_export_source_test PRIVATE VAB_FIXTURE_DIR="${CMAKE_CURRENT_SOURCE_DIR}/tests/fixtures/vab")

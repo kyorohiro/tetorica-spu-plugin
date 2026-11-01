@@ -22,15 +22,17 @@ add_executable(tetorica_vst3_audio_check
   "${TETORICA_ROOT}/src/WebInstrument.cpp"
   "${TETORICA_ROOT}/src/SpuExportSource.cpp"
   "${TETORICA_ROOT}/src/WebInstrumentExport.cpp"
+  "${TETORICA_ROOT}/src/WavImport.cpp"
+  "${TETORICA_ROOT}/src/AdpcmPlayback.cpp"
   "${TETORICA_ROOT}/src/VabBank.cpp"
   "${VST3_SDK}/public.sdk/source/common/memorystream.cpp"
   "${VST3_SDK}/public.sdk/source/vst/hosting/plugprovider.cpp")
 target_compile_features(tetorica_vst3_audio_check PRIVATE cxx_std_17)
 if(CMAKE_CXX_COMPILER_ID MATCHES "Clang|GNU")
-  set_source_files_properties("${TETORICA_ROOT}/src/SpuWaveform.cpp" "${TETORICA_ROOT}/src/SpuMorph.cpp" "${TETORICA_ROOT}/src/WebInstrument.cpp"
+  set_source_files_properties("${TETORICA_ROOT}/src/SpuWaveform.cpp" "${TETORICA_ROOT}/src/SpuMorph.cpp" "${TETORICA_ROOT}/src/WebInstrument.cpp" "${TETORICA_ROOT}/src/WavImport.cpp"
     PROPERTIES COMPILE_OPTIONS "-ffp-contract=off")
 elseif(MSVC)
-  set_source_files_properties("${TETORICA_ROOT}/src/SpuWaveform.cpp" "${TETORICA_ROOT}/src/SpuMorph.cpp" "${TETORICA_ROOT}/src/WebInstrument.cpp"
+  set_source_files_properties("${TETORICA_ROOT}/src/SpuWaveform.cpp" "${TETORICA_ROOT}/src/SpuMorph.cpp" "${TETORICA_ROOT}/src/WebInstrument.cpp" "${TETORICA_ROOT}/src/WavImport.cpp"
     PROPERTIES COMPILE_OPTIONS "/fp:strict")
 endif()
 target_include_directories(tetorica_vst3_audio_check PRIVATE "${TETORICA_ROOT}/src")

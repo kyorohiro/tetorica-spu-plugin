@@ -35,13 +35,13 @@ Web音色v1の[import](../web_instrument_import_20261101.md)と[export](../web_i
 
 ### WAV素材読み込みの今回の区切り（2026-11-01、実装前）
 
-- [ ] RIFF/WAVEのPCM16 / IEEE Float32、mono / stereoをboundedなpure decoderで読む。未知chunkとpaddingを処理し、不正サイズ・format・NaN/Inf・空音声を変更前に拒否する。入力上限32MiB、出力は既存SPU sample RAM内に限定し、黙って切り捨てない。
-- [ ] stereoは左右平均でmono化し、44.1kHzへ変換して通常SPU ADPCMを作る。自動normalizeしない。sample rate変換の品質と終端28-frame paddingを明記する。これはsoftwareによる素材変換であり、長いAudioのhost PCM再生とは区別する。
-- [ ] 初期rootはMIDI60 / C4、初期One shotとする。読み込み後に基準音程とOne shot / Loop entire sampleを変更でき、元ADPCM・loop metadataとともに保存する。loop切替で元PCM付きcycleとの不整合を作らない。
-- [ ] file I/O・decode・resample・encode・engine準備はworkerで行い、成功時だけ既存transactionで採用する。失敗・取消・新しいsource・host restore・editor closeで現音源・全parameter・正常pendingを壊さない。
-- [ ] WAV読込成功時はSample / Morph Offで素材を演奏できるようにし、Gain / ADSR / ReverbとPMON等の休止設定・Morph A/Bは保持する。root / loopだけの変更では現在の音作り設定を保持する。採用時の保持音・残響停止は既存仕様とする。
-- [ ] 既存AdpcmSample kind3 / state8 / 26parameter IDを使い、変換済みsampleをDAWへ埋め込む。元WAVなし復元、Web v1書き出し、root音程・one-shot / loop・MIDI / FX回帰・不正入力のatomic failureを検証する。
-- [ ] 共通Load soundへWAVを追加し、既存720×620・Source / ADSR / Reverb・鍵盤を保つ。VAB用Program/Toneの位置をADPCM時はRoot / Playbackへ使い、音声変換と容量超過を明示する。
+- [x] RIFF/WAVEのPCM16 / IEEE Float32、mono / stereoをboundedなpure decoderで読む。未知chunkとpaddingを処理し、不正サイズ・format・NaN/Inf・空音声を変更前に拒否する。入力上限32MiB、出力は既存SPU sample RAM内に限定し、黙って切り捨てない。
+- [x] stereoは左右平均でmono化し、44.1kHzへ変換して通常SPU ADPCMを作る。自動normalizeしない。sample rate変換の品質と終端28-frame paddingを明記する。これはsoftwareによる素材変換であり、長いAudioのhost PCM再生とは区別する。
+- [x] 初期rootはMIDI60 / C4、初期One shotとする。読み込み後に基準音程とOne shot / Loop entire sampleを変更でき、元ADPCM・loop metadataとともに保存する。loop切替で元PCM付きcycleとの不整合を作らない。
+- [x] file I/O・decode・resample・encode・engine準備はworkerで行い、成功時だけ既存transactionで採用する。失敗・取消・新しいsource・host restore・editor closeで現音源・全parameter・正常pendingを壊さない。
+- [x] WAV読込成功時はSample / Morph Offで素材を演奏できるようにし、Gain / ADSR / ReverbとPMON等の休止設定・Morph A/Bは保持する。root / loopだけの変更では現在の音作り設定を保持する。採用時の保持音・残響停止は既存仕様とする。
+- [x] 既存AdpcmSample kind3 / state8 / 26parameter IDを使い、変換済みsampleをDAWへ埋め込む。元WAVなし復元、Web v1書き出し、root音程・one-shot / loop・MIDI / FX回帰・不正入力のatomic failureを検証する。
+- [x] 共通Load soundへWAVを追加し、既存720×620・Source / ADSR / Reverb・鍵盤を保つ。VAB用Program/Toneの位置をADPCM時はRoot / Playbackへ使い、音声変換と容量超過を明示する。
 - [ ] Offline / macOS / ASan・実AU/VST3・validator・CI、Standaloneのfile読込 / root / loop操作、既知AU退避更新と旧GarageBand復元を確認し、検証記録をcommit / pushする。
 
 開始は`ecd4681`、main / origin同期・clean tree。更新前installed AU manifestは[export記録](../web_instrument_export_20261101.json)。

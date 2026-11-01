@@ -18,6 +18,7 @@
 #include "pcm-cycle-checks.h"
 #include "morph-checks.h"
 #include "web-instrument-checks.h"
+#include "wav-import-checks.h"
 #include "pluginterfaces/vst/ivstmidicontrollers.h"
 
 #include <algorithm>
@@ -790,6 +791,10 @@ int main(int argc, char** argv) {
             auto instance=std::make_unique<Instance>(factory,info,rate);instance->allowAsymmetric();
             instance->start();return instance;
           },rate,"VST3 state/events",originalBank());
+          tetorica::test::checkWavImports([&] {
+            auto instance=std::make_unique<Instance>(factory,info,rate);instance->allowAsymmetric();
+            instance->start();return instance;
+          },rate,"VST3 state/events");
           tetorica::test::checkControllers([&] {
             auto instance=std::make_unique<Instance>(factory,info,rate);instance->start();return instance;
           },rate,"VST3 IMidiMapping");

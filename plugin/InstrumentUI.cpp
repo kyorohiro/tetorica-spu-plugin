@@ -10,6 +10,7 @@
 #include "WaveformControl.h"
 #include "PcmDraftState.h"
 #include "MorphDraftState.h"
+#include "AdpcmPlayback.h"
 #include <algorithm>
 #include <array>
 #include <cmath>
@@ -130,6 +131,24 @@ std::string toneLabel(const tetorica::vab::Tone& tone)
   return label;
 }
 
+std::string noteLabel(int note)
+{
+  constexpr std::array<const char*, 12> names{{"C", "C#", "D", "D#", "E", "F", "F#", "G", "G#", "A", "A#", "B"}};
+  return std::string(names.at(static_cast<std::size_t>(note % 12))) +
+    std::to_string(note / 12 - 1) + " (MIDI " + std::to_string(note) + ")";
+}
+
+std::string rootLabel(const tetorica::RawAdpcmSample& sample)
+{
+  const double note = 69. + 12. * std::log2(sample.baseFrequencyHz / 440.);
+  const auto rounded = static_cast<int>(std::round(note));
+  if (rounded >= 0 && rounded <= 127 && std::abs(note - rounded) < 1.e-7)
+    return "Root: " + noteLabel(rounded);
+  char label[64];
+  std::snprintf(label, sizeof(label), "Root: %.3f Hz", sample.baseFrequencyHz);
+  return label;
+}
+
 bool sameBaseDefinition(const std::shared_ptr<const tetorica::InstrumentDefinition>& a,
                         const std::shared_ptr<const tetorica::InstrumentDefinition>& b)
 {
@@ -174,6 +193,10 @@ struct TetoricaSPU::InstrumentUIState
   std::optional<tetorica::vab::Bank> bank;
   tetorica::SpuEngineExchange::Generation requested = 0;
   tetorica::WebInstrumentLoader::Ticket webTicket = 0;
+  tetorica::AudioFileLoader::Ticket audioTicket = 0;
+  tetorica::SpuEngineExchange::Generation audioBaseGeneration = 0, audioCommitted = 0;
+  std::uint64_t audioRevision = 0;
+  std::string audioDetails;
   tetorica::SpuEngineExchange::Generation webBaseGeneration = 0, webCommitted = 0;
   std::uint64_t webRevision = 0;
   std::uint64_t exportTicket = 0, exportRevision = 0;
@@ -207,10 +230,12 @@ void TetoricaSPU::initializeInstrumentUI()
       "Tetorica SPU", IText(30, IColor(255, 27, 62, 73))));
     auto* saveWeb=new IVButtonControl(IRECT(432, 22, 550, 54),
       [this](IControl*) { prepareWebExportFromUI(); }, "Save Web...");
-    saveWeb->SetTooltip("Save the applied sound as .spu.json for the Web Synth. Current Tone only; Gain and unapplied drafts stay in the DAW. Morph saves its current blend.");
+    saveWeb->SetTooltip("Save the saved sound snapshot as .spu.json for the Web Synth. Current Tone only; Gain and unapplied drafts stay in the DAW. Morph saves its current blend.");
     graphics->AttachControl(saveWeb,kCtrlSaveWeb);
-    graphics->AttachControl(new IVButtonControl(IRECT(24, 64, 154, 99),
-      [this](IControl*) { promptForVab(); }, "Load sound..."), kCtrlLoadVab);
+    auto* loadSound=new IVButtonControl(IRECT(24, 64, 154, 99),
+      [this](IControl*) { promptForVab(); }, "Load sound...");
+    loadSound->SetTooltip("Load complete VAB, Web .spu.json v1, or PCM16 / Float32 mono/stereo WAV. WAV is converted in software to mono SPU ADPCM, starts at C4 / One shot, and selects Sample / Morph Off. Gain, ADSR, Reverb and dormant settings are retained.");
+    graphics->AttachControl(loadSound,kCtrlLoadVab);
     graphics->AttachControl(new IVButtonControl(IRECT(166, 64, 296, 99),
       [this](IControl*) { requestBuiltinFromUI(); }, "Builtin Sine"), kCtrlBuiltin);
     graphics->AttachControl(new ITextControl(IRECT(306, 64, 550, 99),
@@ -218,10 +243,32 @@ void TetoricaSPU::initializeInstrumentUI()
     graphics->AttachControl(new SpuMenuControl(IRECT(24, 108, 276, 144), "Program",
       [this](IPopupMenu& menu, SpuMenuControl::Choice& choice) {
         const auto& ui = *mInstrumentUI;
-        if (!ui.bank || !ui.definition) return;
+        if (!ui.definition) return;
         const auto source = ui.definition;
         const auto revision = mInstrumentUIRevision.load(std::memory_order_acquire);
         const auto generation = mEngines.latestGeneration();
+        if (source->kind() == tetorica::InstrumentDefinition::Kind::AdpcmSample)
+        {
+          const auto hz = source->rawAdpcmSample().baseFrequencyHz;
+          for (int first = 0; first < 128; first += 12)
+          {
+            auto* octave = new IPopupMenu;
+            for (int note = first; note < std::min(first + 12, 128); ++note)
+            {
+              const double root = 440. * std::exp2((note - 69.) / 12.);
+              const auto label = noteLabel(note);
+              octave->AddItem(new IPopupMenu::Item(label.c_str(),
+                std::abs(root - hz) < 1.e-7 ? IPopupMenu::Item::kChecked : 0, note));
+            }
+            const auto label = "Octave " + std::to_string(first / 12 - 1);
+            menu.AddItem(label.c_str(), octave);
+          }
+          choice = [this, source, revision, generation](int note) {
+            requestAdpcmEditFromUI(source, revision, generation, note, -1);
+          };
+          return;
+        }
+        if (!ui.bank) return;
         // Capture the selected bank. A later restore/publication must not make
         // a menu opened for an earlier bank select an unrelated Program ID.
         for (const auto& program : ui.bank->programs)
@@ -240,10 +287,21 @@ void TetoricaSPU::initializeInstrumentUI()
     graphics->AttachControl(new SpuMenuControl(IRECT(288, 108, 550, 144), "Tone",
       [this](IPopupMenu& menu, SpuMenuControl::Choice& choice) {
         const auto& ui = *mInstrumentUI;
-        if (!ui.bank || !ui.definition) return;
+        if (!ui.definition) return;
         const auto source = ui.definition;
         const auto revision = mInstrumentUIRevision.load(std::memory_order_acquire);
         const auto generation = mEngines.latestGeneration();
+        if (source->kind() == tetorica::InstrumentDefinition::Kind::AdpcmSample)
+        {
+          const auto& sample = source->rawAdpcmSample();
+          menu.AddItem(new IPopupMenu::Item("One shot", !sample.loopStartSamples ? IPopupMenu::Item::kChecked : 0, 0));
+          menu.AddItem(new IPopupMenu::Item("Loop entire sample", sample.loopStartSamples && *sample.loopStartSamples == 0 ? IPopupMenu::Item::kChecked : 0, 1));
+          choice = [this, source, revision, generation](int playback) {
+            requestAdpcmEditFromUI(source, revision, generation, -1, playback);
+          };
+          return;
+        }
+        if (!ui.bank) return;
         for (const auto& tone : ui.bank->tones)
           if (tone.program == source->program())
           {
@@ -484,6 +542,7 @@ void TetoricaSPU::OnUIOpen()
 void TetoricaSPU::closeInstrumentUI() noexcept
 {
   mWebLoader.cancel();
+  mAudioLoader.cancel();
   const auto exportState=mWebExporter.status();
   const bool acceptedExport=exportState.state==tetorica::WebInstrumentExporter::State::Writing||
     (!exportState.path.empty()&&(exportState.state==tetorica::WebInstrumentExporter::State::Saved||
@@ -493,6 +552,8 @@ void TetoricaSPU::closeInstrumentUI() noexcept
   {
     if(mInstrumentUI->webTicket)mInstrumentUI->status="Import cancelled when the editor closed. Previous sound kept.";
     mInstrumentUI->webTicket = 0;
+    if(mInstrumentUI->audioTicket)mInstrumentUI->status="Audio preparation cancelled when the editor closed. Previous sound kept.";
+    mInstrumentUI->audioTicket = 0;
     if(!acceptedExport)
     {
       if(mInstrumentUI->exportTicket)
@@ -535,7 +596,7 @@ void TetoricaSPU::promptForVab()
   const auto revision = mInstrumentUIRevision.load(std::memory_order_acquire);
   const auto generation = mEngines.latestGeneration();
   WDL_String fileName, path;
-  GetUI()->PromptForFile(fileName, path, EFileAction::Open, "vab json",
+  GetUI()->PromptForFile(fileName, path, EFileAction::Open, "vab json wav",
     [lifetime, revision, generation](const WDL_String& file, const WDL_String&) {
       const auto live = lifetime.lock();
       if (!live) return;
@@ -561,13 +622,25 @@ void TetoricaSPU::promptForVab()
             if(extension==".json")
             {
               ui.webTicket=owner->mWebLoader.requestFile(std::move(path));
+              owner->mAudioLoader.cancel();ui.audioTicket=0;ui.audioCommitted=0;
               ui.webBaseGeneration=generation;ui.webRevision=revision;
               ui.requested=0;ui.webCommitted=0;
               ui.status="Loading Web instrument. Previous sound remains until ready.";
             }
+            else if(extension==".wav")
+            {
+              const auto source=owner->mEngines.snapshotDefinition();
+              ui.audioTicket=owner->mAudioLoader.requestFile(std::move(path),
+                source ? source->morphEndpoints() : tetorica::MorphEndpoints{});
+              owner->mWebLoader.cancel();ui.webTicket=0;ui.webCommitted=0;
+              ui.audioBaseGeneration=generation;ui.audioRevision=revision;
+              ui.requested=0;ui.audioCommitted=0;ui.audioDetails.clear();
+              ui.status="Converting WAV to SPU ADPCM. Previous sound remains until ready.";
+            }
             else
             {
               owner->mWebLoader.cancel();ui.webTicket=0;ui.webCommitted=0;
+              owner->mAudioLoader.cancel();ui.audioTicket=0;ui.audioCommitted=0;
               ui.requested = owner->mLoader.requestFile(std::move(path));
               ui.status = "Loading VAB. Previous sound remains until ready.";
             }
@@ -668,10 +741,40 @@ void TetoricaSPU::requestBuiltinFromUI()
   {
     std::lock_guard<std::mutex> lock(mStateMutex);
     mWebLoader.cancel();mInstrumentUI->webTicket=0;mInstrumentUI->webCommitted=0;
+    mAudioLoader.cancel();mInstrumentUI->audioTicket=0;mInstrumentUI->audioCommitted=0;
     mInstrumentUI->requested = mLoader.requestBuiltin();
     mInstrumentUI->status = "Preparing Builtin Sine.";
   }
   catch (const std::exception& error) { mInstrumentUI->status = error.what(); }
+  updateInstrumentControls();
+}
+
+void TetoricaSPU::requestAdpcmEditFromUI(
+  std::shared_ptr<const tetorica::InstrumentDefinition> source,
+  std::uint64_t revision, tetorica::SpuEngineExchange::Generation generation,
+  int rootMidiNote, int playback)
+{
+  if(!GetUI()||!source||source->kind()!=tetorica::InstrumentDefinition::Kind::AdpcmSample)return;
+  try
+  {
+    std::lock_guard<std::mutex> lock(mStateMutex);
+    if(mInstrumentUIRevision.load(std::memory_order_acquire)!=revision||
+       mEngines.latestGeneration()!=generation||mEngines.snapshotDefinition()!=source)return;
+    auto sample=source->rawAdpcmSample();
+    if(rootMidiNote>=0)sample=tetorica::withAdpcmRoot(sample,rootMidiNote);
+    if(playback>=0)sample=tetorica::withAdpcmPlayback(sample,playback!=0);
+    if(tetorica::sameRawAdpcmSample(sample,source->rawAdpcmSample()))return;
+    auto definition=tetorica::InstrumentDefinition::withMorphEndpoints(
+      tetorica::InstrumentDefinition::fromAdpcmSample(sample),source->morphEndpoints());
+    auto& ui=*mInstrumentUI;
+    ui.audioTicket=mAudioLoader.requestDefinition(std::move(definition));
+    ui.audioBaseGeneration=generation;ui.audioRevision=revision;
+    ui.requested=0;ui.audioCommitted=0;ui.audioDetails.clear();
+    mWebLoader.cancel();ui.webTicket=0;ui.webCommitted=0;
+    ui.status="Preparing sample playback. Notes and reverb tails stop on replacement.";
+  }
+  catch(const std::exception& error)
+  {mInstrumentUI->status=std::string("Sample edit failed: ")+error.what()+". Previous sound kept.";}
   updateInstrumentControls();
 }
 
@@ -689,6 +792,7 @@ void TetoricaSPU::requestSelectionFromUI(
       return;
     if (source->program() == program && source->tone() == tone) return;
     mWebLoader.cancel();mInstrumentUI->webTicket=0;mInstrumentUI->webCommitted=0;
+    mAudioLoader.cancel();mInstrumentUI->audioTicket=0;mInstrumentUI->audioCommitted=0;
     mInstrumentUI->requested = mLoader.requestSelection(std::move(source), program, tone);
     mInstrumentUI->status = "Preparing tone. Previous sound remains until ready.";
   }
@@ -711,6 +815,7 @@ void TetoricaSPU::requestProgramFromUI(
     // The worker finds a genuinely playable tone within this Program, including
     // native SDK loop restrictions. Metadata alone cannot determine support.
     mWebLoader.cancel();mInstrumentUI->webTicket=0;mInstrumentUI->webCommitted=0;
+    mAudioLoader.cancel();mInstrumentUI->audioTicket=0;mInstrumentUI->audioCommitted=0;
     mInstrumentUI->requested = mLoader.requestProgram(std::move(source), program);
     mInstrumentUI->status = "Preparing program. Previous sound remains until ready.";
   }
@@ -728,6 +833,24 @@ void TetoricaSPU::OnIdle()
   bool importedParameters = false;
   bool promptExport = false;
   std::uint64_t revision = 0;
+  // SerializeState takes mStateMutex itself. Capture outside the commit lock,
+  // then verify source generation/revision below before publishing the result.
+  // This retains the complete coherent current settings, including an accepted
+  // pending import. Preparation never reads or writes live parameter storage.
+  std::optional<tetorica::SavedInstrumentState> audioSnapshot;
+  std::string audioSnapshotError;
+  if(ui.audioTicket)
+  {
+    const auto status=mAudioLoader.status();
+    if(status.ticket==ui.audioTicket&&status.state==tetorica::AudioFileLoader::State::Ready)
+      try
+      {
+        iplug::IByteChunk bytes;
+        if(!SerializeState(bytes))throw std::runtime_error("Could not capture stable settings; load the sound again");
+        audioSnapshot=tetorica::decodeState({bytes.GetData(),static_cast<std::size_t>(bytes.Size())});
+      }
+      catch(const std::exception& error){audioSnapshotError=error.what();}
+  }
   {
     std::lock_guard<std::mutex> lock(mStateMutex);
     revision = mInstrumentUIRevision.load(std::memory_order_acquire);
@@ -737,8 +860,56 @@ void TetoricaSPU::OnIdle()
       ui.revision = revision;
       ui.requested = 0;
       mWebLoader.cancel();ui.webTicket=0;ui.webCommitted=0;
+      mAudioLoader.cancel();ui.audioTicket=0;ui.audioCommitted=0;ui.audioDetails.clear();
       mWebExporter.cancel();ui.exportTicket=0;
       ui.status = "Project sound restored.";
+    }
+    if(ui.audioTicket)
+    {
+      if(ui.audioRevision!=revision||ui.audioBaseGeneration!=mEngines.latestGeneration())
+      {
+        mAudioLoader.cancel();ui.audioTicket=0;
+      }
+      else
+      {
+        const auto status=mAudioLoader.status();
+        if(status.ticket==ui.audioTicket&&status.state==tetorica::AudioFileLoader::State::Failed)
+        {ui.status="Load failed: "+status.error+". Previous sound kept.";ui.audioTicket=0;}
+        else if(!audioSnapshotError.empty())
+        {
+          mAudioLoader.cancel();ui.audioTicket=0;
+          ui.status="Load failed: "+audioSnapshotError+". Previous sound kept.";
+        }
+        else if(audioSnapshot)
+          if(auto ready=mAudioLoader.takeReady(ui.audioTicket))
+          {
+            auto state=std::move(*audioSnapshot);
+            state.definition=std::move(ready->definition);
+            // WAV is a new sample, not an FX preset. Select its audible source
+            // while retaining all dormant settings and authored Morph A/B.
+            // Root/playback edits preserve every current parameter instead.
+            if(ready->fileImport)
+            {state.noise.enabled=false;state.pmon.enabled=false;state.morph.enabled=false;}
+            try
+            {
+              ui.audioCommitted=mEngines.commitPreparedImport(std::move(ready->engine),std::move(state));
+              ui.audioDetails=std::move(ready->details);
+              notify=true;ui.requested=0;ui.audioTicket=0;
+              ui.status="Ready. Waiting for an audio block.";
+            }
+            catch(const std::exception& error)
+            {ui.audioTicket=0;ui.status=std::string("Load failed: ")+error.what()+". Previous sound kept.";}
+          }
+      }
+    }
+    if(ui.audioCommitted)
+    {
+      if(ui.audioCommitted!=mEngines.latestGeneration())ui.audioCommitted=0;
+      else if(mImportAppliedGeneration.load(std::memory_order_acquire)==ui.audioCommitted)
+      {
+        ui.status="Loaded sample. Play MIDI or the keyboard. Details in tooltip.";
+        importedParameters=true;ui.audioCommitted=0;
+      }
     }
     if(ui.webTicket)
     {
@@ -922,6 +1093,8 @@ void TetoricaSPU::updateInstrumentControls()
   }
   const bool vab = ui.definition && ui.bank &&
     ui.definition->kind() == tetorica::InstrumentDefinition::Kind::Vab;
+  const bool raw = ui.definition &&
+    ui.definition->kind() == tetorica::InstrumentDefinition::Kind::AdpcmSample;
   if (auto* control = graphics->GetControlWithTag(kCtrlLoadVab))
     if (control->IsDisabled() != ui.pickerOpen) control->SetDisabled(ui.pickerOpen);
   if(auto* control=graphics->GetControlWithTag(kCtrlSaveWeb))
@@ -954,18 +1127,32 @@ void TetoricaSPU::updateInstrumentControls()
     {
       text->SetStr(ui.status.c_str());
       const auto tooltip=ui.status==ui.exportStatus&&!ui.exportNotes.empty()?
-        ui.status+"\n"+ui.exportNotes:ui.status;
+        ui.status+"\n"+ui.exportNotes:
+        ui.status.rfind("Loaded sample.",0)==0&&!ui.audioDetails.empty()?
+          ui.status+"\n"+ui.audioDetails:ui.status;
       control->SetTooltip(tooltip.c_str());
     }
   }
   for (const auto tag : {kCtrlProgram, kCtrlTone})
     if (auto* control = graphics->GetControlWithTag(tag))
     {
-      if (control->IsDisabled() == vab) control->SetDisabled(!vab);
-      const auto label = vab ?
+      const bool enabled=vab||raw;
+      if (control->IsDisabled() == enabled) control->SetDisabled(!enabled);
+      auto label = vab ?
         (tag == kCtrlProgram ? "Program " + std::to_string(ui.definition->program()) :
           "Tone " + std::to_string(ui.definition->tone())) :
         (tag == kCtrlProgram ? std::string("Program (VAB only)") : std::string("Tone (VAB only)"));
+      if(raw)
+      {
+        const auto& sample=ui.definition->rawAdpcmSample();
+        label=tag==kCtrlProgram?rootLabel(sample):!sample.loopStartSamples?
+          "Playback: One shot":*sample.loopStartSamples==0?
+            "Playback: Loop entire sample":"Loop from sample "+std::to_string(*sample.loopStartSamples);
+        control->SetTooltip(tag==kCtrlProgram?
+          "Base sample root, using C4 = MIDI 60. That key plays the recording at its original speed. Changes replace the prepared sound and stop held notes/tails. Morph uses its own tuning. Authored PCM-cycle metadata is removed when its tuning no longer matches.":
+          "Play once or repeat the entire sample, including up to 27 zero padding frames. This replaces the prepared sound and stops held notes/tails. Loop seam clicks can depend on the recording. Turning loop Off removes incompatible authored PCM-cycle metadata.");
+      }
+      else control->SetTooltip(tag==kCtrlProgram?"Select a Program in the embedded VAB bank.":"Select a Tone in the current VAB Program.");
       auto* menu = static_cast<SpuMenuControl*>(control);
       if (std::strcmp(menu->GetLabelStr(), label.c_str())) menu->SetLabelStr(label.c_str());
     }
@@ -1131,7 +1318,7 @@ void TetoricaSPU::updateInstrumentControls()
       appliedPcm ? "Draft changed. Apply PCM to hear it and save it with the project." :
       vab ? "VAB sound kept. This independent draft replaces it only when you Apply PCM." :
       ui.definition&&ui.definition->kind()==tetorica::InstrumentDefinition::Kind::AdpcmSample ?
-      "Web sample kept. This independent draft replaces it only when you Apply PCM." :
+      "ADPCM sample kept. This independent draft replaces it only when you Apply PCM." :
       "Builtin Sine kept. Apply PCM creates an editable sound. Unapplied drafts are not saved.";
     auto* text = static_cast<ITextControl*>(control);
     if (std::strcmp(text->GetStr(), message)) text->SetStr(message);
@@ -1245,6 +1432,7 @@ void TetoricaSPU::applyPcmDraftFromUI()
     // the old draft must not supersede that newly restored project sound.
     if (ui.revision != mInstrumentUIRevision.load(std::memory_order_acquire)) return;
     mWebLoader.cancel();ui.webTicket=0;ui.webCommitted=0;
+    mAudioLoader.cancel();ui.audioTicket=0;ui.audioCommitted=0;
     if (GetParam(kParamMorphEnabled)->Bool())
     {
       // Capture the latest accepted base, including an earlier Apply that the
