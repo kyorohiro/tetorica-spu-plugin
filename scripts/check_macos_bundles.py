@@ -19,6 +19,16 @@ REQUIRED_ARCHITECTURES = {'arm64', 'x86_64'}
 MACHO_MAGICS = {bytes.fromhex(value) for value in (
     'feedface', 'cefaedfe', 'feedfacf', 'cffaedfe',
     'cafebabe', 'bebafeca', 'cafebabf', 'bfbafeca')}
+HARDENED_RUNTIME = 0x10000
+
+
+def developer_id_requirement(team_id):
+    if not isinstance(team_id, str) or not re.fullmatch(r'[A-Z0-9]{10}', team_id):
+        raise ValueError('Expected Team ID must contain exactly 10 uppercase letters or digits')
+    # A leading '=' makes this literal requirement source, rather than a path.
+    return ('=anchor apple generic and '
+            'certificate leaf[field.1.2.840.113635.100.6.1.13] exists and '
+            f'certificate leaf[subject.OU] = "{team_id}"')
 
 
 def run_command(arguments):
@@ -84,11 +94,7 @@ def bundle_files(bundle):
     return sorted(files), sorted(links, key=lambda item: item['path'])
 
 
-def signature(path, run):
-    # Verification includes every Universal slice. This proves integrity only;
-    # it does not establish Gatekeeper acceptance, Developer ID or notarization.
-    run(['/usr/bin/codesign', '--verify', '--strict', '--all-architectures', str(path)])
-    detail = run(['/usr/bin/codesign', '-d', '--verbose=4', str(path)])
+def signature_fields(detail):
     fields = {}
     authorities = []
     for line in detail.splitlines():
@@ -98,6 +104,50 @@ def signature(path, run):
                 authorities.append(value)
             else:
                 fields[key] = value
+    return fields, authorities
+
+
+def signature(path, run, *, expected_team_id=None):
+    # Verification includes every Universal slice. The default proves integrity
+    # only. Developer ID checks still do not establish Gatekeeper/notary policy.
+    verify = ['/usr/bin/codesign', '--verify', '--strict', '--all-architectures']
+    if expected_team_id is not None:
+        requirement = developer_id_requirement(expected_team_id)
+        verify += ['--test-requirement', requirement]
+    run(verify + [str(path)])
+    if expected_team_id is not None:
+        slices = {}
+        for architecture in sorted(REQUIRED_ARCHITECTURES):
+            # --all-architectures applies to verification, not display; without
+            # --arch, codesign only reports the host's preferred slice.
+            detail = run(['/usr/bin/codesign', '-d', '--verbose=4', '--arch',
+                          architecture, str(path)])
+            fields, authorities = signature_fields(detail)
+            label = f'{path.name} ({architecture})'
+            if fields.get('Signature') == 'adhoc' or not authorities:
+                raise ValueError(f'{label} lacks a Developer ID Application signature')
+            if fields.get('TeamIdentifier') != expected_team_id:
+                raise ValueError(f'{label} has an unexpected TeamIdentifier')
+            if (not authorities[0].startswith('Developer ID Application: ') or
+                    not authorities[0].endswith(f' ({expected_team_id})')):
+                raise ValueError(f'{label} lacks the expected Developer ID Application authority')
+            flags = re.search(r'^CodeDirectory\b[^\r\n]*\bflags=(0x[0-9a-fA-F]+)\b',
+                              detail, re.MULTILINE)
+            if flags is None or not int(flags.group(1), 16) & HARDENED_RUNTIME:
+                raise ValueError(f'{label} does not enable the hardened runtime')
+            timestamp = fields.get('Timestamp', '').strip()
+            if not timestamp or timestamp.lower() in ('none', 'not set', 'not-set', '(null)', '<none>'):
+                raise ValueError(f'{label} lacks a trusted Timestamp')
+            slices[architecture] = {'authorities': authorities,
+                                    'teamIdentifier': fields['TeamIdentifier'],
+                                    'cdhash': fields.get('CDHash'),
+                                    'codeDirectoryFlags': flags.group(1),
+                                    'hardenedRuntime': True, 'timestamp': timestamp}
+        return {'valid': True, 'kind': 'developer-id-application',
+                'teamIdentifier': expected_team_id, 'requirement': requirement,
+                'architectures': slices, 'notarization': 'not-checked'}
+    detail = run(['/usr/bin/codesign', '-d', '--verbose=4', str(path)])
+    fields, authorities = signature_fields(detail)
     if fields.get('Signature') == 'adhoc':
         kind = 'ad-hoc'
     elif authorities:
@@ -109,7 +159,7 @@ def signature(path, run):
             'notarization': 'not-checked'}
 
 
-def macho(path, bundle, run):
+def macho(path, bundle, run, *, expected_team_id=None):
     architectures = run(['/usr/bin/lipo', '-archs', str(path)]).strip().split()
     if set(architectures) != REQUIRED_ARCHITECTURES or len(architectures) != 2:
         raise ValueError(f'{path.relative_to(bundle)} is not exactly arm64 + x86_64: {architectures}')
@@ -148,10 +198,11 @@ def macho(path, bundle, run):
             'mode': oct(stat.S_IMODE(path.stat().st_mode)), 'architectures': sorted(architectures),
             'dylibDependencies': dependencies, 'rpaths': sorted(set(rpaths)),
             'minimumMacOS': sorted(set(minimums)),
-            'signature': signature(path, run)}
+            'signature': signature(path, run, expected_team_id=expected_team_id)}
 
 
-def inspect_bundle(bundle, format_name, expected_version, numeric_version, project_root, run):
+def inspect_bundle(bundle, format_name, expected_version, numeric_version, project_root, run,
+                   *, expected_team_id=None):
     if bundle.is_symlink() or not bundle.is_dir():
         raise ValueError('Missing bundle or bundle root is a symlink')
     bundle = bundle.resolve(strict=True)
@@ -198,7 +249,7 @@ def inspect_bundle(bundle, format_name, expected_version, numeric_version, proje
         with path.open('rb') as source:
             magic = source.read(4)
         if magic in MACHO_MAGICS:
-            binaries.append(macho(path, bundle, run))
+            binaries.append(macho(path, bundle, run, expected_team_id=expected_team_id))
     if not any(item['path'] == executable.relative_to(bundle).as_posix() for item in binaries):
         raise ValueError('CFBundleExecutable is not a Mach-O binary')
     minimum = info.get('LSMinimumSystemVersion')
@@ -216,15 +267,19 @@ def inspect_bundle(bundle, format_name, expected_version, numeric_version, proje
     return {'format': format_name, 'path': bundle.name, 'version': expected_version,
             'minimumSystemVersion': info.get('LSMinimumSystemVersion'), 'fileCount': len(files),
             'symlinks': links, 'resources': resource_hashes, 'machO': binaries,
-            'signature': signature(bundle, run)}
+            'signature': signature(bundle, run, expected_team_id=expected_team_id)}
 
 
-def inspect_bundles(input_dir, project_root=PROJECT_ROOT, run=run_command):
+def inspect_bundles(input_dir, project_root=PROJECT_ROOT, run=run_command, *, expected_team_id=None):
     input_dir, project_root = Path(input_dir).resolve(), Path(project_root).resolve()
     report = {'schema': 1, 'ok': False, 'input': str(input_dir), 'architectures': sorted(REQUIRED_ARCHITECTURES),
               'dependencyPolicy': 'system-only', 'signingPolicy': 'valid-signature-not-trust-assessed',
               'notarization': 'not-checked', 'bundles': [], 'errors': []}
     try:
+        if expected_team_id is not None:
+            report['signingRequirement'] = developer_id_requirement(expected_team_id)
+            report['signingPolicy'] = 'developer-id-application-exact-team'
+            report['expectedTeamIdentifier'] = expected_team_id
         version, numeric = project_version(project_root)
         report['version'] = version
     except (OSError, ValueError) as error:
@@ -233,7 +288,8 @@ def inspect_bundles(input_dir, project_root=PROJECT_ROOT, run=run_command):
     for format_name, name in BUNDLES:
         try:
             report['bundles'].append(inspect_bundle(input_dir / name, format_name, version,
-                                                     numeric, project_root, run))
+                                                     numeric, project_root, run,
+                                                     expected_team_id=expected_team_id))
         except (OSError, ValueError, RuntimeError, plistlib.InvalidFileException, subprocess.TimeoutExpired) as error:
             report['errors'].append(f'{name}: {error}')
     report['ok'] = not report['errors']
@@ -244,8 +300,10 @@ def main(argv=None):
     parser = argparse.ArgumentParser(description=__doc__)
     parser.add_argument('--input', type=Path, required=True, help='Directory containing APP, AU and VST3 bundles')
     parser.add_argument('--output', type=Path, help='Also save the JSON inspection report here')
+    parser.add_argument('--expected-team-id',
+                        help='Require this Developer ID Application Team ID, hardened runtime and trusted timestamps')
     args = parser.parse_args(argv)
-    report = inspect_bundles(args.input)
+    report = inspect_bundles(args.input, expected_team_id=args.expected_team_id)
     text = json.dumps(report, ensure_ascii=False, sort_keys=True, indent=2) + '\n'
     if args.output:
         args.output.write_text(text, encoding='utf-8')

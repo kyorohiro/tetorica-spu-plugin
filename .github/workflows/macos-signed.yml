@@ -1,0 +1,96 @@
+name: Build Signed macOS Candidate
+
+on:
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+concurrency:
+  group: macos-signed-${{ github.ref }}
+  cancel-in-progress: false
+
+env:
+  EXPECTED_TEAM_ID: 5H7KW7PC7C
+
+jobs:
+  sign:
+    if: github.ref == 'refs/heads/main'
+    runs-on: macos-15
+    timeout-minutes: 45
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.12'
+      - run: python3 -m unittest discover -s tests -p 'test_*.py' -v
+      - run: python3 scripts/bootstrap.py
+      - run: python3 scripts/bootstrap.py --check
+      - run: cmake --preset macos-release
+      - run: cmake --build --preset macos-release --parallel 4
+      - run: ctest --preset macos-release
+      - name: Prepare isolated signing and notary credentials
+        env:
+          BUILD_CERTIFICATE_BASE64: ${{ secrets.BUILD_CERTIFICATE_BASE64 }}
+          P12_PASSWORD: ${{ secrets.P12_PASSWORD }}
+          APPLE_ID: ${{ secrets.APPLE_ID }}
+          APPLE_TEAM_ID: ${{ secrets.APPLE_TEAM_ID }}
+          APPLE_APP_SPECIFIC_PASSWORD: ${{ secrets.APPLE_APP_SPECIFIC_PASSWORD }}
+        run: python3 scripts/ci_macos_signing.py prepare --report "$RUNNER_TEMP/macos-signing.json"
+      - name: Sign, notarize and staple the Universal candidate
+        run: python3 scripts/package_macos_signed.py build --input build/macos-release/out --output release/signed --credentials "$RUNNER_TEMP/macos-signing.json" --expected-team-id "$EXPECTED_TEAM_ID" --report build/macos-signed.json
+      - name: Remove temporary credentials on every exit
+        if: always()
+        run: python3 scripts/ci_macos_signing.py cleanup --report "$RUNNER_TEMP/macos-signing.json"
+      - uses: actions/upload-artifact@v4
+        with:
+          name: macos-signed-candidate
+          path: |
+            release/signed/*.dmg
+            release/signed/*.sha256
+          if-no-files-found: error
+      - name: Upload public signing and notarization records
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: macos-signing-report
+          path: |
+            build/macos-signed.json
+            release/signed/*.notary-log.json
+          if-no-files-found: warn
+
+  verify:
+    needs: sign
+    strategy:
+      fail-fast: false
+      matrix:
+        include:
+          - runner: macos-15
+            arch: arm64
+          - runner: macos-15-intel
+            arch: x86_64
+    runs-on: ${{ matrix.runner }}
+    timeout-minutes: 25
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.12'
+      - run: python3 scripts/bootstrap.py
+      - uses: actions/download-artifact@v4
+        with:
+          name: macos-signed-candidate
+          path: build/downloaded-signed
+      - name: Verify and extract the final signed DMG
+        shell: bash
+        run: |
+          set -- build/downloaded-signed/*.dmg
+          test "$#" -eq 1
+          python3 scripts/package_macos_signed.py verify "$1" --expected-source "$GITHUB_SHA" --expected-team-id "$EXPECTED_TEAM_ID" --extract-to build/signed-extracted --report build/signed-verified.json
+      - name: Exercise the exact signed AU and VST3
+        run: python3 scripts/verify_preview_hosts.py --report build/signed-verified.json --expected-team-id "$EXPECTED_TEAM_ID" --ci-auval
+      - uses: actions/upload-artifact@v4
+        with:
+          name: macos-signed-verification-${{ matrix.arch }}
+          path: build/signed-verified.json
+          if-no-files-found: error

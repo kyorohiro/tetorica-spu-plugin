@@ -1,5 +1,5 @@
 cmake_minimum_required(VERSION 3.25)
-project(tetorica_spu_plugin VERSION 0.1.0 LANGUAGES C CXX)
+project(tetorica_spu_plugin VERSION 0.0.0 LANGUAGES C CXX)
 
 include(CTest)
 set(CMAKE_CXX_STANDARD 17)

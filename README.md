@@ -1,7 +1,7 @@
 # Tetorica SPU Plugin
 
 PS1 SPU instrument for DAWs, using iPlug2 and tetorica-soundchip-native.
-Initial development targets macOS Standalone, AUv2 and VST3. Not a published release.
+Targets macOS Universal Standalone, AUv2 and VST3, plus Windows x64 VST3.
 
 Current prototype: full-range built-in Sine with legacy project playback, MIDI Note On/Off and velocity,
 24 voices, channel-aware note ownership, Pitch Bend, Sustain, All sound off,
@@ -93,7 +93,7 @@ python3 scripts/verify_preview_hosts.py --report build/macos-preview.json
 ```
 
 Commit changes before packaging: each manifest records an exact source commit.
-Only staging copies are signed. macOS candidates have valid ad-hoc signatures,
+Only staging copies are signed. The ZIP command above produces ad-hoc signatures,
 without Developer ID signing or notarization; Windows candidates are unsigned.
 ZIP verification checks the manifest, SHA256, executable permissions and safe
 paths. Each ZIP includes installation notes and third-party license notices.
@@ -114,6 +114,24 @@ python scripts/verify_preview_hosts.py --report build/windows-preview.json
 ```
 
 See [candidate verification and remaining checks](docs/preview_builds_20261102.md).
+
+For Developer ID distribution, [Build Signed macOS Candidate](https://github.com/kyorohiro/tetorica-spu-plugin/actions/workflows/macos-signed.yml)
+is a separate manual workflow restricted to `main`. It signs Universal staging
+copies with hardened runtime and trusted timestamps, submits the signed DMG to
+Apple, requires an Accepted result, and staples and validates the DMG ticket.
+Apple Silicon and Intel jobs download that same DMG, check its signature and
+Gatekeeper acceptance, extract its versioned payload folder read-only, and test
+the actual AU/VST3. This workflow creates artifacts without creating a tag or Release.
+
+It reads these five repository Actions secrets: `BUILD_CERTIFICATE_BASE64`,
+`P12_PASSWORD`, `APPLE_ID`, `APPLE_TEAM_ID`, and `APPLE_APP_SPECIFIC_PASSWORD`.
+The certificate must include its private key and be Developer ID Application
+for the expected public Team ID in the workflow. Credentials use a temporary
+file-based keychain and are removed by an `always()` cleanup step.
+
+Open the DMG's versioned folder for the APP, AU, VST3, installation notes,
+licenses and signed-payload manifest. Keep plugin bundles intact when copying
+them to the installation paths described in `INSTALL.txt`.
 
 ## MIDI performance
 

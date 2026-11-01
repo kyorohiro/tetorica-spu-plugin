@@ -49,6 +49,19 @@ class MacBundleInspectionTests(unittest.TestCase):
         self.bad_rpath = False
         self.newer_minos = False
         self.commands = []
+        self.signature_details = None
+        self.reject_requirement = False
+
+    def developer_id(self):
+        detail = ('Identifier=test\n'
+                  'CodeDirectory v=20500 size=100 flags=0x10000(runtime) hashes=1+1 location=embedded\n'
+                  'Authority=Developer ID Application: Example Developer (ABCDE12345)\n'
+                  'Authority=Developer ID Certification Authority\n'
+                  'Authority=Apple Root CA\n'
+                  'TeamIdentifier=ABCDE12345\n'
+                  'Timestamp=Nov 2, 2026 at 12:00:00\n'
+                  'CDHash=test-hash\n')
+        self.signature_details = {architecture: detail for architecture in checker.REQUIRED_ARCHITECTURES}
 
     def fake_run(self, arguments):
         self.commands.append(arguments)
@@ -66,13 +79,18 @@ class MacBundleInspectionTests(unittest.TestCase):
         if tool == 'codesign' and '--verify' in arguments:
             if path == self.bad_signature:
                 raise ValueError('injected invalid resource/code signature')
+            if self.reject_requirement and '--test-requirement' in arguments:
+                raise ValueError('injected Apple Developer ID requirement failure')
             return ''
         if tool == 'codesign' and '-d' in arguments:
+            if self.signature_details is not None:
+                self.assertIn('--arch', arguments)
+                return self.signature_details[arguments[arguments.index('--arch') + 1]]
             return 'Identifier=test\nSignature=adhoc\nTeamIdentifier=not set\nCDHash=test-hash\n'
         self.fail(f'Unexpected tool invocation: {arguments}')
 
-    def inspect(self):
-        return checker.inspect_bundles(self.output, self.project, self.fake_run)
+    def inspect(self, **kwargs):
+        return checker.inspect_bundles(self.output, self.project, self.fake_run, **kwargs)
 
     def test_valid_universal_is_integrity_only_and_never_signs_or_launches(self):
         report = self.inspect()
@@ -84,6 +102,100 @@ class MacBundleInspectionTests(unittest.TestCase):
             self.assertEqual(bundle['signature']['kind'], 'ad-hoc')
         self.assertTrue(all(Path(command[0]).name in ('lipo', 'otool', 'codesign') for command in self.commands))
         self.assertFalse(any('--sign' in command for command in self.commands))
+        self.assertFalse(any('--arch' in command or '--test-requirement' in command for command in self.commands))
+
+    def test_developer_id_checks_apple_requirement_and_both_slices_of_every_binary_and_bundle(self):
+        self.developer_id()
+        library = self.output / 'TetoricaSPU.app/Contents/Resources/nested/helper.dylib'
+        library.parent.mkdir()
+        library.write_bytes(bytes.fromhex('cafebabe') + b'fake universal helper')
+        report = self.inspect(expected_team_id='ABCDE12345')
+        self.assertTrue(report['ok'], report['errors'])
+        self.assertEqual(report['signingPolicy'], 'developer-id-application-exact-team')
+        self.assertEqual(report['expectedTeamIdentifier'], 'ABCDE12345')
+        self.assertEqual(report['notarization'], 'not-checked')
+        requirement = checker.developer_id_requirement('ABCDE12345')
+        self.assertEqual(requirement, '=anchor apple generic and '
+                         'certificate leaf[field.1.2.840.113635.100.6.1.13] exists and '
+                         'certificate leaf[subject.OU] = "ABCDE12345"')
+        expected_paths = {self.output / name for _, name in checker.BUNDLES}
+        expected_paths |= {path / 'Contents/MacOS/TetoricaSPU' for path in list(expected_paths)}
+        expected_paths.add(library)
+        verifications = [command for command in self.commands if '--test-requirement' in command]
+        self.assertEqual({Path(command[-1]) for command in verifications}, expected_paths)
+        for command in verifications:
+            self.assertIn('--all-architectures', command)
+            self.assertEqual(command[command.index('--test-requirement') + 1], requirement)
+        for path in expected_paths:
+            displays = [command for command in self.commands if '-d' in command and Path(command[-1]) == path]
+            self.assertEqual({command[command.index('--arch') + 1] for command in displays},
+                             checker.REQUIRED_ARCHITECTURES)
+        for bundle in report['bundles']:
+            for signature in [bundle['signature']] + [binary['signature'] for binary in bundle['machO']]:
+                self.assertEqual(signature['kind'], 'developer-id-application')
+                self.assertEqual(set(signature['architectures']), checker.REQUIRED_ARCHITECTURES)
+                for evidence in signature['architectures'].values():
+                    self.assertEqual(evidence['teamIdentifier'], 'ABCDE12345')
+                    self.assertEqual(evidence['codeDirectoryFlags'], '0x10000')
+                    self.assertTrue(evidence['hardenedRuntime'])
+                    self.assertTrue(evidence['timestamp'])
+        self.assertFalse(any('--sign' in command for command in self.commands))
+
+    def test_expected_team_id_is_validated_before_any_tool_runs(self):
+        for team in ('', 'abcde12345', 'ABCDE1234', 'ABCDE123456', 'ABCDE1234" or true', 123):
+            with self.subTest(team=team):
+                report = self.inspect(expected_team_id=team)
+                self.assertFalse(report['ok'])
+                self.assertIn('Expected Team ID', report['errors'][0])
+                self.assertEqual(self.commands, [])
+
+    def test_developer_id_rejects_adhoc_development_and_wrong_team_on_either_slice(self):
+        report = self.inspect(expected_team_id='ABCDE12345')
+        self.assertFalse(report['ok'])
+        self.assertTrue(any('Developer ID Application signature' in error for error in report['errors']))
+        for architecture in sorted(checker.REQUIRED_ARCHITECTURES):
+            for old, new, error in (
+                    ('TeamIdentifier=ABCDE12345', 'TeamIdentifier=ZYXWV98765', 'TeamIdentifier'),
+                    ('Developer ID Application: Example Developer (ABCDE12345)',
+                     'Apple Development: Example Developer (ABCDE12345)', 'Developer ID Application authority'),
+                    ('Example Developer (ABCDE12345)', 'Example Developer (ZYXWV98765)',
+                     'Developer ID Application authority')):
+                with self.subTest(architecture=architecture, replacement=new):
+                    self.developer_id()
+                    self.signature_details[architecture] = self.signature_details[architecture].replace(old, new)
+                    report = self.inspect(expected_team_id='ABCDE12345')
+                    self.assertFalse(report['ok'])
+                    self.assertTrue(any(architecture in message and error in message for message in report['errors']))
+
+    def test_developer_id_requires_runtime_flag_bit_not_a_runtime_label(self):
+        for value in ('0x0(runtime)', '0x1000', 'unknown(runtime)'):
+            with self.subTest(flags=value):
+                self.developer_id()
+                self.signature_details['x86_64'] = self.signature_details['x86_64'].replace('0x10000(runtime)', value)
+                report = self.inspect(expected_team_id='ABCDE12345')
+                self.assertFalse(report['ok'])
+                self.assertTrue(any('x86_64' in error and 'hardened runtime' in error for error in report['errors']))
+        self.developer_id()
+        self.signature_details['x86_64'] = self.signature_details['x86_64'].replace('0x10000(runtime)', '0x11000(runtime,library)')
+        self.assertTrue(self.inspect(expected_team_id='ABCDE12345')['ok'])
+
+    def test_developer_id_requires_trusted_timestamp_on_both_slices(self):
+        for replacement in ('Signed Time=Nov 2, 2026', 'Timestamp=', 'Timestamp=none', ''):
+            with self.subTest(timestamp=replacement):
+                self.developer_id()
+                self.signature_details['x86_64'] = self.signature_details['x86_64'].replace(
+                    'Timestamp=Nov 2, 2026 at 12:00:00', replacement)
+                report = self.inspect(expected_team_id='ABCDE12345')
+                self.assertFalse(report['ok'])
+                self.assertTrue(any('x86_64' in error and 'trusted Timestamp' in error for error in report['errors']))
+
+    def test_developer_id_requirement_failure_cannot_be_overridden_by_display_metadata(self):
+        self.developer_id()
+        self.reject_requirement = True
+        report = self.inspect(expected_team_id='ABCDE12345')
+        self.assertFalse(report['ok'])
+        self.assertTrue(any('Developer ID requirement failure' in error for error in report['errors']))
+        self.assertFalse(any('-d' in command for command in self.commands))
 
     def test_every_macho_is_checked_including_resource_subdirectories(self):
         library = self.output / 'TetoricaSPU.app/Contents/Resources/nested/helper.dylib'

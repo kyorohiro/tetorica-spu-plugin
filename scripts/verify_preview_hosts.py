@@ -38,12 +38,18 @@ def main():
     parser.add_argument('--report', type=Path, required=True,
                         help='Report from package_preview build/verify --extract-to')
     parser.add_argument('--ci-auval', action='store_true')
+    parser.add_argument('--expected-team-id', help='Require Developer ID signing on both macOS slices')
     args = parser.parse_args()
     report = json.loads(args.report.read_text())
     stage = Path(report['staging_directory'])
     platform = report['platform']
     checker = 'check_macos_bundles.py' if platform == 'macos' else 'check_windows_bundles.py'
-    run(sys.executable, ROOT / 'scripts' / checker, '--input', stage)
+    check_args = [sys.executable, ROOT / 'scripts' / checker, '--input', stage]
+    if args.expected_team_id:
+        if platform != 'macos':
+            raise SystemExit('Developer ID policy applies only to macOS candidates')
+        check_args += ['--expected-team-id', args.expected_team_id]
+    run(*check_args)
     if platform == 'windows':
         if sys.platform != 'win32':
             raise SystemExit('Run the Windows host checks on Windows')
