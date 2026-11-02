@@ -47,6 +47,18 @@ AUプリセット名warning解消と分割VH/VBのLoad sound対応も完了し�
 [最新の実装・配置・復元記録](../preset_split_vab_20261101.md) /[current installed AU manifest](../preset_split_vab_20261101.json)を参照。
 内蔵Sineの広域化も実装・CI成功した。[新build検証記録](../builtin_sine_range_20261102.md)を参照。手元installed AUはGain380版へ退避更新し、[最新manifest](../au_gain380_update_20261102.json)とGarageBand保存復元を確認した。
 
+### 音源準備・音声処理待ちの表示改善（2026-11-02、開始）
+
+開始`4139641`。ユーザーが表示改善の続行を指示したため、実装前に今回の範囲を記録する。
+
+- [ ] worker準備中、準備完了・host音声処理待ち、適用済みを区別し、上段・PCM/Morph Applyボタン・説明文を揃える。
+- [ ] ReadyではDAW再生を促し、準備済みの音源が次の音声処理で反映されることを説明する。host停止を検出したとは表示せず、plugin内鍵盤だけでhostを起動できるとも案内しない。
+- [ ] PCM /MorphとVAB /Web /WAVの既存準備・採用markerを使い、失敗・新しい要求・restoreで古いReady表示を残さない。音源交換・queue・state/schema /parameter /SDKは変更しない。
+- [ ] 状態遷移の必要な検証、macOS APP /AU /VST3 buildと実画面を確認し、必要な回帰・CIを実施する。
+- [ ] 結果と配置済みAUとの差分を記録してcommit /pushする。公開Release・tag /versionは変更しない。手元AUを更新する場合は既知manifest照合と退避を使う。
+
+Morph /Reverbの実DAW automation録音とv0.0.1 Preview公開は別の区切りとする。
+
 ### Gain 380%版AUの退避更新・GarageBand検証（2026-11-02、更新・保存復元完了）
 
 開始Plugin `d985587`、音源実装 `850a79f`。ユーザーの「進めて」により、既存AUの退避更新とGarageBandでの保存・復元、今回の操作確認を進める。実装前に作業範囲を記録する。
