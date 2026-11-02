@@ -45,20 +45,21 @@ CC120のチャンネル別停止も実装・検証・[CI全2job成功](https://g
 [CC120版の配置・復元記録](../au_cc120_update_20261101.md)を参照。
 AUプリセット名warning解消と分割VH/VBのLoad sound対応も完了した。
 [最新の実装・配置・復元記録](../preset_split_vab_20261101.md) /[current installed AU manifest](../preset_split_vab_20261101.json)を参照。
-内蔵Sineの広域化も実装・CI成功した。[新build検証記録](../builtin_sine_range_20261102.md)を参照。手元installed AUはPSF対応版へ退避更新し、[最新manifest](../au_psf_update_20261103.json)とGarageBandのPCM /Gain380復元を確認した。PSFの実DAW操作は下のcheckpointで継続する。
+内蔵Sineの広域化も実装・CI成功した。[新build検証記録](../builtin_sine_range_20261102.md)を参照。手元installed AUはPSF対応版へ退避更新し、[最新manifest](../au_psf_update_20261103.json)とGarageBandのPCM /Gain380復元、PSFの実DAW操作・保存再起動復元も確認した。下の結果記録を参照。
 
-### PSF対応AU更新・GarageBand検証（2026-11-03、着手）
+### PSF対応AU更新・GarageBand検証（2026-11-03、完了）
 
 開始`8423bac`、PSF実装`d379b60`。ユーザーがAU更新とGarageBand確認の続行を指示したため、更新前に今回の範囲を記録する。
 
 - [x] 現在のGarageBand project /transportとinstalled AU全filesを確認し、検証projectの別copyと元filesのhashを保持した。既知PCM検証projectを2copy保持し、今回専用copyで作業している。
 - [x] 既知manifest `ready_status_20261102.json`と旧AUを照合して全hostを正常終了し、退避・rollback journal付きでPSF版AUへ更新した。journalは`build/au-backups/au-update-23f4rvfb/manifest.json`。
 - [x] installed AUの全5files一致・auval・実AU host22 PASSを確認し、GarageBand専用copyのEmbedded PCM cycle /Gain380% /Project sound restoredを実画面で確認した。
-- [ ] 今回専用projectでPSF folder＋階層PSFLib、Entry /Bank /Program /Tone、取消 /error時の音源保持を確認する。AI操作が届かない場合は人の最小操作を依頼する。
-- [ ] PSFから選んだVABを保存・正常終了・再起動し、元PSF一式に依存せずbank bytes /Program /Toneが復元されることを実画面と保存payloadの両方で確認する。
-- [ ] 更新manifest・rollback・project退避・確認範囲・未確認事項を記録してpushする。公開v0.0.1のtag /assetsは変更しない。
+- [x] 今回専用projectでPSF folder＋階層PSFLibを読み込み、Entry /Bank /Program /Toneを確認した。人の操作後、Bank1 /Bank2の実AU画面と保存VAB全bytesが一致した。Program11でTone0になることも人が確認した。
+- [x] 取消 /不正CRC error時のP3/T1 /Gain380%保持を実AU画面で確認した。人のfolder操作後、保存payload全4776bytesも前後完全一致。
+- [x] PSFから選んだBank2を保存・正常終了・process不在確認・元PSF一式退避・再起動し、実URL /AU画面 /再保存payloadでBank2 /P3/T1 /Gain380%の復元を確認した。5段階のpayload SHAが完全一致した。
+- [x] 更新manifest・rollback・project退避・確認範囲・未確認事項を記録した。checkpointと最終結果をpushし、公開v0.0.1のtag /assetsは変更していない。
 
-[配置・checkpoint・再開手順](../au_psf_update_20261103.md)。PSF folderの実読込・Bank1保存bytes一致まで確認。AU内へのAIクリックが届かず、Entry /Bank /Program /Tone選択を人へ依頼中。
+[配置・結果・再開手順](../au_psf_update_20261103.md)。最後はmaster+0.0dB /tempo120 /再生・録音・cycle Off、専用projectのAU editorを表示。実ゲームPSF・実聴・長時間・PSF版公開は別段階。
 
 ### PSF1 /MiniPSF 静的VAB抽出のPlugin移植（2026-11-02着手、11-03実装・CI結果記録）
 
@@ -72,7 +73,7 @@ AUプリセット名warning解消と分割VH/VBのLoad sound対応も完了し�
 - [x] 結果・制約・操作方法・再開手順を記録した。実装`d379b60`をpush済み。公開済みv0.0.1 tag /assetsと手元installed AU /GarageBand projectは今回変更していない。
 
 - [x] Windows /Mac ARM /IntelのCIを通し、同じsourceの通常2 /配布3 jobsすべて成功した。[記録](../psf_import_20261102.md) /[証跡JSON](../psf_import_20261102.json)。
-- [ ] 次は既知manifest照合・退避付きAU更新と、GarageBand独自file panelでPSF folder /Entry /Bank /保存復元の確認。元ゲームPSF・実聴・新version公開は別段階とする。
+- [x] その後の続行指示により、既知manifest照合・退避付きAU更新とGarageBandのPSF folder /Entry /Bank /保存復元も完了した。[更新・実DAW検証記録](../au_psf_update_20261103.md)。元ゲームPSF・実聴・新version公開は別段階。
 
 ### v0.0.1 Preview 公開（2026-11-02、公開・再download照合完了）
 

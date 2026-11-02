@@ -727,8 +727,11 @@ regressions, including channel-only CC120, preserved shared Reverb tails,
 PMON pair reuse, live Gain ramps and restore/reset/reactivation/bypass,
 as well as the [loop compatibility fix](docs/loop_repeat_20261101.md).
 The PSF development AU also restored the existing PCM cycle and 380% Gain in
-the copied GarageBand project. Its DAW-specific PSF folder and save/reopen
-checks are in progress; the update record distinguishes them from host regressions.
+the copied GarageBand project. GarageBand PSF folder/Entry/Bank/Program/Tone,
+cancel/CRC failure preservation, and save/reopen without the original PSF set
+passed using the original demo fixtures. Selected VAB bytes, Program 3, Tone 1
+and 380% Gain survived full host exit and resave with an identical payload.
+Listening, real-game PSF sets and long-duration operation remain unverified.
 A copied GarageBand project also restored its embedded VAB, Program 3, Tone 0
 and Gain 99% / Boost 1 after schema11 save, full host exit and reopen.
 AU validation now passes without the preset-name warning. Host user-preset names

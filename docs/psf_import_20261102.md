@@ -45,12 +45,12 @@ path照合は完全一致を優先し、ASCII大文字小文字のfallbackは曖
 - 実AU hostは22 PASS行、実VST3は44.1 /48 /96kHzの既存suiteと公式validator47 passed /0 failedが成功した。これは既存host機能の回帰検査で、DAW内file panelのPSF操作確認とは区別する。
 - Standalone実画面でDemo folderのMiniPSF＋階層PSFLib読込、PSF1/2 → 2/2、Builtin復帰で選択表示解除、Load soundからstandalone.psf直接読込を確認した。最後は検証アプリを終了した。
 
-自作fixtureのみを使用し、ゲーム素材は同梱していない。実聴・実DAW独自file panelでのPSF操作・実ゲームPSFの追試は未実施。
+自作fixtureのみを使用し、ゲーム素材は同梱していない。この実装段階では実聴・実DAW独自file panelでのPSF操作・実ゲームPSFの追試は未実施。後続の実DAW検証は末尾の記録を参照。
 実装source `d379b60c4c695c6bb1cfbb26c16c52e91ab2b34d`の[通常CI 41444849100](https://github.com/kyorohiro/tetorica-spu-plugin/actions/runs/41444849100)は全2jobs、[配布CI 41444848856](https://github.com/kyorohiro/tetorica-spu-plugin/actions/runs/41444848856)は全3jobs成功。Windows x64 VST3と同じMac候補のARM /Intel実AU /VST3検査を含む。
 [機械可読記録](psf_import_20261102.json)へlocal /CI /binary /fixture /画面と証跡hashを保存した。証跡は`build/psf-import-20261102/`。
 
 ## 再開点
 
 手元installed AU /GarageBand projectと公開v0.0.1 assetsは今回更新していない。
-次は既知manifest照合・退避付きのAU更新と、実DAWでPSF folderを読み込む操作確認。
+その後、既知manifest照合・退避付きのAU更新と、GarageBandでのfolder /Entry /Bank /Program /Tone、取消 /CRC失敗時保持、元PSFなしの保存再起動復元も完了した。[AU配置・実DAW検証記録](au_psf_update_20261103.md)を参照。
 新しい公開versionの作成は別段階とする。

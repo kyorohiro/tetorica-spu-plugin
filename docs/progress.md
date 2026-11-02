@@ -1,11 +1,12 @@
 # 作業記録
 
-## 2026-11-03 JST — PSF版installed AUへ更新・GarageBand検証中
+## 2026-11-03 JST — PSF版installed AU更新・GarageBand folder /保存再起動検証完了
 
 - 作業前TODO `211e9ac`。旧AU全5filesをReady版manifestと照合し、GarageBandを正常終了して退避付きでPSF実装`d379b60`へ更新した。旧AU2copyを保持し、新AUはbuild元 /installed /journal一致、auval成功・実AU host22 PASS。
 - 既知PCM検証projectを全7files照合付きで2copy保持し、今回専用copyの実URL /AU画面でEmbedded PCM cycle /Gain380% /Project sound restoredを確認した。再起動時に自動表示された既知automation copyも、切替前に全11files退避して保存した。
-- 人のPSF folder選択後、実AUでPSF1/2 /Embedded VAB /P3/T0 /Loadedを確認。保存Bank1の全3744bytesも期待値と一致した。Entry /Bank /Program /Toneの選択を人へ依頼中で、取消 /error保持・元PSF一式なしの保存再起動復元は未完了。
-- [配置・checkpoint・再開記録](au_psf_update_20261103.md) /[次回更新用installed AU manifest](au_psf_update_20261103.json)。公開済みv0.0.1 tag /assetsは変更していない。
+- 人のPSF folder選択後、実AUでPSF1/2 /Embedded VAB /P3/T0 /Loadedを確認。保存Bank1の全3744bytesも期待値と一致した。Entry /Bank2 /Program11→3 /Tone1も人の操作後、実画面と保存Bank2完全一致を確認。取消 /CRC error時も音色と全payloadを保持した。
+- 正常終了・process不在確認後、作業PSF一式を別pathへ退避。同じ専用projectを元PSFなしで再起動し、実URL /AU画面 /再保存payloadでBank2 /P3/T1 /Gain380%を復元した。Bank2保存から再起動再保存まで5段階でpayload4776bytesのSHAが完全一致。
+- 最後はmaster+0.0dB /tempo120 /再生・録音・cycle Off、AU editorを表示。[配置・結果・再開記録](au_psf_update_20261103.md) /[次回更新用installed AU manifest・証跡](au_psf_update_20261103.json)。公開済みv0.0.1 tag /assetsは変更していない。実ゲームPSF・実聴・長時間とPSF版公開は別段階。
 
 ## 2026-11-03 JST — PSF1 /MiniPSF folder import・静的VAB抽出、実装・CI完了
 

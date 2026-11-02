@@ -1,6 +1,6 @@
 {
   "date_jst": "2026-11-03",
-  "status": "installed_verified; GarageBand PSF folder Bank1 verified; remaining selections and reopen pending",
+  "status": "complete: PSF development AU installed; GarageBand folder/selection/cancel/error/source-free save-reopen verified",
   "source_commit": "d379b60c4c695c6bb1cfbb26c16c52e91ab2b34d",
   "todo_commit": "211e9ac",
   "au": {
@@ -30,7 +30,8 @@
     "old_au_two_backups_match": true,
     "auval": "succeeded",
     "au_host_pass_lines_including_summary": 22,
-    "psf_file_panel_proven_by_host_validation": false
+    "psf_file_panel_proven_by_host_validation": false,
+    "garageband_version": "10.4.12"
   },
   "project": {
     "source": "/Users/kyorohiro/development8/wfm/hello_ymfm/w/tetorica-spu-plugin/build/au-gain380-update-tqa8b91a/spu-gain380-restore-check.band",
@@ -57,9 +58,9 @@
     },
     "master_original_normalized": 0.7119110226631165,
     "master_during_checks_normalized": 0,
-    "master_final_restored": false,
+    "master_final_restored": true,
     "psf_folder_ui": true,
-    "save_reopen_without_psf_source": false,
+    "save_reopen_without_psf_source": true,
     "folder_first_bank": {
       "schema": 11,
       "kind": "VAB",
@@ -79,6 +80,85 @@
         "tone": 0,
         "status": "Loaded. Play MIDI or the keyboard."
       }
+    },
+    "selection_checks": {
+      "entry": "standalone.psf",
+      "bank": 2,
+      "entry_and_bank_selected_by_user": true,
+      "program_11_resets_tone_0_user_confirmed": true,
+      "final_program": 3,
+      "final_tone": 1,
+      "final_ui_label": "PSF 2/2",
+      "final_source": "Embedded VAB",
+      "final_status": "Loaded. Play MIDI or the keyboard.",
+      "final_ui_observed": true
+    },
+    "bank2_saved": {
+      "schema": 11,
+      "kind": "VAB",
+      "program": 3,
+      "tone": 1,
+      "gain_percent": 100.0,
+      "gain_boost": 3.8,
+      "effective_gain_percent": 380.0,
+      "bank_bytes": 3744,
+      "bank_sha256": "a85c06db6b608b6943040b86cff9a5af5902f489ef0e73abb9eba2d38497a42d",
+      "payload_bytes": 4776,
+      "payload_sha256": "b73bc5d594050a9b59b34985f3a6230dcd94183920962eb53ef4b3e41239c09d"
+    },
+    "cancel_ui": {
+      "observed": true,
+      "label": "PSF 2/2",
+      "program": 3,
+      "tone": 1,
+      "gain_percent": 380,
+      "status": "PSF folder selection cancelled. Previous sound kept."
+    },
+    "master_final_normalized": 0.7119110226631165,
+    "final_transport": {
+      "playing": false,
+      "recording": false,
+      "cycle": false,
+      "tempo": 120,
+      "master_db": 0.0
+    },
+    "crc_error_ui": {
+      "observed": true,
+      "label": "PSF 2/2",
+      "program": 3,
+      "tone": 1,
+      "gain_percent": 380,
+      "status": "PSF load failed: PSF: compressed program CRC-32 mismatch. Previous sound kept."
+    },
+    "cancel_error_payload_identical": true,
+    "source_free_restore": {
+      "host_exited_normally": true,
+      "host_process_absent_checked": true,
+      "selected_psf_root_absent_during_restore_and_save": true,
+      "selected_root": "build/psf-au-update-20261103/psf-demo-source",
+      "held_root": "build/psf-au-update-20261103/psf-demo-source-held",
+      "all_5_saved_payload_stages_identical": true,
+      "payload_bytes": 4776,
+      "payload_sha256": "b73bc5d594050a9b59b34985f3a6230dcd94183920962eb53ef4b3e41239c09d",
+      "bank_bytes": 3744,
+      "bank_sha256": "a85c06db6b608b6943040b86cff9a5af5902f489ef0e73abb9eba2d38497a42d",
+      "program": 3,
+      "tone": 1,
+      "gain_percent": 100,
+      "gain_boost": 3.8,
+      "effective_gain_percent": 380,
+      "reopened_ui": {
+        "label": "PSF...",
+        "source": "Embedded VAB",
+        "status": "Project sound restored.",
+        "program": 3,
+        "tone": 1,
+        "gain_percent": 380
+      },
+      "catalog_saved": false,
+      "actual_project_url_and_au_ui_observed": true,
+      "inspector_alone_proves_active_track": false,
+      "final_editor_left_open": true
     }
   },
   "test_inputs": {
@@ -96,15 +176,14 @@
         "sha256": "a85c06db6b608b6943040b86cff9a5af5902f489ef0e73abb9eba2d38497a42d"
       }
     ],
-    "original_fixtures_modified": false
+    "original_fixtures_modified": false,
+    "folder_current_location": "build/psf-au-update-20261103/psf-demo-source-held"
   },
   "not_verified": [
-    "GarageBand PSF Entry / Bank / Program / Tone selection",
-    "GarageBand cancel/error preserves source",
-    "GarageBand PSF embedded VAB save/reopen without source files",
     "actual listening",
     "real-game PSF",
-    "long-duration operation"
+    "long-duration operation",
+    "new Preview release including PSF"
   ],
   "public_release_changed": false,
   "evidence": {
@@ -155,6 +234,75 @@
     "build/psf-au-update-20261103/psf-folder-bank1-loaded.png": {
       "bytes": 205562,
       "sha256": "f9eaa01bf8bcfcb4bf04c29b8db2c37199218c5d872e6ca34899fd3bdd540311"
+    },
+    "build/psf-au-update-20261103/bank2-saved-state.json": {
+      "bytes": 3423,
+      "sha256": "d5335df90d29119b7561b99dbbd32d42299e68ac46da7cb85266ab4345fed226"
+    },
+    "build/psf-au-update-20261103/bank2-project-backup.json": {
+      "bytes": 1415,
+      "sha256": "3cdb036108f6f098b35cbbfe1ed9baf8fb2371e9ca7c5a07dea19f7ad14ff132"
+    },
+    "build/psf-au-update-20261103/psf-bank2-tone1-loaded.png": {
+      "bytes": 204372,
+      "sha256": "7aea307483981d2f383b8bd4bb5259f67022cf785375da534243c0692bc34e62"
+    },
+    "build/psf-au-update-20261103/bank2-saved-main-ax.txt": {
+      "bytes": 21105,
+      "sha256": "bd803545abff595bfe7eff2e0ff967c1ca6dfcbc50c0ab42810663c7af2d3e11"
+    },
+    "build/psf-au-update-20261103/psf-folder-cancel-preserved.png": {
+      "bytes": 206868,
+      "sha256": "50fd99d47cda09f157c5a22ad5a6e7d0f10398fafc961080acf8182eff853e4c"
+    },
+    "build/psf-au-update-20261103/psf-crc-error-preserved.png": {
+      "bytes": 211867,
+      "sha256": "9c1f707734367826bbb759632510eedb7eaa0b7828dc78f3a74bd534d2d9fb20"
+    },
+    "build/psf-au-update-20261103/after-cancel-error-state.json": {
+      "bytes": 3423,
+      "sha256": "8c5b2e8b0c822db324580da6ccba010702e75dc45f65267f8708d37750365aef"
+    },
+    "build/psf-au-update-20261103/before-quit-main-ax.txt": {
+      "bytes": 21141,
+      "sha256": "cc6b767adfc5299e8d3bad0cfbd786d8aa7b04937f0f37381a5086719d80f043"
+    },
+    "build/psf-au-update-20261103/before-quit-state.json": {
+      "bytes": 3423,
+      "sha256": "2f3dc296752c26ff9eaa102ff506be5b20a8d8191f0507bb0802549cb498bf93"
+    },
+    "build/psf-au-update-20261103/before-restart-project-backup.json": {
+      "bytes": 905,
+      "sha256": "caab3c119e59276fcbc6fa7d534247cd4d46efda833e89c83bd067c37a18c909"
+    },
+    "build/psf-au-update-20261103/after-exit-state.json": {
+      "bytes": 3423,
+      "sha256": "2f3dc296752c26ff9eaa102ff506be5b20a8d8191f0507bb0802549cb498bf93"
+    },
+    "build/psf-au-update-20261103/psf-source-retired.json": {
+      "bytes": 1352,
+      "sha256": "8ad8869122ea2cb60eae69a5900ac4a938bbc38d298babcd01e1fe834279d719"
+    },
+    "build/psf-au-update-20261103/reopened-main-ax.txt": {
+      "bytes": 21141,
+      "sha256": "cc6b767adfc5299e8d3bad0cfbd786d8aa7b04937f0f37381a5086719d80f043"
+    },
+    "build/psf-au-update-20261103/psf-source-free-restored.png": {
+      "bytes": 203173,
+      "sha256": "d0e72d0eb65d7076149a57abf746a6853c51825735a3a1475846c3d39ca57b21"
+    },
+    "build/psf-au-update-20261103/final-main-ax.txt": {
+      "bytes": 21141,
+      "sha256": "cc6b767adfc5299e8d3bad0cfbd786d8aa7b04937f0f37381a5086719d80f043"
+    },
+    "build/psf-au-update-20261103/reopened-saved-state.json": {
+      "bytes": 3423,
+      "sha256": "cea2aa7f9294792c2b28ead140f9c5f61787cb1cb75954b07157488e7d8a7df1"
+    },
+    "build/psf-au-update-20261103/source-free-restore-comparison.json": {
+      "bytes": 2916,
+      "sha256": "bd753b66ba77c9bcb3cad20d402e46942b4c43a0e9ca809142cb1fd0e0e81774"
     }
-  }
+  },
+  "checkpoint_commit": "f075f27"
 }

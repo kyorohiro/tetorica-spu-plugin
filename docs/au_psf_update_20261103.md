@@ -1,7 +1,7 @@
 # PSF版AU配置・GarageBand検証（2026-11-03 JST）
 
 PSF実装`d379b60c4c695c6bb1cfbb26c16c52e91ab2b34d`のAUへ、既知manifest照合と退避付きで更新した。作業前TODOは`211e9ac`。
-version0.0.1 /state schema11 /parameter27個は維持している。公開済みv0.0.1のtag /assetsは変更しない。
+version0.0.1 /state schema11 /parameter27個は維持した。公開済みv0.0.1のtag /assetsは変更していない。
 
 ## 配置と回帰検証
 
@@ -30,24 +30,45 @@ python3 scripts/install_au.py --rollback build/au-backups/au-update-23f4rvfb/man
 
 専用projectの実URLとAU画面で、Embedded PCM cycle /Gain380% orange /Project sound restoredを確認した。
 Morph /Reverb /Noise /PMONはOff。操作時はDAW masterを一時的に0へ設定し、実聴の検証とは扱わない。
-終了時はmaster+0.0dB /再生・録音・cycle Offへ戻す。
+最後はmaster+0.0dB /tempo120 /再生・録音・cycle Offへ戻して保存し、再起動後も同じ状態を実画面で確認した。
 
-## 現在のcheckpoint
+## PSF folder・選択・失敗時の保持
 
 人のfolder選択後、実AU画面でPSF 1/2 /Embedded VAB /Program3 /Tone0 /Loadedを確認した。
 専用projectへ保存し、schema11のVAB全3744bytesが期待するBank1と完全一致、Gain100×Boost3.8、各FX Offも確認した。
 保存payloadは4776bytes /SHA256 `b33234398dab0d6260dc15882f5a0f37822da5c42e5972c0f3b150b65de162ab`。
-AU独自UIへのAIクリックではmenuが開かず、Entry /Bank /Program /Toneの選択を人へ依頼中。
-取消 /不正file時の保持、PSF元fileなしの保存再起動復元はまだ完了していない。
+人のEntry → standalone.psf /Bank2 /Program11 → 3 /Tone1の操作後、実画面でPSF2/2 /P3/T1 /Loadedを確認した。
+Program11ではTone0になることも人が確認した。Bank2の全3744bytes、P3/T1 /Gain380%が保存payloadと一致した。
+Bank2保存payloadは4776bytes /SHA256 `b73bc5d594050a9b59b34985f3a6230dcd94183920962eb53ef4b3e41239c09d`。
+キャンセル後はPSF2/2 /P3/T1を保持し、`PSF folder selection cancelled. Previous sound kept.`の実画面を確認した。
+不正CRCのfolderを選ぶと、`PSF load failed: PSF: compressed program CRC-32 mismatch. Previous sound kept.`を表示した。
+PSF2/2 /P3/T1 /Gain380%を保持し、取消・error前後の保存payload全4776bytesが完全一致した。
+AU独自UIへのAIクリックではmenuが開かないため、上記menu /folder操作は人が行い、画面取得・保存・byte比較はAIが行った。
 
-自作demoを`build/psf-au-update-20261103/psf-demo-source`へ複製し、原fixturesを保護して使う。
-階層PSFLibを含む`Demo/track.minipsf`と`standalone.psf`から2banksを抽出する。
+自作demoを`build/psf-au-update-20261103/psf-demo-source`へ複製し、原fixturesを保護して使った。
+階層PSFLibを含む`Demo/track.minipsf`と`standalone.psf`から2banksを抽出した。
 Bank1 /id23とBank2 /id24はそれぞれ3744bytes。音声データは同一で、VAB idだけが異なる。
 
 - Bank1 SHA256: `71a7de205c0ebe1b8743288d90cd3b0204da9bd81aed9159af31f404d7cf2be6`
 - Bank2 SHA256: `a85c06db6b608b6943040b86cff9a5af5902f489ef0e73abb9eba2d38497a42d`
 
-保存後の検証では実URL /AU画面とread-only state inspectorを併用する。
-inspectorだけでactive trackを証明しない。元PSF一式を退避しても選択VAB /Program /Toneが復元できるかを確認する。
+## 元PSFなしの保存・正常終了・再起動復元
+
+保存した専用projectの全7filesを`build/psf-au-update-20261103/before-restart.band`へ退避・照合してから正常終了した。
+実GarageBand processが不在であることを確認し、作業用PSF一式の4filesを`psf-demo-source-held`へ移した。
+元の選択pathが存在しない状態でGarageBandを再起動し、同じ専用projectの実URLを確認した。
+
+AU画面はEmbedded VAB /Program3 /Tone1 /Gain380% orange /Project sound restoredを表示した。
+folderを再選択せず再保存し、Bank2選択後・取消とerror後・終了前・完全終了後・再起動再保存後の5段階すべてで
+payload SHA256 `b73bc5d594050a9b59b34985f3a6230dcd94183920962eb53ef4b3e41239c09d`とBank2全bytesが一致した。
+実URL /AU画面とread-only state inspectorを併用し、inspectorだけでactive trackを証明していない。
+
 catalog自体は保存しない仕様なので、再起動後のPSFボタンが`PSF...`になるのは正常。
-実ゲームPSF・実聴・長時間動作・新version公開は別段階とする。
+最後はこの専用projectのAU editorを表示し、再生・録音・cycleを停止して残した。
+最終projectの全11filesも`build/psf-au-update-20261103/source-free-restored.band`へ照合付きで複製した。
+元PCM検証projectと原PSF fixturesは保持している。作業用PSF一式は`build/psf-au-update-20261103/psf-demo-source-held`に残す。
+
+## 残る確認
+
+GarageBand10.4.12で、自作demoのPSF folder /Entry /Bank /Program /Tone、取消・CRC失敗時の保持、元PSFなしの復元を確認した。
+実ゲームPSF・実聴・長時間動作、新version公開は別段階とする。今回buildや音源処理の修正は行っていない。
