@@ -17,8 +17,9 @@ inline void requireGain(bool condition,const char* message) {
   if(!condition)throw std::runtime_error(message);
 }
 
-// Independent mathematical oracle: the target is sampled at a host block
-// boundary, then each rendered output sample advances a fixed five-ms line.
+// Independent mathematical oracle: after a target event each rendered output
+// sample advances a fixed five-ms line. This suite authors its events at zero;
+// continuous-automation-checks.h covers in-block and carried event offsets.
 // Re-authoring the same target must not restart that line.
 struct Line {
   explicit Line(double rate):length(static_cast<int>(std::ceil(rate*.005))) {}
@@ -175,6 +176,6 @@ template<class Factory> void checkGainSmoothing(Factory make,double rate,const c
     <<" sampleCountAcrossBlocks=true MIDISplits=true stateSavesTarget=true"
     <<" firstRestoreSnap=true failedRestoreKeepsRamp=true separateInstances=true"
     <<" resetFirstSnap=true reactivateFirstSnap=true bypassFirstSnap=true"
-    <<" automationTargetsBlockBased=true\n";
+    <<" zeroOffsetTargets=true\n";
 }
 } // namespace tetorica::test

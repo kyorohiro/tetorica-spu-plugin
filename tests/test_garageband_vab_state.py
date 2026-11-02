@@ -27,10 +27,10 @@ def software(pcm=b'\x00\x80\xff\xff\x00\x00\xff\x7f', name=b'Software source', l
     return source_header(len(pcm) // 2, name, 2 | bool(loop)) + pcm + name
 
 
-def state(schema=9, kind=4, source=None, program=0, tone=0, gain=37.):
+def state(schema=9, kind=4, source=None, program=0, tone=0, gain=37., boost=1.):
     if source is None:
         source = software() if kind == 4 else b''
-    fixed = {1: 40, 2: 48, 3: 72, 4: 72, 5: 80, 6: 112, 7: 1024, 8: 1024, 9: 1024, 10: 1024}[schema]
+    fixed = {1: 40, 2: 48, 3: 72, 4: 72, 5: 80, 6: 112, 7: 1024, 8: 1024, 9: 1024, 10: 1024, 11: 1032}[schema]
     result = bytearray(fixed + len(source))
     result[:8] = b'TSPUST01'
     struct.pack_into('<6I', result, 8, schema, len(result), kind, program, tone, len(source))
@@ -47,6 +47,8 @@ def state(schema=9, kind=4, source=None, program=0, tone=0, gain=37.):
         struct.pack_into('<2I3d', result, 80 + n, 0, 0, 1., .5, 500.)
     if schema >= 7:
         struct.pack_into('<2Id', result, 112 + n, 0, 0, .375)
+    if schema >= 11:
+        struct.pack_into('<d', result, 1024 + n, boost)
     return bytes(result)
 
 
@@ -137,6 +139,32 @@ class GarageBandStateTests(unittest.TestCase):
         software_state, _ = INSPECT.decode_payload(state(10, 4))
         self.assertEqual(software_state['kind'], 'SoftwarePcm')
 
+    def test_schema11_gain_boost_and_legacy_unity_migration(self):
+        for kind, source in ((0, b''), (1, b'pBAVfixture'), (2, bytes(448)),
+                             (4, software()), (5, b'')):
+            for gain, boost in ((0., 3.8), (37.5, 2.5), (100., 3.8), (50., 1.)):
+                with self.subTest(kind=kind, gain=gain, boost=boost):
+                    payload = state(11, kind, source, gain=gain, boost=boost)
+                    fields, _ = INSPECT.decode_payload(payload)
+                    self.assertEqual(fields['payload_bytes'], 1032 + len(source))
+                    self.assertEqual((fields['gain_percent'], fields['gain_boost'],
+                                      fields['effective_gain_percent']),
+                                     (gain, boost, gain * boost))
+        for schema in range(1, 11):
+            fields, _ = INSPECT.decode_payload(state(schema, 0, gain=37.5))
+            self.assertEqual((fields['gain_percent'], fields['gain_boost'],
+                              fields['effective_gain_percent']), (37.5, 1., 37.5))
+        legacy, _ = INSPECT.decode_payload(struct.pack('<d', 99.))
+        self.assertEqual((legacy['gain_boost'], legacy['effective_gain_percent']), (1., 99.))
+        for invalid in (0., -.1, .999999, 3.800001, float('nan'), float('inf')):
+            with self.subTest(invalid=invalid), self.assertRaises(ValueError):
+                INSPECT.decode_payload(state(11, 0, boost=invalid))
+        good = state(11, 0, gain=100., boost=3.8)
+        with self.assertRaises(ValueError):
+            INSPECT.decode_payload(change(good[:-8], 12, len(good) - 8))
+        with self.assertRaises(ValueError):
+            INSPECT.decode_payload(change(good, 8, 10))
+
     def test_bad_lengths_flags_metadata_and_loop_minimum(self):
         good = state()
         for offset in (12, 20, 24, 28, 32, 40, 44, 80):
@@ -167,7 +195,7 @@ class GarageBandStateTests(unittest.TestCase):
         # Exercise the full32MiB cap and its roughly44.8MB base64 XML fragment.
         # No Python list/tuple with millions of samples is ever constructed.
         pcm = b'\x00\x80\xff\x7f' * (INSPECT.MAX_SOFTWARE_PCM // 4)
-        payload = state(source=software(pcm, b'x' * 320))
+        payload = state(11, source=software(pcm, b'x' * 320), gain=100., boost=3.8)
         self.assertEqual(len(payload), INSPECT.MAX_STATE)
         fields, _ = INSPECT.decode_payload(payload)
         self.assertEqual(fields['software_pcm_sample']['pcm_frames'], INSPECT.MAX_SOFTWARE_FRAMES)
@@ -204,6 +232,19 @@ class GarageBandStateTests(unittest.TestCase):
         self.assertEqual(report['mode'], 'expected-vab')
         self.assertEqual(report['expected_candidate_indices'], [0])
         self.assertFalse(report['active_selection_proven'])
+
+    def test_expected_vab_requires_the_exact_gain_tuple(self):
+        bank = b'pBAVoriginal-bank'
+        payload = state(11, 1, bank, 3, 1, 100., 3.8)
+        xml = plistlib.dumps(dict(INSPECT.IDENTITY, version=0x100, name='TetoricaSPU', data=payload))
+        with tempfile.TemporaryDirectory() as directory:
+            project, expected = Path(directory) / 'ProjectData', Path(directory) / 'expected.vab'
+            project.write_bytes(xml)
+            expected.write_bytes(bank)
+            arguments = ['check_garageband_vab_state.py', str(project), '--expected-vab', str(expected), '--gain', '100']
+            for extra, status in (([], 1), (['--gain-boost', '3.8'], 0)):
+                with mock.patch('sys.argv', arguments + extra), contextlib.redirect_stdout(io.StringIO()):
+                    self.assertEqual(INSPECT.main(), status)
 
 
 if __name__ == '__main__':

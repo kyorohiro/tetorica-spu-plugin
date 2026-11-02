@@ -4,6 +4,7 @@
 #include "SpuEngineExchange.h"
 #include "VabLoader.h"
 #include "SpuBuiltin.h"
+#include "GainSmoother.h"
 #include <algorithm>
 #include <array>
 #include <atomic>
@@ -68,7 +69,7 @@ std::size_t bankLength(const Bytes& bytes){
   std::uint32_t result=0;for(unsigned i=0;i<4;++i)result|=std::uint32_t(bytes.at(28+i))<<(i*8);return result;
 }
 Bytes oldSchema(Bytes bytes,unsigned version){
-  bytes.resize(bankLength(bytes)+(version==1?40:version==2?48:version<=4?72:version==5?80:version==6?112:kStateFixedBytes));word(bytes,8,version);
+  bytes.resize(bankLength(bytes)+(version==1?40:version==2?48:version<=4?72:version==5?80:version==6?112:version<=10?1024:kStateFixedBytes));word(bytes,8,version);
   word(bytes,12,static_cast<std::uint32_t>(bytes.size()));return bytes;
 }
 struct Stereo{std::vector<float> left,right;explicit Stereo(std::size_t n):left(n),right(n){}};
@@ -81,8 +82,8 @@ void codec(){
   const auto builtin=Def::builtin();
   CHECK(builtin->kind()==Def::Kind::Builtin&&builtin->bankBytes().empty()&&builtin->program()==0&&builtin->tone()==0);
   const auto encoded=encodeState(builtin,37.5);
-  CHECK(encoded.size()==1024&&std::equal(kStateMagic.begin(),kStateMagic.end(),encoded.begin()));
-  CHECK(encoded[8]==kStateSchemaVersion&&encoded[12]==0&&encoded[13]==4&&encoded[16]==0);
+  CHECK(encoded.size()==kStateFixedBytes&&std::equal(kStateMagic.begin(),kStateMagic.end(),encoded.begin()));
+  CHECK(encoded[8]==kStateSchemaVersion&&encoded[12]==8&&encoded[13]==4&&encoded[16]==0);
   CHECK(encoded[37]==0xc0&&encoded[38]==0x42&&encoded[39]==0x40); //LE binary64 37.5.
   auto restored=decode(encoded);CHECK(restored.gainPercent==37.5&&restored.definition==builtin);
   CHECK(sameEnvelope(restored.envelope,{})&&sameReverb(restored.reverb,{}));
@@ -103,7 +104,7 @@ void codec(){
   for(unsigned flags=0;flags<4;++flags){
     EnvelopeSettings settings{{0xa937,0xd7bb},bool(flags&1),bool(flags&2)};
     const auto wire=encodeState(selected,37,settings);const auto read=decode(wire);
-    CHECK(wire.size()==original.size()+1024&&sameEnvelope(settings,read.envelope));
+    CHECK(wire.size()==original.size()+kStateFixedBytes&&sameEnvelope(settings,read.envelope));
     CHECK(encodeState(read.definition,read.gainPercent,read.envelope)==wire);
     CHECK(read.definition->bankBytes()==original);
     // v1 has no authored override; migration must never infer custom values
@@ -145,6 +146,62 @@ void codec(){
   for(double value:{-1.,101.,std::numeric_limits<double>::infinity(),std::numeric_limits<double>::quiet_NaN()})
     rejects([&]{encodeState(builtin,value);});
 }
+void extendedGainState(){
+  const EnvelopeSettings env{{0xa937,0xd7bb},true,false};
+  const ReverbSettings fx{ReverbPreset::Hall,true,true,.375,.625};
+  const NoiseSettings noise{true,37};
+  const PmonSettings pmon{true,WaveformShape::Square,2.5,.375,1250};
+  const MorphSettings morph{true,.625};
+  MorphEndpoints endpoints;endpoints.a[17]=-.1234567f;endpoints.b[31]=.3456789f;
+  for(const auto& source:{Def::builtin(),Def::builtinWide(),Def::fromVab(fixture(),3,1),
+                         Def::fromPcmCycle(makePcmCycle(WaveformShape::Triangle))}) {
+    const auto definition=Def::withMorphEndpoints(source,endpoints);
+    for(double base:{0.,37.5,100.})for(double boost:{1.,1.001,2.5,3.8}) {
+      const auto wire=encodeState(definition,base,env,fx,noise,pmon,morph,boost);
+      const auto read=decode(wire);
+      CHECK(read.gainPercent==base&&read.gainBoost==boost);
+      CHECK(tetorica::effectiveAudioGain(read.gainPercent,read.gainBoost)==
+            tetorica::effectiveAudioGain(base,boost));
+      CHECK(sameEnvelope(read.envelope,env)&&sameReverb(read.reverb,fx)&&
+            samePmon(read.pmon,pmon)&&read.noise.enabled&&read.noise.clock==37&&
+            read.morph.enabled&&read.morph.amount==morph.amount);
+      CHECK(sameMorphEndpoints(read.definition->morphEndpoints(),endpoints)&&
+            read.definition->bankBytes()==definition->bankBytes());
+      CHECK(encodeState(read.definition,read.gainPercent,read.envelope,read.reverb,
+                        read.noise,read.pmon,read.morph,read.gainBoost)==wire);
+      const auto n=bankLength(wire);
+      if(boost==3.8)CHECK(wire[n+1024]==0x66&&wire[n+1030]==0x0e&&wire[n+1031]==0x40);
+      // Historical chunks retain the original base value, never an inferred
+      // product. An old 50% project must not silently become 190% on migration.
+      for(unsigned version=1;version<=10;++version) {
+        if(source->kind()==Def::Kind::BuiltinSineWide&&version<10)continue;
+        if(source->kind()==Def::Kind::PcmCycle&&version<4)continue;
+        const auto old=decode(oldSchema(wire,version));
+        CHECK(old.gainPercent==base&&old.gainBoost==1.);
+        CHECK(tetorica::effectiveAudioGain(old.gainPercent,old.gainBoost)==base/100.);
+      }
+    }
+  }
+  const auto definition=Def::builtin();
+  const auto good=encodeState(definition,100,{}, {},{}, {},{},3.8);
+  for(double invalid:{0.,-1.,std::nextafter(1.,0.),std::nextafter(3.8,4.),
+                      std::numeric_limits<double>::quiet_NaN(),
+                      std::numeric_limits<double>::infinity()}) {
+    rejects([&]{encodeState(definition,100,{}, {},{}, {},{},invalid);});
+    auto state=decode(good);state.gainBoost=invalid;
+    rejects([&]{validateSavedInstrumentState(state);});
+  }
+  for(auto bits:{0ull,0x3fefffffffffffffull,0x400e666666666667ull,
+                 0x7ff0000000000000ull,0x7ff8000000000000ull,0xbff0000000000000ull}) {
+    auto bad=good;
+    for(unsigned i=0;i<8;++i)bad[1024+i]=static_cast<std::uint8_t>(bits>>(i*8));
+    rejects([&]{decode(bad);});
+  }
+  auto truncated=good;truncated.resize(1024);word(truncated,12,1024);
+  rejects([&]{decode(truncated);}); // schema11 requires its boost field.
+  auto old=oldSchema(good,10);old.insert(old.end(),8,0);word(old,12,1032);
+  rejects([&]{decode(old);}); // schema10 cannot borrow schema11's extension.
+}
 void malformed(){
   const auto good=encodeState(Def::fromVab(fixture(),3,0),25.);
   for(std::size_t n=0;n<1024;++n)rejects([&]{decodeState({good.data(),n});});
@@ -185,7 +242,7 @@ void builtinWideCompatibility(){
   CHECK(wide!=legacy&&wide==Def::builtinWide()&&wide->kind()==Def::Kind::BuiltinSineWide);
   CHECK(wide->bankBytes().empty()&&wide->program()==0&&wide->tone()==0);
   const auto wire=encodeState(wide,37);
-  CHECK(wire.size()==kStateFixedBytes&&wire[8]==10&&wire[16]==5&&bankLength(wire)==0);
+  CHECK(wire.size()==kStateFixedBytes&&wire[8]==kStateSchemaVersion&&wire[16]==5&&bankLength(wire)==0);
   CHECK(decode(wire).definition==wide&&encodeState(decode(wire).definition,37)==wire);
   CHECK(Def::withMorphEndpoints(wide,{})==wide);
   MorphEndpoints endpoints;endpoints.a[9]=-.12345f;endpoints.b[11]=.54321f;
@@ -232,13 +289,13 @@ void pcmCycles(){
     CHECK(definition->kind()==Def::Kind::PcmCycle&&definition->bankBytes().empty());
     CHECK(definition->program()==0&&definition->tone()==0&&definition->pcmCycle()==original);
     const auto wire=encodeState(definition,37,envelope,effects);const auto read=decode(wire);
-    CHECK(wire.size()==1472&&wire[8]==kStateSchemaVersion&&wire[16]==2&&bankLength(wire)==448);
+    CHECK(wire.size()==kStateFixedBytes+448&&wire[8]==kStateSchemaVersion&&wire[16]==2&&bankLength(wire)==448);
     CHECK(read.definition->pcmCycle()==original&&sameEnvelope(read.envelope,envelope)&&sameReverb(read.reverb,effects));
     CHECK(encodeState(read.definition,read.gainPercent,read.envelope,read.reverb)==wire);
     auto bad=wire;word(bad,8,3);rejects([&]{decode(bad);}); //Older versions do not know kind2.
     for(auto at:{20u,24u}){bad=wire;word(bad,at,1);rejects([&]{decode(bad);});}
     for(auto size:{0u,447u,449u}) {
-      bad=wire;bad.resize(size+1024);word(bad,28,size);word(bad,12,static_cast<std::uint32_t>(bad.size()));
+      bad=wire;bad.resize(size+kStateFixedBytes);word(bad,28,size);word(bad,12,static_cast<std::uint32_t>(bad.size()));
       rejects([&]{decode(bad);});
     }
     for(auto bits:{0x7f800000u,0x7fc00000u,0xbf800001u,0x3f800001u}) {
@@ -544,7 +601,7 @@ void concurrentSnapshots(){
 }
 }
 int main(){
-  codec();malformed();builtinWideCompatibility();pcmCycles();noiseSettings();pmonSettings();morphSettings();rawSources();immediateRestore();snapshotsAndAtomicFailure();
+  codec();extendedGainState();malformed();builtinWideCompatibility();pcmCycles();noiseSettings();pmonSettings();morphSettings();rawSources();immediateRestore();snapshotsAndAtomicFailure();
   callbackAndDefinitionLifetime();loaderMetadata();concurrentSnapshots();
   std::puts("PASS immutable VAB/PCM/rawADPCM current-state metadata/signedvolumes/tuning/source preservation; legacy schema migration; strict codec, immediate restore, snapshots, failure atomicity, RT lifetime and concurrent collection");
 }

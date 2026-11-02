@@ -37,7 +37,7 @@ template<class Factory> void checkMorph(Factory make,double rate,const char* hos
   const auto wire=encodeState(source,37,envelope,effects,noise,pmon,morph);
   auto state=make(),reference=make();
   requireMorph(state->tryStateRestoreForTest(wire)&&reference->tryStateRestoreForTest(wire),"Morph state restore failed");
-  requireMorph(state->stateBodyForTest()==wire,"Morph restore changed its full26-parameter tuple/endpoints");
+  requireMorph(state->stateBodyForTest()==wire,"Morph restore changed its full27-parameter tuple/endpoints");
   reverb_detail::exact(*state,*reference,events,"Morph settings/endpoints were not applied before first fresh NoteOn");
   requireMorph(maximum(state->right())>1e-4,"Restored PMON+Morph did not sound");
   for(int i=0;i<8;++i)reverb_detail::exact(*state,*reference,{},"Restored PMON+Morph PCM diverged");
@@ -179,7 +179,7 @@ template<class Factory> void checkMorph(Factory make,double rate,const char* hos
     reverb_detail::exact(*state,*reference,events,"Morph-off did not resume exact original Builtin/VAB/PCM source");
   }
   std::cout<<"PASS "<<host<<" Morph sampleRate="<<rate
-    <<" full26Params=true immutableAB=true firstRestoreBlock=true amountLive=true heldReleaseNoKON=true"
+    <<" full27Params=true immutableAB=true firstRestoreBlock=true amountLive=true heldReleaseNoKON=true"
     <<" AMidB=true PMONCombined=true noisePriority=true topologyPanic=true freshCarriedControllers=true"
     <<" malformedPendingActiveAtomic=true schema1To6Legacy=true originalSourceRestored=true\n";
 }

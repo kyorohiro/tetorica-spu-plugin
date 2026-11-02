@@ -675,15 +675,15 @@ void importedParameterPublication(const std::vector<std::uint8_t>&) {
   using Definition=tetorica::InstrumentDefinition;
   using State=tetorica::SavedInstrumentState;
   const auto encoded=[](const State& s) {
-    return tetorica::encodeState(s.definition,s.gainPercent,s.envelope,s.reverb,s.noise,s.pmon,s.morph);
+    return tetorica::encodeState(s.definition,s.gainPercent,s.envelope,s.reverb,s.noise,s.pmon,s.morph,s.gainBoost);
   };
   State first;
   first.definition=Definition::fromPcmCycle(tetorica::makePcmCycle(tetorica::WaveformShape::Triangle));
-  first.gainPercent=37;first.envelope={{0xa937,0xd7bb},false,false};
+  first.gainPercent=37;first.gainBoost=3.8;first.envelope={{0xa937,0xd7bb},false,false};
   first.reverb={tetorica::ReverbPreset::Room,false,true,.375,.625};
   first.noise={false,37};first.pmon={true,tetorica::WaveformShape::Saw,2.5,.375,1250};
   first.morph={true,.375};
-  auto second=first;second.gainPercent=19;second.morph.amount=.75;
+  auto second=first;second.gainPercent=19;second.gainBoost=1.25;second.morph.amount=.75;
   second.definition=Definition::fromPcmCycle(tetorica::makePcmCycle(tetorica::WaveformShape::Square));
   const auto firstBytes=encoded(first),secondBytes=encoded(second);
   Exchange exchange;
@@ -704,7 +704,7 @@ void importedParameterPublication(const std::vector<std::uint8_t>&) {
   auto missing=second;missing.definition.reset();rejected=false;
   try{exchange.commitPreparedImport(tetorica::prepareDefinition(*second.definition),missing);}catch(const std::invalid_argument&){rejected=true;}
   CHECK(rejected&&exchange.latestGeneration()==generation&&encoded(*exchange.snapshotAuthoring().importedState)==firstBytes);
-  for(unsigned field=0;field<6;++field) {
+  for(unsigned field=0;field<7;++field) {
     auto invalid=second;
     if(field==0)invalid.gainPercent=std::numeric_limits<double>::quiet_NaN();
     if(field==1)invalid.pmon.depth=std::numeric_limits<double>::quiet_NaN();
@@ -712,6 +712,7 @@ void importedParameterPublication(const std::vector<std::uint8_t>&) {
     if(field==3)invalid.morph.amount=std::numeric_limits<double>::infinity();
     if(field==4)invalid.noise.clock=64;
     if(field==5)invalid.envelope.custom.adsr2|=0x2000;
+    if(field==6)invalid.gainBoost=std::numeric_limits<double>::quiet_NaN();
     rejected=false;
     try{exchange.commitPreparedImport(tetorica::prepareDefinition(*second.definition),invalid);}
     catch(const std::exception&){rejected=true;}
@@ -721,7 +722,7 @@ void importedParameterPublication(const std::vector<std::uint8_t>&) {
   {
     RtProbe probe;CHECK(exchange.beginBlock(96000));
     const auto* adopted=exchange.adoptedImportState();
-    CHECK(adopted&&adopted->definition==first.definition&&adopted->gainPercent==37);
+    CHECK(adopted&&adopted->definition==first.definition&&adopted->gainPercent==37&&adopted->gainBoost==3.8);
     CHECK(adopted->envelope.custom.adsr1==0xa937&&adopted->envelope.custom.adsr2==0xd7bb);
     CHECK(adopted->reverb.volumeLeft==.375&&adopted->reverb.volumeRight==.625&&adopted->reverb.useToneSend);
     CHECK(adopted->noise.clock==37&&adopted->pmon.ratio==2.5&&adopted->pmon.depth==.375&&adopted->pmon.decayMs==1250);
@@ -736,7 +737,7 @@ void importedParameterPublication(const std::vector<std::uint8_t>&) {
   const auto replaced=exchange.commitPreparedImport(tetorica::prepareDefinition(*first.definition),first);
   const auto latest=exchange.commitPreparedImport(tetorica::prepareDefinition(*second.definition),second);
   CHECK(latest>replaced&&encoded(*exchange.snapshotAuthoring().importedState)==secondBytes);
-  {RtProbe probe;CHECK(exchange.beginBlock(48000));CHECK(exchange.adoptedImportState()->gainPercent==19);
+  {RtProbe probe;CHECK(exchange.beginBlock(48000));CHECK(exchange.adoptedImportState()->gainPercent==19&&exchange.adoptedImportState()->gainBoost==1.25);
     CHECK(exchange.adoptedImportState()->definition==second.definition);}
   // A rejected candidate falls back to the surviving imported active tuple.
   exchange.commitPreparedImport(tetorica::prepareDefinition(*first.definition),first);
@@ -759,7 +760,7 @@ void importedParameterPublication(const std::vector<std::uint8_t>&) {
     auto state=n%2?first:second;
     const auto next=exchange.commitPreparedImport(tetorica::prepareDefinition(*state.definition),state);
     CHECK(exchange.snapshotAuthoring().generation==next);
-    {RtProbe probe;CHECK(exchange.beginBlock(48000));CHECK(exchange.adoptedImportState()->gainPercent==state.gainPercent);
+    {RtProbe probe;CHECK(exchange.beginBlock(48000));CHECK(exchange.adoptedImportState()->gainPercent==state.gainPercent&&exchange.adoptedImportState()->gainBoost==state.gainBoost);
       Pcm out;exchange.instrument().noteOn(60,127);render(exchange.instrument(),out);}
   }
   exchange.collectRetired();

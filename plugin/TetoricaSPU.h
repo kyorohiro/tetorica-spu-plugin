@@ -13,6 +13,7 @@
 #include "WebInstrumentExporter.h"
 #include "AudioFileLoader.h"
 #include "GainSmoother.h"
+#include "ContinuousAutomation.h"
 #include "UiMidiQueue.h"
 #include <array>
 #include <atomic>
@@ -50,6 +51,7 @@ enum EParams
   kParamPmonDecay,
   kParamMorphEnabled,
   kParamMorphAmount,
+  kParamGainBoost,
   kNumParams
 };
 
@@ -110,7 +112,10 @@ enum ECtrlTags
   kCtrlKeyboardOctaveDown,
   kCtrlKeyboardOctaveRange,
   kCtrlKeyboardOctaveUp,
-  kCtrlKeyboardPitch
+  kCtrlKeyboardPitch,
+  kCtrlPcmAutoApply,
+  kCtrlPcmAutoInfo,
+  kCtrlTotalGain
 };
 
 class TetoricaSPU final : public iplug::Plugin
@@ -140,6 +145,9 @@ public:
     AudioUnitScope scope, AudioUnitElement element, void* data, UInt32* size);
   static OSStatus AuSetProperty(void* instance, AudioUnitPropertyID property,
     AudioUnitScope scope, AudioUnitElement element, const void* data, UInt32 size);
+  static OSStatus AuSetParameter(void* instance, AudioUnitParameterID parameter,
+    AudioUnitScope scope, AudioUnitElement element, AudioUnitParameterValue value, UInt32 offset);
+  static OSStatus AuScheduleParameters(void* instance, const AudioUnitParameterEvent* events, UInt32 count);
 #endif
 
 #if IPLUG_DSP
@@ -148,6 +156,7 @@ public:
   void SendMidiMsgFromUI(const iplug::IMidiMsg& msg) override;
   void OnReset() override;
   void OnActivate(bool active) override;
+  void OnParamChange(int parameter, iplug::EParamSource source, int sampleOffset = -1) override;
 
 private:
   // Host restore calls this only after a successful transactional commit.
@@ -203,6 +212,13 @@ private:
   void applyEnvelopeParameters() noexcept;
   void applyReverbParameters() noexcept;
   void applySourceParameters() noexcept;
+  static int continuousSlot(int parameter) noexcept;
+  tetorica::ContinuousAutomation::Values continuousTargets() const noexcept;
+  void resetAutomation() noexcept;
+  void applyContinuousParameters() noexcept;
+  void publishContinuousTarget(int parameter, double value) noexcept;
+  void scheduleAuContinuous(int parameter, int offset, double value,
+                            std::uint32_t duration = 0, double start = 0.) noexcept;
   tetorica::SavedInstrumentState captureSavedStateLocked() const;
   void applyImportedParameters(const tetorica::SavedInstrumentState& state) noexcept;
   void discardCarriedMidi() noexcept;
@@ -251,6 +267,11 @@ private:
   // restore/reset snaps on the first render; ordinary source swaps retain it.
   tetorica::AudioGainSmoother mGain;
   bool mGainNeedsReset = true;
+  tetorica::ContinuousAutomation mAutomation;
+  std::atomic<std::uint32_t> mAutomationUiDirty{0};
+  std::atomic_flag mAuAutomationIngress = ATOMIC_FLAG_INIT;
+  bool mBlockMorphEnabled = false;
+  tetorica::ReverbSettings mBlockReverb{};
   // Audio-thread-owned live MIDI state, separate from saved instrument state.
   // A UI bank/tone replacement inherits it; host restore/reset starts neutral.
   // Bend is stored as the signed displacement from raw MIDI center 8192.

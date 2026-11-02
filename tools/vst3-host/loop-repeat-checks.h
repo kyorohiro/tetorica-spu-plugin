@@ -32,7 +32,7 @@ template<class Factory>void checkLoopRepeats(Factory make,double rate,const char
     const auto original=web_detail::wire(state);auto a=make(),reference=make();
     requireLoop(a->tryStateRestoreForTest(original)&&reference->tryStateRestoreForTest(web_detail::wire(referenceState)),
       "Actual bundle rejected flag4-only or markerless flag0 repeat target");
-    requireLoop(a->stateBodyForTest()==original,"Loop restore/save rewrote original ADPCM flags or full26 settings");
+    requireLoop(a->stateBodyForTest()==original,"Loop restore/save rewrote original ADPCM flags or full27 settings");
     reverb_detail::exact(*a,*reference,{on(0,60,37)},"Original repeat flags changed first post-restore PCM");
     requireLoop(std::all_of(a->right().begin(),a->right().begin()+37,[](float x){return x==0;}),
       "Repeat fixture sounded before NoteOn offset");
@@ -61,7 +61,7 @@ template<class Factory>void checkLoopRepeats(Factory make,double rate,const char
   }
   std::cout<<"PASS "<<host<<" LoopRepeat sampleRate="<<rate
     <<" VABRaw4Cases=true marker4=true markerless0=true nonzeroRepeat=true originalBytes=true"
-    <<" full26Params=true firstRestoreBlock=true PCMExactToFlag6Or2=true continuesAfterEND=true"
+    <<" full27Params=true firstRestoreBlock=true PCMExactToFlag6Or2=true continuesAfterEND=true"
     <<" embeddedReopen=true WebOriginalFlags=true hostBankModeReturn=true\n";
 }
 } // namespace tetorica::test

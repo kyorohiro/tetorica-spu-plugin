@@ -35,7 +35,7 @@ template<class Factory> void checkPmon(Factory make,double rate,const char* host
   const auto wire=encodeState(pcm,37,envelope,effects,noise,authored);
   auto state=make(),reference=make();
   requirePmon(state->tryStateRestoreForTest(wire)&&reference->tryStateRestoreForTest(wire),"PMON state restore failed");
-  requirePmon(state->stateBodyForTest()==wire,"PMON restore changed the full twenty-four-parameter tuple");
+  requirePmon(state->stateBodyForTest()==wire,"PMON restore changed the full saved parameter tuple");
   reverb_detail::exact(*state,*reference,events,"PMON settings were not applied to the first post-restore NoteOn");
   requirePmon(maximum(state->right())>1e-4,"PMON first restored NoteOn produced no useful PCM");
   for(int i=0;i<8;++i)reverb_detail::exact(*state,*reference,{},"Restored PMON PCM diverged");
@@ -211,7 +211,7 @@ template<class Factory> void checkPmon(Factory make,double rate,const char* host
     encodeState(builtin,100,{}, {},{},neutral)),"Paired MIDI fixture rejected");return instance;
   },rate,"PMON paired MIDI");
   std::cout<<"PASS "<<host<<" PMON sampleRate="<<rate
-    <<" full24Params=true firstRestoreBlock=true depthZeroOriginal=true noRetrigger=true fourShapes=true"
+    <<" full27Params=true firstRestoreBlock=true depthZeroOriginal=true noRetrigger=true fourShapes=true"
     <<" waveformRatioDepthLive=true decayNextKey=true noisePriority=true bothRawFlagsSaved=true"
     <<" topologyPanic=true freshAndCarriedControllers=true malformedAtomic=true schema1To5Legacy=true pairedMIDI=true\n";
 }

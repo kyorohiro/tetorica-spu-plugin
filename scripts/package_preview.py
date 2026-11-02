@@ -69,7 +69,7 @@ def instructions(platform, version, commit):
     common = f"""Tetorica SPU Plugin {version} Preview ({commit[:12]})
 
 Development candidate, not an official release.
-DAW state saves use schema 10. Keep earlier project copies before testing;
+DAW state saves use schema 11. Keep earlier project copies before testing;
 older plugin builds cannot read new saves. Old sound sources retain their
 legacy playback when restored by this build.
 No game sample banks are included.

@@ -62,6 +62,31 @@ using tetorica::AudioGainSmoother;
 namespace {
 bool close(double actual, double expected) { return std::abs(actual - expected) < 2e-13; }
 
+void compatibleExtendedGain() {
+  using tetorica::effectiveAudioGain;
+  static_assert(noexcept(effectiveAudioGain(100., 3.8)));
+  for (double normalized : {0., .25, .5, .75, 1.})
+    CHECK(effectiveAudioGain(normalized * 100., 1.) == normalized);
+  CHECK(effectiveAudioGain(100., 3.8) == 3.8);
+  CHECK(effectiveAudioGain(50., 3.8) == 1.9);
+  CHECK(effectiveAudioGain(25., 2.) == .5);
+  CHECK(effectiveAudioGain(0., 3.8) == 0.);
+  CHECK(effectiveAudioGain(-0., 3.8) == 0. &&
+        !std::signbit(effectiveAudioGain(-0., 3.8)));
+  CHECK(effectiveAudioGain(1000., 1000.) == 3.8);
+  CHECK(effectiveAudioGain(50., -1.) == .5);
+  for (double invalid : {std::numeric_limits<double>::quiet_NaN(),
+                         std::numeric_limits<double>::infinity()}) {
+    CHECK(effectiveAudioGain(invalid, 1.) == 0.);
+    CHECK(effectiveAudioGain(100., invalid) == 0.);
+  }
+  AudioGainSmoother gain;
+  gain.reset(48000., effectiveAudioGain(100., 3.8));
+  CHECK(gain.next() == 3.8);
+  // The coefficient is an output multiplier, not a saturation threshold.
+  CHECK(.5 * gain.next() == 1.9 && -.25 * gain.next() == -.95);
+}
+
 void timingsAndExactEndpoints() {
   static_assert(noexcept(std::declval<AudioGainSmoother&>().reset(44100., 1.)));
   static_assert(noexcept(std::declval<AudioGainSmoother&>().setTarget(0.)));
@@ -72,7 +97,8 @@ void timingsAndExactEndpoints() {
     const auto rate = setting[0], frames = setting[1];
     CHECK(double(frames) / rate >= .005);
     CHECK(double(frames) / rate < .005 + 1. / rate);
-    for (const auto endpoints : {std::array<double, 2>{1., 0.}, {0., 1.}, {.37, .61}}) {
+    for (const auto endpoints : {std::array<double, 2>{1., 0.}, {0., 1.}, {.37, .61},
+                                {1., 3.8}, {3.8, 0.}, {2.5, 3.8}}) {
       AudioGainSmoother gain;
       gain.reset(rate, endpoints[0]);
       CHECK(gain.current() == endpoints[0] && gain.next() == endpoints[0]);
@@ -83,7 +109,7 @@ void timingsAndExactEndpoints() {
       for (unsigned n = 1; n <= frames; ++n) {
         const double value = gain.next();
         const double expected = endpoints[0] + (endpoints[1] - endpoints[0]) * n / frames;
-        CHECK(close(value, expected) && value >= 0. && value <= 1.);
+        CHECK(close(value, expected) && value >= 0. && value <= 3.8);
         CHECK(endpoints[1] > endpoints[0] ? value >= previous : value <= previous);
         CHECK(gain.rampRemaining() == frames - n);
         if (n < frames) CHECK(value != endpoints[1]);
@@ -168,10 +194,10 @@ void invalidValuesAndRates() {
     CHECK(gain.current() == 0. && gain.next() == 0.);
   }
   AudioGainSmoother clipped;
-  clipped.reset(48000., 100.); CHECK(clipped.current() == 1.);
-  clipped.reset(48000., 0.); clipped.setTarget(2.);
+  clipped.reset(48000., 100.); CHECK(clipped.current() == 3.8);
+  clipped.reset(48000., 0.); clipped.setTarget(3.8);
   for (int n = 0; n < 240; ++n) { clipped.setTarget(100.); clipped.next(); }
-  CHECK(clipped.current() == 1. && clipped.rampRemaining() == 0);
+  CHECK(clipped.current() == 3.8 && clipped.rampRemaining() == 0);
   for (double rate : {0., -1., nan, inf, -inf, std::numeric_limits<double>::max()}) {
     AudioGainSmoother gain;
     gain.reset(rate, 1.); gain.setTarget(0.);
@@ -212,6 +238,7 @@ void callbackMemory() {
 }
 
 int main() {
+  compatibleExtendedGain();
   timingsAndExactEndpoints();
   retargetSameTargetAndReset();
   partitionInvariance();

@@ -19,7 +19,7 @@ template<class Factory> void checkNoise(Factory make,double rate,const char* hos
   const auto wire=encodeState(pcm,37,envelope,effects,generator);
   auto state=make(),reference=make();
   requireNoise(state->tryStateRestoreForTest(wire)&&reference->tryStateRestoreForTest(wire),"Noise state restore failed");
-  requireNoise(state->stateBodyForTest()==wire,"Noise restore changed the nineteen-parameter tuple or retained PCM");
+  requireNoise(state->stateBodyForTest()==wire,"Noise restore changed the saved parameter tuple or retained PCM");
   reverb_detail::exact(*state,*reference,events,"First post-restore Noise PCM differs");
   requireNoise(maximum(state->right())>1e-4,"Noise first NoteOn produced no useful PCM");
   for(int i=0;i<16;++i)reverb_detail::exact(*state,*reference,{},"Restored Noise PCM diverged");
@@ -133,7 +133,7 @@ template<class Factory> void checkNoise(Factory make,double rate,const char* hos
     reverb_detail::exact(*state,*reference,events,"Noise-off failed to use its retained Builtin/VAB source");
   }
   std::cout<<"PASS "<<host<<" Noise sampleRate="<<rate
-    <<" full19Params=true firstRestoreBlock=true noNoteBendTracking=true clockLive=true sameClockNoop=true"
+    <<" full27Params=true firstRestoreBlock=true noNoteBendTracking=true clockLive=true sameClockNoop=true"
     <<" topologyPanic=true oldCarriedNotesCleared=true freshNotePreserved=true sourceRetained=true malformedAtomic=true schema1To4Legacy=true schema4PCMFX=true\n";
 }
 } // namespace tetorica::test

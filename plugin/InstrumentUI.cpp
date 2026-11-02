@@ -10,8 +10,10 @@
 #include "WaveformControl.h"
 #include "PcmDraftState.h"
 #include "MorphDraftState.h"
+#include "PcmApplyState.h"
 #include "KeyboardPerformanceState.h"
 #include "PitchWheelControl.h"
+#include "TotalGainControl.h"
 #include "AdpcmPlayback.h"
 #include <algorithm>
 #include <array>
@@ -319,6 +321,7 @@ struct TetoricaSPU::InstrumentUIState
   std::optional<bool> displayedMorph;
   tetorica::PcmDraftState pcmDraft;
   tetorica::MorphDraftState morphDraft;
+  tetorica::ui::PcmApplyState pcmApply;
   bool morphEditB = false;
   std::string status = "Play MIDI from your DAW or the keyboard.";
 };
@@ -426,8 +429,33 @@ void TetoricaSPU::initializeInstrumentUI()
           requestSelectionFromUI(source, revision, generation, source->program(), static_cast<std::uint32_t>(tone));
         };
       }), kCtrlTone);
-    graphics->AttachControl(new IVKnobControl(IRECT(576, 28, 696, 152),
-      kParamGain, "Gain"));
+    graphics->AttachControl(new SpuTotalGainControl(IRECT(576, 28, 696, 152),
+      [this] {
+        BeginInformHostOfParamChangeFromUI(kParamGain);
+        BeginInformHostOfParamChangeFromUI(kParamGainBoost);
+      }, [this](double total) {
+        const auto revision = mInstrumentUIRevision.load(std::memory_order_acquire);
+        if (mInstrumentUI->revision != revision) return;
+        const double gain = std::min(total, 100.);
+        const double boost = std::max(1., total / 100.);
+        const auto send = [&](int parameter, double value) {
+          if (revision != mInstrumentUIRevision.load(std::memory_order_acquire) ||
+              GetParam(parameter)->Value() == value) return;
+          const auto normalized = GetParam(parameter)->ToNormalized(value);
+          SendParameterValueFromUI(parameter, normalized);
+          if (revision == mInstrumentUIRevision.load(std::memory_order_acquire))
+            SendParameterValueFromDelegate(parameter, normalized, true);
+        };
+        // Lower an old boost before raising base Gain; this avoids a transient
+        // overshoot while the host receives the two compatible parameters.
+        if (boost < GetParam(kParamGainBoost)->Value())
+        { send(kParamGainBoost, boost); send(kParamGain, gain); }
+        else { send(kParamGain, gain); send(kParamGainBoost, boost); }
+        updateInstrumentControls();
+      }, [this] {
+        EndInformHostOfParamChangeFromUI(kParamGainBoost);
+        EndInformHostOfParamChangeFromUI(kParamGain);
+      }, [this] { return mPerformanceUIEpoch.load(std::memory_order_acquire); }), kCtrlTotalGain);
     graphics->AttachControl(new IVButtonControl(IRECT(24, 154, 154, 189),
       [this](IControl*) { mUiMidi.push({true}); },
       "All sound off"));
@@ -533,10 +561,25 @@ void TetoricaSPU::initializeInstrumentUI()
           choosePcmShapeFromUI(static_cast<tetorica::WaveformShape>(shape));
         };
       });
-    shapeMenu->SetTooltip("Choose a preset for the editable PCM cycle or the selected Morph endpoint. It remains a draft until Apply.");
+    shapeMenu->SetTooltip("Choose a PCM cycle or selected Morph endpoint. Auto apply is on by default; turn it off to prepare a draft before Apply.");
     graphics->AttachControl(shapeMenu, kCtrlPcmShape);
-    graphics->AttachControl(new SpuWaveformControl(IRECT(24, 278, 696, 392),
+    graphics->AttachControl(new SpuWaveformControl(IRECT(24, 278, 696, 364),
       [this](const tetorica::PcmCycle& cycle) { setPcmDraftFromUI(cycle); }), kCtrlPcmGraph);
+    auto* autoApply = new IVToggleControl(IRECT(24, 370, 240, 396),
+      [this](IControl* control) {
+        auto& ui = *mInstrumentUI;
+        ui.pcmApply.setEnabled(control->GetValue() > .5);
+        const auto target = GetParam(kParamMorphEnabled)->Bool() ?
+          tetorica::ui::PcmApplyState::Target::Morph : tetorica::ui::PcmApplyState::Target::Pcm;
+        // Enabling must not replace an untouched VAB/sample with the
+        // independent Sine draft merely because this editor was opened.
+        if (ui.pcmApply.autoApply(target)) applyPcmDraftFromUI();
+        else updateInstrumentControls();
+      }, "", switchStyle, "Auto apply: OFF", "Auto apply: ON", true);
+    autoApply->SetTooltip("On: selecting a shape or releasing a completed stroke prepares the sound automatically. Off: edit a draft, then press Apply. Each replacement stops held notes and reverb tails. Work already requested can finish after switching Off. This editor preference is not a DAW parameter.");
+    graphics->AttachControl(autoApply, kCtrlPcmAutoApply);
+    graphics->AttachControl(new ITextControl(IRECT(250, 370, 696, 396),
+      "Changes stop held notes and reverb tails.", IText(12).WithAlign(EAlign::Near)), kCtrlPcmAutoInfo);
     auto* revertPcm = new IVButtonControl(IRECT(24, 402, 154, 436),
       [this](IControl*) { revertPcmDraftFromUI(); }, "Revert draft", smallStyle);
     revertPcm->SetTooltip("Discard the current PCM draft or both Morph endpoint drafts. Amount and the original source are kept.");
@@ -546,17 +589,17 @@ void TetoricaSPU::initializeInstrumentUI()
     applyPcm->SetTooltip("Prepare the draft off the audio thread, then replace the sound. Held notes and reverb tails stop.");
     graphics->AttachControl(applyPcm, kCtrlPcmApply);
     graphics->AttachControl(new IMultiLineTextControl(IRECT(308, 399, 696, 440),
-      "112 samples -> SPU ADPCM. Draw, then Apply.\nApplying stops notes and reverb tails.",
+      "112 samples -> SPU ADPCM.\nSelect a shape or release a stroke to hear it.",
       IText(12).WithAlign(EAlign::Near).WithVAlign(EVAlign::Top)), kCtrlPcmInfo);
     graphics->AttachControl(new IMultiLineTextControl(IRECT(24, 444, 696, 469),
-      "Draft only. Apply PCM to use and save it with the project.",
+      "Auto apply is on. Select a shape or draw to edit the sound.",
       IText(12).WithAlign(EAlign::Near).WithVAlign(EVAlign::Top)), kCtrlPcmStatus);
     graphics->AttachControl(new ITextControl(IRECT(308, 398, 696, 414),
       "Morph Amount: A 100% / B 0%", IText(12).WithAlign(EAlign::Near)), kCtrlMorphAmountText);
     auto* morphAmount = new IVSliderControl(IRECT(308, 416, 696, 436),
       kParamMorphAmount, "", smallStyle.WithShowLabel(false).WithShowValue(false), false,
       EDirection::Horizontal);
-    morphAmount->SetTooltip("Live blend of the applied endpoints. A/B draft edits are heard only after Apply Morph.");
+    morphAmount->SetTooltip("Live blend of the applied endpoints. With Auto apply on, endpoint edits prepare automatically after shape selection or stroke release.");
     graphics->AttachControl(morphAmount, kCtrlMorphAmount);
     graphics->AttachControl(new IMultiLineTextControl(IRECT(24, 250, 696, 461),
       "Software audio - outside physical SPU RAM.",
@@ -703,6 +746,8 @@ void TetoricaSPU::closeInstrumentUI() noexcept
   }
   if (auto* graphics = GetUI())
   {
+    if (auto* gain = graphics->GetControlWithTag(kCtrlTotalGain))
+      static_cast<SpuTotalGainControl*>(gain)->CancelPointerEdit();
     if (auto* keyboard = graphics->GetControlWithTag(kCtrlKeyboard))
       static_cast<SpuKeyboardControl*>(keyboard)->CancelPointerEdit();
     if (auto* pitch = graphics->GetControlWithTag(kCtrlKeyboardPitch))
@@ -1062,6 +1107,11 @@ void TetoricaSPU::requestProgramFromUI(
 
 void TetoricaSPU::OnIdle()
 {
+  const auto dirty = mAutomationUiDirty.exchange(0, std::memory_order_acq_rel);
+  for (const int parameter : {kParamGain, kParamGainBoost, kParamMorphAmount,
+                              kParamReverbLeft, kParamReverbRight})
+    if (dirty & (1u << parameter))
+      SendParameterValueFromDelegate(parameter, GetParam(parameter)->GetNormalized(), true);
   if (!mInstrumentUI) return;
   auto& ui = *mInstrumentUI;
   std::shared_ptr<const tetorica::InstrumentDefinition> definition;
@@ -1100,6 +1150,7 @@ void TetoricaSPU::OnIdle()
       {ui.splitPicker.reset();ui.pickerOpen=false;++ui.pickerSerial;}
       ui.revision = revision;
       ui.requested = 0;
+      ui.pcmApply.restored();
       mWebLoader.cancel();ui.webTicket=0;ui.webCommitted=0;
       mAudioLoader.cancel();ui.audioTicket=0;ui.audioCommitted=0;ui.audioDetails.clear();
       mWebExporter.cancel();ui.exportTicket=0;
@@ -1172,11 +1223,14 @@ void TetoricaSPU::OnIdle()
           // Only now issue a source generation. Failed imports never cancel
           // valid pending source changes, nor modify a single host parameter.
           ready->imported.state.gainPercent=GetParam(kParamGain)->Value();
+          ready->imported.state.gainBoost=GetParam(kParamGainBoost)->Value();
           try
           {
             if(!std::isfinite(ready->imported.state.gainPercent)||
-               ready->imported.state.gainPercent<0||ready->imported.state.gainPercent>100)
-              throw std::invalid_argument("Current Gain must be finite 0-100 percent");
+               ready->imported.state.gainPercent<0||ready->imported.state.gainPercent>100||
+               !std::isfinite(ready->imported.state.gainBoost)||
+               ready->imported.state.gainBoost<1||ready->imported.state.gainBoost>3.8)
+              throw std::invalid_argument("Current Gain must be finite 0-100 percent with boost 1-3.8");
             ui.webCommitted=mEngines.commitPreparedImport(std::move(ready->engine),
               std::move(ready->imported.state));
             notify=true;
@@ -1319,6 +1373,13 @@ void TetoricaSPU::updateInstrumentControls()
   auto* graphics = GetUI();
   if (!graphics || !mInstrumentUI) return;
   auto& ui = *mInstrumentUI;
+  if (auto* gain = graphics->GetControlWithTag(kCtrlTotalGain))
+  {
+    auto* control = static_cast<SpuTotalGainControl*>(gain);
+    control->CancelStalePointerEdit();
+    control->SetGain(100. * tetorica::effectiveAudioGain(
+      GetParam(kParamGain)->Value(), GetParam(kParamGainBoost)->Value()));
+  }
   const auto performanceEpoch = mPerformanceUIEpoch.load(std::memory_order_acquire);
   if (ui.performanceEpoch != performanceEpoch)
   {
@@ -1488,7 +1549,8 @@ void TetoricaSPU::updateInstrumentControls()
   const bool noiseEditor = pcmPage && noise;
   const bool pmonEditor = pcmPage && pmon;
   for (const auto tag : {kCtrlMorphEnabled, kCtrlPcmShape, kCtrlPcmGraph,
-                        kCtrlPcmRevert, kCtrlPcmApply, kCtrlPcmStatus})
+                        kCtrlPcmRevert, kCtrlPcmApply, kCtrlPcmStatus,
+                        kCtrlPcmAutoApply, kCtrlPcmAutoInfo})
     if (auto* control = graphics->GetControlWithTag(tag))
       if (control->IsHidden() == pcmEditor) control->Hide(!pcmEditor);
   for (const auto tag : {kCtrlMorphEditA, kCtrlMorphEditB, kCtrlMorphAmount, kCtrlMorphAmountText})
@@ -1550,22 +1612,44 @@ void TetoricaSPU::updateInstrumentControls()
   const bool draftApplied=appliedCycle&&*appliedCycle==ui.pcmDraft.cycle();
   const bool endpointsApplied = ui.definition && tetorica::sameMorphEndpoints(
     ui.definition->morphEndpoints(), ui.morphDraft.endpoints());
+  const auto latest = mEngines.latestGeneration();
+  const auto loaderStatus = mLoader.status();
+  const bool pending = loaderStatus.generation == latest &&
+    mEngines.adoptedGeneration() != latest &&
+    (loaderStatus.state == tetorica::VabLoader::State::Loading ||
+     loaderStatus.state == tetorica::VabLoader::State::Ready);
+  const bool sameRequest = morph ? ui.pcmApply.sameRequest(ui.morphDraft.endpoints(), latest) :
+    ui.pcmApply.sameRequest(ui.pcmDraft.cycle(), latest);
+  const bool preparingDraft = pending && sameRequest;
+  if (!pending)
+  {
+    if (draftApplied) ui.pcmApply.synchronized(tetorica::ui::PcmApplyState::Target::Pcm);
+    if (endpointsApplied) ui.pcmApply.synchronized(tetorica::ui::PcmApplyState::Target::Morph);
+  }
+  if (auto* control = graphics->GetControlWithTag(kCtrlPcmAutoApply))
+    if ((control->GetValue() > .5) != ui.pcmApply.enabled())
+    { control->SetValue(ui.pcmApply.enabled() ? 1. : 0.); control->SetDirty(false); }
   const double rawAmount = GetParam(kParamMorphAmount)->Value();
   const double amount = std::isfinite(rawAmount) ? std::clamp(rawAmount, 0., 1.) : 0.;
   if (auto* graph = graphics->GetControlWithTag(kCtrlPcmGraph))
   {
     auto* waveform = static_cast<SpuWaveformControl*>(graph);
+    waveform->SetAutoApply(ui.pcmApply.enabled());
     if (morph) waveform->SetMorph(ui.morphDraft.endpoints(), amount, ui.morphEditB, !endpointsApplied);
     else waveform->SetCycle(ui.pcmDraft.cycle());
   }
   if (auto* control = graphics->GetControlWithTag(kCtrlPcmApply))
   {
-    const bool disabled = morph ? endpointsApplied : draftApplied;
+    const bool needed = morph ? ui.pcmApply.requestNeeded(ui.morphDraft.endpoints(), endpointsApplied, latest, pending) :
+      ui.pcmApply.requestNeeded(ui.pcmDraft.cycle(), draftApplied, latest, pending);
+    const bool disabled = !needed;
     if (control->IsDisabled() != disabled) control->SetDisabled(disabled);
     auto* button = static_cast<IVButtonControl*>(control);
-    const char* label = morph ? "Apply Morph" : "Apply PCM";
+    const char* label = preparingDraft ? "Preparing..." : morph ? "Apply Morph" : "Apply PCM";
     if (std::strcmp(button->GetLabelStr(), label)) button->SetLabelStr(label);
   }
+  if (auto* control = graphics->GetControlWithTag(kCtrlPcmRevert))
+    if (control->IsDisabled() != pending) control->SetDisabled(pending);
   for (const auto tag : {kCtrlMorphEditA, kCtrlMorphEditB})
     if (auto* control = graphics->GetControlWithTag(tag))
     {
@@ -1610,7 +1694,14 @@ void TetoricaSPU::updateInstrumentControls()
   }
   if (auto* control = graphics->GetControlWithTag(kCtrlPcmStatus))
   {
-    const char* message = morph ? (endpointsApplied ?
+    const char* message = preparingDraft ?
+      "Preparing the latest edit. The sound changes when ready; held notes and reverb tails stop." :
+      ui.pcmApply.enabled() ? (morph ? (endpointsApplied ?
+        "Auto apply ON. A/B are applied and saved with the project. Amount is live." :
+        "Auto apply ON. Edit A/B to hear changes. If preparation failed, press Apply Morph to retry.") : draftApplied ?
+        "Auto apply ON. This PCM cycle and its sound settings are saved with the project." :
+        "Auto apply ON. Select a shape or draw to replace this source. If preparation failed, press Apply PCM to retry.") :
+      morph ? (endpointsApplied ?
       "Applied A/B. Amount is live; Morph Off returns to the retained source. Endpoint Apply stops notes and tails." :
       "Draft A/B preview. Apply Morph to hear/save edits; Amount still controls the applied A/B. Apply stops notes and tails.") : draftApplied ?
       "Applied PCM cycle. The project saves this source PCM and its sound settings." :
@@ -1620,7 +1711,15 @@ void TetoricaSPU::updateInstrumentControls()
       "ADPCM sample kept. This independent draft replaces it only when you Apply PCM." :
       ui.definition&&ui.definition->kind()==tetorica::InstrumentDefinition::Kind::Builtin ?
       "Legacy Sine kept. Builtin Sine selects full range. Apply PCM replaces this sound." :
-      "Builtin Sine kept. Apply PCM creates an editable sound. Unapplied drafts are not saved.";
+      "Auto apply OFF. Builtin Sine kept. Apply PCM to hear/save the draft; unapplied drafts are not saved.";
+    auto* text = static_cast<ITextControl*>(control);
+    if (std::strcmp(text->GetStr(), message)) text->SetStr(message);
+  }
+  if (auto* control = graphics->GetControlWithTag(kCtrlPcmInfo))
+  {
+    const char* message = ui.pcmApply.enabled() ?
+      "112 samples -> SPU ADPCM.\nSelect a shape or release a stroke to hear it." :
+      "Manual draft: press Apply PCM to hear/save edits.\nUnapplied edits are not saved with the project.";
     auto* text = static_cast<ITextControl*>(control);
     if (std::strcmp(text->GetStr(), message)) text->SetStr(message);
   }
@@ -1682,6 +1781,10 @@ void TetoricaSPU::setPcmDraftFromUI(const tetorica::PcmCycle& cycle)
     ui.morphDraft.set(endpoints);
   }
   else ui.pcmDraft.set(cycle);
+  const auto target = GetParam(kParamMorphEnabled)->Bool() ?
+    tetorica::ui::PcmApplyState::Target::Morph : tetorica::ui::PcmApplyState::Target::Pcm;
+  ui.pcmApply.edited(target);
+  if (ui.pcmApply.autoApply(target)) { applyPcmDraftFromUI(); return; }
   updateInstrumentControls();
 }
 
@@ -1712,12 +1815,15 @@ void TetoricaSPU::revertPcmDraftFromUI()
   if (GetParam(kParamMorphEnabled)->Bool())
   {
     mInstrumentUI->morphDraft.set(definition ? definition->morphEndpoints() : tetorica::MorphEndpoints{});
+    mInstrumentUI->pcmApply.synchronized(tetorica::ui::PcmApplyState::Target::Morph);
     updateInstrumentControls();
   }
   else
   {
     const auto* cycle=authoredCycle(definition);
-    setPcmDraftFromUI(cycle ? *cycle : tetorica::makePcmCycle(tetorica::WaveformShape::Sine));
+    mInstrumentUI->pcmDraft.set(cycle ? *cycle : tetorica::makePcmCycle(tetorica::WaveformShape::Sine));
+    mInstrumentUI->pcmApply.synchronized(tetorica::ui::PcmApplyState::Target::Pcm);
+    updateInstrumentControls();
   }
 }
 
@@ -1733,24 +1839,31 @@ void TetoricaSPU::applyPcmDraftFromUI()
     // A host restore can land before the next UI timer refresh. A click on
     // the old draft must not supersede that newly restored project sound.
     if (ui.revision != mInstrumentUIRevision.load(std::memory_order_acquire)) return;
+    const auto latest = mEngines.latestGeneration();
+    const auto status = mLoader.status();
+    const bool pending = status.generation == latest && mEngines.adoptedGeneration() != latest &&
+      (status.state == tetorica::VabLoader::State::Loading || status.state == tetorica::VabLoader::State::Ready);
+    const auto source = mEngines.snapshotDefinition();
     mWebLoader.cancel();ui.webTicket=0;ui.webCommitted=0;
     mAudioLoader.cancel();ui.audioTicket=0;ui.audioCommitted=0;
     if (GetParam(kParamMorphEnabled)->Bool())
     {
       // Capture the latest accepted base, including an earlier Apply that the
       // UI timer has not observed yet. Only this endpoint pair is replaced.
-      const auto source = mEngines.snapshotDefinition();
-      if (source && tetorica::sameMorphEndpoints(source->morphEndpoints(), ui.morphDraft.endpoints())) return;
+      const bool applied = source && tetorica::sameMorphEndpoints(source->morphEndpoints(), ui.morphDraft.endpoints());
+      if (!ui.pcmApply.requestNeeded(ui.morphDraft.endpoints(), applied, latest, pending)) return;
       ui.requested = mLoader.requestMorphEndpoints(source, ui.morphDraft.endpoints());
       ui.morphDraft.requested(ui.requested);
+      ui.pcmApply.requested(ui.requested, ui.morphDraft.endpoints());
       ui.status = "Preparing Morph endpoints. Held notes and reverb tails stop on Apply.";
     }
     else
     {
-      const auto* cycle=authoredCycle(ui.definition);
-      if(cycle&&*cycle==ui.pcmDraft.cycle())return;
+      const auto* cycle=authoredCycle(source);
+      if (!ui.pcmApply.requestNeeded(ui.pcmDraft.cycle(), cycle && *cycle == ui.pcmDraft.cycle(), latest, pending)) return;
       ui.requested = mLoader.requestPcmCycle(ui.pcmDraft.cycle());
       ui.pcmDraft.requested(ui.requested);
+      ui.pcmApply.requested(ui.requested, ui.pcmDraft.cycle());
       ui.status = "Preparing PCM. Notes and reverb tails stop when the sound is replaced.";
     }
   }

@@ -31,7 +31,7 @@ template<class F>void rejects(F action){bool threw=false;try{action();}catch(con
 void word(std::vector<std::uint8_t>& bytes,std::size_t at,std::uint32_t value){for(unsigned i=0;i<4;++i)bytes.at(at+i)=static_cast<std::uint8_t>(value>>(i*8));}
 std::uint32_t word(const std::vector<std::uint8_t>& bytes,std::size_t at){std::uint32_t value=0;for(unsigned i=0;i<4;++i)value|=std::uint32_t(bytes.at(at+i))<<(i*8);return value;}
 SavedInstrumentState decode(const std::vector<std::uint8_t>& bytes){return decodeState({bytes.data(),bytes.size()});}
-std::vector<std::uint8_t> encode(const SavedInstrumentState& state){return encodeState(state.definition,state.gainPercent,state.envelope,state.reverb,state.noise,state.pmon,state.morph);}
+std::vector<std::uint8_t> encode(const SavedInstrumentState& state){return encodeState(state.definition,state.gainPercent,state.envelope,state.reverb,state.noise,state.pmon,state.morph,state.gainBoost);}
 bool sameEndpoints(const MorphEndpoints& a,const MorphEndpoints& b){return !std::memcmp(a.a.data(),b.a.data(),sizeof(a.a))&&!std::memcmp(a.b.data(),b.b.data(),sizeof(a.b));}
 SoftwarePcmSample source(std::size_t frames=4096){
   std::vector<std::int16_t> pcm(frames);
@@ -97,7 +97,7 @@ SavedInstrumentState authored(){
   SavedInstrumentState state;auto sample=source();sample.volumeRight=-0.;
   MorphEndpoints endpoints;endpoints.a=makePcmCycle(WaveformShape::Triangle);endpoints.b[3]=-.1234567f;
   state.definition=Def::withMorphEndpoints(Def::fromSoftwarePcmSample(sample),endpoints);
-  state.gainPercent=37;state.envelope={{0xa937,0xd7bb},true,false};
+  state.gainPercent=37;state.gainBoost=3.8;state.envelope={{0xa937,0xd7bb},true,false};
   state.reverb={ReverbPreset::Hall,true,true,.375,.625};state.noise={true,37};
   state.pmon={true,WaveformShape::Square,2.5,.375,1250};state.morph={true,.375};
   return state;
@@ -107,6 +107,7 @@ void codecAndMalformed(){
   check(word(wire,8)==kStateSchemaVersion&&word(wire,16)==4&&word(wire,20)==0&&word(wire,24)==0,"software current-schema header wrong");
   check(n==64+state.definition->softwarePcmSample().pcm->samples().size()*2+state.definition->softwarePcmSample().name.size(),"software payload length wrong");
   const auto restored=decode(wire);
+  check(restored.gainPercent==37&&restored.gainBoost==3.8,"extended Gain tuple was not preserved");
   check(sameSoftwarePcmSample(restored.definition->softwarePcmSample(),state.definition->softwarePcmSample())&&
     sameEndpoints(restored.definition->morphEndpoints(),state.definition->morphEndpoints())&&encode(restored)==wire,"state9 lost PCM/metadata/26 settings");
   check(restored.definition->softwarePcmSample().pcm!=state.definition->softwarePcmSample().pcm,"decoded state borrowed host chunk storage");
@@ -125,12 +126,12 @@ void codecAndMalformed(){
   {auto bad=wire;bad.push_back(0);rejects([&]{decode(bad);});}
   {auto bad=wire;bad.pop_back();rejects([&]{decode(bad);});}
   for(unsigned version=1;version<=8;++version){
-    auto old=encodeState(Def::builtin(),25);const auto fixed=version==1?40:version==2?48:version<=4?72:version==5?80:version==6?112:kStateFixedBytes;
+    auto old=encodeState(Def::builtin(),25);const auto fixed=version==1?40:version==2?48:version<=4?72:version==5?80:version==6?112:1024;
     old.resize(fixed);word(old,8,version);word(old,12,static_cast<std::uint32_t>(old.size()));
     const auto read=decode(old);check(read.definition->kind()==Def::Kind::Builtin&&read.gainPercent==25,"legacy builtin schema migration failed");
   }
   for(const auto& original:{Def::fromPcmCycle(makePcmCycle(WaveformShape::Triangle)),Def::fromAdpcmSample(extractAdpcmSource(*Def::builtin()))}){
-    auto old=encodeState(original,99);word(old,8,8);const auto read=decode(old);
+    auto old=encodeState(original,99);old.resize(word(old,28)+1024);word(old,8,8);word(old,12,static_cast<std::uint32_t>(old.size()));const auto read=decode(old);
     check(read.definition->kind()==original->kind()&&read.gainPercent==99,"schema8 source migration failed");
   }
 }
@@ -161,7 +162,7 @@ void immediateAndAtomic(){
   allocations=largestAllocation=0;tracking=true;
   const auto committed=exchange.commitPreparedImport(std::move(prepared),restored);
   tracking=false;check(largestAllocation<4096,"import commit allocated full PCM state merely for validation");
-  check(exchange.snapshotAuthoring().importedState->gainPercent==37,"pending import settings lost");
+  check(exchange.snapshotAuthoring().importedState->gainPercent==37&&exchange.snapshotAuthoring().importedState->gainBoost==3.8,"pending import settings lost");
   check(exchange.beginBlock(48000)&&exchange.adoptedGeneration()==committed,"software source was not adopted");
   auto independent=prepareDefinition(*state.definition);check(independent->prepare(48000),"software reference prepare failed");
   exchange.instrument().noteOn(60,127);independent->noteOn(60,127);

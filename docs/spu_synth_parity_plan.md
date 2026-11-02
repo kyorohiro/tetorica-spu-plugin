@@ -16,7 +16,8 @@ VAB由来のADSR・tuning・loop・volume/panを使用する。ADSRはCustom ove
 共有Reverbのpreset / Enable / Return / sendも実装した。初期Offで元の音を保つ。
 [Reverbの検証記録](reverb_20261031.md)を参照。
 112-sample PCMの4形状・単一canvasでのdraft描画・Applyも実装・検証済み。
-Applyはworkerで準備した音源への交換であり、保持音・残響は停止する。通常PCM draftのlive適用は対象外。
+Auto applyは既定Onで、shape選択・描画stroke完了時にworkerへ反映を要求する。
+Offではdraftを明示してApplyへ誘導する。反映は準備済み音源への交換であり、保持音・残響は停止する。
 [PCMの検証記録](pcm_waveform_20261031.md)を参照。
 共有Noiseとlive Clockも実装し、元音源を保持してSampleへ戻せる。
 [Noiseの検証記録](noise_20261031.md)を参照。
@@ -28,7 +29,11 @@ core・実AU/VST3・Standalone操作・installed AU更新・GarageBand旧state�
 新規Builtin Sineは5-zone ADPCMへ広げ、MIDI0〜127・±2半音を検証した。
 旧kind0はLegacyのまま保持する。[仕様・検証](builtin_sine_range_20261102.md)を参照。
 新buildの実装・CIは完了し、手元installed AUへの配置更新は次の区切りとする。
-Gainは現在0〜100%。WebのMaster 200%とは異なる。
+WebとPluginのGain上限は380%。Pluginの旧Gain ID0は0〜100%のまま保ち、
+ID26のGain Boost（1〜3.8、既定1）と合成して旧automationの音量を維持する。
+schema11はBoostを保存し、旧schema1〜10はBoost1で復元する。
+Gain /Boost /Morph Amount /Reverb return左右はsample offsetに沿う連続parameter処理を使用する。
+他parameterの離散・block処理、実DAW automation録音の追試とは区別する。
 
 実DAWでの確認済み範囲と残るProgram操作・dirty判定は、
 [GarageBand検証記録](au_vab_garageband_20261031.md)を参照する。
@@ -45,7 +50,7 @@ Gainは現在0〜100%。WebのMaster 200%とは異なる。
 | 実装済み：PMON | 変調波形・Ratio・Depth・Decay | 隣接voiceの12組、4変調波形、live Ratio / Depth、次NoteのDecay、24params / state6を追加した。元音源保持・Noise優先・旧state互換をcore / 実AU・VST3で検証。Standalone操作・installed AU更新・CIも完了。実聴・実DAW automation録音等は残る。 |
 | 実装済み：Software Morph | A/B/Resultを同じcanvasへ表示し、編集対象を切替。保持音を再発音せずblend変更 | 元sourceとA/B原本を保つ26params / state7を実装。endpointはdraft / Apply、Amountだけlive。初期Off、A=Sine / B=Saw（振幅0.8）、Amount0。Offは元sourceへ戻す。PMON併用・Noise優先・実AU/VST3・Standalone・旧state復元・CIを検証。実聴・実DAW独自UIとautomation録音は残る。 |
 | 音色・素材の入力 | `.spu.json`、audio、PSF1/MiniPSFからの静的VAB抽出、VH+VB | `.spu.json` v1/v2とPCM16 / Float32 mono/stereo WAVをimportする。短いWAVはmono /44.1kHz ADPCM、RAMを超えるWAVはSoftware PCMとしてschema9へ保持し、C4 / One shotからRootと全体loopを編集できる。Save WebはADPCM等をv1、Software PCMをv2として書き出す。実Web reader / Chromium / WebKitで読み戻しを検証。Gainや全VAB bankは含めず、Morph等の形式差を説明する。長いAudio v2は32MiB PCM /48MiB JSONの範囲で実装（schema9、Software機能の明示、Root/全体loop、Morph使用不可・設定保持）。分割VH/VB file pickerとNative repeat flag互換は後続作業で実装・検証済み。他Audio format・PSF抽出は後続。 |
-| monitor・演奏UI | Envelope/Waveform/Spectrum、Guitar/Bass/Ukulele、Octave、Pitch/Morph wheel、Master 200% | Morph AmountはSourceとkeyboard横へ実装済み。v0.0.0後の開発buildでは、37鍵のOctave − / ＋と固定±2半音Pitch wheelを追加した。Octaveは画面鍵盤だけ、PitchはMIDI channel 1の一時入力で、host parameter / schemaを維持する。[操作・検証](keyboard_performance_20261102.md)。monitor /配列 / Master 200%は残る。Gainの最大値変更は既存normalized automationの互換を考慮して設計する。 |
+| monitor・演奏UI | Envelope/Waveform/Spectrum、Guitar/Bass/Ukulele、Octave、Pitch/Morph wheel、Master 380% | Morph AmountはSourceとkeyboard横、37鍵のOctave − / ＋と固定±2半音Pitch wheelを実装済み。Octaveは画面鍵盤だけ、PitchはMIDI channel 1の一時入力。[操作・検証](keyboard_performance_20261102.md)。Gainは旧mappingを保つBoost追加で380%へ拡張。monitor /配列は残る。 |
 
 各段階で、音の変化だけでなく、演奏中の編集・保存直後の復元・不正入力時の現音源保持を確認する。
 coreのoffline検証と実AU/VST3の検証を行い、実DAWのUI確認や実聴とは区別して記録する。

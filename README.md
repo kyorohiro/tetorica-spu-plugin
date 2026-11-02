@@ -154,7 +154,7 @@ wheel. Opening or closing an idle editor leaves external MIDI Bend unchanged.
 The wheel displays its own local gesture, rather than tracking external MIDI;
 controllers on the same channel share the most recently processed Bend value.
 Reset, restore, deactivation, overflow and bypass invalidate old pointer gestures.
-These controls do not change the 26 host parameters or schema 10.
+These keyboard controls add no host parameters or saved performance state.
 See [editor keyboard verification](docs/keyboard_performance_20261102.md).
 
 All 16 MIDI channels have independent Pitch Bend and Sustain state.
@@ -213,11 +213,17 @@ bypassed blocks is not replayed when processing resumes.
 Gain changes use an approximately **5 ms linear ramp** after the SPU output,
 with one shared coefficient per stereo frame. The ramp continues across audio
 blocks and MIDI offsets. This is plugin output smoothing, separate from the
-SPU's voice volumes and ADSR. Normal host Gain automation still supplies one
-target per block; individual automation-point offsets are not scheduled.
+SPU's voice volumes and ADSR. Gain, Gain Boost, Morph Amount and both Reverb
+returns process bounded automation points at their supplied sample offsets.
+VST3 retains every accepted point; AU supports offset SetParameter and scheduled
+steps or ramps. Other parameters retain their block-level behavior.
 Initial playback, audio reset, reactivation and successful state/import restore
 start at the saved Gain immediately. Only the target is saved; an unfinished
-ramp is live processing state. Gain remains 0–100%, parameter ID 0.
+ramp is live processing state. The editor Gain reaches **380%**, with orange
+above 100%. Existing **Gain (ID 0)** remains 0–100% with its original normalized
+mapping. **Gain Boost (ID 26)** multiplies it by 1–3.8, default 1, so older
+projects retain their volume. The editor records paired gestures for these
+two parameters. Their product sets the audible gain.
 See [Gain smoothing verification](docs/gain_smoothing_20261101.md) for the
 actual AU/VST3 PCM checks and deployment status.
 
@@ -226,8 +232,14 @@ actual AU/VST3 PCM checks and deployment status.
 Open the **Source** page with **Source: Sample** to choose Sine, Triangle, Saw or Square, or draw one cycle
 on the single canvas. The editor uses 112 signed PCM samples in `[-1, 1]`.
 The four shapes have amplitude 0.8, matching the original built-in Sine.
-Edits are a draft until **Apply PCM**; **Revert** discards the draft.
-Unapplied changes are not included in project state.
+**Auto apply** is On by default: choosing a shape or finishing a drawing stroke
+prepares and replaces the PCM on the worker. This also applies to Morph A/B
+endpoint edits. Replacement stops held notes and the previous Reverb tail.
+Turn Auto apply Off to keep a draft, then press **Apply PCM** (or **Apply A/B**).
+The status identifies unapplied changes. **Revert** discards the draft without
+requesting a replacement. Opening the editor never replaces an imported sound
+with its untouched default draft. Auto apply is an editor preference, not a
+DAW automation parameter; unapplied drafts are not included in project state.
 
 Applying prepares a new instrument on the worker, then exchanges it at the next
 audio block. Held notes and old reverb tails stop at that exchange; play a new
@@ -610,8 +622,11 @@ Source metadata edits and export snapshots share immutable PCM; actual project
 save/restore creates bounded serialized data off the audio thread.
 Schema 10 adds source kind 5 for full-range Builtin Sine, without a sample payload
 or Program/Tone selection. All 26 parameters and the 1024-byte fixed layout remain
-unchanged. Builtin kind 0 from all supported schemas retains legacy Sine playback. New saves use schema
-10, which earlier plugin builds reject; keep earlier project copies for rollback.
+unchanged. Builtin kind 0 from all supported schemas retains legacy Sine playback.
+Schema 11 appends the Gain Boost binary64 value, giving a 1032-byte fixed
+layout and 27 parameters. Schemas 1–10 and legacy Gain-only state restore with
+Boost 1. New saves use schema 11, which earlier plugin builds reject; keep
+earlier project copies for rollback.
 
 The actual AU and VST3 have been tested for embedded-bank round-trip, separate
 instances, immediate first-render MIDI/PCM and malformed-state rejection. VST3
@@ -686,13 +701,17 @@ still need a direct user check; the verified host-preset route is separate.
   sample-dependent limits of VAB, imported sources or the PMON modulator.
 - Host rate conversion uses continuous linear interpolation. Anti-alias filtering
   below 44.1 kHz and improved conversion quality remain follow-up work.
-- State schema 10 stores a legacy or full-range built-in instrument, one selected VAB Tone, one
+- State schema 11 stores a legacy or full-range built-in instrument, one selected VAB Tone, one
   authored 112-sample PCM cycle, one imported ADPCM sample or one Software PCM recording.
   VAB is limited to 1 MiB, ADPCM to 520192 bytes and Software PCM to 32 MiB. VAB key zones, layers and game-driver performance state are
   not reconstructed. Held notes, release tails, decoder caches and host rate
   are not saved.
 - Configurable Pitch Bend range remains TODO.
-- Sample-accurate ordinary parameter automation remains TODO; Gain output smoothing is sample-based after each block target is received.
+- Offset scheduling covers Gain / Boost, Morph Amount and Reverb returns only.
+  The fixed-capacity scheduler accepts up to 1024 events; overflow or concurrent
+  ingress contention falls back to the latest public targets without waiting.
+  Other parameters remain block-based. AU ramps feed the Gain smoother rather
+  than bypassing its 5 ms transition.
 - Prepared-engine changes start with no held notes and cut the previous tail.
   Carried MIDI from previous blocks is removed; new current-block host MIDI is
   retained. Tail crossfades and universal non-render-thread AU MIDI ingress are

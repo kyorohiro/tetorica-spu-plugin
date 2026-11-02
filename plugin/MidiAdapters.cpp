@@ -53,6 +53,7 @@ Steinberg::tresult PLUGIN_API TetoricaSPU::process(Steinberg::Vst::ProcessData& 
   if(data.numSamples<0)return kInvalidArgument;
   RegularParameters regular;
   std::size_t inspected=0;
+  std::size_t automationPoints=0;
   constexpr int32 maximumQueues=16*kCountCtrlNumber+kNumParams+1;
   if(auto* changes=data.inputParameterChanges)
   {
@@ -63,6 +64,31 @@ Steinberg::tresult PLUGIN_API TetoricaSPU::process(Steinberg::Vst::ProcessData& 
       auto* queue=changes->getParameterData(index);
       if(!queue)continue;
       const auto id=queue->getParameterId();
+      const int slot = id < static_cast<ParamID>(kNumParams) ? continuousSlot(id) : -1;
+      if (slot >= 0)
+      {
+        const int32 points = queue->getPointCount();
+        if (points <= 0) continue;
+        const bool bounded = static_cast<std::size_t>(points) <=
+          tetorica::ContinuousAutomation::kCapacity - automationPoints;
+        if (!bounded) mAutomation.overflow();
+        // A pathological host queue must not make render work unbounded.
+        // Still retain its valid latest target for the overflow fallback.
+        const int32 first = bounded ? 0 : points - 1;
+        for (int32 point = first; point < points; ++point)
+        {
+          int32 offset=0; ParamValue value=0;
+          if (queue->getPoint(point,offset,value)!=kResultOk || offset<0 ||
+              !std::isfinite(value) || value<0 || value>1) continue;
+          const double plain = GetParam(id)->FromNormalized(value);
+          if (bounded)
+            mAutomation.enqueue(static_cast<unsigned>(slot),offset,plain);
+          publishContinuousTarget(id, plain);
+        }
+        automationPoints = bounded ? automationPoints + static_cast<std::size_t>(points) :
+          tetorica::ContinuousAutomation::kCapacity;
+        continue;
+      }
       if(id<static_cast<ParamID>(kNumParams)||id==static_cast<ParamID>(iplug::kBypassParam))
       { regular.include(queue);continue; }
       if(id<static_cast<ParamID>(iplug::kMIDICCParamStartIdx))continue;
@@ -94,7 +120,8 @@ Steinberg::tresult PLUGIN_API TetoricaSPU::process(Steinberg::Vst::ProcessData& 
   }
   // All mapped queues (including unsupported controllers) are removed so the
   // pinned base's last-point-only CC conversion cannot duplicate these events.
-  // Its ordinary Gain/bypass and note-event handling remain intact.
+  // Continuous parameters use all bounded points above; other parameter and
+  // note-event handling remains with the pinned base.
   auto forwarded=data;
   forwarded.inputParameterChanges=&regular;
   const auto result=iplug::Plugin::process(forwarded);
@@ -110,6 +137,7 @@ Steinberg::tresult PLUGIN_API TetoricaSPU::process(Steinberg::Vst::ProcessData& 
     mEngines.instrument().panic();
     mEngines.instrument().resetControllers();
     mGainNeedsReset=true;
+    resetAutomation();
   }
   return result;
 }

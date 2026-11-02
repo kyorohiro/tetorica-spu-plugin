@@ -10,6 +10,8 @@ TetoricaSPU::TetoricaSPU(const iplug::InstanceInfo& info)
 : iplug::Plugin(info, iplug::MakeConfig(kNumParams, 1))
 {
   GetParam(kParamGain)->InitDouble("Gain", 100., 0., 100., 0.1, "%");
+  // Preserve parameter 0's original normalized mapping for existing projects.
+  GetParam(kParamGainBoost)->InitDouble("Gain Boost", 1., 1., 3.8, 0.001, "x");
   GetParam(kParamEnvelopeEnabled)->InitBool("Custom ADSR", false);
   GetParam(kParamAttackRate)->InitInt("Attack rate", 0, 0, 127);
   GetParam(kParamAttackExponential)->InitBool("Attack exponential", false);
@@ -39,6 +41,7 @@ TetoricaSPU::TetoricaSPU(const iplug::InstanceInfo& info)
   GetParam(kParamMorphAmount)->InitDouble("Software morph A to B", 0., 0., 1., 0.001);
 
 #if IPLUG_DSP
+  resetAutomation();
   // Initialize the published factory entry and its complete default state.
   // AU PresentPreset and ClassInfo must describe the same named preset.
   MakeDefaultPreset("TetoricaSPU", 1);
@@ -62,6 +65,7 @@ TetoricaSPU::~TetoricaSPU()
 #if IPLUG_DSP
 void TetoricaSPU::OnReset()
 {
+  resetAutomation();
   mUiMidi.discardPending();
   mMidiCount = 0;
   mMidiOverflow = false;
@@ -76,6 +80,7 @@ void TetoricaSPU::OnActivate(bool active)
 {
   if (!active)
   {
+    resetAutomation();
     mUiMidi.discardPending();
     mMidiCount = 0;
     mMidiOverflow = false;
@@ -84,6 +89,67 @@ void TetoricaSPU::OnActivate(bool active)
     mEngines.instrument().resetControllers();
     mGainNeedsReset = true;
   }
+}
+
+int TetoricaSPU::continuousSlot(int parameter) noexcept
+{
+  switch (parameter)
+  {
+    case kParamGain: return 0;
+    case kParamGainBoost: return 1;
+    case kParamMorphAmount: return 2;
+    case kParamReverbLeft: return 3;
+    case kParamReverbRight: return 4;
+    default: return -1;
+  }
+}
+
+tetorica::ContinuousAutomation::Values TetoricaSPU::continuousTargets() const noexcept
+{
+  return {{GetParam(kParamGain)->Value(), GetParam(kParamGainBoost)->Value(),
+    GetParam(kParamMorphAmount)->Value(), GetParam(kParamReverbLeft)->Value(),
+    GetParam(kParamReverbRight)->Value()}};
+}
+
+void TetoricaSPU::resetAutomation() noexcept
+{
+  mAutomation.reset(continuousTargets());
+}
+
+void TetoricaSPU::publishContinuousTarget(int parameter, double value) noexcept
+{
+  GetParam(parameter)->Set(value);
+  // Coalesce concurrent AU setters without writing the framework's SPSC
+  // processor-to-editor queue from multiple host threads.
+  mAutomationUiDirty.fetch_or(1u << parameter, std::memory_order_release);
+}
+
+void TetoricaSPU::scheduleAuContinuous(int parameter, int offset, double value,
+  std::uint32_t duration, double start) noexcept
+{
+  // Serialize the event/public-value pair with a single attempt, so two AU
+  // producers cannot publish values in the reverse order of their events.
+  // Contention deliberately discards timing and falls back to public targets.
+  if (mAuAutomationIngress.test_and_set(std::memory_order_acquire))
+  {
+    mAutomation.overflow();
+    publishContinuousTarget(parameter, value);
+    return;
+  }
+  const auto slot = static_cast<unsigned>(continuousSlot(parameter));
+  if (duration) mAutomation.enqueueRamp(slot, offset, duration, start, value);
+  else mAutomation.enqueue(slot, offset, value);
+  publishContinuousTarget(parameter, value);
+  mAuAutomationIngress.clear(std::memory_order_release);
+}
+
+void TetoricaSPU::OnParamChange(int parameter, iplug::EParamSource source, int)
+{
+  // Host adapters preserve their explicit offsets. A local edit is a new
+  // immediate target, including while a previously scheduled ramp is active.
+  const int slot = continuousSlot(parameter);
+  if (source == iplug::kUI && slot >= 0)
+    mAutomation.enqueue(static_cast<unsigned>(slot), 0, GetParam(parameter)->Value());
 }
 
 void TetoricaSPU::SendMidiMsgFromUI(const iplug::IMidiMsg& msg)
@@ -277,7 +343,7 @@ void TetoricaSPU::applySourceParameters() noexcept
   const double depth = GetParam(kParamPmonDepth)->Value();
   const double decay = GetParam(kParamPmonDecay)->Value();
   const double morphEnabled = GetParam(kParamMorphEnabled)->Value();
-  const double morphAmount = GetParam(kParamMorphAmount)->Value();
+  const double morphAmount = mAutomation.value(2);
   if (!std::isfinite(enabled) || enabled < 0 || enabled > 1 || std::floor(enabled) != enabled ||
       !std::isfinite(clock) || clock < 0 || clock > 63 || std::floor(clock) != clock ||
       !std::isfinite(pmonEnabled) || pmonEnabled < 0 || pmonEnabled > 1 || std::floor(pmonEnabled) != pmonEnabled ||
@@ -304,6 +370,7 @@ void TetoricaSPU::applySourceParameters() noexcept
   // blend amount changes their private carrier cache on this audio thread.
   // Keep raw Morph enabled while Noise hides it, so returning restores it.
   instrument.setMorph({morphEnabled != 0, morphAmount});
+  mBlockMorphEnabled = morphEnabled != 0;
   if (previousNoise != instrument.noise().enabled || previousPmon != instrument.pmon().enabled ||
       previousMorph != instrument.effectiveMorphEnabled())
     // The old source's future NoteOns must not restart after the mode panic.
@@ -326,9 +393,28 @@ void TetoricaSPU::applyReverbParameters() noexcept
   settings.preset = static_cast<tetorica::ReverbPreset>(static_cast<unsigned>(preset));
   settings.enabled = enabled != 0;
   settings.useToneSend = toneSend != 0;
-  settings.volumeLeft = GetParam(kParamReverbLeft)->Value() / 100.;
-  settings.volumeRight = GetParam(kParamReverbRight)->Value() / 100.;
+  settings.volumeLeft = mAutomation.value(3) / 100.;
+  settings.volumeRight = mAutomation.value(4) / 100.;
+  mBlockReverb = settings;
   mEngines.instrument().setReverb(settings);
+}
+
+void TetoricaSPU::applyContinuousParameters() noexcept
+{
+  const double gain = tetorica::effectiveAudioGain(mAutomation.value(0), mAutomation.value(1));
+  if (mGainNeedsReset)
+  {
+    mGain.reset(GetSampleRate(), gain);
+    mGainNeedsReset = false;
+  }
+  else mGain.setTarget(gain);
+  // Do not reapply source modes here: their panic path can invalidate MIDI
+  // iteration. Only the continuous blend/return values change within a block.
+  mEngines.instrument().setMorph({mBlockMorphEnabled, mAutomation.value(2)});
+  auto reverb = mBlockReverb;
+  reverb.volumeLeft = mAutomation.value(3) / 100.;
+  reverb.volumeRight = mAutomation.value(4) / 100.;
+  mEngines.instrument().setReverb(reverb);
 }
 
 void TetoricaSPU::renderRange(iplug::sample** outputs, int offset, int nFrames)
@@ -372,6 +458,9 @@ void TetoricaSPU::ProcessBlock(iplug::sample**, iplug::sample** outputs, int nFr
     if(const auto* imported=mEngines.adoptedImportState())
     {
       applyImportedParameters(*imported);
+      mAutomation.setBaseline({{imported->gainPercent, imported->gainBoost,
+        imported->morph.amount, imported->reverb.volumeLeft * 100.,
+        imported->reverb.volumeRight * 100.}});
       mGainNeedsReset = true;
       mImportAppliedGeneration.store(mEngines.adoptedGeneration(),std::memory_order_release);
     }
@@ -395,33 +484,27 @@ void TetoricaSPU::ProcessBlock(iplug::sample**, iplug::sample** outputs, int nFr
     return;
   }
 
+  mAutomation.beginBlock(continuousTargets());
+  mAutomation.advanceTo(0);
   applyEnvelopeParameters();
   applyReverbParameters();
   applySourceParameters();
 
-  const double requestedGain = GetParam(kParamGain)->Value() / 100.;
-  // Ordinary host automation supplies one target per block. The ramp follows
-  // output sample time, across scratch chunks, MIDI offsets and later blocks.
-  if (mGainNeedsReset)
-  {
-    mGain.reset(GetSampleRate(), requestedGain);
-    mGainNeedsReset = false;
-  }
-  else
-    mGain.setTarget(requestedGain);
   int offset = 0;
   std::size_t event = 0;
-  while (event < mMidiCount && mMidi[event].message.mOffset < nFrames)
+  while (offset < nFrames)
   {
-    const int nextOffset = mMidi[event].message.mOffset;
+    mAutomation.advanceTo(offset);
+    applyContinuousParameters();
+    while (event < mMidiCount && mMidi[event].message.mOffset == offset)
+      applyMidi(mMidi[event++].message);
+    int nextOffset = mAutomation.nextBoundary(offset, nFrames);
+    if (event < mMidiCount)
+      nextOffset = std::min(nextOffset, mMidi[event].message.mOffset);
     renderRange(outputs, offset, nextOffset - offset);
     offset = nextOffset;
-    do
-    {
-      applyMidi(mMidi[event++].message);
-    } while (event < mMidiCount && mMidi[event].message.mOffset == nextOffset);
   }
-  renderRange(outputs, offset, nFrames - offset);
+  mAutomation.endBlock(nFrames);
 
   // Preserve a host event exactly at the end of the block for sample zero of
   // the next block, as well as any later event supplied by a host.

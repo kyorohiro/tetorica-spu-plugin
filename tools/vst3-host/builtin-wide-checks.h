@@ -110,9 +110,9 @@ template<class Factory> void checkBuiltinWide(Factory make,double rate,const cha
   const auto initial=fresh->stateBodyForTest();
   const auto initialState=decodeState({initial.data(),initial.size()});
   requireWide(initialState.definition->kind()==InstrumentDefinition::Kind::BuiltinSineWide&&
-    initialState.gainPercent==100,"Fresh actual bundle did not select wide builtin Sine at default Gain");
+    initialState.gainPercent==100&&initialState.gainBoost==1,"Fresh actual bundle did not select wide builtin Sine at default Gain");
   const auto originalParameters=fresh->soundParametersForBuiltinTest();
-  requireWide(originalParameters.size()==26,"Wide Sine changed the 26 public sound parameters");
+  requireWide(originalParameters.size()==27,"Wide Sine changed the 27 public sound parameters");
   std::size_t measured=0;
   // Include all zone edges as well as the explicitly requested high keys. Each
   // zone must retain two semitones of upward bend headroom.
@@ -180,13 +180,13 @@ template<class Factory> void checkBuiltinWide(Factory make,double rate,const cha
     "Actual host rejected an authored wide Sine state");
   requireWide(roundtrip->stateBodyForTest()==authored,"Wide Sine changed its exact authored state before audio");
   const auto parameters=roundtrip->soundParametersForBuiltinTest();
-  const std::array<double,26> expected{{37,0,41,1,3,7,94,1,1,27,1,0,6,0,37.5,62.5,1,0,23,0,3,2.25,.375,321,0,.625}};
+  const std::array<double,27> expected{{37,0,41,1,3,7,94,1,1,27,1,0,6,0,37.5,62.5,1,0,23,0,3,2.25,.375,321,0,.625,1}};
   for(std::size_t i=0;i<expected.size();++i)requireWide(std::abs(parameters[i]-expected[i])<1e-5,
     "Wide Sine changed a public parameter ID/value during restore");
   exact(*roundtrip,*reference,{on(0,116,37)},"First restored wide Sine NoteOn/offset PCM differs");
   for(int i=0;i<12;++i)exact(*roundtrip,*reference,{},"Wide Sine restored held PCM differs");
   requireWide(roundtrip->stateBodyForTest()==authored&&roundtrip->soundParametersForBuiltinTest()==parameters,
-    "Wide Sine save/restore changed one of the 26 authored sound parameters");
+    "Wide Sine save/restore changed one of the 27 authored sound parameters");
   for(const auto& edit:{std::pair<std::size_t,std::uint32_t>{8,9},{20,1},{24,1},{28,1}}) {
     auto malformed=authored;word(malformed,edit.first,edit.second);
     requireWide(!roundtrip->tryStateRestoreForTest(malformed)&&roundtrip->stateBodyForTest()==authored&&
@@ -207,7 +207,7 @@ template<class Factory> void checkBuiltinWide(Factory make,double rate,const cha
   // Every historical kind0 schema still selects the original fixed ADPCM and
   // legacy PITCH ceiling, even when replacing an active wide source.
   const auto legacy=encodeState(InstrumentDefinition::builtin(),100);
-  for(unsigned schema=1;schema<=9;++schema) {
+  for(unsigned schema=1;schema<=10;++schema) {
     auto old=make(),canonical=make();
     const auto fixture=oldBuiltin(schema);
     requireWide(old->tryStateRestoreForTest(fixture)&&canonical->tryStateRestoreForTest(legacy),
@@ -230,6 +230,6 @@ template<class Factory> void checkBuiltinWide(Factory make,double rate,const cha
   std::cout<<"PASS "<<host<<" builtin wide Sine sampleRate="<<rate<<" pitchMeasurements="<<measured
     <<" keys92_104_116_127=true bendEndpoints2st=true zoneEdges=true heldBendNoKON=true partitionInvariant=true"
     <<" freshWide=true originalLowKeysExact=true exactStateRoundtrip=true malformedWideAtomic=true"
-    <<" publicParams26Stable=true schemas1To9LegacyPCM=true rawGainLegacy=true depthZeroPmonWide=true\n";
+    <<" publicParams27Stable=true schemas1To10LegacyPCM=true rawGainLegacy=true depthZeroPmonWide=true\n";
 }
 } // namespace tetorica::test

@@ -9,6 +9,8 @@
 #include <array>
 #include <cstdint>
 #include <cstring>
+#include <cmath>
+#include <limits>
 #include <type_traits>
 #include <vector>
 
@@ -118,6 +120,13 @@ Steinberg::tresult PLUGIN_API TetoricaSPU::setState(Steinberg::IBStream* stream)
 #if defined(AU_API)
 static_assert(std::is_same_v<decltype(&TetoricaSPU::AuGetProperty), AudioUnitGetPropertyProc>);
 static_assert(std::is_same_v<decltype(&TetoricaSPU::AuSetProperty), AudioUnitSetPropertyProc>);
+// Recent Apple SDKs annotate the official parameter pointers nonblocking;
+// older SDKs do not. Check their callable ABI without requiring that attribute
+// on the pinned framework's forwarding methods.
+static_assert(std::is_invocable_r_v<OSStatus, AudioUnitSetParameterProc, void*,
+  AudioUnitParameterID, AudioUnitScope, AudioUnitElement, AudioUnitParameterValue, UInt32>);
+static_assert(std::is_invocable_r_v<OSStatus, AudioUnitScheduleParametersProc, void*,
+  const AudioUnitParameterEvent*, UInt32>);
 namespace {
 bool auPresetProperty(AudioUnitPropertyID property)
 {
@@ -148,7 +157,84 @@ template<> AudioComponentMethod iplug::IPlugAUFactory<TetoricaSPU, true>::Lookup
     return reinterpret_cast<AudioComponentMethod>(&TetoricaSPU::AuGetProperty);
   if (selector == kAudioUnitSetPropertySelect)
     return reinterpret_cast<AudioComponentMethod>(&TetoricaSPU::AuSetProperty);
+  if (selector == kAudioUnitSetParameterSelect)
+    return reinterpret_cast<AudioComponentMethod>(&TetoricaSPU::AuSetParameter);
+  if (selector == kAudioUnitScheduleParametersSelect)
+    return reinterpret_cast<AudioComponentMethod>(&TetoricaSPU::AuScheduleParameters);
   return IPlugAUFactory<IPlugAU, true>::Lookup(selector);
+}
+
+OSStatus TetoricaSPU::AuSetParameter(void* instance, AudioUnitParameterID parameter,
+  AudioUnitScope scope, AudioUnitElement element, AudioUnitParameterValue value, UInt32 offset)
+{
+  const auto forward = reinterpret_cast<AudioUnitSetParameterProc>(
+    iplug::IPlugAUFactory<iplug::IPlugAU, true>::Lookup(kAudioUnitSetParameterSelect));
+  const int slot = parameter < kNumParams ? continuousSlot(parameter) : -1;
+  if (slot < 0) return forward(instance, parameter, scope, element, value, offset);
+  if (!instance) return kAudioUnitErr_InvalidParameter;
+  if (scope != kAudioUnitScope_Global) return kAudioUnitErr_InvalidScope;
+  if (element != 0) return kAudioUnitErr_InvalidElement;
+  auto* plug = reinterpret_cast<TetoricaSPU*>(
+    &static_cast<iplug::AudioComponentPlugInInstance*>(instance)->mInstanceStorage);
+  const auto* param = plug->GetParam(parameter);
+  if (!std::isfinite(value) || value < param->GetMin() || value > param->GetMax() ||
+      offset > static_cast<UInt32>(std::numeric_limits<int>::max()))
+    return kAudioUnitErr_InvalidParameter;
+  // Publish the event before its public target: render must never observe a
+  // future target without the corresponding offset. The continuous path
+  // avoids the pinned framework's single-producer editor notification FIFO.
+  plug->scheduleAuContinuous(parameter, static_cast<int>(offset), value);
+  return noErr;
+}
+
+OSStatus TetoricaSPU::AuScheduleParameters(void* instance,
+  const AudioUnitParameterEvent* events, UInt32 count)
+{
+  if (!instance || (count && !events) || count > tetorica::ContinuousAutomation::kCapacity)
+    return kAudioUnitErr_InvalidParameter;
+  auto* plug = reinterpret_cast<TetoricaSPU*>(
+    &static_cast<iplug::AudioComponentPlugInInstance*>(instance)->mInstanceStorage);
+  // Validate the complete bounded batch before publishing any of its points.
+  for (UInt32 i=0; i<count; ++i)
+  {
+    const auto& event = events[i];
+    if (event.parameter >= kNumParams) return kAudioUnitErr_InvalidParameter;
+    if (event.scope != kAudioUnitScope_Global) return kAudioUnitErr_InvalidScope;
+    if (event.element != 0) return kAudioUnitErr_InvalidElement;
+    const auto* param = plug->GetParam(event.parameter);
+    const auto valid = [param](double v) {
+      return std::isfinite(v) && v >= param->GetMin() && v <= param->GetMax();
+    };
+    if (event.eventType == kParameterEvent_Immediate)
+    {
+      if (!valid(event.eventValues.immediate.value) || event.eventValues.immediate.bufferOffset >
+          static_cast<UInt32>(std::numeric_limits<int>::max())) return kAudioUnitErr_InvalidParameter;
+    }
+    else if (event.eventType == kParameterEvent_Ramped)
+    {
+      if (continuousSlot(event.parameter)<0 || !event.eventValues.ramp.durationInFrames ||
+          !valid(event.eventValues.ramp.startValue) || !valid(event.eventValues.ramp.endValue))
+        return kAudioUnitErr_InvalidParameter;
+    }
+    else return kAudioUnitErr_InvalidParameter;
+  }
+  for (UInt32 i=0; i<count; ++i)
+  {
+    const auto& event = events[i];
+    if (event.eventType == kParameterEvent_Immediate)
+    {
+      const auto& step = event.eventValues.immediate;
+      const auto status = AuSetParameter(instance, event.parameter,event.scope,event.element,step.value,step.bufferOffset);
+      if (status != noErr) return status;
+    }
+    else
+    {
+      const auto& ramp = event.eventValues.ramp;
+      plug->scheduleAuContinuous(event.parameter, ramp.startBufferOffset, ramp.endValue,
+        ramp.durationInFrames, ramp.startValue);
+    }
+  }
+  return noErr;
 }
 
 OSStatus TetoricaSPU::AuGetProperty(void* instance, AudioUnitPropertyID property,
@@ -159,7 +245,12 @@ OSStatus TetoricaSPU::AuGetProperty(void* instance, AudioUnitPropertyID property
     using GetProperty = OSStatus (*)(void*, AudioUnitPropertyID, AudioUnitScope, AudioUnitElement, void*, UInt32*);
     const auto forward = reinterpret_cast<GetProperty>(
       iplug::IPlugAUFactory<iplug::IPlugAU, true>::Lookup(kAudioUnitGetPropertySelect));
-    return forward(instance, property, scope, element, data, size);
+    const auto status = forward(instance, property, scope, element, data, size);
+    if (status == noErr && property == kAudioUnitProperty_ParameterInfo &&
+        scope == kAudioUnitScope_Global && element < kNumParams &&
+        continuousSlot(element) >= 0 && data && size && *size >= sizeof(AudioUnitParameterInfo))
+      static_cast<AudioUnitParameterInfo*>(data)->flags |= kAudioUnitParameterFlag_CanRamp;
+    return status;
   }
   if (scope != kAudioUnitScope_Global) return kAudioUnitErr_InvalidScope;
   if (element != 0) return kAudioUnitErr_InvalidElement;

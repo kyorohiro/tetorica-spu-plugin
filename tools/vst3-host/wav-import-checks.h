@@ -71,7 +71,7 @@ template<class Factory> void checkWavImports(Factory make,double rate,const char
     auto a=make(),b=make();
     requireWav(a->tryStateRestoreForTest(encoded)&&b->tryStateRestoreForTest(encoded),
       "Actual bundle rejected converted WAV source");
-    requireWav(a->stateBodyForTest()==encoded,"WAV saved source or one of26 parameters changed");
+    requireWav(a->stateBodyForTest()==encoded,"WAV saved source or one of27 parameters changed");
     const auto saved=envelope_detail::saved(*a);
     requireWav(saved.definition->kind()==InstrumentDefinition::Kind::AdpcmSample&&
       web_detail::same(saved.definition->rawAdpcmSample(),authored.definition->rawAdpcmSample()),
@@ -149,7 +149,7 @@ template<class Factory> void checkWavImports(Factory make,double rate,const char
   const auto tryImport=[&](const Bytes& bytes){try{return actual->tryStateRestoreForTest(
     web_detail::wire(state(imported(bytes).sample)));}catch(const std::exception&){return false;}};
   for(const auto& bad:malformed)requireWav(!tryImport(bad)&&actual->stateBodyForTest()==valid,
-    "Rejected WAV input replaced a prepared source or any of26 parameters");
+    "Rejected WAV input replaced a prepared source or any of27 parameters");
   auto badState=valid;badState.at(96)=0xf0; // Raw payload's first ADPCM filter.
   requireWav(!actual->tryStateRestoreForTest(badState)&&actual->stateBodyForTest()==valid,
     "Invalid converted ADPCM cancelled a valid pending WAV state");
@@ -165,7 +165,7 @@ template<class Factory> void checkWavImports(Factory make,double rate,const char
   auto isolated=make(),pristine=make();reverb_detail::exact(*isolated,*pristine,first,
     "WAV imported source leaked into another plugin instance");
   std::cout<<"PASS "<<host<<" WavImport sampleRate="<<rate
-    <<" formats4=true embeddedSourceWithoutWav=true full26Params=true firstRestoreBlock=true"
+    <<" formats4=true embeddedSourceWithoutWav=true full27Params=true firstRestoreBlock=true"
     <<" rootTuning=true metadataEdits=true recordedPitch=true oneShotEndsUnderSustain=true loopContinues=true singlePacketLoop=true"
     <<" invalidPendingActiveAtomic=true carriedMidi=true separateInstance=true\n";
 }

@@ -22,6 +22,7 @@
 #include "software-audio-checks.h"
 #include "loop-repeat-checks.h"
 #include "gain-smoothing-checks.h"
+#include "continuous-automation-checks.h"
 #include "cc120-checks.h"
 #include "builtin-wide-checks.h"
 #include "pluginterfaces/vst/ivstmidicontrollers.h"
@@ -158,8 +159,8 @@ public:
     parameterForTest(bypass,bypassed?1.:0.,0);
   }
   double gain() const { return controller->getParamNormalized(gainId); }
-  std::array<double,26> soundParametersForBuiltinTest() const {
-    std::array<bool,26> found{};std::array<double,26> values{};
+  std::array<double,27> soundParametersForBuiltinTest() const {
+    std::array<bool,27> found{};std::array<double,27> values{};
     FUnknownPtr<IMidiMapping> mapping(controller);require(bool(mapping),"Missing parameter-list MIDI mapping");
     ParamID midiStart=0;
     ok(mapping->getMidiControllerAssignment(0,0,kCtrlBankSelectMSB,midiStart),
@@ -176,7 +177,7 @@ public:
         controller->getParamNormalized(parameter.id));
     }
     require(std::all_of(found.begin(),found.end(),[](bool present){return present;}),
-      "VST3 lost one of the 26 public sound-parameter IDs");
+      "VST3 lost one of the 27 public sound-parameter IDs");
     return values;
   }
   void allowAsymmetric() { symmetricExpected=false; }
@@ -253,11 +254,14 @@ public:
     ok(queue->addPoint(offset,value,pointIndex),"Cannot add adversarial parameter point");
   }
   void plainParameterForTest(int index,double plainValue) {
-    require(index>=1&&index<=25,"Invalid sound parameter ID");
+    plainAutomationForTest(index,plainValue,0);
+  }
+  void plainAutomationForTest(int index,double plainValue,int offset) {
+    require(index>=0&&index<=26,"Invalid sound parameter ID");
     const ParamID id=static_cast<ParamID>(index);
     const double normalized=controller->plainParamToNormalized(id,plainValue);
     ok(controller->setParamNormalized(id,normalized),"ADSR controller parameter rejected");
-    parameterForTest(id,normalized,0);
+    parameterForTest(id,normalized,offset);
   }
   std::vector<std::uint8_t> stateBodyForTest() {
     auto bytes=savedBytes();require(bytes.size()>=4,"Missing VST3 state trailer");
@@ -547,6 +551,35 @@ void checkRate(const PluginFactory& factory, const ClassInfo& info, double rate)
     << " restoredGainRatio=" << ratio << " stateBytes=" << state.getSize()
     << " independentInstances=true\n";
 }
+void checkContinuousIngress(const PluginFactory& factory,const ClassInfo& info,double rate) {
+  {
+    Instance edited(factory,info,rate),reference(factory,info,rate);
+    edited.start();reference.start();tetorica::test::gain_detail::warm(edited,reference);
+    for(int point=0;point<1025;++point)
+      edited.parameterForTest(0,point==1024?.75:0.,point+37);
+    edited.plainAutomationForTest(26,1.5,0);
+    tetorica::test::gain_detail::Line line(rate);line.target(1.125);
+    tetorica::test::gain_detail::span(edited,reference,line,line.length+97);
+    const auto state=tetorica::test::automation_detail::saved(edited);
+    require(state.gainPercent==75&&state.gainBoost==1.5,
+      "VST3 automation overflow lost the latest authoring targets");
+    require(peak(edited.renderMidi({}))>1.e-4,
+      "Continuous automation overflow panicked a held MIDI voice");
+  }
+  {
+    Instance edited(factory,info,rate),reference(factory,info,rate);
+    edited.start();reference.start();tetorica::test::gain_detail::warm(edited,reference);
+    int at=19;
+    for(double value:{-1.,1.01,std::numeric_limits<double>::infinity(),std::numeric_limits<double>::quiet_NaN()}) {
+      edited.parameterForTest(0,value,at++);edited.parameterForTest(26,value,at++);
+    }
+    edited.parameterForTest(0,0.,-1);edited.parameterForTest(26,1.,-1);
+    edited.plainAutomationForTest(0,37.5,37);
+    tetorica::test::automation_detail::gainOracle(edited,reference,rate,{{0,37.5,37}},600);
+  }
+  std::cout<<"PASS VST3 continuous ingress sampleRate="<<rate
+    <<" points1025LatestFallback=true heldVoicePreserved=true gainBoostTargetsPreserved=true invalidPointsIgnored=true\n";
+}
 void checkMappedIngress(const PluginFactory& factory,const ClassInfo& info) {
   constexpr double rate=48000;
   auto savedGain=[](Instance& instance) {
@@ -814,6 +847,11 @@ int main(int argc, char** argv) {
           tetorica::test::checkGainSmoothing([&] {
             auto instance=std::make_unique<Instance>(factory,info,rate);instance->start();return instance;
           },rate,"VST3 parameters/events");
+          tetorica::test::checkContinuousAutomation([&] {
+            auto instance=std::make_unique<Instance>(factory,info,rate);instance->allowAsymmetric();
+            instance->start();return instance;
+          },rate,"VST3 parameter points");
+          checkContinuousIngress(factory,info,rate);
           tetorica::test::checkEnvelopes([&] {
             auto instance=std::make_unique<Instance>(factory,info,rate);instance->allowAsymmetric();
             instance->start();return instance;

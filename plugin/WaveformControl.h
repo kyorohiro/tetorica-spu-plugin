@@ -22,8 +22,14 @@ public:
     mCycle(tetorica::makePcmCycle(tetorica::WaveformShape::Sine)), mStroke(mCycle)
   {
     mDblAsSingleClick = true;
-    SetTooltip("Draw the 112-sample source PCM. Release completes the draft; "
-               "Apply PCM changes the sound. Cancelled strokes are discarded.");
+    SetTooltip("Draw the 112-sample source PCM. Release completes one edit; Auto apply is on by default. With Auto apply off, press Apply to hear the draft. Replacement stops notes and reverb tails. Cancelled strokes are discarded.");
+  }
+
+  void SetAutoApply(bool enabled)
+  {
+    if (mAutoApply == enabled) return;
+    mAutoApply = enabled;
+    SetDirty(false);
   }
 
   void SetCycle(const tetorica::PcmCycle& cycle)
@@ -97,7 +103,7 @@ public:
     }
     else path(cycle, accent, 2.f, false);
     const IText caption(11, text);
-    const char* label = !mMorph ? "Source PCM - draft" :
+    const char* label = !mMorph ? (mAutoApply ? "Source PCM / auto apply" : "Source PCM / manual draft") :
       mEditB ? "Edit B (pink) / A (blue) / Result (gold)" : "Edit A (blue) / B (pink) / Result (gold)";
     graphics.DrawText(caption.WithAlign(EAlign::Near), label,
       IRECT(mRECT.L + 10, mRECT.T + 2, mRECT.MW(), mRECT.T + 18), &mBlend);
@@ -106,7 +112,7 @@ public:
       std::snprintf(sample, sizeof(sample), "Sample %d: %.4f", mHoverIndex, cycle[std::size_t(mHoverIndex)]);
     else
       std::snprintf(sample, sizeof(sample), "%s", mMorph ?
-        (mDraft ? "Draft preview / Apply to hear" : "Applied endpoints / live Amount") : "112 samples / -1 to +1");
+        (mDraft ? (mAutoApply ? "Auto apply after edit" : "Draft preview / Apply to hear") : "Applied endpoints / live Amount") : "112 samples / -1 to +1");
     graphics.DrawText(caption.WithAlign(EAlign::Far), sample,
       IRECT(mRECT.MW(), mRECT.T + 2, mRECT.R - 10, mRECT.T + 18), &mBlend);
   }
@@ -199,7 +205,7 @@ private:
   Change mChange;
   tetorica::PcmCycle mCycle, mStroke;
   tetorica::MorphEndpoints mEndpoints{};
-  bool mMorph = false, mEditB = false, mDraft = false;
+  bool mMorph = false, mEditB = false, mDraft = false, mAutoApply = true;
   double mAmount = 0;
   bool mDrawing = false;
   int mLastIndex = -1, mHoverIndex = -1;

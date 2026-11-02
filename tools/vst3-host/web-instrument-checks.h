@@ -22,7 +22,7 @@ inline ImportedWebInstrument fixture(const char* name) {
   return readWebInstrument(text);
 }
 inline Bytes wire(const SavedInstrumentState& s) {
-  return encodeState(s.definition,s.gainPercent,s.envelope,s.reverb,s.noise,s.pmon,s.morph);
+  return encodeState(s.definition,s.gainPercent,s.envelope,s.reverb,s.noise,s.pmon,s.morph,s.gainBoost);
 }
 inline bool same(const RawAdpcmSample& a,const RawAdpcmSample& b) {
   return a.adpcm==b.adpcm&&a.baseFrequencyHz==b.baseFrequencyHz&&a.loopStartSamples==b.loopStartSamples&&
@@ -115,9 +115,9 @@ template<class Factory> void checkWebInstruments(Factory make,double rate,const 
   requireWeb(gatedPcm.left==dryPcm.left&&gatedPcm.right==dryPcm.right&&delta(wetPcm.left,dryPcm.left)>1e-5,
     "Raw source reverb flag did not independently control Tone-send wet output");
 
-  // All26 values are deliberately authored, including dormant settings. Reject
+  // All27 values are deliberately authored, including dormant settings. Reject
   // malformed raw data before replacing pending or active state/MIDI runtime.
-  SavedInstrumentState full;full.definition=cycleDefinition;full.gainPercent=37;
+  SavedInstrumentState full;full.definition=cycleDefinition;full.gainPercent=37;full.gainBoost=1.75;
   full.envelope={{0xa937,0xd7bb},false,false};full.reverb={ReverbPreset::Room,false,true,.375,.625};
   full.noise={false,37};full.pmon={false,WaveformShape::Saw,2.5,.375,1250};full.morph={false,.375};
   const auto valid=wire(full);const auto payload=valid.size()-kStateFixedBytes;
@@ -138,12 +138,12 @@ template<class Factory> void checkWebInstruments(Factory make,double rate,const 
   {auto bad=valid;bad.pop_back();invalid.push_back(std::move(bad));}
   for(const auto& bad:invalid)
     requireWeb(!active->tryStateRestoreForTest(bad)&&active->stateBodyForTest()==valid,
-      "Invalid Web raw state changed pending source or any of26 parameters");
+      "Invalid Web raw state changed pending source or any of27 parameters");
   const auto carried=std::vector<Midi>{on(0,60,37),on(15,67,600),cc(64,127,15,600)};
   reverb_detail::exact(*active,*reference,carried,"Malformed raw state altered first fresh key or pending engine");
   for(const auto& bad:invalid) {
     requireWeb(!active->tryStateRestoreForTest(bad)&&active->stateBodyForTest()==valid,
-      "Invalid Web raw state changed active source/26 parameters");
+      "Invalid Web raw state changed active source/27 parameters");
     reverb_detail::exact(*active,*reference,{},"Rejected raw state interrupted PCM or discarded carried MIDI");
   }
   auto isolated=make(),pristine=make();
@@ -155,15 +155,16 @@ template<class Factory> void checkWebInstruments(Factory make,double rate,const 
   for(auto base:{InstrumentDefinition::builtin(),InstrumentDefinition::fromVab(bank,3,1),
                  InstrumentDefinition::fromPcmCycle(makePcmCycle(WaveformShape::Triangle))}) {
     auto previous=full;previous.definition=InstrumentDefinition::withMorphEndpoints(base,endpoints);
-    previous.morph={true,.375};previous.pmon.enabled=true;
-    auto old=wire(previous);envelope_detail::word(old,8,7);
+    previous.morph={true,.375};previous.pmon.enabled=true;previous.gainBoost=1;
+    auto old=wire(previous);old.resize(old.size()-8);
+    envelope_detail::word(old,8,7);envelope_detail::word(old,12,static_cast<std::uint32_t>(old.size()));
     requireWeb(active->tryStateRestoreForTest(valid)&&active->tryStateRestoreForTest(old)&&
       reference->tryStateRestoreForTest(wire(previous)),"Schema7 restore over raw import rejected");
     requireWeb(active->stateBodyForTest()==wire(previous),"Schema7 migration lost an original source, endpoints or parameter");
     reverb_detail::exact(*active,*reference,events,"Schema7 migration changed first source/Morph PCM");
   }
   std::cout<<"PASS "<<host<<" WebInstrument sampleRate="<<rate
-    <<" actualWebFixtures6=true rawBytesMetadata=true full26Params=true firstRestoreBlock=true"
+    <<" actualWebFixtures6=true rawBytesMetadata=true full27Params=true firstRestoreBlock=true"
     <<" signedPolarity=true rootTuning=true sourceADSR=true sourceReverbSend=true"
     <<" malformedPendingActiveAtomic=true carriedMidi=true separateInstance=true schema7Migration=true\n";
 }

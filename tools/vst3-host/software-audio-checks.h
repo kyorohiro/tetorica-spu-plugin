@@ -13,7 +13,7 @@ inline SoftwarePcmSample sample(std::size_t frames=4096,bool loop=true) {
   result.name="Original Software audio";result.reverb=true;return result;
 }
 inline SavedInstrumentState state(const SoftwarePcmSample& sample) {
-  SavedInstrumentState result;result.gainPercent=37;result.envelope={{0xa937,0xd7bb},false,false};
+  SavedInstrumentState result;result.gainPercent=37;result.gainBoost=1.75;result.envelope={{0xa937,0xd7bb},false,false};
   result.reverb={ReverbPreset::Room,false,true,.375,.625};result.noise={false,37};
   result.pmon={false,WaveformShape::Saw,2.5,.375,1250};result.morph={false,.375};
   result.definition=InstrumentDefinition::withMorphEndpoints(InstrumentDefinition::fromSoftwarePcmSample(sample),
@@ -38,7 +38,7 @@ template<class Factory> void checkSoftwareAudio(Factory make,double rate,const c
   const auto source=sample();const auto authored=state(source);const auto valid=web_detail::wire(authored);
   auto a=make(),reference=make();
   requireSoftware(a->tryStateRestoreForTest(valid)&&reference->tryStateRestoreForTest(valid)&&a->stateBodyForTest()==valid,
-    "Software source or full26 authored settings failed state round trip");
+    "Software source or full27 authored settings failed state round trip");
   reverb_detail::exact(*a,*reference,{on(0,60,37)},"Software first restore block differs");
   requireSoftware(std::all_of(a->right().begin(),a->right().begin()+37,[](float x){return x==0;})&&maximum(a->right())>1e-5,
     "Software first NoteOn offset/PCM failed");
@@ -103,16 +103,18 @@ template<class Factory> void checkSoftwareAudio(Factory make,double rate,const c
   {auto bad=valid;reverb_detail::putDouble(bad,48,0);badStates.push_back(std::move(bad));}
   {auto bad=valid;bad.pop_back();badStates.push_back(std::move(bad));}
   for(const auto& bad:badStates)requireSoftware(!a->tryStateRestoreForTest(bad)&&a->stateBodyForTest()==valid,
-    "Malformed Software state changed valid pending source/26params");
+    "Malformed Software state changed valid pending source/27params");
   reverb_detail::exact(*a,*reference,{on(0,60,37),on(15,67,600),cc(64,127,15,600)},
     "Invalid Software state changed first-block adoption or MIDI");
   for(const auto& bad:badStates){requireSoftware(!a->tryStateRestoreForTest(bad)&&a->stateBodyForTest()==valid,
-      "Malformed Software state changed active source/26params");
+      "Malformed Software state changed active source/27params");
     reverb_detail::exact(*a,*reference,{},"Invalid Software state interrupted held/future PCM");}
   for(auto oldSource:{InstrumentDefinition::builtin(),InstrumentDefinition::fromVab(bank,3,1),
       InstrumentDefinition::fromPcmCycle(makePcmCycle(WaveformShape::Triangle)),
       web_detail::fixture("v1-arbitrary.spu.json").state.definition}) {
-    auto previous=authored;previous.definition=oldSource;auto old=web_detail::wire(previous);envelope_detail::word(old,8,8);
+    auto previous=authored;previous.definition=oldSource;previous.gainBoost=1;
+    auto old=web_detail::wire(previous);old.resize(old.size()-8);
+    envelope_detail::word(old,8,8);envelope_detail::word(old,12,static_cast<std::uint32_t>(old.size()));
     requireSoftware(a->tryStateRestoreForTest(valid)&&a->tryStateRestoreForTest(old)&&
       reference->tryStateRestoreForTest(web_detail::wire(previous)),"Schema8 restore over Software source rejected");
     reverb_detail::exact(*a,*reference,{on(0,60,37)},"Schema8 migration over Software source changed first PCM");}
@@ -136,7 +138,7 @@ template<class Factory> void checkSoftwareAudio(Factory make,double rate,const c
     requireSoftware(maximum(first->right())>1e-5,"20MiB Software source produced no first-block PCM");
   }
   std::cout<<"PASS "<<host<<" SoftwareAudio sampleRate="<<rate
-    <<" webV2=true full26Params=true firstRestoreBlock=true rawMorphDormant=true dormantMorphCarriedOff=true rootTuning=true"
+    <<" webV2=true full27Params=true firstRestoreBlock=true rawMorphDormant=true dormantMorphCarriedOff=true rootTuning=true"
     <<" PMONCarrier=true reverb=true oneShotLoop=true malformedPendingActiveAtomic=true carriedMidi=true"
     <<" schema8Migration=true large20MiB="<<(rate==48000?"true":"coveredAt48k")<<"\n";
 }

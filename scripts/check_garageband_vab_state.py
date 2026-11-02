@@ -16,7 +16,7 @@ import struct
 MAX_BANK = 1024 * 1024
 MAX_SOFTWARE_PCM = 32 * 1024 * 1024
 MAX_SOFTWARE_FRAMES = MAX_SOFTWARE_PCM // 2
-MAX_STATE = MAX_SOFTWARE_PCM + 64 + 320 + 1024
+MAX_STATE = MAX_SOFTWARE_PCM + 64 + 320 + 1032
 # A maximum-size embedded state expands to about44.8MB of base64 plus XML
 # whitespace. Permit bounded project history/multiple AU fragments as well.
 MAX_PROJECT_DATA = 256 * 1024 * 1024
@@ -164,7 +164,7 @@ def decode_payload(payload):
         if not math.isfinite(gain) or not 0 <= gain <= 100:
             raise ValueError('Invalid legacy Gain')
         return dict(result, schema='legacy-gain-only', kind='Builtin',
-                    program=0, tone=0, gain_percent=gain,
+                    program=0, tone=0, gain_percent=gain, gain_boost=1., effective_gain_percent=gain,
                     envelope={'enabled': False, 'live': True, 'adsr1': 0x000f, 'adsr2': 0x1fc0},
                     reverb={'preset': 0, 'enabled': False, 'use_tone_send': False,
                             'volume_left': .25, 'volume_right': .25},
@@ -175,7 +175,7 @@ def decode_payload(payload):
     if len(payload) < 40 or payload[:8] != b'TSPUST01':
         raise ValueError('Expected complete TSPUST01 custom state or legacy Gain')
     schema, total, kind, program, tone, size = struct.unpack_from('<6I', payload, 8)
-    fixed = {1: 40, 2: 48, 3: 72, 4: 72, 5: 80, 6: 112, 7: 1024, 8: 1024, 9: 1024, 10: 1024}.get(schema)
+    fixed = {1: 40, 2: 48, 3: 72, 4: 72, 5: 80, 6: 112, 7: 1024, 8: 1024, 9: 1024, 10: 1024, 11: 1032}.get(schema)
     if fixed is None or total != len(payload) or total != fixed + size:
         raise ValueError('Invalid state schema, total or source length')
     if kind not in ((0, 1, 2, 3, 4, 5) if schema >= 10 else (0, 1, 2, 3, 4) if schema >= 9 else (0, 1, 2, 3) if schema >= 8 else (0, 1, 2) if schema >= 4 else (0, 1)) or program > 127 or tone > 15:
@@ -196,6 +196,9 @@ def decode_payload(payload):
     gain, = struct.unpack_from('<d', payload, 32 + size)
     if not math.isfinite(gain) or not 0 <= gain <= 100:
         raise ValueError('Invalid custom-state Gain')
+    boost, = struct.unpack_from('<d', payload, 1024 + size) if schema >= 11 else (1.,)
+    if not math.isfinite(boost) or not 1 <= boost <= 3.8:
+        raise ValueError('Invalid custom-state Gain boost')
     packed, flags = struct.unpack_from('<2I', payload, 40 + size) if schema >= 2 else (0x1fc0000f, 2)
     if flags & ~3 or packed & 0x20000000:
         raise ValueError('Unknown envelope flags or reserved custom ADSR2 bit13')
@@ -225,6 +228,7 @@ def decode_payload(payload):
     software = decode_software_sample(bank) if kind == 4 else None
     return dict(result, schema=schema, kind={0: 'Builtin', 1: 'VAB', 2: 'PcmCycle', 3: 'AdpcmSample', 4: 'SoftwarePcm', 5: 'BuiltinSineWide'}[kind],
                 program=program, tone=tone, gain_percent=gain,
+                gain_boost=boost, effective_gain_percent=gain * boost,
                 envelope={'enabled': bool(flags & 1), 'live': bool(flags & 2),
                           'adsr1': packed & 65535, 'adsr2': packed >> 16},
                 reverb={'preset': preset, 'enabled': bool(effects & 1), 'use_tone_send': bool(effects & 2),
@@ -286,10 +290,13 @@ def main():
     parser.add_argument('--expected-vab', type=Path)
     parser.add_argument('--program', type=int, default=3)
     parser.add_argument('--tone', type=int, default=1)
-    parser.add_argument('--gain', type=float, default=99.)
+    parser.add_argument('--gain', type=float, default=99., help='Legacy base Gain, 0..100 percent')
+    parser.add_argument('--gain-boost', type=float, default=1., help='Gain multiplier, 1..3.8 (schema11)')
     args = parser.parse_args()
     if not 0 <= args.program <= 127 or not 0 <= args.tone <= 15 or not math.isfinite(args.gain) or not 0 <= args.gain <= 100:
         parser.error('Program, Tone or Gain is out of range')
+    if not math.isfinite(args.gain_boost) or not 1 <= args.gain_boost <= 3.8:
+        parser.error('Gain boost is out of range')
     expected = bounded_read(args.expected_vab, MAX_BANK) if args.expected_vab else None
     if expected is not None and (not expected or expected[:4] != b'pBAV'):
         parser.error('Expected VAB must contain a standard pBAV header')
@@ -301,7 +308,8 @@ def main():
             if expected is not None:
                 record['matches_expected'] = bool('error' not in record and record['kind'] == 'VAB'
                     and bank == expected and record['program'] == args.program
-                    and record['tone'] == args.tone and abs(record['gain_percent'] - args.gain) <= 1e-9)
+                    and record['tone'] == args.tone and abs(record['gain_percent'] - args.gain) <= 1e-9
+                    and abs(record['gain_boost'] - args.gain_boost) <= 1e-9)
             candidates.append(record)
     matches = [n for n, record in enumerate(candidates) if record.get('matches_expected')]
     conflicts = [n for n, record in enumerate(candidates) if expected is not None and not record.get('matches_expected')]
@@ -309,7 +317,8 @@ def main():
     report = {'project': str(args.project), 'mode': 'expected-vab' if expected is not None else 'inspect-only',
               'files': files, 'matching_au_candidates': candidates,
               'expected': {'file': str(args.expected_vab), 'bytes': len(expected), 'sha256': sha(expected),
-                           'program': args.program, 'tone': args.tone, 'gain_percent': args.gain} if expected is not None else None,
+                           'program': args.program, 'tone': args.tone, 'gain_percent': args.gain,
+                           'gain_boost': args.gain_boost, 'effective_gain_percent': args.gain * args.gain_boost} if expected is not None else None,
               'expected_candidate_indices': matches, 'conflicting_candidate_indices': conflicts,
               'passed': passed, 'active_selection_proven': False,
               'scope': 'Observed AU XML fragments and exact embedded bytes only; not a GarageBand container decoder or active-track binding. Raw ADPCM packet structure and metadata are checked; optional PCM is not re-encoded to verify its ADPCM consistency. Software PCM16LE is checked by exact byte count and metadata and hashed without expanding samples. Multiple/history candidates are reported, never silently selected. GUI reopen and audio export verify the active instrument separately.'}

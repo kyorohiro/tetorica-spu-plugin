@@ -15,6 +15,9 @@ namespace {
 void gain(double value) {
   if(!std::isfinite(value)||value<0||value>100)fail("SPU state: Gain must be finite 0-100 percent");
 }
+void gainBoost(double value) {
+  if(!std::isfinite(value)||value<1||value>3.8)fail("SPU state: Gain boost must be finite 1-3.8");
+}
 void envelope(const EnvelopeSettings& value) {
   // Custom parameters cover the documented fields only. The source Tone's
   // reserved bit13 is retained separately and merged by the DSP wrapper.
@@ -152,8 +155,8 @@ SoftwarePcmSample readSoftware(vab::BytesView bytes){
 }
 void validateFields(const InstrumentDefinition& definition,double gainPercent,
                     EnvelopeSettings settings,ReverbSettings effects,NoiseSettings generator,
-                    PmonSettings modulation,MorphSettings blend){
-  gain(gainPercent);envelope(settings);reverb(effects);noise(generator);pmon(modulation);morph(blend);
+                    PmonSettings modulation,MorphSettings blend,double boost){
+  gain(gainPercent);gainBoost(boost);envelope(settings);reverb(effects);noise(generator);pmon(modulation);morph(blend);
   validateMorphEndpoints(definition.morphEndpoints());
   if(definition.bankBytes().size()>vab::kMaxFileBytes)fail("SPU state: VAB exceeds 1 MiB");
   switch(definition.kind()){
@@ -234,12 +237,12 @@ std::shared_ptr<const InstrumentDefinition> InstrumentDefinition::withMorphEndpo
 
 void validateSavedInstrumentState(const SavedInstrumentState& state){
   if(!state.definition)throw std::invalid_argument("SPU state: missing instrument definition");
-  validateFields(*state.definition,state.gainPercent,state.envelope,state.reverb,state.noise,state.pmon,state.morph);
+  validateFields(*state.definition,state.gainPercent,state.envelope,state.reverb,state.noise,state.pmon,state.morph,state.gainBoost);
 }
 
 std::vector<std::uint8_t> encodeState(const InstrumentDefinition& definition,double gainPercent,
-                                    EnvelopeSettings settings,ReverbSettings effects,NoiseSettings generator,PmonSettings modulation,MorphSettings blend) {
-  validateFields(definition,gainPercent,settings,effects,generator,modulation,blend);
+                                    EnvelopeSettings settings,ReverbSettings effects,NoiseSettings generator,PmonSettings modulation,MorphSettings blend,double boost) {
+  validateFields(definition,gainPercent,settings,effects,generator,modulation,blend,boost);
   const auto& bank=definition.bankBytes();
   if(bank.size()>vab::kMaxFileBytes)fail("SPU state: VAB exceeds 1 MiB");
   const bool pcm=definition.kind()==InstrumentDefinition::Kind::PcmCycle;
@@ -281,14 +284,15 @@ std::vector<std::uint8_t> encodeState(const InstrumentDefinition& definition,dou
     putSample(bytes.data()+128+size+i*4,definition.morphEndpoints().a[i]);
     putSample(bytes.data()+576+size+i*4,definition.morphEndpoints().b[i]);
   }
+  putGain(bytes.data()+1024+size,boost);
   return bytes;
 }
 
 std::vector<std::uint8_t> encodeState(
     const std::shared_ptr<const InstrumentDefinition>& definition,double gainPercent,
-    EnvelopeSettings settings,ReverbSettings effects,NoiseSettings generator,PmonSettings modulation,MorphSettings blend) {
+    EnvelopeSettings settings,ReverbSettings effects,NoiseSettings generator,PmonSettings modulation,MorphSettings blend,double boost) {
   if(!definition)throw std::invalid_argument("SPU state: missing instrument definition");
-  return encodeState(*definition,gainPercent,settings,effects,generator,modulation,blend);
+  return encodeState(*definition,gainPercent,settings,effects,generator,modulation,blend,boost);
 }
 
 SavedInstrumentState decodeState(vab::BytesView bytes) {
@@ -299,7 +303,7 @@ SavedInstrumentState decodeState(vab::BytesView bytes) {
   if(version<1||version>kStateSchemaVersion)fail("SPU state: unsupported schema");
   if(word(bytes.data+12)!=bytes.size)fail("SPU state: declared length differs");
   const auto kind=word(bytes.data+16),program=word(bytes.data+20),tone=word(bytes.data+24),n=word(bytes.data+28);
-  const auto fixed=version==1?40:version==2?48:version<=4?72:version==5?80:version==6?112:kStateFixedBytes;
+  const auto fixed=version==1?40:version==2?48:version<=4?72:version==5?80:version==6?112:version<=10?1024:kStateFixedBytes;
   if(kind>(version>=10?5u:version>=9?4u:version>=8?3u:version>=4?2u:1u))fail("SPU state: unsupported instrument kind");
   const auto maximum=version>=9&&kind==4?kMaxStateBytes-kStateFixedBytes:vab::kMaxFileBytes;
   if(n>maximum||std::uint64_t(n)+fixed!=bytes.size)fail("SPU state: invalid source length");
@@ -309,6 +313,7 @@ SavedInstrumentState decodeState(vab::BytesView bytes) {
   if(kind==3&&(n<kRawHeaderBytes||program||tone))fail("SPU state: invalid raw source length or selection");
   if(kind==4&&(n<kRawHeaderBytes||program||tone))fail("SPU state: invalid software PCM length or selection");
   const auto gainPercent=readGain(bytes.data+32+n);gain(gainPercent);
+  const auto boost=version>=11?readGain(bytes.data+1024+n):1.;gainBoost(boost);
   EnvelopeSettings settings;
   if(version>=2) {
     const auto packed=word(bytes.data+40+n),flags=word(bytes.data+44+n);
@@ -352,17 +357,17 @@ SavedInstrumentState decodeState(vab::BytesView bytes) {
     }
     validateMorphEndpoints(endpoints);
   }
-  if(kind==0)return {InstrumentDefinition::withMorphEndpoints(InstrumentDefinition::builtin(),endpoints),gainPercent,settings,effects,generator,modulation,blend};
-  if(kind==5)return {InstrumentDefinition::withMorphEndpoints(InstrumentDefinition::builtinWide(),endpoints),gainPercent,settings,effects,generator,modulation,blend};
+  if(kind==0)return {InstrumentDefinition::withMorphEndpoints(InstrumentDefinition::builtin(),endpoints),gainPercent,settings,effects,generator,modulation,blend,boost};
+  if(kind==5)return {InstrumentDefinition::withMorphEndpoints(InstrumentDefinition::builtinWide(),endpoints),gainPercent,settings,effects,generator,modulation,blend,boost};
   if(kind==2) {
     PcmCycle cycle{};
     for(std::size_t i=0;i<cycle.size();++i)cycle[i]=readSample(bytes.data+kStateHeaderBytes+i*4);
-    return {InstrumentDefinition::withMorphEndpoints(InstrumentDefinition::fromPcmCycle(cycle),endpoints),gainPercent,settings,effects,generator,modulation,blend};
+    return {InstrumentDefinition::withMorphEndpoints(InstrumentDefinition::fromPcmCycle(cycle),endpoints),gainPercent,settings,effects,generator,modulation,blend,boost};
   }
-  if(kind==3)return {InstrumentDefinition::withMorphEndpoints(InstrumentDefinition::fromAdpcmSample(readRaw({bytes.data+kStateHeaderBytes,n})),endpoints),gainPercent,settings,effects,generator,modulation,blend};
-  if(kind==4)return {InstrumentDefinition::withMorphEndpoints(InstrumentDefinition::fromSoftwarePcmSample(readSoftware({bytes.data+kStateHeaderBytes,n})),endpoints),gainPercent,settings,effects,generator,modulation,blend};
+  if(kind==3)return {InstrumentDefinition::withMorphEndpoints(InstrumentDefinition::fromAdpcmSample(readRaw({bytes.data+kStateHeaderBytes,n})),endpoints),gainPercent,settings,effects,generator,modulation,blend,boost};
+  if(kind==4)return {InstrumentDefinition::withMorphEndpoints(InstrumentDefinition::fromSoftwarePcmSample(readSoftware({bytes.data+kStateHeaderBytes,n})),endpoints),gainPercent,settings,effects,generator,modulation,blend,boost};
   std::vector<std::uint8_t> bank(bytes.data+kStateHeaderBytes,bytes.data+kStateHeaderBytes+n);
-  return {InstrumentDefinition::withMorphEndpoints(InstrumentDefinition::fromVab(std::move(bank),program,tone),endpoints),gainPercent,settings,effects,generator,modulation,blend};
+  return {InstrumentDefinition::withMorphEndpoints(InstrumentDefinition::fromVab(std::move(bank),program,tone),endpoints),gainPercent,settings,effects,generator,modulation,blend,boost};
 }
 
 } // namespace tetorica

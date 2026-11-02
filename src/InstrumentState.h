@@ -21,8 +21,8 @@ namespace tetorica {
 
 inline constexpr std::size_t kStateHeaderBytes=32;
 inline constexpr std::array<std::uint8_t,8> kStateMagic{{'T','S','P','U','S','T','0','1'}};
-inline constexpr std::uint32_t kStateSchemaVersion=10;
-inline constexpr std::size_t kStateFixedBytes=1024;
+inline constexpr std::uint32_t kStateSchemaVersion=11;
+inline constexpr std::size_t kStateFixedBytes=1032;
 inline constexpr std::size_t kMaxStateBytes=kMaxSoftwarePcmBytes+64+kMaxSoftwarePcmNameBytes+kStateFixedBytes;
 
 // Factory-created immutable authoring data, independent of mutable audio state.
@@ -78,6 +78,9 @@ struct SavedInstrumentState {
   NoiseSettings noise{};
   PmonSettings pmon{};
   MorphSettings morph{};
+  // Gain percent remains the legacy 0..100 host parameter. Appending a boost
+  // preserves old normalized automation and all earlier aggregate initializers.
+  double gainBoost=1;
 };
 
 // Validates the complete scalar tuple and immutable source without allocating
@@ -87,10 +90,10 @@ void validateSavedInstrumentState(const SavedInstrumentState& state);
 // Pure bounded codec: no native SDK, filesystem, audio callbacks or handles.
 // Throws on malformed/oversized/unsupported state; requires an exact total size.
 std::vector<std::uint8_t> encodeState(const InstrumentDefinition& definition,double gainPercent,
-                                    EnvelopeSettings envelope={},ReverbSettings reverb={},NoiseSettings noise={},PmonSettings pmon={},MorphSettings morph={});
+                                    EnvelopeSettings envelope={},ReverbSettings reverb={},NoiseSettings noise={},PmonSettings pmon={},MorphSettings morph={},double gainBoost=1);
 std::vector<std::uint8_t> encodeState(
     const std::shared_ptr<const InstrumentDefinition>& definition,double gainPercent,
-    EnvelopeSettings envelope={},ReverbSettings reverb={},NoiseSettings noise={},PmonSettings pmon={},MorphSettings morph={});
+    EnvelopeSettings envelope={},ReverbSettings reverb={},NoiseSettings noise={},PmonSettings pmon={},MorphSettings morph={},double gainBoost=1);
 SavedInstrumentState decodeState(vab::BytesView bytes);
 
 class SpuInstrument;

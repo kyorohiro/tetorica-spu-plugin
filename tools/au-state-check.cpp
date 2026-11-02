@@ -13,6 +13,7 @@
 #include "vst3-host/software-audio-checks.h"
 #include "vst3-host/loop-repeat-checks.h"
 #include "vst3-host/gain-smoothing-checks.h"
+#include "vst3-host/continuous-automation-checks.h"
 #include "vst3-host/cc120-checks.h"
 #include "vst3-host/builtin-wide-checks.h"
 #include <AudioToolbox/AudioToolbox.h>
@@ -25,6 +26,7 @@
 #include <filesystem>
 #include <fstream>
 #include <iostream>
+#include <limits>
 #include <memory>
 #include <stdexcept>
 #include <vector>
@@ -184,17 +186,17 @@ public:
     ok(AudioUnitGetParameter(mUnit, 0, kAudioUnitScope_Global, 0, &result), "Cannot read AU Gain");
     return result;
   }
-  std::array<double,26> soundParametersForBuiltinTest() const
+  std::array<double,27> soundParametersForBuiltinTest() const
   {
     UInt32 bytes=0;Boolean writable=false;
     ok(AudioUnitGetPropertyInfo(mUnit,kAudioUnitProperty_ParameterList,kAudioUnitScope_Global,
       0,&bytes,&writable),"Cannot inspect AU sound-parameter list");
-    require(bytes==26*sizeof(AudioUnitParameterID),"AU changed the 26 public sound parameters");
-    std::array<AudioUnitParameterID,26> ids{};
+    require(bytes==27*sizeof(AudioUnitParameterID),"AU changed the 27 public sound parameters");
+    std::array<AudioUnitParameterID,27> ids{};
     ok(AudioUnitGetProperty(mUnit,kAudioUnitProperty_ParameterList,kAudioUnitScope_Global,
       0,ids.data(),&bytes),"Cannot read AU sound-parameter list");
     require(bytes==sizeof(ids),"AU returned a truncated sound-parameter list");
-    std::sort(ids.begin(),ids.end());std::array<double,26> values{};
+    std::sort(ids.begin(),ids.end());std::array<double,27> values{};
     for(unsigned i=0;i<values.size();++i)
     {
       require(ids[i]==i,"AU public sound-parameter IDs changed");
@@ -219,9 +221,41 @@ public:
     const auto state=save();return body(state.get());
   }
   void plainParameterForTest(int index,double plainValue) {
-    require(index>=1&&index<=25,"Invalid AU sound parameter ID");
+    plainAutomationForTest(index,plainValue,0);
+  }
+  void plainAutomationForTest(int index,double plainValue,int offset) {
+    require(index>=0&&index<=26&&offset>=0,"Invalid AU sound parameter ID/offset");
     ok(AudioUnitSetParameter(mUnit,static_cast<AudioUnitParameterID>(index),
-      kAudioUnitScope_Global,0,static_cast<AudioUnitParameterValue>(plainValue),0),"AU ADSR parameter rejected");
+      kAudioUnitScope_Global,0,static_cast<AudioUnitParameterValue>(plainValue),offset),"AU timed parameter rejected");
+  }
+  void scheduledImmediateForTest(int index,double plainValue,unsigned offset) {
+    AudioUnitParameterEvent event{};
+    event.scope=kAudioUnitScope_Global;event.parameter=index;
+    event.eventType=kParameterEvent_Immediate;
+    event.eventValues.immediate.bufferOffset=offset;
+    event.eventValues.immediate.value=plainValue;
+    ok(AudioUnitScheduleParameters(mUnit,&event,1),"AU scheduled immediate parameter rejected");
+  }
+  void scheduledRampForTest(int index,double start,double end,int offset,unsigned duration) {
+    AudioUnitParameterEvent event{};
+    event.scope=kAudioUnitScope_Global;event.parameter=index;
+    event.eventType=kParameterEvent_Ramped;
+    event.eventValues.ramp.startBufferOffset=offset;
+    event.eventValues.ramp.durationInFrames=duration;
+    event.eventValues.ramp.startValue=start;event.eventValues.ramp.endValue=end;
+    ok(AudioUnitScheduleParameters(mUnit,&event,1),"AU scheduled ramp parameter rejected");
+  }
+  OSStatus tryScheduleForTest(const std::vector<AudioUnitParameterEvent>& events) {
+    return AudioUnitScheduleParameters(mUnit,events.data(),static_cast<UInt32>(events.size()));
+  }
+  bool supportsRampForTest(int index) {
+    AudioUnitParameterInfo info{};UInt32 bytes=sizeof(info);
+    ok(AudioUnitGetProperty(mUnit,kAudioUnitProperty_ParameterInfo,kAudioUnitScope_Global,
+      static_cast<AudioUnitElement>(index),&info,&bytes),"AU parameter metadata rejected");
+    require(bytes==sizeof(info),"AU returned truncated parameter metadata");
+    const bool canRamp=(info.flags&kAudioUnitParameterFlag_CanRamp)!=0;
+    if((info.flags&kAudioUnitParameterFlag_CFNameRelease)&&info.cfNameString)CFRelease(info.cfNameString);
+    return canRamp;
   }
   std::vector<std::uint8_t> stateBodyForTest() const { return savedBytes(); }
   const std::vector<float>& right() const { return mLastRight; }
@@ -278,6 +312,43 @@ private:
   double mPosition = 0;
   std::vector<float> mLastRight;
 };
+
+void checkScheduleValidation(AudioComponent component)
+{
+  Instance edited(component),reference(component);
+  for(int index=0;index<27;++index)
+    require(edited.supportsRampForTest(index)==(index==0||index==26||index==25||index==14||index==15),
+      "AU CanRamp metadata does not match its five continuous parameter IDs");
+  tetorica::test::gain_detail::warm(edited,reference);
+  const auto before=edited.stateBodyForTest();
+  AudioUnitParameterEvent valid{};
+  valid.scope=kAudioUnitScope_Global;valid.parameter=0;valid.eventType=kParameterEvent_Immediate;
+  valid.eventValues.immediate.bufferOffset=37;valid.eventValues.immediate.value=25;
+  std::vector<std::vector<AudioUnitParameterEvent>> invalid;
+  auto bad=valid;bad.scope=kAudioUnitScope_Input;invalid.push_back({valid,bad});
+  bad=valid;bad.element=1;invalid.push_back({valid,bad});
+  bad=valid;bad.parameter=27;invalid.push_back({valid,bad});
+  bad=valid;bad.eventType=static_cast<AUParameterEventType>(99);invalid.push_back({valid,bad});
+  bad=valid;bad.eventValues.immediate.bufferOffset=0xffffffffu;invalid.push_back({valid,bad});
+  for(double value:{-1.,101.,std::numeric_limits<double>::infinity(),std::numeric_limits<double>::quiet_NaN()}) {
+    bad=valid;bad.eventValues.immediate.value=value;invalid.push_back({valid,bad});
+  }
+  bad=valid;bad.eventType=kParameterEvent_Ramped;bad.eventValues.ramp.startBufferOffset=0;
+  bad.eventValues.ramp.durationInFrames=0;bad.eventValues.ramp.startValue=100;bad.eventValues.ramp.endValue=25;
+  invalid.push_back({valid,bad});
+  bad.eventValues.ramp.durationInFrames=100;bad.parameter=18;bad.eventValues.ramp.startValue=48;
+  bad.eventValues.ramp.endValue=37;invalid.push_back({valid,bad}); // discrete Noise clock
+  invalid.push_back(std::vector<AudioUnitParameterEvent>(1025,valid));
+  require(edited.tryScheduleForTest({})==noErr,"AU rejected an empty scheduling batch");
+  for(const auto& events:invalid) {
+    require(edited.tryScheduleForTest(events)!=noErr && edited.stateBodyForTest()==before,
+      "AU invalid scheduling batch partially changed an authoring parameter");
+    tetorica::test::reverb_detail::exact(edited,reference,{},
+      "AU rejected scheduling batch changed held PCM or queued its valid prefix");
+  }
+  std::cout<<"PASS AU ScheduleParameters validation invalidBatches="<<invalid.size()
+    <<" rampMetadata5=true atomicPrefixRejection=true count1025Rejected=true emptyBatch=true stateAndHeldPCMUnchanged=true\n";
+}
 
 void rejected(Instance& instance, CFPropertyListRef bad, const std::vector<std::uint8_t>& expected)
 {
@@ -584,6 +655,9 @@ int main(int argc, char** argv)
     require(decoded.definition->kind() == tetorica::InstrumentDefinition::Kind::Builtin &&
       decoded.gainPercent == 17., "Legacy AU state did not migrate to a builtin definition");
     tetorica::test::checkGainSmoothing([&] { return std::make_unique<Instance>(component); },48000,"AU parameters/MIDIEvent");
+    tetorica::test::checkContinuousAutomation([&] { return std::make_unique<Instance>(component); },48000,"AU timed SetParameter");
+    tetorica::test::checkAuAutomationRamps([&] { return std::make_unique<Instance>(component); },48000);
+    checkScheduleValidation(component);
     tetorica::test::checkControllers([&] { return std::make_unique<Instance>(component); },48000,"AU MIDIEvent");
     tetorica::test::checkChannelStopsPmon([&] { return std::make_unique<Instance>(component); },48000,"AU MIDIEvent");
     tetorica::test::checkEnvelopes([&] { return std::make_unique<Instance>(component); },48000,"AU parameters",bank);

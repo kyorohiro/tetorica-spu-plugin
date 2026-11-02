@@ -11,7 +11,7 @@
 
 namespace {
 using Parameters=std::array<double,kNumParams>;
-static_assert(kNumParams==26,"Update the state parameter mapping when adding parameters");
+static_assert(kNumParams==27,"Update the state parameter mapping when adding parameters");
 unsigned field(const Parameters& values,int index,unsigned maximum)
 {
   const double value=values[index];
@@ -83,6 +83,7 @@ Parameters stateParameters(const tetorica::SavedInstrumentState& state)
   p[kParamPmonDecay]=state.pmon.decayMs;
   p[kParamMorphEnabled]=state.morph.enabled?1:0;
   p[kParamMorphAmount]=state.morph.amount;
+  p[kParamGainBoost]=state.gainBoost;
   return p;
 }
 }
@@ -126,7 +127,7 @@ tetorica::SavedInstrumentState TetoricaSPU::captureSavedStateLocked() const
       position=next;
     }
     tetorica::SavedInstrumentState state{snapshot.definition,values[kParamGain],
-      envelope(values),reverb(values),noise(values),pmon(values),morph(values)};
+      envelope(values),reverb(values),noise(values),pmon(values),morph(values),values[kParamGainBoost]};
     tetorica::validateSavedInstrumentState(state);
     if(epoch!=mImportParameterEpoch.load(std::memory_order_acquire))
     {std::this_thread::yield();continue;}
@@ -143,7 +144,7 @@ bool TetoricaSPU::SerializeState(iplug::IByteChunk& chunk) const
   try {
     const auto state=captureSavedStateLocked();
     const auto bytes=tetorica::encodeState(state.definition,state.gainPercent,
-      state.envelope,state.reverb,state.noise,state.pmon,state.morph);
+      state.envelope,state.reverb,state.noise,state.pmon,state.morph,state.gainBoost);
     if(chunk.Size()<0||bytes.size()>static_cast<std::size_t>(
         std::numeric_limits<int>::max()-chunk.Size()))return false;
     return chunk.PutBytes(bytes.data(),static_cast<int>(bytes.size()))>0;
@@ -197,8 +198,9 @@ int TetoricaSPU::UnserializeState(const iplug::IByteChunk& chunk, int startPos)
     mMidiOverflow = false;
     mUiMidi.discardPending();
     // This trusted complete parameter chunk was fully validated and allocated
-    // above. The framework sets all 26 values and calls OnParamReset.
+    // above. The framework sets all 27 values and calls OnParamReset.
     UnserializeParams(params, 0);
+    resetAutomation();
     // A restored target is the initial level, not a live fade from the old
     // project. Publish only after successful validation/transactional commit.
     mGainNeedsReset = true;

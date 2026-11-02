@@ -9,6 +9,17 @@
 
 namespace tetorica {
 
+inline constexpr double kMaximumAudioGain = 3.8;
+
+// Parameter zero keeps its original 0..100 percent host mapping. A separate
+// multiplier extends the audible range without changing old automation.
+inline double effectiveAudioGain(double gainPercent, double boost = 1.) noexcept {
+  if (!std::isfinite(gainPercent) || !std::isfinite(boost) || gainPercent <= 0.)
+    return 0.;
+  return std::clamp(gainPercent, 0., 100.) / 100. *
+         std::clamp(boost, 1., kMaximumAudioGain);
+}
+
 // Audio-thread-owned output gain. This live interpolation is not preset data.
 // One next() call represents one host output frame, shared by both channels.
 class AudioGainSmoother final {
@@ -51,7 +62,7 @@ private:
   static double safeGain(double gain) noexcept {
     if (!std::isfinite(gain) || gain <= 0.)
       return 0.;
-    return std::min(gain, 1.);
+    return std::min(gain, kMaximumAudioGain);
   }
 
   static std::uint32_t rampSamples(double sampleRate) noexcept {

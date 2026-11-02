@@ -1,5 +1,14 @@
 # 作業記録
 
+## 2026-11-02 JST — Gain 380%・連続automation・PCM自動反映を実装、最終検証中
+
+- 作業前TODO `c85e5e1`の後、画面Gainを0〜380%へ拡張した。旧ID0の0〜100% /normalized mappingを維持し、ID26へBoost 1〜3.8を追加。100%超をorangeで表示する。
+- schema11へbase /Boostの組を保存し、旧schema1〜10 /Gain-onlyはBoost 1で復元する。Web /Audio importでも両値を保持する。
+- Gain /Boost /Morph Amount /Reverb return左右を、固定容量のsample-offset timelineで処理する。VST3複数pointとAU Set /Schedule /ramp、block末尾のcarry、同時刻の後勝ち、overflowの最新target復帰を実装した。既存5ms smoothingを保つ。
+- PCM /Morph endpointへ既定OnのAuto applyを追加。shape選択 /stroke完了時にworker準備し、Offは未反映表示とApplyへ誘導する。未操作のVABをeditor起動だけで置き換えない。
+- この時点でOffline /macOS CTest各32 /32、Python114、実AU22 PASS行・実VST3 63 PASS行（各summary込み）、validator47 /0が成功した。timeline単体ASan /UBSan・2 producerとrender /resetのThreadSanitizerも成功した。
+- **次:** 最終sourceの全core ASan・bundle再検証・Standalone UI・CIを完了し、確定sourceと証跡hashを追記する。[仕様・ローカル検証・再開点](gain_380_automation_pcm_20261102.md)。公開済み`v0.0.0` /installed AU /SDK pinは更新しない。
+
 ## 2026-11-02 JST — macOS Universal /Windows VST3配布候補・CI検証完了
 
 - 作業前TODO `cfaf621`の後、Universal APP /AU /VST3とWindows x64 VST3のZIP /SHA256 /source・file manifest /導入手順 /noticesを追加した。Linux Pluginはユーザーの回答により別TODO。

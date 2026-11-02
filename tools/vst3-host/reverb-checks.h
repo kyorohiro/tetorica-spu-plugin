@@ -131,7 +131,7 @@ template<class Factory> void checkReverbs(Factory make,double rate,const char* h
   auto state=make(),stateReference=make();
   requireReverb(state->tryStateRestoreForTest(encodeState(definition,37)),"Reverb source restore failed");
   envelope_detail::author(*state,envelope);author(*state,authored);state->renderMidi({});
-  requireReverb(state->stateBodyForTest()==full,"Full seventeen-parameter state did not preserve exact authored values");
+  requireReverb(state->stateBodyForTest()==full,"Full saved parameter state did not preserve exact authored values");
   requireReverb(state->tryStateRestoreForTest(full)&&stateReference->tryStateRestoreForTest(full),"Authored wet state rejected");
   // Validate malformed state while the valid replacement is still pending.
   std::vector<Bytes> malformed;
@@ -173,7 +173,7 @@ template<class Factory> void checkReverbs(Factory make,double rate,const char* h
   requireReverb(same(snapshot.reverb,{})&&envelope_detail::equal(snapshot.envelope,{})&&
     snapshot.definition->kind()==InstrumentDefinition::Kind::Builtin&&snapshot.gainPercent==17,"Legacy migration retained Reverb settings");
   std::cout<<"PASS "<<host<<" Reverb sampleRate="<<rate
-    <<" full17Params=true firstWetRestore=true sourceSend=true presetAutomationIndependent=true presetsDiffer=true"
+    <<" full27Params=true firstWetRestore=true sourceSend=true presetAutomationIndependent=true presetsDiffer=true"
     <<" disabledDry=true zeroReturnDry=true stereoReturns=true releasedTail=true CC120TailRetained=true offClears=true"
     <<" restoreClearsHistory=true malformedAtomic=true schema1Schema2Schema3Legacy=true\n";
 }
