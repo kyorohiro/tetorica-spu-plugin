@@ -1,10 +1,10 @@
 {
   "schema": 1,
-  "recorded_at_utc": "2026-11-02T09:22:45.486622+00:00",
+  "recorded_at_utc": "2026-11-02T10:38:25.532237+00:00",
   "starting_commit": "3425b36",
   "todo_commit": "875e9cc",
   "source_commit": "6cac7e8791acf1f4837a3f7e660f73fd034e90e7",
-  "status": "awaiting_direct_au_setup",
+  "status": "curve_playback_and_restore_verified_export_variance_open",
   "garageband": {
     "version": "10.4.12",
     "build": "6182",
@@ -17,34 +17,60 @@
     "observed_selected_parameter": "TetoricaSPU: Software morph A to B",
     "observed_hand_drawn_points": 3,
     "curve_saved": true,
-    "master_value": 0,
+    "master_value": 0.7119110226631165,
     "original_master_value": 0.7119110226631165,
     "transport_stopped": true,
-    "recording_stopped": true
+    "recording_stopped": true,
+    "morph_during_playback_percent": [
+      42,
+      86,
+      10
+    ],
+    "reverb_playback_human_observed_both_moving": true,
+    "reopened_gui": {
+      "effective_gain_percent": 380,
+      "preset": "Room",
+      "reverb_enabled": true,
+      "send": "all notes",
+      "return_left_percent": 42.6,
+      "return_right_percent": 46,
+      "morph_percent": 47
+    },
+    "reopened_correct_project_url": true,
+    "normal_host_exit_process_absent_verified": true,
+    "verified_project_copy": "/Users/kyorohiro/development8/wfm/hello_ymfm/w/tetorica-spu-plugin/build/garageband-automation-20261102-zphye0it/verified-automation.band",
+    "verified_project_file_count": 11,
+    "export_master_value": 0.2992126047611237,
+    "export_master_display_db": -15,
+    "master_display_db": 0,
+    "tempo": 120,
+    "cycle_enabled": false
   },
   "installed_au_manifest_matches": "docs/ready_status_20261102.json",
   "verification": {
     "morph_curve_created_and_seen": true,
-    "morph_playback_checked": false,
-    "reverb_curves_created": false,
-    "automation_reopen_checked": false,
+    "morph_playback_checked": true,
+    "reverb_curves_created": true,
+    "automation_reopen_checked": true,
     "realtime_automation_recorded": false,
-    "listening_performed": false
+    "listening_performed": false,
+    "reverb_playback_checked_by_user": true,
+    "automation_curves_seen_after_reopen": true,
+    "exact_saved_payload_across_save_quit_reopen": true,
+    "base_pcm_and_morph_endpoint_hashes_retained": true,
+    "wav_exports_non_silent": true,
+    "all_wav_comparisons_within_one_lsb": false
   },
   "input_limitations": [
     "Track parameter menu required direct selection; open menu caused CUA AX timeout",
     "AU Source click did not change the plugin page"
   ],
-  "pending_user_setup": [
-    "Shared preset Room",
-    "Source page",
-    "Morph On; keep Amount unchanged"
-  ],
+  "pending_user_setup": [],
   "remaining": [
-    "Morph enabled playback with Amount/Result UI following the track curve",
-    "Reverb return left/right curves, enabled preset and playback",
-    "Save/normal quit/reopen and verify state plus automation curves",
-    "Restore/check master and stopped transport; record actual scope"
+    "Real-time gesture recording using Smart Controls region automation or a host with Touch/Latch/Write; hand-drawn curves are not live recording",
+    "Identify the small 1-3 LSB initial export variance; isolate host FX/initial states without changing strict comparator tolerance",
+    "Actual listening and long-run validation; AU Auto apply Off drawing/manual Apply remains separate",
+    "Prepare and review v0.0.1 Preview in a separate release task"
   ],
   "artifacts": {
     "preflight.json": {
@@ -58,6 +84,149 @@
     "session-checkpoint.json": {
       "path": "build/garageband-automation-20261102-zphye0it/session-checkpoint.json",
       "sha256": "3febc41b72d0321d6270a939da48063a704dd0adf7f7a34ab14b543efac53f8c"
+    },
+    "before-export-info.json": {
+      "path": "build/garageband-automation-20261102-zphye0it/before-export-info.json",
+      "sha256": "86d1f751ead164fc355324f58439ec6c641dc5361e2089416bba0930bcbe0d37"
+    },
+    "before-restart-files.json": {
+      "path": "build/garageband-automation-20261102-zphye0it/before-restart-files.json",
+      "sha256": "300ede16301a4678a227b7784df80fa0066c8e4b8a6e42715ec7e242feda88fc"
+    },
+    "diagnostic-reopen-difference.json": {
+      "path": "build/garageband-automation-20261102-zphye0it/diagnostic-reopen-difference.json",
+      "sha256": "5413bc1a13c28b8b9f092558a17cbe1307b8b459dce2c6adc813f59c8cb81b96"
+    },
+    "export-before-repeat-comparison.json": {
+      "path": "build/garageband-automation-20261102-zphye0it/export-before-repeat-comparison.json",
+      "sha256": "aa21c85c7348785ace1cdf7aaba85d6e8eac69e701dc1707a5aa1b491975e22e"
+    },
+    "export-before-repeat-diagnostic.json": {
+      "path": "build/garageband-automation-20261102-zphye0it/export-before-repeat-diagnostic.json",
+      "sha256": "905b98be77bc7fda5352632f6e311c4dd0b350fe166393b2e775c73b0f3fcb30"
+    },
+    "export-strict-results.json": {
+      "path": "build/garageband-automation-20261102-zphye0it/export-strict-results.json",
+      "sha256": "db39d11cfa6d700e333991396859bd197f81f24e9a058c1ac2f3a86601d362c4"
+    },
+    "morph-playback-observations.json": {
+      "path": "build/garageband-automation-20261102-zphye0it/morph-playback-observations.json",
+      "sha256": "554a33a7326adf99a98351d797f7614a4fb0b144ab46a3151c482689f9bed7a5"
+    },
+    "project-after-gain-restored.json": {
+      "path": "build/garageband-automation-20261102-zphye0it/project-after-gain-restored.json",
+      "sha256": "b62d67feed56271ee764f77ed49fa5ae7c077d1f62506153f86790933f38782e"
+    },
+    "project-after-morph-playback.json": {
+      "path": "build/garageband-automation-20261102-zphye0it/project-after-morph-playback.json",
+      "sha256": "cf74a9207061ff06017e690510adf2fa601ee329ee4b5e0ccdd060cc46d964b5"
+    },
+    "project-after-quit.json": {
+      "path": "build/garageband-automation-20261102-zphye0it/project-after-quit.json",
+      "sha256": "712adc11da0ce97f1c53458736110e8f4e66b844ad57336e3f9d9e26282b7442"
+    },
+    "project-after-reopen.json": {
+      "path": "build/garageband-automation-20261102-zphye0it/project-after-reopen.json",
+      "sha256": "712adc11da0ce97f1c53458736110e8f4e66b844ad57336e3f9d9e26282b7442"
+    },
+    "project-after-reverb-curves.json": {
+      "path": "build/garageband-automation-20261102-zphye0it/project-after-reverb-curves.json",
+      "sha256": "f171af0e028d848a099c6d3cbcacc604981b86aca6e982e3738efe043f27e25a"
+    },
+    "project-after-reverb-left.json": {
+      "path": "build/garageband-automation-20261102-zphye0it/project-after-reverb-left.json",
+      "sha256": "e726684e3109f04ab36584bd1bf4cfb835717afd6f91fd832f29573038ff2ac7"
+    },
+    "project-before-restart.json": {
+      "path": "build/garageband-automation-20261102-zphye0it/project-before-restart.json",
+      "sha256": "546f3c40b7fbb0ad626f00bd104314ec4c12c9201efcf994724d8f164789b122"
+    },
+    "project-final.json": {
+      "path": "build/garageband-automation-20261102-zphye0it/project-final.json",
+      "sha256": "712dc546dc2a159134b3f63873f0475d74bf0f762e0072f4cf1a5582251bbba5"
+    },
+    "restart-state-comparison.json": {
+      "path": "build/garageband-automation-20261102-zphye0it/restart-state-comparison.json",
+      "sha256": "d4c604dce2de6e2ab6507bdccfcdb5664bf9ab4dcd02ef8b42d6da5f335704a3"
+    },
+    "verified-project-files.json": {
+      "path": "build/garageband-automation-20261102-zphye0it/verified-project-files.json",
+      "sha256": "1b468b49cc6c08c61f14603b7e2a68e73a118c42308dfed9cd85e7c6fcfe0b41"
+    },
+    "automation-before-reopen.wav": {
+      "path": "build/garageband-automation-20261102-zphye0it/automation-before-reopen.wav",
+      "sha256": "d7bf6246cbf9351a82af2cc5c95dc46ef125fd1e33130bb5265c0f20d0e05bb4"
+    },
+    "automation-after-reopen.wav": {
+      "path": "build/garageband-automation-20261102-zphye0it/automation-after-reopen.wav",
+      "sha256": "a6999698bc0a01713c31edb8719064cc8c293efe9c98da3cb758bcf03d104124"
+    },
+    "automation-after-repeat.wav": {
+      "path": "build/garageband-automation-20261102-zphye0it/automation-after-repeat.wav",
+      "sha256": "43ca01634fcccb64af386233aa26cf216c54b7377431d817776d84be1dbada7a"
     }
-  }
+  },
+  "scope": "Hand-drawn GarageBand track curves, GUI following, saved-state and project/curve restoration, three offline WAVE exports. Live gesture recording and listening are not verified. No plugin source/binary/version/tag/published asset changes.",
+  "waves": {
+    "automation-before-reopen.wav": {
+      "sample_rate": 44100,
+      "channels": 2,
+      "sample_bytes": 2,
+      "frames": 352800,
+      "file": "automation-before-reopen.wav",
+      "sha256": "d7bf6246cbf9351a82af2cc5c95dc46ef125fd1e33130bb5265c0f20d0e05bb4",
+      "peak": 0.988494873046875,
+      "rms": 0.15368054917676602
+    },
+    "automation-after-reopen.wav": {
+      "sample_rate": 44100,
+      "channels": 2,
+      "sample_bytes": 2,
+      "frames": 352800,
+      "file": "automation-after-reopen.wav",
+      "sha256": "a6999698bc0a01713c31edb8719064cc8c293efe9c98da3cb758bcf03d104124",
+      "peak": 0.988494873046875,
+      "rms": 0.153680530580858
+    },
+    "automation-after-repeat.wav": {
+      "sample_rate": 44100,
+      "channels": 2,
+      "sample_bytes": 2,
+      "frames": 352800,
+      "file": "automation-after-repeat.wav",
+      "sha256": "43ca01634fcccb64af386233aa26cf216c54b7377431d817776d84be1dbada7a",
+      "peak": 0.988494873046875,
+      "rms": 0.15368054971099016
+    }
+  },
+  "wave_comparisons": [
+    {
+      "first": "automation-before-reopen.wav",
+      "second": "automation-after-reopen.wav",
+      "max_difference_pcm16": 3,
+      "different_samples": 21287,
+      "rms_difference_pcm16": 0.1902938114965317,
+      "strict_one_lsb_passed": false,
+      "observed_comparator_exit_code": 1
+    },
+    {
+      "first": "automation-after-reopen.wav",
+      "second": "automation-after-repeat.wav",
+      "max_difference_pcm16": 3,
+      "different_samples": 21292,
+      "rms_difference_pcm16": 0.19031242960373873,
+      "strict_one_lsb_passed": false,
+      "observed_comparator_exit_code": 1
+    },
+    {
+      "first": "automation-before-reopen.wav",
+      "second": "automation-after-repeat.wav",
+      "max_difference_pcm16": 1,
+      "different_samples": 17,
+      "rms_difference_pcm16": 0.004908459078116262,
+      "strict_one_lsb_passed": true,
+      "observed_comparator_exit_code": 0
+    }
+  ],
+  "wave_comparison_scope": "Includes GarageBand host effects/output processing. Before/first-reopen and same-session repeat differ by up to 3 LSB; before/third export passes original 1 LSB limit. Cause unknown, no tolerance changes. Normalize setting was not observed or changed; not a hardware loopback or absolute gain/clipping proof."
 }

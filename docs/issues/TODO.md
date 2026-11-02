@@ -47,18 +47,20 @@ AUプリセット名warning解消と分割VH/VBのLoad sound対応も完了し�
 [最新の実装・配置・復元記録](../preset_split_vab_20261101.md) /[current installed AU manifest](../preset_split_vab_20261101.json)を参照。
 内蔵Sineの広域化も実装・CI成功した。[新build検証記録](../builtin_sine_range_20261102.md)を参照。手元installed AUは準備状態の表示改善版へ退避更新し、[最新manifest](../ready_status_20261102.json)とGarageBandのPCM /Gain380復元を確認した。
 
-### GarageBand Morph /Reverb automation（2026-11-02、開始）
+### GarageBand Morph /Reverb automation（2026-11-02、曲線再生・保存復元完了）
 
 開始`3425b36`。ユーザーの続行指示により、既存自動検証に加えて実DAWの操作・保存復元を確認する。操作前に今回の範囲を記録する。
 
 - [x] 現在のGarageBand projectとinstalled AUを確認し、既知検証projectの別copy・hashを保持して今回専用のcopyで作業する。未確認のユーザーprojectや原本を上書きしない。
-- [ ] Morph Enabled /Amountを実DAWで操作し、Amount automationの記録・再生時のparameterと画面追従を確認する。描画したautomationとリアルタイム録音を区別する。
-- [ ] Reverb preset /Enabled /Return左右も同様に確認する。共有presetのUI auto-enableとhost automationの独立Enableを区別する。
-- [ ] 記録したprojectを保存・正常終了・再起動し、音源とparameter /automationの保持を確認する。必要なら既存のproject state inspectorを補助に使い、active-track確認と混同しない。
-- [ ] AI入力が届かない箇所は人の最小操作を依頼し、その間に進められる検証・記録を行う。実聴未実施とautomation録音未確認を成功扱いしない。
-- [ ] 結果・残作業・再開手順を記録してcommit /pushする。今回version /tag /公開Releaseは変更せず、v0.0.1 Previewは検証後の別作業とする。
+- [x] Morph Enabled /Amountを実DAWで操作し、手描きAmount automationの作成・再生時のparameterと画面追従を確認した。実AUで42%→86%→10%、横slider /keyboard wheel /Result波形が連動した。master0での受信・表示確認とする。
+- [ ] Smart Controlsのregion automation等を使うリアルタイム操作録音は別途確認する。手描きcurveの再生を操作録音の成功とは扱わない。
+- [x] Room /Enabled On /Send all notesを固定し、左右別のReturn曲線を作成・保存した。人の直接観察で左右とも動くことを確認。共有presetのUI auto-enableとhost automationの独立Enableを区別した。
+- [x] 記録したprojectを保存・正常終了・再起動し、実URL /音源 /curve表示 /AUの380%・Room・Morphを確認した。保存payloadも完全一致。state inspectorだけでactive track確認を代用しない。
+- [x] AI入力が届かない箇所は人の最小操作を依頼し、その間に進められる検証・記録を行った。実聴未実施とautomation録音未確認を成功扱いしない。
+- [x] 結果・残作業・再開手順を記録する。今回version /tag /公開Releaseは変更せず、v0.0.1 Previewは別作業とする。
+- [ ] 8秒のWAVE exportに生じる冒頭1〜3LSB差の原因を、host FX /初期状態等を分けて調べる。最初の再起動前後比較と同session比較は最大3で既存1LSB条件に失敗し、再起動前と3本目は最大1で成功。全export比較の成功とはせず、閾値を緩めない。
 
-GarageBand10.4.12で人がMorph Amountを選択し、AIで低→高→低の3点曲線を作成・保存した。再生確認前のcheckpointを[作業記録](../garageband_automation_20261102.md)へ残した。現在はAU内のRoom preset /Source /Morph Onを直接操作してもらう段階。masterは今回copyで0、再生 /録音停止。操作録音と手描き曲線は区別して継続する。
+GarageBand10.4.12で手描き3曲線の再生と保存・復元を確認した。[操作・export全結果と残作業](../garageband_automation_20261102.md) /[hash・証跡JSON](../garageband_automation_20261102.json)。最後はmaster+0.0dB /tempo120 /再生・録音・cycle Offへ戻して保存し、AU Reverb画面を残した。手描きcurveとリアルタイム操作録音は区別する。
 
 ### 音源準備・音声処理待ちの表示改善（2026-11-02、実装・AU更新完了）
 

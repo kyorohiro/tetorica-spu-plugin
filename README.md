@@ -227,6 +227,12 @@ two parameters. Their product sets the audible gain.
 See [Gain smoothing verification](docs/gain_smoothing_20261101.md) for the
 actual AU/VST3 PCM checks and deployment status.
 
+In GarageBand, press **A** in the track window and select **TetoricaSPU: Software
+morph A to B**, **Reverb return left** or **Reverb return right** to draw track
+automation. Enable Morph or Reverb in the instrument before playing its curve.
+See the [GarageBand curve playback and project-reopen record](docs/garageband_automation_20261102.md)
+for the verified workflow, export results and remaining live-recording checks.
+
 ## PCM waveform editing
 
 Open the **Source** page with **Source: Sample** to choose Sine, Triangle, Saw or Square, or draw one cycle

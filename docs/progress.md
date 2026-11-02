@@ -1,10 +1,12 @@
 # 作業記録
 
-## 2026-11-02 JST — GarageBand automation確認のcheckpoint
+## 2026-11-02 JST — GarageBand曲線再生・保存復元、WAVE比較を記録
 
 - 開始前TODO `875e9cc`。installed AUがReady版manifestと一致することを確認し、既知検証copyの全11filesを退避した。専用copy `build/garageband-automation-20261102-zphye0it/spu-morph-reverb-automation.band`を手動保存版から開いた。
-- GarageBand10.4.12で、人のparameter選択後にAIでMorph Amountの低→高→低3点曲線を作成・保存した。AU SourceへのAI clickが届かず、Room preset /Source /Morph Onの直接操作を依頼中。再生・automation録音・聴感・再起動復元は未確認。
-- [作業記録・現在の画面と再開手順](garageband_automation_20261102.md)。今回copyのmaster0 /再生・録音停止で待機している。公開Releaseは変更していない。
+- Morph Amountの3点曲線再生で実AU42%→86%→10%、横slider /keyboard wheel /Result波形の連動を確認した。Room On /Send all notesで左右に異なるReturn曲線を作り、人の直接観察で左右とも動くことも確認した。
+- 正常終了・process不在・同project再起動を経て、curveと380% /Room /Morphを実画面で復元した。保存前 /終了後 /再起動後payload SHA256は完全一致し、元PCMとMorph A/Bのhashを保持した。
+- 8秒44.1k stereo PCM16 WAVEを3本export。初回の前後比較と同session比較は最大3LSBで既存1LSB条件に失敗し、再起動前と3本目の比較は最大1で成功。原因未確定の微小初期差としてTODOに残し、閾値は変えていない。
+- 最後はmaster+0.0dB /tempo120 /再生・録音・cycle Offで保存。検証copyを全file照合付きで保持した。[操作・全比較結果と残作業](garageband_automation_20261102.md) /[hash・証跡](garageband_automation_20261102.json)。plugin source /binaryと公開Releaseは変更せず、操作録音・実聴は未確認。
 
 ## 2026-11-02 JST — Preparing /Ready /Loaded表示を統一・AU更新完了
 
