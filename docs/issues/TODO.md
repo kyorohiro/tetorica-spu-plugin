@@ -52,8 +52,8 @@ AUプリセット名warning解消と分割VH/VBのLoad sound対応も完了し�
 開始`9015b62`。ユーザーがPSF対応版のtag /GitHub Release公開を指示したため、version変更・build前に今回の範囲を記録する。
 Previewはannotated `v0.0.2` tagに基づくGitHub Prereleaseとして公開する。実ゲームPSF・実聴・長時間テストはユーザーが後日行う。
 
-- [ ] v0.0.1との差分・配布範囲・既知制限を確認し、CMake /config /APP・AU・VST3のversionを0.0.2へ揃える。state schema11 /parameter27個 /ID /固定依存は維持する。
-- [ ] PSF folder /Entry /Bank /Program /Tone、抽出VAB保存復元、未対応PSF2 /CPU実行 /曲再生、実ゲーム・実聴・長時間未確認を公開文面へ明記する。
+- [x] v0.0.1との差分・配布範囲・既知制限を確認し、CMake /config /APP・AU・VST3のversionを0.0.2へ揃えた。state schema11 /parameter27個 /ID /固定依存を維持し、文字・数値version整合を確認した。
+- [x] [公開文面の草稿](../release_notes_v0_0_2.md)へPSF folder /Entry /Bank /Program /Tone、抽出VAB保存復元、未対応PSF2 /CPU実行 /曲再生、実ゲーム・実聴・長時間未確認を明記した。CI /公証結果と証跡linkは成功後に追記する。
 - [ ] version /metadata・ローカルbuild /必要な検証を通し、同じ候補source SHAの通常2 /配布3 /署名3 CI jobsを通す。Windows x64 VST3とmacOS Universal APP /AU /VST3を対象にする。
 - [ ] 既存の隔離署名workflowでDeveloper ID署名・公証・stapleとcredential cleanupを確認し、同じ最終DMGをApple Silicon /Intelの実hostで検証する。Secrets値を取得・表示しない。
 - [ ] 最終Mac DMG /Windows ZIPとSHA256 sidecarの4filesを取得し、manifest /source /version /hash /署名・公証を照合して検証記録を保存する。既存v0.0.0 /v0.0.1 tag /assetsとinstalled AUは保持する。
