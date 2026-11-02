@@ -8,7 +8,7 @@ macOS 13+ Universal Developer ID signed and notarized DMG (APP / AUv2 / VST3),
 or unsigned Windows x64 VST3 ZIP. See the
 [release verification record and remaining checks](docs/release_v0_0_0_20261102.md).
 
-The development tree is preparing **v0.0.1 Preview**. See its
+The development tree has a verified **v0.0.1 Preview candidate**, not yet published. See its
 [draft changes and compatibility notes](docs/release_notes_v0_0_1.md) and
 [candidate verification record](docs/preview_v0_0_1_20261102.md).
 

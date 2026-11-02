@@ -1,5 +1,15 @@
 # 作業記録
 
+## 2026-11-02 JST — v0.0.1 Preview候補の署名・公証・全8CI jobs成功、未公開
+
+- 実装前TODO `c6a47e4`の後、候補source `b80a8a01fd278bda4a1463bdebb6cd8b1fc49422`でCMake /config /APP・AU・VST3のversionを0.0.1へ揃えた。今回の変更はversion metadataとdocsで、DSP /state schema11 /parameter ID /SDK pinは維持した。
+- v0.0.0以降のOctave /Pitch、Gain380%、PCM Auto apply、連続automation、Ready表示を[公開文面の下書き](release_notes_v0_0_1.md)へまとめた。旧Pluginでschema11新保存を読めない互換性と、未確認事項を明記した。
+- ローカルPython114 /Universal build /CTest32/32が成功。ad-hoc候補の実VST3とvalidator47/0が成功し、AUはsandbox内登録失敗を保存した上で同じ候補のsandbox外再試行22 PASS・exit0を確認した。
+- 同じsourceの[通常2jobs](https://github.com/kyorohiro/tetorica-spu-plugin/actions/runs/41432227747) /[配布3jobs](https://github.com/kyorohiro/tetorica-spu-plugin/actions/runs/41432227796) /[署名3jobs](https://github.com/kyorohiro/tetorica-spu-plugin/actions/runs/41432505698)が全成功。公証Accepted・issuesなし、stapled ticket /Gatekeeper、同じ最終DMGのARM /Intel実AU /VST3と手元read-only照合を確認した。
+- Windows VST3 ZIPも取得し、全manifest /sidecar /AMD64 DLL /font /noticesをCI reportと照合。配布候補とsidecar計4filesは`release/preview-v0.0.1-20261102-ci/`に保存した。
+- [候補・hash・導入・再開記録](preview_v0_0_1_20261102.md) /[全8jobs・公証・26証跡hash](preview_v0_0_1_20261102.json)。installed AU全5filesと公開済みv0.0.0 tag /4assetsは不変。GarageBand projectへの操作とv0.0.1 tag /Release作成は行っていない。
+- **次:** 公開指示後に候補sourceへv0.0.1 tagを付けPrerelease公開・再download照合。実聴 /長時間 /操作録音 /冒頭1〜3LSB差の切分けは引き続きTODO。
+
 ## 2026-11-02 JST — GarageBand曲線再生・保存復元、WAVE比較を記録
 
 - 開始前TODO `875e9cc`。installed AUがReady版manifestと一致することを確認し、既知検証copyの全11filesを退避した。専用copy `build/garageband-automation-20261102-zphye0it/spu-morph-reverb-automation.band`を手動保存版から開いた。

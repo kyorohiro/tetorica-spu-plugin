@@ -1,20 +1,20 @@
 # Tetorica SPU Plugin v0.0.1 Preview — release notes draft
 
-Candidate preparation only. This file does not announce a published release.
+The candidate passed its build, packaging, signing and native host checks. This draft does not announce a published release. See the [verification record](preview_v0_0_1_20261102.md).
 
 ## Changes since v0.0.0
 
 - Add Octave − / + controls and a momentary ±2-semitone Pitch wheel beside Morph in the editor keyboard. These controls affect editor performance; DAW MIDI note numbers remain unchanged.
 - Extend Gain to 380%, with orange feedback above 100%. Existing Gain automation retains its original mapping; an additional Boost parameter supplies the extra range.
 - Add Auto apply, enabled by default, for PCM shapes and completed drawing strokes, including Morph endpoints. Turn it off to edit a draft before applying it.
-- Process Gain, Boost, Morph Amount and both Reverb returns on a bounded sample-offset automation timeline, retaining smoothing.
+- Process Gain, Boost, Morph Amount and both Reverb returns on a bounded sample-offset automation timeline, retaining existing Gain smoothing.
 - Distinguish sound preparation from a prepared sound waiting for host audio processing. When Ready, start DAW playback to let the host adopt the sound; Standalone users are directed to audio settings.
 
 GarageBand checks cover hand-drawn Morph and left/right Reverb automation playback, plus project save, quit and reopen. Real-time gesture recording has not been verified.
 
 ## Candidate formats
 
-- macOS 13+: Universal Standalone APP, AUv2 and VST3 in a Developer ID signed, notarized DMG. Signing and notarization must pass for the actual candidate before publication.
+- macOS 13+: Universal Standalone APP, AUv2 and VST3 in a Developer ID signed, notarized DMG, verified on Apple Silicon and Intel CI hosts.
 - Windows x64: unsigned VST3 ZIP, built and checked on Windows CI. Uses the DAW's audio driver.
 - Linux DAW plugins and Windows Standalone are not included.
 
