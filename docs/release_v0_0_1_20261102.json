@@ -1,0 +1,499 @@
+{
+  "schema": 1,
+  "date_jst": "2026-11-02",
+  "repository": "kyorohiro/tetorica-spu-plugin",
+  "version": "0.0.1",
+  "status": "published_and_all_assets_reverified",
+  "source_commit": "b80a8a01fd278bda4a1463bdebb6cd8b1fc49422",
+  "todo_commit": "55bc5e31674811789bb1366d686058c89502adaf",
+  "release": {
+    "id": 431381204,
+    "node_id": "RE_kwDOVd3iFc4ZtlrU",
+    "tag_name": "v0.0.1",
+    "name": "Tetorica SPU Plugin v0.0.1 Preview",
+    "html_url": "https://github.com/kyorohiro/tetorica-spu-plugin/releases/tag/v0.0.1",
+    "draft": false,
+    "prerelease": true,
+    "created_at": "2026-11-02T11:25:39Z",
+    "published_at": "2026-11-02T11:30:23Z",
+    "target_commitish": "main"
+  },
+  "published_at_jst": "2026-11-02T20:30:23+09:00",
+  "tag_ref": {
+    "ref": "refs/tags/v0.0.1",
+    "node_id": "REF_kwDOVd3iFbByZWZzL3RhZ3MvdjAuMC4x",
+    "url": "https://api.github.com/repos/kyorohiro/tetorica-spu-plugin/git/refs/tags/v0.0.1",
+    "object": {
+      "sha": "92a4a714cfd0c36ebd237a600044ed713a4285da",
+      "type": "tag",
+      "url": "https://api.github.com/repos/kyorohiro/tetorica-spu-plugin/git/tags/92a4a714cfd0c36ebd237a600044ed713a4285da"
+    }
+  },
+  "tag": {
+    "node_id": "TA_kwDOVd3iFdoAKDkyYTRhNzE0Y2ZkMGMzNmViZDIzN2E2MDAwNDRlZDcxM2E0Mjg1ZGE",
+    "sha": "92a4a714cfd0c36ebd237a600044ed713a4285da",
+    "url": "https://api.github.com/repos/kyorohiro/tetorica-spu-plugin/git/tags/92a4a714cfd0c36ebd237a600044ed713a4285da",
+    "tagger": {
+      "name": "kyorohiro",
+      "email": "kyorohiro@gmail.com",
+      "date": "2026-11-02T11:25:39Z"
+    },
+    "object": {
+      "sha": "b80a8a01fd278bda4a1463bdebb6cd8b1fc49422",
+      "type": "commit",
+      "url": "https://api.github.com/repos/kyorohiro/tetorica-spu-plugin/git/commits/b80a8a01fd278bda4a1463bdebb6cd8b1fc49422"
+    },
+    "tag": "v0.0.1",
+    "message": "Tetorica SPU Plugin v0.0.1 Preview\n",
+    "verification": {
+      "verified": false,
+      "reason": "unsigned",
+      "signature": null,
+      "payload": null,
+      "verified_at": null
+    }
+  },
+  "assets": [
+    {
+      "id": 701524784,
+      "name": "tetorica-spu-plugin-0.0.1-preview-b80a8a01fd27-macos-universal-signed.dmg",
+      "bytes": 5972086,
+      "sha256": "90d187ac7245953fc30b56ce777e412ddbc4e83891c8f7c805052519b1fb0406",
+      "github_digest": "sha256:90d187ac7245953fc30b56ce777e412ddbc4e83891c8f7c805052519b1fb0406",
+      "url": "https://github.com/kyorohiro/tetorica-spu-plugin/releases/download/v0.0.1/tetorica-spu-plugin-0.0.1-preview-b80a8a01fd27-macos-universal-signed.dmg",
+      "downloaded_path": "release/v0.0.1-published-20261102/tetorica-spu-plugin-0.0.1-preview-b80a8a01fd27-macos-universal-signed.dmg",
+      "candidate_path": "release/preview-v0.0.1-20261102-ci/macos/tetorica-spu-plugin-0.0.1-preview-b80a8a01fd27-macos-universal-signed.dmg",
+      "candidate_bytes_identical": true
+    },
+    {
+      "id": 701524785,
+      "name": "tetorica-spu-plugin-0.0.1-preview-b80a8a01fd27-macos-universal-signed.dmg.sha256",
+      "bytes": 140,
+      "sha256": "78b813eba614e52f2a0d8a97f6cc1188d1e82891f2bb6193582d6768c5d506bb",
+      "github_digest": "sha256:78b813eba614e52f2a0d8a97f6cc1188d1e82891f2bb6193582d6768c5d506bb",
+      "url": "https://github.com/kyorohiro/tetorica-spu-plugin/releases/download/v0.0.1/tetorica-spu-plugin-0.0.1-preview-b80a8a01fd27-macos-universal-signed.dmg.sha256",
+      "downloaded_path": "release/v0.0.1-published-20261102/tetorica-spu-plugin-0.0.1-preview-b80a8a01fd27-macos-universal-signed.dmg.sha256",
+      "candidate_path": "release/preview-v0.0.1-20261102-ci/macos/tetorica-spu-plugin-0.0.1-preview-b80a8a01fd27-macos-universal-signed.dmg.sha256",
+      "candidate_bytes_identical": true
+    },
+    {
+      "id": 701524786,
+      "name": "tetorica-spu-plugin-0.0.1-preview-b80a8a01fd27-windows-x64-vst3.zip",
+      "bytes": 857319,
+      "sha256": "0487c53638f5e39c670ddd8b5086df029a14793aa757190fae7bb9c6c9af8c78",
+      "github_digest": "sha256:0487c53638f5e39c670ddd8b5086df029a14793aa757190fae7bb9c6c9af8c78",
+      "url": "https://github.com/kyorohiro/tetorica-spu-plugin/releases/download/v0.0.1/tetorica-spu-plugin-0.0.1-preview-b80a8a01fd27-windows-x64-vst3.zip",
+      "downloaded_path": "release/v0.0.1-published-20261102/tetorica-spu-plugin-0.0.1-preview-b80a8a01fd27-windows-x64-vst3.zip",
+      "candidate_path": "release/preview-v0.0.1-20261102-ci/windows/tetorica-spu-plugin-0.0.1-preview-b80a8a01fd27-windows-x64-vst3.zip",
+      "candidate_bytes_identical": true
+    },
+    {
+      "id": 701524787,
+      "name": "tetorica-spu-plugin-0.0.1-preview-b80a8a01fd27-windows-x64-vst3.zip.sha256",
+      "bytes": 135,
+      "sha256": "3e43631d4783396bf2bd79e6784c63cf62d85b5d34f3d92f336141bab78720a4",
+      "github_digest": "sha256:3e43631d4783396bf2bd79e6784c63cf62d85b5d34f3d92f336141bab78720a4",
+      "url": "https://github.com/kyorohiro/tetorica-spu-plugin/releases/download/v0.0.1/tetorica-spu-plugin-0.0.1-preview-b80a8a01fd27-windows-x64-vst3.zip.sha256",
+      "downloaded_path": "release/v0.0.1-published-20261102/tetorica-spu-plugin-0.0.1-preview-b80a8a01fd27-windows-x64-vst3.zip.sha256",
+      "candidate_path": "release/preview-v0.0.1-20261102-ci/windows/tetorica-spu-plugin-0.0.1-preview-b80a8a01fd27-windows-x64-vst3.zip.sha256",
+      "candidate_bytes_identical": true
+    }
+  ],
+  "published_body": {
+    "path": "docs/release_notes_v0_0_1.md",
+    "sha256": "bacfe146fabd881571bd88fddbf7c169294ca6e0af5ce5ec10b826e8fd37007f",
+    "remote_body_matches": true,
+    "evidence_links_pinned_to": "772bf41669a0619021247b6b6e7210de0cf04eff"
+  },
+  "candidate_record": {
+    "path": "docs/preview_v0_0_1_20261102.json",
+    "sha256": "bbc9eb623a7c10056a0588726853a3525bcbf7a0c7c04d1817743f5d866fe2c6"
+  },
+  "ci_runs": [
+    {
+      "id": 41432227747,
+      "name": "verify",
+      "source_commit": "b80a8a01fd278bda4a1463bdebb6cd8b1fc49422",
+      "url": "https://github.com/kyorohiro/tetorica-spu-plugin/actions/runs/41432227747",
+      "conclusion": "success",
+      "jobs": [
+        {
+          "name": "offline",
+          "conclusion": "success"
+        },
+        {
+          "name": "macos",
+          "conclusion": "success"
+        }
+      ]
+    },
+    {
+      "id": 41432227796,
+      "name": "preview",
+      "source_commit": "b80a8a01fd278bda4a1463bdebb6cd8b1fc49422",
+      "url": "https://github.com/kyorohiro/tetorica-spu-plugin/actions/runs/41432227796",
+      "conclusion": "success",
+      "jobs": [
+        {
+          "name": "macos",
+          "conclusion": "success"
+        },
+        {
+          "name": "windows",
+          "conclusion": "success"
+        },
+        {
+          "name": "macos-intel",
+          "conclusion": "success"
+        }
+      ]
+    },
+    {
+      "id": 41432505698,
+      "name": "signed",
+      "source_commit": "b80a8a01fd278bda4a1463bdebb6cd8b1fc49422",
+      "url": "https://github.com/kyorohiro/tetorica-spu-plugin/actions/runs/41432505698",
+      "conclusion": "success",
+      "jobs": [
+        {
+          "name": "sign",
+          "conclusion": "success"
+        },
+        {
+          "name": "verify (macos-15, arm64)",
+          "conclusion": "success"
+        },
+        {
+          "name": "verify (macos-15-intel, x86_64)",
+          "conclusion": "success"
+        }
+      ]
+    }
+  ],
+  "post_tag_ci": {
+    "id": 41436861716,
+    "conclusion": "success",
+    "headSha": "b80a8a01fd278bda4a1463bdebb6cd8b1fc49422",
+    "jobs": [
+      {
+        "completedAt": "2026-11-02T11:31:56Z",
+        "conclusion": "success",
+        "databaseId": 125248686077,
+        "name": "macos",
+        "startedAt": "2026-11-02T11:26:35Z",
+        "status": "completed",
+        "steps": [
+          {
+            "completedAt": "2026-11-02T11:26:37Z",
+            "conclusion": "success",
+            "name": "Set up job",
+            "number": 1,
+            "startedAt": "2026-11-02T11:26:36Z",
+            "status": "completed"
+          },
+          {
+            "completedAt": "2026-11-02T11:26:39Z",
+            "conclusion": "success",
+            "name": "Run actions/checkout@v4",
+            "number": 2,
+            "startedAt": "2026-11-02T11:26:37Z",
+            "status": "completed"
+          },
+          {
+            "completedAt": "2026-11-02T11:26:42Z",
+            "conclusion": "success",
+            "name": "Verify safe AU installer in temporary directories",
+            "number": 3,
+            "startedAt": "2026-11-02T11:26:39Z",
+            "status": "completed"
+          },
+          {
+            "completedAt": "2026-11-02T11:26:43Z",
+            "conclusion": "success",
+            "name": "Verify bounded GarageBand state inspection",
+            "number": 4,
+            "startedAt": "2026-11-02T11:26:42Z",
+            "status": "completed"
+          },
+          {
+            "completedAt": "2026-11-02T11:27:00Z",
+            "conclusion": "success",
+            "name": "Initialize and verify pinned dependencies",
+            "number": 5,
+            "startedAt": "2026-11-02T11:26:43Z",
+            "status": "completed"
+          },
+          {
+            "completedAt": "2026-11-02T11:27:00Z",
+            "conclusion": "success",
+            "name": "Run python3 scripts/bootstrap.py --check",
+            "number": 6,
+            "startedAt": "2026-11-02T11:27:00Z",
+            "status": "completed"
+          },
+          {
+            "completedAt": "2026-11-02T11:27:10Z",
+            "conclusion": "success",
+            "name": "Run cmake --preset macos",
+            "number": 7,
+            "startedAt": "2026-11-02T11:27:00Z",
+            "status": "completed"
+          },
+          {
+            "completedAt": "2026-11-02T11:30:18Z",
+            "conclusion": "success",
+            "name": "Run cmake --build --preset macos --parallel 4",
+            "number": 8,
+            "startedAt": "2026-11-02T11:27:10Z",
+            "status": "completed"
+          },
+          {
+            "completedAt": "2026-11-02T11:30:31Z",
+            "conclusion": "success",
+            "name": "Run ctest --preset macos",
+            "number": 9,
+            "startedAt": "2026-11-02T11:30:18Z",
+            "status": "completed"
+          },
+          {
+            "completedAt": "2026-11-02T11:30:39Z",
+            "conclusion": "success",
+            "name": "Install and validate the user AU",
+            "number": 10,
+            "startedAt": "2026-11-02T11:30:31Z",
+            "status": "completed"
+          },
+          {
+            "completedAt": "2026-11-02T11:31:12Z",
+            "conclusion": "success",
+            "name": "Validate VST3",
+            "number": 11,
+            "startedAt": "2026-11-02T11:30:39Z",
+            "status": "completed"
+          },
+          {
+            "completedAt": "2026-11-02T11:31:43Z",
+            "conclusion": "success",
+            "name": "Render and restore the actual VST3",
+            "number": 12,
+            "startedAt": "2026-11-02T11:31:12Z",
+            "status": "completed"
+          },
+          {
+            "completedAt": "2026-11-02T11:31:49Z",
+            "conclusion": "success",
+            "name": "Restore embedded state in the actual AU",
+            "number": 13,
+            "startedAt": "2026-11-02T11:31:43Z",
+            "status": "completed"
+          },
+          {
+            "completedAt": "2026-11-02T11:31:51Z",
+            "conclusion": "success",
+            "name": "Run actions/upload-artifact@v4",
+            "number": 14,
+            "startedAt": "2026-11-02T11:31:49Z",
+            "status": "completed"
+          },
+          {
+            "completedAt": "2026-11-02T11:31:52Z",
+            "conclusion": "success",
+            "name": "Post Run actions/checkout@v4",
+            "number": 28,
+            "startedAt": "2026-11-02T11:31:51Z",
+            "status": "completed"
+          },
+          {
+            "completedAt": "2026-11-02T11:31:55Z",
+            "conclusion": "success",
+            "name": "Complete job",
+            "number": 29,
+            "startedAt": "2026-11-02T11:31:52Z",
+            "status": "completed"
+          }
+        ],
+        "url": "https://github.com/kyorohiro/tetorica-spu-plugin/actions/runs/41436861716/job/125248686077"
+      },
+      {
+        "completedAt": "2026-11-02T11:28:14Z",
+        "conclusion": "success",
+        "databaseId": 125248686472,
+        "name": "offline",
+        "startedAt": "2026-11-02T11:26:39Z",
+        "status": "completed",
+        "steps": [
+          {
+            "completedAt": "2026-11-02T11:26:43Z",
+            "conclusion": "success",
+            "name": "Set up job",
+            "number": 1,
+            "startedAt": "2026-11-02T11:26:43Z",
+            "status": "completed"
+          },
+          {
+            "completedAt": "2026-11-02T11:26:44Z",
+            "conclusion": "success",
+            "name": "Run actions/checkout@v4",
+            "number": 2,
+            "startedAt": "2026-11-02T11:26:43Z",
+            "status": "completed"
+          },
+          {
+            "completedAt": "2026-11-02T11:26:45Z",
+            "conclusion": "success",
+            "name": "Verify safe AU installer in temporary directories",
+            "number": 3,
+            "startedAt": "2026-11-02T11:26:44Z",
+            "status": "completed"
+          },
+          {
+            "completedAt": "2026-11-02T11:26:46Z",
+            "conclusion": "success",
+            "name": "Verify bounded GarageBand state inspection",
+            "number": 4,
+            "startedAt": "2026-11-02T11:26:45Z",
+            "status": "completed"
+          },
+          {
+            "completedAt": "2026-11-02T11:26:51Z",
+            "conclusion": "success",
+            "name": "Initialize pinned native SDK and JSON header",
+            "number": 5,
+            "startedAt": "2026-11-02T11:26:46Z",
+            "status": "completed"
+          },
+          {
+            "completedAt": "2026-11-02T11:26:53Z",
+            "conclusion": "success",
+            "name": "Run cmake --preset offline",
+            "number": 6,
+            "startedAt": "2026-11-02T11:26:51Z",
+            "status": "completed"
+          },
+          {
+            "completedAt": "2026-11-02T11:27:54Z",
+            "conclusion": "success",
+            "name": "Run cmake --build --preset offline --parallel 4",
+            "number": 7,
+            "startedAt": "2026-11-02T11:26:53Z",
+            "status": "completed"
+          },
+          {
+            "completedAt": "2026-11-02T11:28:11Z",
+            "conclusion": "success",
+            "name": "Run ctest --preset offline",
+            "number": 8,
+            "startedAt": "2026-11-02T11:27:54Z",
+            "status": "completed"
+          },
+          {
+            "completedAt": "2026-11-02T11:28:11Z",
+            "conclusion": "success",
+            "name": "Post Run actions/checkout@v4",
+            "number": 16,
+            "startedAt": "2026-11-02T11:28:11Z",
+            "status": "completed"
+          },
+          {
+            "completedAt": "2026-11-02T11:28:11Z",
+            "conclusion": "success",
+            "name": "Complete job",
+            "number": 17,
+            "startedAt": "2026-11-02T11:28:11Z",
+            "status": "completed"
+          }
+        ],
+        "url": "https://github.com/kyorohiro/tetorica-spu-plugin/actions/runs/41436861716/job/125248686472"
+      }
+    ],
+    "status": "completed",
+    "url": "https://github.com/kyorohiro/tetorica-spu-plugin/actions/runs/41436861716"
+  },
+  "notarization": {
+    "status": "Accepted",
+    "submission_id": "25d57e71-3ad2-4064-9a16-c057c703fc0c",
+    "issues": null,
+    "final_stapled_dmg_sha256": "90d187ac7245953fc30b56ce777e412ddbc4e83891c8f7c805052519b1fb0406"
+  },
+  "scope": {
+    "rebuilt_or_resigned": false,
+    "plugin_source_changed": false,
+    "state_schema_changed": false,
+    "parameter_ids_changed": false,
+    "sdk_pin_changed": false,
+    "installed_au_updated_by_this_task": false,
+    "garageband_project_edited_by_this_task": false,
+    "v0_0_0_tag_retargeted": false,
+    "v0_0_0_body_date_assets_unchanged": true,
+    "verification_reused_because_published_bytes_identical": true
+  },
+  "remaining": [
+    "GarageBand export initial 1–3 PCM16 LSB variance: cause open; two <=1 LSB comparisons failed, one passed; threshold unchanged",
+    "Real-time automation gesture recording",
+    "Physical listening, latency and long-running DAW tests",
+    "macOS 13 hardware and general Windows DAW GUI/file panels",
+    "Linux plugin platform and Windows Standalone distribution"
+  ],
+  "evidence": {
+    "build/release-v0.0.1-20261102/post-tag-ci.json": {
+      "bytes": 1583,
+      "sha256": "97a1f7a1c718dcd564f0dc8dca6bc9cf8aa6aa30e70e5d26e723ef2e2e6b170c"
+    },
+    "build/release-v0.0.1-20261102/preview-run.json": {
+      "bytes": 8224,
+      "sha256": "5d9b71126262324eb0d60755348f71b4d64213646634f1778cfc9c2521fa03a6"
+    },
+    "build/release-v0.0.1-20261102/release-body.md": {
+      "bytes": 4224,
+      "sha256": "bacfe146fabd881571bd88fddbf7c169294ca6e0af5ce5ec10b826e8fd37007f"
+    },
+    "build/release-v0.0.1-20261102/release-draft.json": {
+      "bytes": 7106,
+      "sha256": "04017c60da11bf9c41da39d93d6f1fc2114371ba419d0ef4b9c5e2f19a2083ad"
+    },
+    "build/release-v0.0.1-20261102/release-public.json": {
+      "bytes": 12558,
+      "sha256": "be73f9ad32682832d14b3d9ebc0ef5c1549e3fda8fe2cab2ad94ff0ff8fabffe"
+    },
+    "build/release-v0.0.1-20261102/releases-preflight.json": {
+      "bytes": 11622,
+      "sha256": "4511e37a54f6d58c2c1a6f83fd4d898dab5ee9394a2747f591509bec0b0343f7"
+    },
+    "build/release-v0.0.1-20261102/remote-tag-ref.json": {
+      "bytes": 353,
+      "sha256": "222df9bd245341986aefb971e540560a3f049f8f107f0ace370ac0809b7c7c78"
+    },
+    "build/release-v0.0.1-20261102/remote-tag.json": {
+      "bytes": 705,
+      "sha256": "caa55a046043040914ae3c90aa9db523bc9a54eab8cdc89f12bd453036e20c73"
+    },
+    "build/release-v0.0.1-20261102/signed-run.json": {
+      "bytes": 7589,
+      "sha256": "63091b8c1506b4649dd84493efa282b52e361c6bc0f0e7269cd61d7e949cb86f"
+    },
+    "build/release-v0.0.1-20261102/tag-ci.json": {
+      "bytes": 5144,
+      "sha256": "70c42678d7e12a8eb8cd49cfc47403f7dc676bf8962d0e77f34b499ee65f3372"
+    },
+    "build/release-v0.0.1-20261102/tag-preflight.json": {
+      "bytes": 2,
+      "sha256": "4f53cda18c2baa0c0354bb5f9a3ecbe5ed12ab4d8e11ba873c2f11161202b945"
+    },
+    "build/release-v0.0.1-20261102/v0.0.0-after.json": {
+      "bytes": 11620,
+      "sha256": "0e1c5e8b9c9f513d38a129b9745959048c40f695fbe76c4ab0d9479054c0af10"
+    },
+    "build/release-v0.0.1-20261102/v0.0.0-preflight.json": {
+      "bytes": 11620,
+      "sha256": "0e1c5e8b9c9f513d38a129b9745959048c40f695fbe76c4ab0d9479054c0af10"
+    },
+    "build/release-v0.0.1-20261102/v0.0.0-tag-after.json": {
+      "bytes": 353,
+      "sha256": "323fbdcf120910756893eff6421ab7b67f54ab0ecc4215d2d55c68104756054c"
+    },
+    "build/release-v0.0.1-20261102/verify-run.json": {
+      "bytes": 5062,
+      "sha256": "610e7cabfb0d0be14bd13e600705dd2d42ae9f26f7bc4c66f9841f5de44478b7"
+    }
+  }
+}

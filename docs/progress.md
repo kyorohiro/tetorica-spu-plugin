@@ -1,5 +1,13 @@
 # 作業記録
 
+## 2026-11-02 JST — v0.0.1 Preview公開・全4assets再取得照合完了
+
+- ユーザーの公開指示を受け、作業前TODO `55bc5e3`を保存した。候補source `b80a8a01fd278bda4a1463bdebb6cd8b1fc49422`と全8CI成功・4候補filesを再照合し、annotated `v0.0.1` tagをそのsourceへ作成・pushした。
+- draftの本文・4asset names /sizes /GitHub digestsとremote tagを照合してから、[v0.0.1 Preview](https://github.com/kyorohiro/tetorica-spu-plugin/releases/tag/v0.0.1)をPrereleaseとして20:30:23 JSTに公開した。最終CI候補のbytesをそのまま使い、再build /再署名はしていない。
+- Mac署名・公証済みUniversal DMG /Windows x64 VST3 ZIPと各sidecarを新しい保存先へ再downloadし、候補とのbyte一致・SHA256・GitHub digest・sidecar内容を確認した。既存v0.0.0の本文 /公開日時 /4assetsは不変。
+- tag push後の追加[通常CI全2jobs](https://github.com/kyorohiro/tetorica-spu-plugin/actions/runs/41436861716)も同じsourceで成功した。
+- [公開・導入・再開記録](release_v0_0_1_20261102.md) /[公開本文](release_notes_v0_0_1.md)。手元AU /GarageBand project /音源処理 /SDK pinは変更していない。実聴・長時間・操作録音・冒頭1〜3LSB差は引き続きTODO。
+
 ## 2026-11-02 JST — v0.0.1 Preview候補の署名・公証・全8CI jobs成功、未公開
 
 - 実装前TODO `c6a47e4`の後、候補source `b80a8a01fd278bda4a1463bdebb6cd8b1fc49422`でCMake /config /APP・AU・VST3のversionを0.0.1へ揃えた。今回の変更はversion metadataとdocsで、DSP /state schema11 /parameter ID /SDK pinは維持した。

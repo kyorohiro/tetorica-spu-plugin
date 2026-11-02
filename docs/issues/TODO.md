@@ -47,17 +47,19 @@ AUプリセット名warning解消と分割VH/VBのLoad sound対応も完了し�
 [最新の実装・配置・復元記録](../preset_split_vab_20261101.md) /[current installed AU manifest](../preset_split_vab_20261101.json)を参照。
 内蔵Sineの広域化も実装・CI成功した。[新build検証記録](../builtin_sine_range_20261102.md)を参照。手元installed AUは準備状態の表示改善版へ退避更新し、[最新manifest](../ready_status_20261102.json)とGarageBandのPCM /Gain380復元を確認した。
 
-### v0.0.1 Preview 公開（2026-11-02、着手）
+### v0.0.1 Preview 公開（2026-11-02、公開・再download照合完了）
 
 開始`772bf41`。ユーザーがtag作成・GitHub Preview公開を指示したため、公開前に今回の範囲を記録する。
 
-- [ ] 候補source `b80a8a01fd278bda4a1463bdebb6cd8b1fc49422`、全8CI jobs、最終DMG /Windows ZIPと各sidecarの4filesを再照合する。
-- [ ] 互換性・既知制限と導入方法を含む公開文面を確定する。v0.0.1 tag /Releaseの既存有無も確認し、既存tagやassetを無断で置き換えない。
-- [ ] 検証済みsourceへannotated `v0.0.1` tagを作成・pushし、4filesをPrereleaseへ公開する。buildや署名をやり直して別bytesの配布物にしない。
-- [ ] 公開後に全4assetsを新しい保存先へ再downloadし、候補・sidecar・GitHub digest・remote tagの参照先を照合する。
-- [ ] README /公開記録 /TODOを更新してpushする。手元AU・GarageBand project、既存v0.0.0 tag /Releaseは変更しない。
+- [x] 候補source `b80a8a01fd278bda4a1463bdebb6cd8b1fc49422`、全8CI jobs、最終DMG /Windows ZIPと各sidecarの4filesを再照合した。
+- [x] 互換性・既知制限と導入方法を含む公開文面を確定し、証跡へのlinkを検証記録commitへ固定した。既存v0.0.1 tag /Releaseがないことも確認した。
+- [x] 検証済みsourceへannotated `v0.0.1` tagを作成・pushし、4filesをPrereleaseへ公開した。build /署名はやり直していない。
+- [x] 公開後に全4assetsを新しい保存先へ再downloadし、候補とのbyte一致・sidecar・GitHub digest・remote tagのsourceを照合した。
+- [x] README /公開記録 /TODOを更新する。tag push後の追加[通常CI](https://github.com/kyorohiro/tetorica-spu-plugin/actions/runs/41436861716)も同じsourceで全2jobs成功。手元AU・GarageBand project、既存v0.0.0 tag /Releaseは変更していない。
 
-### v0.0.1 Preview 配布準備（2026-11-02、候補検証完了・未公開）
+[公開URL](https://github.com/kyorohiro/tetorica-spu-plugin/releases/tag/v0.0.1) /[公開・再取得記録](../release_v0_0_1_20261102.md)。実聴 /長時間 /リアルタイム操作録音・冒頭1〜3LSB差の切分けは引き続き下のTODOに残す。
+
+### v0.0.1 Preview 配布準備（2026-11-02、候補検証完了、公開は上記）
 
 開始`9084858`。ユーザーの続行指示により、v0.0.0以降の改善をまとめた次の配布候補を準備する。実装・build前に今回の範囲を記録する。
 
@@ -67,7 +69,7 @@ AUプリセット名warning解消と分割VH/VBのLoad sound対応も完了し�
 - [x] 既存の隔離署名workflowでDeveloper ID署名・公証Accepted・staple、同じDMGのARM /Intel実AU /VST3検査が成功。secret値は取得・表示せず、cleanupも成功した。
 - [x] [検証記録](../preview_v0_0_1_20261102.md)と[JSON](../preview_v0_0_1_20261102.json)へsource /artifact /hash /CIと再開手順を保存した。installed AUの全5filesは開始時と同一。GarageBand projectへの操作は行っていない。
 - [x] tag /公開Releaseは別段階とし、今回は候補と公開文面まで用意した。公開済みv0.0.0のtag /4assetsの一致も照合済み。
-- [ ] v0.0.1公開が指示されたら、候補source `b80a8a01fd278bda4a1463bdebb6cd8b1fc49422`をtagにし、最終DMG /Windows ZIPと各sidecarの4filesをPrereleaseへ公開・再download照合する。後続docs HEADを候補sourceと取り違えない。
+- [x] その後のユーザー公開指示により、候補source `b80a8a01fd278bda4a1463bdebb6cd8b1fc49422`をtagにし、4filesをPrereleaseへ公開・再download照合した。上の公開記録を参照。
 
 ### GarageBand Morph /Reverb automation（2026-11-02、曲線再生・保存復元完了）
 
