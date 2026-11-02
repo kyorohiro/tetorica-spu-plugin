@@ -47,6 +47,18 @@ AUプリセット名warning解消と分割VH/VBのLoad sound対応も完了し�
 [最新の実装・配置・復元記録](../preset_split_vab_20261101.md) /[current installed AU manifest](../preset_split_vab_20261101.json)を参照。
 内蔵Sineの広域化も実装・CI成功した。[新build検証記録](../builtin_sine_range_20261102.md)を参照。手元installed AUは上のmanifestから変更していない。
 
+### Gain 380%版AUの退避更新・GarageBand検証（2026-11-02、開始）
+
+開始Plugin `d985587`、音源実装 `850a79f`。ユーザーの「進めて」により、既存AUの退避更新とGarageBandでの保存・復元、今回の操作確認を進める。実装前に作業範囲を記録する。
+
+- [ ] 現在のinstalled AUを`docs/preset_split_vab_20261101.json`の全file manifestと照合し、最新版buildも検証記録のhashと照合する。
+- [ ] 開いているGarageBand projectを特定する。既知検証copyは保存前に退避し、原本や未確認のユーザーprojectを上書きせず、hostを正常終了する。
+- [ ] 既存installerのhash照合・退避・journal・rollback手順でAUを更新する。unknown bundleを置き換えない。
+- [ ] 配置済みAUでauvalと実AU hostの全回帰を確認する（27params /schema11 /Gain380 /timed automation /旧state migration）。
+- [ ] 新しい検証project copyで旧VABのP3/T0/Gain99とBoost1復元を確認し、保存・完全終了・再起動後のstate11 /埋め込みbank /parameterを照合する。
+- [ ] 可能な範囲で実AU editorの380%表示・Auto apply On/Off・PCM/Morph・ReverbとDAW automation操作を確認する。AI入力がAU別processへ届かない操作は実行済み扱いにせず、必要な人の操作を具体化する。
+- [ ] 配置manifest /退避・戻し方 /検証範囲 /残る実聴・長時間確認を記録し、commit /pushする。version /tag /公開Release・Web配布は変更しない。
+
 ### Gain 380%・連続parameter automation・PCM即反映（2026-11-02、実装・CI完了）
 
 開始`9a82e5b`。ユーザーがDAW automation改善の続行に加え、FM Synth / Web SPU Synth / Native SPU Pluginの380%と、PCM編集の分かりやすい反映操作を指定したため、実装前に記録する。
