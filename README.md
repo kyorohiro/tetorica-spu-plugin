@@ -3,6 +3,11 @@
 PS1 SPU instrument for DAWs, using iPlug2 and tetorica-soundchip-native.
 Targets macOS Universal Standalone, AUv2 and VST3, plus Windows x64 VST3.
 
+[Download v0.0.0 Preview](https://github.com/kyorohiro/tetorica-spu-plugin/releases/tag/v0.0.0):
+macOS 13+ Universal Developer ID signed and notarized DMG (APP / AUv2 / VST3),
+or unsigned Windows x64 VST3 ZIP. See the
+[release verification record and remaining checks](docs/release_v0_0_0_20261102.md).
+
 Current prototype: full-range built-in Sine with legacy project playback, MIDI Note On/Off and velocity,
 24 voices, channel-aware note ownership, Pitch Bend, Sustain, All sound off,
 Gain, a PCM waveform editor, Software Morph, SPU Noise, paired PMON, custom ADSR editing, shared SPU Reverb and mouse keyboard.

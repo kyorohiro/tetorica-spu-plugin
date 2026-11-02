@@ -745,3 +745,11 @@
 - `6229311`で5-zoneのsoftware-authored ADPCM Builtin Sineを追加。新規instance /Builtinボタンがwide、kind0 /旧schema /Gain-onlyはLegacyのまま。全zone/voice cacheをconstructorでprimeし、Bendはlatched zoneのPITCHだけ更新する。
 - Offline /macOS /ASan+UBSan各29件、実AU 19 /VST3 58 PASS行、公式validator47/0、Python inspector8件成功。旧全128音のPCM hashと測定は修正前後で完全一致した。実装head `6229311`の[CI全2job・全step成功](https://github.com/kyorohiro/tetorica-spu-plugin/actions/runs/41336715428)も確認した。artifact metadataだけを保存し、配布archiveはdownloadしていない。
 - [仕様・互換性・検証](builtin_sine_range_20261102.md)。旧projectと手元installed AUは変更せず、新buildへ直接一時host検証した。実聴と配置更新・実DAWの新source復元は次の区切り。
+
+## 2026-11-02 JST — v0.0.0 Preview公開・Developer ID署名と公証
+
+- TODO `9d0fbe1`から署名CIを追加した。初回`da7131e`のstatic plist版番号・codesign keychain search list・Apple lock companion cleanupを`1e46aa6`で修正し、portable Python112件が成功した。
+- 同じsourceの通常CI全2 /配布CI全3 /署名CI全3 jobsが成功。Mac Universal APP /AU /VST3はDeveloper ID /runtime /timestamp、公証Accepted /stapled ticket /Gatekeeper /manifestを検証し、同じ最終DMGをARM /Intelで実AU /VST3 /auval確認した。Windows VST3は29CTest /57 PASS行 /validator47/0とZIP manifest・PE resourceを確認した。
+- 検証済み`1e46aa64672d44af6ae28b858f1219bc0c4c1d71`へannotated tag `v0.0.0`を作り、[Preview Release](https://github.com/kyorohiro/tetorica-spu-plugin/releases/tag/v0.0.0)を公開した。Mac署名・公証済みDMG /Windows未署名VST3 ZIPと各SHA256の4 assetsを再downloadし、候補bytes・GitHub digestと一致した。remote tagの参照先も一致した。
+- [公開・公証・失敗修正・残る確認](release_v0_0_0_20261102.md) /[機械可読記録](release_v0_0_0_20261102.json)。Apple submissionは`2a012f72-2fcf-40e8-af6d-f516e9b53e8a` Accepted。credential cleanup `cleaned`、秘密鍵 /Secrets値はローカル取得せず、credential artifactも作らなかった。手元AU binaryの既知hashは不変。
+- 実DAW GUI /file panel /automation、実device・長時間・macOS13実機、Linux Plugin /Windows APPの作業はTODOに残す。tagや公開assetは無断で置き換えず、修正配布は次versionで行う。

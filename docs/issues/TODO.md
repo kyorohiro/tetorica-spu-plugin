@@ -47,7 +47,7 @@ AUプリセット名warning解消と分割VH/VBのLoad sound対応も完了し�
 [最新の実装・配置・復元記録](../preset_split_vab_20261101.md) /[current installed AU manifest](../preset_split_vab_20261101.json)を参照。
 内蔵Sineの広域化も実装・CI成功した。[新build検証記録](../builtin_sine_range_20261102.md)を参照。手元installed AUは上のmanifestから変更していない。
 
-### macOS Developer ID署名・公証の今回の区切り（2026-11-02、CI検証中）
+### macOS Developer ID署名・公証の今回の区切り（2026-11-02、v0.0.0 Preview公開完了）
 
 開始Plugin `d83ed67`、Native SDK `95cf71a`。ユーザーが署名 /公証用Secretsを登録したため、実装前に今回のTODOを保存した（`9d0fbe1`）。続く指示で`v0.0.0` tagとGitHub Releaseへの公開を許可された。
 
@@ -55,16 +55,20 @@ AUプリセット名warning解消と分割VH/VBのLoad sound対応も完了し�
 - [x] Developer ID /hardened runtime /timestamp署名、公証、ticket付与に対応した配布形式をAppleの仕様で確認し、既存のad-hoc Previewを維持して追加する。
 - [x] mainからの手動実行だけで動く署名用Actionsを追加する。証明書 /秘密鍵 /公証資格情報は一時keychainへ入れ、失敗時も削除する。
 - [x] Universal APP /AU /VST3のstaging copy専用署名・検査を実装する。音源 /schema10 /parameter ID0〜25 /依存pin /installed AUを変更しない。実署名の成功は次項で確認する。
-- [ ] Actionsで署名 /公証済みartifactを生成し、signature /Team ID /hardened runtime /timestamp /notarization /manifest /SHA256、同じ成果物のARM /Intel実AU /VST3 /auvalを検証する。
-- [ ] 失敗時の再開点・Apple submission ID・公開可能な検査証跡・残る実機確認を記録し、TODO /READMEを更新してcommit /pushする。
-- [ ] project /bundle versionを`0.0.0`へ揃え、Mac署名・公証済みDMGとWindows VST3 ZIPの同じsourceの検証が成功してから`v0.0.0` tagを作り、GitHubへPreview Releaseとして公開する。既存tag /releaseがある場合は無断で置き換えない。
+- [x] Actionsで署名 /公証済みartifactを生成し、signature /Team ID /hardened runtime /timestamp /notarization /manifest /SHA256、同じ成果物のARM /Intel実AU /VST3 /auvalを検証する。
+- [x] 失敗時の再開点・Apple submission ID・公開可能な検査証跡・残る実機確認を記録し、TODO /READMEを更新してcommit /pushする。
+- [x] project /bundle versionを`0.0.0`へ揃え、Mac署名・公証済みDMGとWindows VST3 ZIPの同じsourceの検証が成功してから`v0.0.0` tagを作り、GitHubへPreview Releaseとして公開する。既存tag /releaseがある場合は無断で置き換えない。
 
 秘密鍵のローカル書き出し・Secretsの値の取得、手元AU /GarageBandの操作は行わない。
 
 最初のsource `da7131e`では[通常CI全2job](https://github.com/kyorohiro/tetorica-spu-plugin/actions/runs/41361594937)とWindows候補が成功した。
 Mac Previewは固定plistの旧version、[署名CI](https://github.com/kyorohiro/tetorica-spu-plugin/actions/runs/41361750027)は最初のcodesignとkeychain companionのcleanupで停止した（公証への提出前）。5つのSecretsによる証明書取込・notary credentials検証は成功した。
 plistとAU metadataを`0.0.0`へ揃え、codesignのchain構築に必要な一時keychainを署名中だけ検索対象へ保持するよう修正した。
-cleanupはAppleの公開AtomicFile実装に沿う既知companionだけを検証して削除し、エラー診断は固定語彙で記録する。初回の不明ファイル名そのものは未観測で、再CIで確認する。tag /Releaseはまだ作成していない。
+cleanupはAppleの公開AtomicFile実装に沿う既知companionだけを検証して削除し、エラー診断は固定語彙で記録する。
+修正版`1e46aa6`の通常全2 /配布全3 /署名全3 jobsが成功し、再CIで`.flD3051040`とcleanup `cleaned`を確認した。
+Apple公証`2a012f72-2fcf-40e8-af6d-f516e9b53e8a`はAccepted。
+同じsourceの`v0.0.0` tagと[Preview Release](https://github.com/kyorohiro/tetorica-spu-plugin/releases/tag/v0.0.0)を公開し、4 assetsの再download・byte /SHA256一致とremote tagのsource一致を確認した。
+[公開・検証記録と残る確認](../release_v0_0_0_20261102.md)を参照。手元AUは更新していない。
 
 ### macOS /Windows配布候補の今回の区切り（2026-11-02、配布候補・CI完了）
 
@@ -84,7 +88,7 @@ version /tag /公開Releaseはこの段階では作成せず、具体的な配�
 APPは内部buildのみとし、旧ASIO SDKの配布条件を確認してから別途判断する。
 
 - [ ] 各OSの実DAWでGUI・native file panel・実deviceの音 /latency・長時間動作を確認する。Mac13.0実機も別確認。
-- [ ] 正式配布のversion /tag /署名 /公証 /公開Releaseを準備する。現時点はPreview候補で、手元AUは更新しない。
+- [x] 配布のversion /tag /署名 /公証 /公開Releaseを準備する。`v0.0.0` Previewを公開済み。正式版判断は残る実DAW /device /長時間確認後とし、手元AUは更新しない。
 - [ ] Linux Plugin用platform /Timer /UIを移植するか、別のnative wrapperを採用するか設計する。固定iPlug2には実装がなく、NO_IGRAPHICSだけで対応済みとしない。
 - [ ] Windows Standalone配布前に旧ASIO SDKの条件を確認するか、別driver構成へ分ける。
 

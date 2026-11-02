@@ -1,0 +1,2398 @@
+{
+  "schema": 1,
+  "date_jst": "2026-11-02",
+  "repository": "kyorohiro/tetorica-spu-plugin",
+  "version": "0.0.0",
+  "source_commit": "1e46aa64672d44af6ae28b858f1219bc0c4c1d71",
+  "todo_commit": "9d0fbe1",
+  "implementation_commit": "da7131e9c8057b695cad7595313ebc5ab38b453d",
+  "release": {
+    "id": "RE_kwDOVd3iFc4Zr7g8",
+    "tagName": "v0.0.0",
+    "name": "Tetorica SPU Plugin v0.0.0 Preview",
+    "url": "https://github.com/kyorohiro/tetorica-spu-plugin/releases/tag/v0.0.0",
+    "isDraft": false,
+    "isPrerelease": true,
+    "publishedAt": "2026-11-02T00:09:36Z"
+  },
+  "tag": {
+    "node_id": "TA_kwDOVd3iFdoAKGM0NTEzNzE3YjI5NTRmZDAwY2QxMWJlZjUxMmFkMjcxMGUyYmFiMGI",
+    "sha": "c4513717b2954fd00cd11bef512ad2710e2bab0b",
+    "url": "https://api.github.com/repos/kyorohiro/tetorica-spu-plugin/git/tags/c4513717b2954fd00cd11bef512ad2710e2bab0b",
+    "tagger": {
+      "name": "kyorohiro",
+      "email": "kyorohiro@gmail.com",
+      "date": "2026-11-02T00:09:07Z"
+    },
+    "object": {
+      "sha": "1e46aa64672d44af6ae28b858f1219bc0c4c1d71",
+      "type": "commit",
+      "url": "https://api.github.com/repos/kyorohiro/tetorica-spu-plugin/git/commits/1e46aa64672d44af6ae28b858f1219bc0c4c1d71"
+    },
+    "tag": "v0.0.0",
+    "message": "Tetorica SPU Plugin v0.0.0 Preview\n",
+    "verification": {
+      "verified": false,
+      "reason": "unsigned",
+      "signature": null,
+      "payload": null,
+      "verified_at": null
+    }
+  },
+  "assets": [
+    {
+      "name": "tetorica-spu-plugin-0.0.0-preview-1e46aa64672d-macos-universal-signed.dmg",
+      "size": 5841170,
+      "sha256": "e93fa1451cbebf418c95ab6ffda4c7594ccc28fbc0661b0f56288533b1d2205a",
+      "url": "https://github.com/kyorohiro/tetorica-spu-plugin/releases/download/v0.0.0/tetorica-spu-plugin-0.0.0-preview-1e46aa64672d-macos-universal-signed.dmg",
+      "release_asset_id": "RA_kwDOVd3iFc4pt-92",
+      "downloaded_bytes_match_ci_candidate": true
+    },
+    {
+      "name": "tetorica-spu-plugin-0.0.0-preview-1e46aa64672d-macos-universal-signed.dmg.sha256",
+      "size": 140,
+      "sha256": "a4fa979cd132a3ed15e347b94d1e532cbe04f6e9845bdaa33c8361dafa08a707",
+      "url": "https://github.com/kyorohiro/tetorica-spu-plugin/releases/download/v0.0.0/tetorica-spu-plugin-0.0.0-preview-1e46aa64672d-macos-universal-signed.dmg.sha256",
+      "release_asset_id": "RA_kwDOVd3iFc4pt-94",
+      "downloaded_bytes_match_ci_candidate": true
+    },
+    {
+      "name": "tetorica-spu-plugin-0.0.0-preview-1e46aa64672d-windows-x64-vst3.zip",
+      "size": 840777,
+      "sha256": "efb1a0436a7454795ae4a4b74815de4b8f546f1e3c0d5cda5fc8e21255b24044",
+      "url": "https://github.com/kyorohiro/tetorica-spu-plugin/releases/download/v0.0.0/tetorica-spu-plugin-0.0.0-preview-1e46aa64672d-windows-x64-vst3.zip",
+      "release_asset_id": "RA_kwDOVd3iFc4pt-93",
+      "downloaded_bytes_match_ci_candidate": true
+    },
+    {
+      "name": "tetorica-spu-plugin-0.0.0-preview-1e46aa64672d-windows-x64-vst3.zip.sha256",
+      "size": 135,
+      "sha256": "335452e4d8628c5209696f0b7db9079baae73e4d6e7116359341d794b91fccb4",
+      "url": "https://github.com/kyorohiro/tetorica-spu-plugin/releases/download/v0.0.0/tetorica-spu-plugin-0.0.0-preview-1e46aa64672d-windows-x64-vst3.zip.sha256",
+      "release_asset_id": "RA_kwDOVd3iFc4pt-96",
+      "downloaded_bytes_match_ci_candidate": true
+    }
+  ],
+  "ci_runs": [
+    {
+      "id": 41363700187,
+      "name": "Verify SPU Plugin",
+      "source_commit": "1e46aa64672d44af6ae28b858f1219bc0c4c1d71",
+      "conclusion": "success",
+      "url": "https://github.com/kyorohiro/tetorica-spu-plugin/actions/runs/41363700187",
+      "completed_at": "2026-11-01T23:51:35Z",
+      "jobs": [
+        {
+          "id": 125019298126,
+          "name": "macos",
+          "conclusion": "success",
+          "url": "https://github.com/kyorohiro/tetorica-spu-plugin/actions/runs/41363700187/job/125019298126",
+          "steps": [
+            {
+              "name": "Set up job",
+              "conclusion": "success"
+            },
+            {
+              "name": "Run actions/checkout@v4",
+              "conclusion": "success"
+            },
+            {
+              "name": "Verify safe AU installer in temporary directories",
+              "conclusion": "success"
+            },
+            {
+              "name": "Verify bounded GarageBand state inspection",
+              "conclusion": "success"
+            },
+            {
+              "name": "Initialize and verify pinned dependencies",
+              "conclusion": "success"
+            },
+            {
+              "name": "Run python3 scripts/bootstrap.py --check",
+              "conclusion": "success"
+            },
+            {
+              "name": "Run cmake --preset macos",
+              "conclusion": "success"
+            },
+            {
+              "name": "Run cmake --build --preset macos --parallel 4",
+              "conclusion": "success"
+            },
+            {
+              "name": "Run ctest --preset macos",
+              "conclusion": "success"
+            },
+            {
+              "name": "Install and validate the user AU",
+              "conclusion": "success"
+            },
+            {
+              "name": "Validate VST3",
+              "conclusion": "success"
+            },
+            {
+              "name": "Render and restore the actual VST3",
+              "conclusion": "success"
+            },
+            {
+              "name": "Restore embedded state in the actual AU",
+              "conclusion": "success"
+            },
+            {
+              "name": "Run actions/upload-artifact@v4",
+              "conclusion": "success"
+            },
+            {
+              "name": "Post Run actions/checkout@v4",
+              "conclusion": "success"
+            },
+            {
+              "name": "Complete job",
+              "conclusion": "success"
+            }
+          ]
+        },
+        {
+          "id": 125019298332,
+          "name": "offline",
+          "conclusion": "success",
+          "url": "https://github.com/kyorohiro/tetorica-spu-plugin/actions/runs/41363700187/job/125019298332",
+          "steps": [
+            {
+              "name": "Set up job",
+              "conclusion": "success"
+            },
+            {
+              "name": "Run actions/checkout@v4",
+              "conclusion": "success"
+            },
+            {
+              "name": "Verify safe AU installer in temporary directories",
+              "conclusion": "success"
+            },
+            {
+              "name": "Verify bounded GarageBand state inspection",
+              "conclusion": "success"
+            },
+            {
+              "name": "Initialize pinned native SDK and JSON header",
+              "conclusion": "success"
+            },
+            {
+              "name": "Run cmake --preset offline",
+              "conclusion": "success"
+            },
+            {
+              "name": "Run cmake --build --preset offline --parallel 4",
+              "conclusion": "success"
+            },
+            {
+              "name": "Run ctest --preset offline",
+              "conclusion": "success"
+            },
+            {
+              "name": "Post Run actions/checkout@v4",
+              "conclusion": "success"
+            },
+            {
+              "name": "Complete job",
+              "conclusion": "success"
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "id": 41363700169,
+      "name": "Build Preview Candidates",
+      "source_commit": "1e46aa64672d44af6ae28b858f1219bc0c4c1d71",
+      "conclusion": "success",
+      "url": "https://github.com/kyorohiro/tetorica-spu-plugin/actions/runs/41363700169",
+      "completed_at": "2026-11-01T23:56:06Z",
+      "jobs": [
+        {
+          "id": 125019298206,
+          "name": "windows",
+          "conclusion": "success",
+          "url": "https://github.com/kyorohiro/tetorica-spu-plugin/actions/runs/41363700169/job/125019298206",
+          "steps": [
+            {
+              "name": "Set up job",
+              "conclusion": "success"
+            },
+            {
+              "name": "Run actions/checkout@v4",
+              "conclusion": "success"
+            },
+            {
+              "name": "Run actions/setup-python@v5",
+              "conclusion": "success"
+            },
+            {
+              "name": "Verify portable Windows tooling",
+              "conclusion": "success"
+            },
+            {
+              "name": "Run python scripts/bootstrap.py",
+              "conclusion": "success"
+            },
+            {
+              "name": "Run python scripts/bootstrap.py --check",
+              "conclusion": "success"
+            },
+            {
+              "name": "Run cmake --preset windows",
+              "conclusion": "success"
+            },
+            {
+              "name": "Run cmake --build --preset windows --parallel 4",
+              "conclusion": "success"
+            },
+            {
+              "name": "Run ctest --preset windows",
+              "conclusion": "success"
+            },
+            {
+              "name": "Check built Windows resources (EXE is not distributed)",
+              "conclusion": "success"
+            },
+            {
+              "name": "Package VST3 candidate",
+              "conclusion": "success"
+            },
+            {
+              "name": "Verify exact packaged VST3",
+              "conclusion": "success"
+            },
+            {
+              "name": "Run actions/upload-artifact@v4",
+              "conclusion": "success"
+            },
+            {
+              "name": "Run actions/upload-artifact@v4",
+              "conclusion": "success"
+            },
+            {
+              "name": "Post Run actions/setup-python@v5",
+              "conclusion": "success"
+            },
+            {
+              "name": "Post Run actions/checkout@v4",
+              "conclusion": "success"
+            },
+            {
+              "name": "Complete job",
+              "conclusion": "success"
+            }
+          ]
+        },
+        {
+          "id": 125019298287,
+          "name": "macos",
+          "conclusion": "success",
+          "url": "https://github.com/kyorohiro/tetorica-spu-plugin/actions/runs/41363700169/job/125019298287",
+          "steps": [
+            {
+              "name": "Set up job",
+              "conclusion": "success"
+            },
+            {
+              "name": "Run actions/checkout@v4",
+              "conclusion": "success"
+            },
+            {
+              "name": "Run actions/setup-python@v5",
+              "conclusion": "success"
+            },
+            {
+              "name": "Run python3 -m unittest discover -s tests -p 'test_*.py' -v",
+              "conclusion": "success"
+            },
+            {
+              "name": "Run python3 scripts/bootstrap.py",
+              "conclusion": "success"
+            },
+            {
+              "name": "Run python3 scripts/bootstrap.py --check",
+              "conclusion": "success"
+            },
+            {
+              "name": "Run cmake --preset macos-release",
+              "conclusion": "success"
+            },
+            {
+              "name": "Run cmake --build --preset macos-release --parallel 4",
+              "conclusion": "success"
+            },
+            {
+              "name": "Run ctest --preset macos-release",
+              "conclusion": "success"
+            },
+            {
+              "name": "Package Universal staging copies with ad-hoc signatures",
+              "conclusion": "success"
+            },
+            {
+              "name": "Verify exact packaged AU and VST3",
+              "conclusion": "success"
+            },
+            {
+              "name": "Run actions/upload-artifact@v4",
+              "conclusion": "success"
+            },
+            {
+              "name": "Run actions/upload-artifact@v4",
+              "conclusion": "success"
+            },
+            {
+              "name": "Post Run actions/setup-python@v5",
+              "conclusion": "success"
+            },
+            {
+              "name": "Post Run actions/checkout@v4",
+              "conclusion": "success"
+            },
+            {
+              "name": "Complete job",
+              "conclusion": "success"
+            }
+          ]
+        },
+        {
+          "id": 125020486586,
+          "name": "macos-intel",
+          "conclusion": "success",
+          "url": "https://github.com/kyorohiro/tetorica-spu-plugin/actions/runs/41363700169/job/125020486586",
+          "steps": [
+            {
+              "name": "Set up job",
+              "conclusion": "success"
+            },
+            {
+              "name": "Run actions/checkout@v4",
+              "conclusion": "success"
+            },
+            {
+              "name": "Run actions/setup-python@v5",
+              "conclusion": "success"
+            },
+            {
+              "name": "Run python3 scripts/bootstrap.py",
+              "conclusion": "success"
+            },
+            {
+              "name": "Run actions/download-artifact@v4",
+              "conclusion": "success"
+            },
+            {
+              "name": "Verify and unpack the same Universal candidate on Intel",
+              "conclusion": "success"
+            },
+            {
+              "name": "Run packaged Intel AU/VST3 and auval",
+              "conclusion": "success"
+            },
+            {
+              "name": "Post Run actions/setup-python@v5",
+              "conclusion": "success"
+            },
+            {
+              "name": "Post Run actions/checkout@v4",
+              "conclusion": "success"
+            },
+            {
+              "name": "Complete job",
+              "conclusion": "success"
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "id": 41363741154,
+      "name": "Build Signed macOS Candidate",
+      "source_commit": "1e46aa64672d44af6ae28b858f1219bc0c4c1d71",
+      "conclusion": "success",
+      "url": "https://github.com/kyorohiro/tetorica-spu-plugin/actions/runs/41363741154",
+      "completed_at": "2026-11-01T23:56:41Z",
+      "jobs": [
+        {
+          "id": 125019421015,
+          "name": "sign",
+          "conclusion": "success",
+          "url": "https://github.com/kyorohiro/tetorica-spu-plugin/actions/runs/41363741154/job/125019421015",
+          "steps": [
+            {
+              "name": "Set up job",
+              "conclusion": "success"
+            },
+            {
+              "name": "Run actions/checkout@v4",
+              "conclusion": "success"
+            },
+            {
+              "name": "Run actions/setup-python@v5",
+              "conclusion": "success"
+            },
+            {
+              "name": "Run python3 -m unittest discover -s tests -p 'test_*.py' -v",
+              "conclusion": "success"
+            },
+            {
+              "name": "Run python3 scripts/bootstrap.py",
+              "conclusion": "success"
+            },
+            {
+              "name": "Run python3 scripts/bootstrap.py --check",
+              "conclusion": "success"
+            },
+            {
+              "name": "Run cmake --preset macos-release",
+              "conclusion": "success"
+            },
+            {
+              "name": "Run cmake --build --preset macos-release --parallel 4",
+              "conclusion": "success"
+            },
+            {
+              "name": "Run ctest --preset macos-release",
+              "conclusion": "success"
+            },
+            {
+              "name": "Prepare isolated signing and notary credentials",
+              "conclusion": "success"
+            },
+            {
+              "name": "Sign, notarize and staple the Universal candidate",
+              "conclusion": "success"
+            },
+            {
+              "name": "Remove temporary credentials on every exit",
+              "conclusion": "success"
+            },
+            {
+              "name": "Run actions/upload-artifact@v4",
+              "conclusion": "success"
+            },
+            {
+              "name": "Upload public signing and notarization records",
+              "conclusion": "success"
+            },
+            {
+              "name": "Post Run actions/setup-python@v5",
+              "conclusion": "success"
+            },
+            {
+              "name": "Post Run actions/checkout@v4",
+              "conclusion": "success"
+            },
+            {
+              "name": "Complete job",
+              "conclusion": "success"
+            }
+          ]
+        },
+        {
+          "id": 125021044978,
+          "name": "verify (macos-15-intel, x86_64)",
+          "conclusion": "success",
+          "url": "https://github.com/kyorohiro/tetorica-spu-plugin/actions/runs/41363741154/job/125021044978",
+          "steps": [
+            {
+              "name": "Set up job",
+              "conclusion": "success"
+            },
+            {
+              "name": "Run actions/checkout@v4",
+              "conclusion": "success"
+            },
+            {
+              "name": "Run actions/setup-python@v5",
+              "conclusion": "success"
+            },
+            {
+              "name": "Run python3 scripts/bootstrap.py",
+              "conclusion": "success"
+            },
+            {
+              "name": "Run actions/download-artifact@v4",
+              "conclusion": "success"
+            },
+            {
+              "name": "Verify and extract the final signed DMG",
+              "conclusion": "success"
+            },
+            {
+              "name": "Exercise the exact signed AU and VST3",
+              "conclusion": "success"
+            },
+            {
+              "name": "Run actions/upload-artifact@v4",
+              "conclusion": "success"
+            },
+            {
+              "name": "Post Run actions/setup-python@v5",
+              "conclusion": "success"
+            },
+            {
+              "name": "Post Run actions/checkout@v4",
+              "conclusion": "success"
+            },
+            {
+              "name": "Complete job",
+              "conclusion": "success"
+            }
+          ]
+        },
+        {
+          "id": 125021044987,
+          "name": "verify (macos-15, arm64)",
+          "conclusion": "success",
+          "url": "https://github.com/kyorohiro/tetorica-spu-plugin/actions/runs/41363741154/job/125021044987",
+          "steps": [
+            {
+              "name": "Set up job",
+              "conclusion": "success"
+            },
+            {
+              "name": "Run actions/checkout@v4",
+              "conclusion": "success"
+            },
+            {
+              "name": "Run actions/setup-python@v5",
+              "conclusion": "success"
+            },
+            {
+              "name": "Run python3 scripts/bootstrap.py",
+              "conclusion": "success"
+            },
+            {
+              "name": "Run actions/download-artifact@v4",
+              "conclusion": "success"
+            },
+            {
+              "name": "Verify and extract the final signed DMG",
+              "conclusion": "success"
+            },
+            {
+              "name": "Exercise the exact signed AU and VST3",
+              "conclusion": "success"
+            },
+            {
+              "name": "Run actions/upload-artifact@v4",
+              "conclusion": "success"
+            },
+            {
+              "name": "Post Run actions/setup-python@v5",
+              "conclusion": "success"
+            },
+            {
+              "name": "Post Run actions/checkout@v4",
+              "conclusion": "success"
+            },
+            {
+              "name": "Complete job",
+              "conclusion": "success"
+            }
+          ]
+        }
+      ]
+    }
+  ],
+  "python_tests": {
+    "count": 112,
+    "result": "success"
+  },
+  "dependencies": {
+    "schema": 1,
+    "repositories": {
+      "vendor/iPlug2OOS": "9b214c1121a0da1e8db14b86a565c942a3bfea7e",
+      "vendor/iPlug2OOS/iPlug2": "b64192fe18afd9bc9a1fe324db5aceb48f4a0eee",
+      "vendor/tetorica-soundchip-native": "95cf71a857b15d0ea932ebf97d5fde80b5e80a95",
+      "vendor/vst3sdk": "9fad9770f2ae8542ab1a548a68c1ad1ac690abe0",
+      "vendor/vst3sdk/base": "3d2e82f8e6bff59c1d8b7a27491a29c2286b5206",
+      "vendor/vst3sdk/pluginterfaces": "31d6eeba6daaa3e2a8bfbe3e7a90ca0b7fbfbc1c",
+      "vendor/vst3sdk/public.sdk": "a3911a4615dabbfdfd9d181ee26b05c70c289a95",
+      "vendor/vst3sdk/cmake": "de6e54eeaaab35b7145f5c32c279b5e892146e04"
+    },
+    "notes": [
+      "Native SDK uses an immutable public commit after v0.1.6, including SPU Gaussian/headroom corrections, allocation-free reverb clear and live edits to two independent private host PCM banks, plus bounded long-host-PCM event distances and independent ADPCM loop flags; it is not a published v0.1.7 release.",
+      "VST3 SDK v3.8.0_build_66. Only base, pluginterfaces, public.sdk and cmake submodules are needed.",
+      "Gitlinks are authoritative. Never update a dependency to moving master as part of a normal build."
+    ]
+  },
+  "macos": {
+    "signed_build_report": {
+      "archive": "/Users/runner/work/tetorica-spu-plugin/tetorica-spu-plugin/release/signed/tetorica-spu-plugin-0.0.0-preview-1e46aa64672d-macos-universal-signed.dmg",
+      "channel": "signed-preview",
+      "checksum": "/Users/runner/work/tetorica-spu-plugin/tetorica-spu-plugin/release/signed/tetorica-spu-plugin-0.0.0-preview-1e46aa64672d-macos-universal-signed.dmg.sha256",
+      "errors": [],
+      "image": "/Users/runner/work/tetorica-spu-plugin/tetorica-spu-plugin/release/signed/tetorica-spu-plugin-0.0.0-preview-1e46aa64672d-macos-universal-signed.dmg",
+      "inspection": {
+        "architectures": [
+          "arm64",
+          "x86_64"
+        ],
+        "bundles": [
+          {
+            "fileCount": 7,
+            "format": "app",
+            "machO": [
+              {
+                "architectures": [
+                  "arm64",
+                  "x86_64"
+                ],
+                "dylibDependencies": [
+                  "/System/Library/Frameworks/Accelerate.framework/Versions/A/Accelerate",
+                  "/System/Library/Frameworks/AppKit.framework/Versions/C/AppKit",
+                  "/System/Library/Frameworks/ApplicationServices.framework/Versions/A/ApplicationServices",
+                  "/System/Library/Frameworks/Carbon.framework/Versions/A/Carbon",
+                  "/System/Library/Frameworks/Cocoa.framework/Versions/A/Cocoa",
+                  "/System/Library/Frameworks/CoreAudio.framework/Versions/A/CoreAudio",
+                  "/System/Library/Frameworks/CoreData.framework/Versions/A/CoreData",
+                  "/System/Library/Frameworks/CoreFoundation.framework/Versions/A/CoreFoundation",
+                  "/System/Library/Frameworks/CoreGraphics.framework/Versions/A/CoreGraphics",
+                  "/System/Library/Frameworks/CoreMIDI.framework/Versions/A/CoreMIDI",
+                  "/System/Library/Frameworks/CoreServices.framework/Versions/A/CoreServices",
+                  "/System/Library/Frameworks/CoreText.framework/Versions/A/CoreText",
+                  "/System/Library/Frameworks/Foundation.framework/Versions/C/Foundation",
+                  "/System/Library/Frameworks/Metal.framework/Versions/A/Metal",
+                  "/System/Library/Frameworks/MetalKit.framework/Versions/A/MetalKit",
+                  "/System/Library/Frameworks/QuartzCore.framework/Versions/A/QuartzCore",
+                  "/usr/lib/libSystem.B.dylib",
+                  "/usr/lib/libc++.1.dylib",
+                  "/usr/lib/libobjc.A.dylib"
+                ],
+                "minimumMacOS": [
+                  "13.0"
+                ],
+                "mode": "0o755",
+                "path": "Contents/MacOS/TetoricaSPU",
+                "rpaths": [],
+                "sha256": "13824ef223e1a9ba05e9e45a57345b667020a3d19925427a157e9757e4c5b03d",
+                "signature": {
+                  "architectures": {
+                    "arm64": {
+                      "authorities": [
+                        "Developer ID Application: KIYOHIRO KAWAMURA (5H7KW7PC7C)",
+                        "Developer ID Certification Authority",
+                        "Apple Root CA"
+                      ],
+                      "cdhash": "5b14e5b04d024aa3d46c4e36190cc4d1a14cf7c0",
+                      "codeDirectoryFlags": "0x10000",
+                      "hardenedRuntime": true,
+                      "teamIdentifier": "5H7KW7PC7C",
+                      "timestamp": "Nov 1, 2026 at 11:52:33 PM"
+                    },
+                    "x86_64": {
+                      "authorities": [
+                        "Developer ID Application: KIYOHIRO KAWAMURA (5H7KW7PC7C)",
+                        "Developer ID Certification Authority",
+                        "Apple Root CA"
+                      ],
+                      "cdhash": "f52190fb5a4a44cc25b97992761b436413f3e814",
+                      "codeDirectoryFlags": "0x10000",
+                      "hardenedRuntime": true,
+                      "teamIdentifier": "5H7KW7PC7C",
+                      "timestamp": "Nov 1, 2026 at 11:52:33 PM"
+                    }
+                  },
+                  "kind": "developer-id-application",
+                  "notarization": "not-checked",
+                  "requirement": "=anchor apple generic and certificate leaf[field.1.2.840.113635.100.6.1.13] exists and certificate leaf[subject.OU] = \"5H7KW7PC7C\"",
+                  "teamIdentifier": "5H7KW7PC7C",
+                  "valid": true
+                }
+              }
+            ],
+            "minimumSystemVersion": "13.0",
+            "path": "TetoricaSPU.app",
+            "resources": {
+              "Roboto-Regular.ttf": "b2efabca5ea4bc56eea829713706b5cd0788b82aca153bd4adde9b1573933b4f",
+              "THIRD_PARTY_NOTICES.txt": "d26ed5d113ec81968e0f1c41560491631e9c77c5bddf6ad6608dbf8697ce5dcf"
+            },
+            "signature": {
+              "architectures": {
+                "arm64": {
+                  "authorities": [
+                    "Developer ID Application: KIYOHIRO KAWAMURA (5H7KW7PC7C)",
+                    "Developer ID Certification Authority",
+                    "Apple Root CA"
+                  ],
+                  "cdhash": "5b14e5b04d024aa3d46c4e36190cc4d1a14cf7c0",
+                  "codeDirectoryFlags": "0x10000",
+                  "hardenedRuntime": true,
+                  "teamIdentifier": "5H7KW7PC7C",
+                  "timestamp": "Nov 1, 2026 at 11:52:33 PM"
+                },
+                "x86_64": {
+                  "authorities": [
+                    "Developer ID Application: KIYOHIRO KAWAMURA (5H7KW7PC7C)",
+                    "Developer ID Certification Authority",
+                    "Apple Root CA"
+                  ],
+                  "cdhash": "f52190fb5a4a44cc25b97992761b436413f3e814",
+                  "codeDirectoryFlags": "0x10000",
+                  "hardenedRuntime": true,
+                  "teamIdentifier": "5H7KW7PC7C",
+                  "timestamp": "Nov 1, 2026 at 11:52:33 PM"
+                }
+              },
+              "kind": "developer-id-application",
+              "notarization": "not-checked",
+              "requirement": "=anchor apple generic and certificate leaf[field.1.2.840.113635.100.6.1.13] exists and certificate leaf[subject.OU] = \"5H7KW7PC7C\"",
+              "teamIdentifier": "5H7KW7PC7C",
+              "valid": true
+            },
+            "symlinks": [],
+            "version": "0.0.0"
+          },
+          {
+            "fileCount": 6,
+            "format": "au",
+            "machO": [
+              {
+                "architectures": [
+                  "arm64",
+                  "x86_64"
+                ],
+                "dylibDependencies": [
+                  "/System/Library/Frameworks/Accelerate.framework/Versions/A/Accelerate",
+                  "/System/Library/Frameworks/AppKit.framework/Versions/C/AppKit",
+                  "/System/Library/Frameworks/AudioToolbox.framework/Versions/A/AudioToolbox",
+                  "/System/Library/Frameworks/AudioUnit.framework/Versions/A/AudioUnit",
+                  "/System/Library/Frameworks/Carbon.framework/Versions/A/Carbon",
+                  "/System/Library/Frameworks/Cocoa.framework/Versions/A/Cocoa",
+                  "/System/Library/Frameworks/CoreAudio.framework/Versions/A/CoreAudio",
+                  "/System/Library/Frameworks/CoreData.framework/Versions/A/CoreData",
+                  "/System/Library/Frameworks/CoreFoundation.framework/Versions/A/CoreFoundation",
+                  "/System/Library/Frameworks/CoreGraphics.framework/Versions/A/CoreGraphics",
+                  "/System/Library/Frameworks/CoreMIDI.framework/Versions/A/CoreMIDI",
+                  "/System/Library/Frameworks/CoreServices.framework/Versions/A/CoreServices",
+                  "/System/Library/Frameworks/CoreText.framework/Versions/A/CoreText",
+                  "/System/Library/Frameworks/Foundation.framework/Versions/C/Foundation",
+                  "/System/Library/Frameworks/Metal.framework/Versions/A/Metal",
+                  "/System/Library/Frameworks/MetalKit.framework/Versions/A/MetalKit",
+                  "/System/Library/Frameworks/QuartzCore.framework/Versions/A/QuartzCore",
+                  "/usr/lib/libSystem.B.dylib",
+                  "/usr/lib/libc++.1.dylib",
+                  "/usr/lib/libobjc.A.dylib"
+                ],
+                "minimumMacOS": [
+                  "13.0"
+                ],
+                "mode": "0o755",
+                "path": "Contents/MacOS/TetoricaSPU",
+                "rpaths": [],
+                "sha256": "78269486ec4f920783d6c1b64f2cad1a442396aa0b7f21594f60c7c9cbe0761c",
+                "signature": {
+                  "architectures": {
+                    "arm64": {
+                      "authorities": [
+                        "Developer ID Application: KIYOHIRO KAWAMURA (5H7KW7PC7C)",
+                        "Developer ID Certification Authority",
+                        "Apple Root CA"
+                      ],
+                      "cdhash": "377141e821361f2de5ef78087bde6301158de1ae",
+                      "codeDirectoryFlags": "0x10000",
+                      "hardenedRuntime": true,
+                      "teamIdentifier": "5H7KW7PC7C",
+                      "timestamp": "Nov 1, 2026 at 11:52:34 PM"
+                    },
+                    "x86_64": {
+                      "authorities": [
+                        "Developer ID Application: KIYOHIRO KAWAMURA (5H7KW7PC7C)",
+                        "Developer ID Certification Authority",
+                        "Apple Root CA"
+                      ],
+                      "cdhash": "78879ee48c2a2e90fc4ab9d6692c6afdc299861d",
+                      "codeDirectoryFlags": "0x10000",
+                      "hardenedRuntime": true,
+                      "teamIdentifier": "5H7KW7PC7C",
+                      "timestamp": "Nov 1, 2026 at 11:52:33 PM"
+                    }
+                  },
+                  "kind": "developer-id-application",
+                  "notarization": "not-checked",
+                  "requirement": "=anchor apple generic and certificate leaf[field.1.2.840.113635.100.6.1.13] exists and certificate leaf[subject.OU] = \"5H7KW7PC7C\"",
+                  "teamIdentifier": "5H7KW7PC7C",
+                  "valid": true
+                }
+              }
+            ],
+            "minimumSystemVersion": "13.0",
+            "path": "TetoricaSPU.component",
+            "resources": {
+              "Roboto-Regular.ttf": "b2efabca5ea4bc56eea829713706b5cd0788b82aca153bd4adde9b1573933b4f",
+              "THIRD_PARTY_NOTICES.txt": "d26ed5d113ec81968e0f1c41560491631e9c77c5bddf6ad6608dbf8697ce5dcf"
+            },
+            "signature": {
+              "architectures": {
+                "arm64": {
+                  "authorities": [
+                    "Developer ID Application: KIYOHIRO KAWAMURA (5H7KW7PC7C)",
+                    "Developer ID Certification Authority",
+                    "Apple Root CA"
+                  ],
+                  "cdhash": "377141e821361f2de5ef78087bde6301158de1ae",
+                  "codeDirectoryFlags": "0x10000",
+                  "hardenedRuntime": true,
+                  "teamIdentifier": "5H7KW7PC7C",
+                  "timestamp": "Nov 1, 2026 at 11:52:34 PM"
+                },
+                "x86_64": {
+                  "authorities": [
+                    "Developer ID Application: KIYOHIRO KAWAMURA (5H7KW7PC7C)",
+                    "Developer ID Certification Authority",
+                    "Apple Root CA"
+                  ],
+                  "cdhash": "78879ee48c2a2e90fc4ab9d6692c6afdc299861d",
+                  "codeDirectoryFlags": "0x10000",
+                  "hardenedRuntime": true,
+                  "teamIdentifier": "5H7KW7PC7C",
+                  "timestamp": "Nov 1, 2026 at 11:52:33 PM"
+                }
+              },
+              "kind": "developer-id-application",
+              "notarization": "not-checked",
+              "requirement": "=anchor apple generic and certificate leaf[field.1.2.840.113635.100.6.1.13] exists and certificate leaf[subject.OU] = \"5H7KW7PC7C\"",
+              "teamIdentifier": "5H7KW7PC7C",
+              "valid": true
+            },
+            "symlinks": [],
+            "version": "0.0.0"
+          },
+          {
+            "fileCount": 6,
+            "format": "vst3",
+            "machO": [
+              {
+                "architectures": [
+                  "arm64",
+                  "x86_64"
+                ],
+                "dylibDependencies": [
+                  "/System/Library/Frameworks/Accelerate.framework/Versions/A/Accelerate",
+                  "/System/Library/Frameworks/AppKit.framework/Versions/C/AppKit",
+                  "/System/Library/Frameworks/Carbon.framework/Versions/A/Carbon",
+                  "/System/Library/Frameworks/Cocoa.framework/Versions/A/Cocoa",
+                  "/System/Library/Frameworks/CoreData.framework/Versions/A/CoreData",
+                  "/System/Library/Frameworks/CoreFoundation.framework/Versions/A/CoreFoundation",
+                  "/System/Library/Frameworks/CoreGraphics.framework/Versions/A/CoreGraphics",
+                  "/System/Library/Frameworks/CoreServices.framework/Versions/A/CoreServices",
+                  "/System/Library/Frameworks/CoreText.framework/Versions/A/CoreText",
+                  "/System/Library/Frameworks/Foundation.framework/Versions/C/Foundation",
+                  "/System/Library/Frameworks/Metal.framework/Versions/A/Metal",
+                  "/System/Library/Frameworks/MetalKit.framework/Versions/A/MetalKit",
+                  "/System/Library/Frameworks/QuartzCore.framework/Versions/A/QuartzCore",
+                  "/usr/lib/libSystem.B.dylib",
+                  "/usr/lib/libc++.1.dylib",
+                  "/usr/lib/libobjc.A.dylib"
+                ],
+                "minimumMacOS": [
+                  "13.0"
+                ],
+                "mode": "0o755",
+                "path": "Contents/MacOS/TetoricaSPU",
+                "rpaths": [],
+                "sha256": "3c47b35aa8556fca6e132f4e3a0932a7951a6d95b4da04baed607774dc247a6b",
+                "signature": {
+                  "architectures": {
+                    "arm64": {
+                      "authorities": [
+                        "Developer ID Application: KIYOHIRO KAWAMURA (5H7KW7PC7C)",
+                        "Developer ID Certification Authority",
+                        "Apple Root CA"
+                      ],
+                      "cdhash": "582a2f7f73ebae1bf7caf6f2505b93266004e35f",
+                      "codeDirectoryFlags": "0x10000",
+                      "hardenedRuntime": true,
+                      "teamIdentifier": "5H7KW7PC7C",
+                      "timestamp": "Nov 1, 2026 at 11:52:34 PM"
+                    },
+                    "x86_64": {
+                      "authorities": [
+                        "Developer ID Application: KIYOHIRO KAWAMURA (5H7KW7PC7C)",
+                        "Developer ID Certification Authority",
+                        "Apple Root CA"
+                      ],
+                      "cdhash": "36c983abc523bcad533175b309166a890a0508b6",
+                      "codeDirectoryFlags": "0x10000",
+                      "hardenedRuntime": true,
+                      "teamIdentifier": "5H7KW7PC7C",
+                      "timestamp": "Nov 1, 2026 at 11:52:34 PM"
+                    }
+                  },
+                  "kind": "developer-id-application",
+                  "notarization": "not-checked",
+                  "requirement": "=anchor apple generic and certificate leaf[field.1.2.840.113635.100.6.1.13] exists and certificate leaf[subject.OU] = \"5H7KW7PC7C\"",
+                  "teamIdentifier": "5H7KW7PC7C",
+                  "valid": true
+                }
+              }
+            ],
+            "minimumSystemVersion": "13.0",
+            "path": "TetoricaSPU.vst3",
+            "resources": {
+              "Roboto-Regular.ttf": "b2efabca5ea4bc56eea829713706b5cd0788b82aca153bd4adde9b1573933b4f",
+              "THIRD_PARTY_NOTICES.txt": "d26ed5d113ec81968e0f1c41560491631e9c77c5bddf6ad6608dbf8697ce5dcf"
+            },
+            "signature": {
+              "architectures": {
+                "arm64": {
+                  "authorities": [
+                    "Developer ID Application: KIYOHIRO KAWAMURA (5H7KW7PC7C)",
+                    "Developer ID Certification Authority",
+                    "Apple Root CA"
+                  ],
+                  "cdhash": "582a2f7f73ebae1bf7caf6f2505b93266004e35f",
+                  "codeDirectoryFlags": "0x10000",
+                  "hardenedRuntime": true,
+                  "teamIdentifier": "5H7KW7PC7C",
+                  "timestamp": "Nov 1, 2026 at 11:52:34 PM"
+                },
+                "x86_64": {
+                  "authorities": [
+                    "Developer ID Application: KIYOHIRO KAWAMURA (5H7KW7PC7C)",
+                    "Developer ID Certification Authority",
+                    "Apple Root CA"
+                  ],
+                  "cdhash": "36c983abc523bcad533175b309166a890a0508b6",
+                  "codeDirectoryFlags": "0x10000",
+                  "hardenedRuntime": true,
+                  "teamIdentifier": "5H7KW7PC7C",
+                  "timestamp": "Nov 1, 2026 at 11:52:34 PM"
+                }
+              },
+              "kind": "developer-id-application",
+              "notarization": "not-checked",
+              "requirement": "=anchor apple generic and certificate leaf[field.1.2.840.113635.100.6.1.13] exists and certificate leaf[subject.OU] = \"5H7KW7PC7C\"",
+              "teamIdentifier": "5H7KW7PC7C",
+              "valid": true
+            },
+            "symlinks": [],
+            "version": "0.0.0"
+          }
+        ],
+        "dependencyPolicy": "system-only",
+        "errors": [],
+        "expectedTeamIdentifier": "5H7KW7PC7C",
+        "input": "/Users/runner/work/tetorica-spu-plugin/tetorica-spu-plugin/release/signed/.signed-build-erv28way/image-root/tetorica-spu-plugin-0.0.0-preview-1e46aa64672d-macos-universal-signed",
+        "notarization": "not-checked",
+        "ok": true,
+        "schema": 1,
+        "signingPolicy": "developer-id-application-exact-team",
+        "signingRequirement": "=anchor apple generic and certificate leaf[field.1.2.840.113635.100.6.1.13] exists and certificate leaf[subject.OU] = \"5H7KW7PC7C\"",
+        "version": "0.0.0"
+      },
+      "notary": {
+        "log": "/Users/runner/work/tetorica-spu-plugin/tetorica-spu-plugin/release/signed/tetorica-spu-plugin-0.0.0-preview-1e46aa64672d-macos-universal-signed.notary-log.json",
+        "log_status": "Accepted",
+        "status": "Accepted",
+        "submission_id": "2a012f72-2fcf-40e8-af6d-f516e9b53e8a"
+      },
+      "notary_trust": {
+        "container": "signed-udif-dmg",
+        "gatekeeper_accepted": true,
+        "stapled_ticket_valid": true
+      },
+      "ok": true,
+      "platform": "macos",
+      "schema": 1,
+      "sha256": "e93fa1451cbebf418c95ab6ffda4c7594ccc28fbc0661b0f56288533b1d2205a",
+      "signature": {
+        "authorities": [
+          "Developer ID Application: KIYOHIRO KAWAMURA (5H7KW7PC7C)",
+          "Developer ID Certification Authority",
+          "Apple Root CA"
+        ],
+        "identifier": "com.Tetorica.TetoricaSPU.distribution.1e46aa64672d",
+        "kind": "developer-id-application",
+        "requirement": "=anchor apple generic and certificate leaf[field.1.2.840.113635.100.6.1.13] exists and certificate leaf[subject.OU] = \"5H7KW7PC7C\"",
+        "team_id": "5H7KW7PC7C",
+        "timestamp": "Nov 1, 2026 at 11:52:44 PM"
+      },
+      "signing_identity_sha1": "D06624D16CEA635B4149880891F9883EE4F5B18C",
+      "signing_step": {
+        "operation": "sign-disk-image"
+      },
+      "source_commit": "1e46aa64672d44af6ae28b858f1219bc0c4c1d71",
+      "team_id": "5H7KW7PC7C",
+      "version": "0.0.0"
+    },
+    "apple_notary_log": {
+      "archiveFilename": "candidate.dmg",
+      "issues": null,
+      "jobId": "2a012f72-2fcf-40e8-af6d-f516e9b53e8a",
+      "logFormatVersion": 1,
+      "sha256": "c3eacfa0e3377cb5fb0281d5023fee2962027c7ddfa7f736b059dec578d58140",
+      "status": "Accepted",
+      "statusCode": 0,
+      "statusSummary": "Ready for distribution",
+      "ticketContents": [
+        {
+          "arch": "x86_64",
+          "cdhash": "36c983abc523bcad533175b309166a890a0508b6",
+          "digestAlgorithm": "SHA-256",
+          "path": "candidate.dmg/tetorica-spu-plugin-0.0.0-preview-1e46aa64672d-macos-universal-signed/TetoricaSPU.vst3"
+        },
+        {
+          "arch": "arm64",
+          "cdhash": "582a2f7f73ebae1bf7caf6f2505b93266004e35f",
+          "digestAlgorithm": "SHA-256",
+          "path": "candidate.dmg/tetorica-spu-plugin-0.0.0-preview-1e46aa64672d-macos-universal-signed/TetoricaSPU.vst3"
+        },
+        {
+          "arch": "x86_64",
+          "cdhash": "36c983abc523bcad533175b309166a890a0508b6",
+          "digestAlgorithm": "SHA-256",
+          "path": "candidate.dmg/tetorica-spu-plugin-0.0.0-preview-1e46aa64672d-macos-universal-signed/TetoricaSPU.vst3/Contents/MacOS/TetoricaSPU"
+        },
+        {
+          "arch": "arm64",
+          "cdhash": "582a2f7f73ebae1bf7caf6f2505b93266004e35f",
+          "digestAlgorithm": "SHA-256",
+          "path": "candidate.dmg/tetorica-spu-plugin-0.0.0-preview-1e46aa64672d-macos-universal-signed/TetoricaSPU.vst3/Contents/MacOS/TetoricaSPU"
+        },
+        {
+          "arch": "x86_64",
+          "cdhash": "f52190fb5a4a44cc25b97992761b436413f3e814",
+          "digestAlgorithm": "SHA-256",
+          "path": "candidate.dmg/tetorica-spu-plugin-0.0.0-preview-1e46aa64672d-macos-universal-signed/TetoricaSPU.app"
+        },
+        {
+          "arch": "arm64",
+          "cdhash": "5b14e5b04d024aa3d46c4e36190cc4d1a14cf7c0",
+          "digestAlgorithm": "SHA-256",
+          "path": "candidate.dmg/tetorica-spu-plugin-0.0.0-preview-1e46aa64672d-macos-universal-signed/TetoricaSPU.app"
+        },
+        {
+          "arch": "x86_64",
+          "cdhash": "f52190fb5a4a44cc25b97992761b436413f3e814",
+          "digestAlgorithm": "SHA-256",
+          "path": "candidate.dmg/tetorica-spu-plugin-0.0.0-preview-1e46aa64672d-macos-universal-signed/TetoricaSPU.app/Contents/MacOS/TetoricaSPU"
+        },
+        {
+          "arch": "arm64",
+          "cdhash": "5b14e5b04d024aa3d46c4e36190cc4d1a14cf7c0",
+          "digestAlgorithm": "SHA-256",
+          "path": "candidate.dmg/tetorica-spu-plugin-0.0.0-preview-1e46aa64672d-macos-universal-signed/TetoricaSPU.app/Contents/MacOS/TetoricaSPU"
+        },
+        {
+          "arch": "x86_64",
+          "cdhash": "78879ee48c2a2e90fc4ab9d6692c6afdc299861d",
+          "digestAlgorithm": "SHA-256",
+          "path": "candidate.dmg/tetorica-spu-plugin-0.0.0-preview-1e46aa64672d-macos-universal-signed/TetoricaSPU.component"
+        },
+        {
+          "arch": "arm64",
+          "cdhash": "377141e821361f2de5ef78087bde6301158de1ae",
+          "digestAlgorithm": "SHA-256",
+          "path": "candidate.dmg/tetorica-spu-plugin-0.0.0-preview-1e46aa64672d-macos-universal-signed/TetoricaSPU.component"
+        },
+        {
+          "arch": "x86_64",
+          "cdhash": "78879ee48c2a2e90fc4ab9d6692c6afdc299861d",
+          "digestAlgorithm": "SHA-256",
+          "path": "candidate.dmg/tetorica-spu-plugin-0.0.0-preview-1e46aa64672d-macos-universal-signed/TetoricaSPU.component/Contents/MacOS/TetoricaSPU"
+        },
+        {
+          "arch": "arm64",
+          "cdhash": "377141e821361f2de5ef78087bde6301158de1ae",
+          "digestAlgorithm": "SHA-256",
+          "path": "candidate.dmg/tetorica-spu-plugin-0.0.0-preview-1e46aa64672d-macos-universal-signed/TetoricaSPU.component/Contents/MacOS/TetoricaSPU"
+        },
+        {
+          "cdhash": "8cd2d3d7022f5be321d26360b9d095641ceff881",
+          "digestAlgorithm": "SHA-256",
+          "path": "candidate.dmg"
+        }
+      ],
+      "uploadDate": "2026-11-01T23:52:49.713Z"
+    },
+    "consumer_reports": {
+      "arm64": {
+        "archive": "/Users/runner/work/tetorica-spu-plugin/tetorica-spu-plugin/build/downloaded-signed/tetorica-spu-plugin-0.0.0-preview-1e46aa64672d-macos-universal-signed.dmg",
+        "errors": [],
+        "image": "/Users/runner/work/tetorica-spu-plugin/tetorica-spu-plugin/build/downloaded-signed/tetorica-spu-plugin-0.0.0-preview-1e46aa64672d-macos-universal-signed.dmg",
+        "inspection": {
+          "architectures": [
+            "arm64",
+            "x86_64"
+          ],
+          "bundles": [
+            {
+              "fileCount": 7,
+              "format": "app",
+              "machO": [
+                {
+                  "architectures": [
+                    "arm64",
+                    "x86_64"
+                  ],
+                  "dylibDependencies": [
+                    "/System/Library/Frameworks/Accelerate.framework/Versions/A/Accelerate",
+                    "/System/Library/Frameworks/AppKit.framework/Versions/C/AppKit",
+                    "/System/Library/Frameworks/ApplicationServices.framework/Versions/A/ApplicationServices",
+                    "/System/Library/Frameworks/Carbon.framework/Versions/A/Carbon",
+                    "/System/Library/Frameworks/Cocoa.framework/Versions/A/Cocoa",
+                    "/System/Library/Frameworks/CoreAudio.framework/Versions/A/CoreAudio",
+                    "/System/Library/Frameworks/CoreData.framework/Versions/A/CoreData",
+                    "/System/Library/Frameworks/CoreFoundation.framework/Versions/A/CoreFoundation",
+                    "/System/Library/Frameworks/CoreGraphics.framework/Versions/A/CoreGraphics",
+                    "/System/Library/Frameworks/CoreMIDI.framework/Versions/A/CoreMIDI",
+                    "/System/Library/Frameworks/CoreServices.framework/Versions/A/CoreServices",
+                    "/System/Library/Frameworks/CoreText.framework/Versions/A/CoreText",
+                    "/System/Library/Frameworks/Foundation.framework/Versions/C/Foundation",
+                    "/System/Library/Frameworks/Metal.framework/Versions/A/Metal",
+                    "/System/Library/Frameworks/MetalKit.framework/Versions/A/MetalKit",
+                    "/System/Library/Frameworks/QuartzCore.framework/Versions/A/QuartzCore",
+                    "/usr/lib/libSystem.B.dylib",
+                    "/usr/lib/libc++.1.dylib",
+                    "/usr/lib/libobjc.A.dylib"
+                  ],
+                  "minimumMacOS": [
+                    "13.0"
+                  ],
+                  "mode": "0o755",
+                  "path": "Contents/MacOS/TetoricaSPU",
+                  "rpaths": [],
+                  "sha256": "13824ef223e1a9ba05e9e45a57345b667020a3d19925427a157e9757e4c5b03d",
+                  "signature": {
+                    "architectures": {
+                      "arm64": {
+                        "authorities": [
+                          "Developer ID Application: KIYOHIRO KAWAMURA (5H7KW7PC7C)",
+                          "Developer ID Certification Authority",
+                          "Apple Root CA"
+                        ],
+                        "cdhash": "5b14e5b04d024aa3d46c4e36190cc4d1a14cf7c0",
+                        "codeDirectoryFlags": "0x10000",
+                        "hardenedRuntime": true,
+                        "teamIdentifier": "5H7KW7PC7C",
+                        "timestamp": "Nov 1, 2026 at 11:52:33 PM"
+                      },
+                      "x86_64": {
+                        "authorities": [
+                          "Developer ID Application: KIYOHIRO KAWAMURA (5H7KW7PC7C)",
+                          "Developer ID Certification Authority",
+                          "Apple Root CA"
+                        ],
+                        "cdhash": "f52190fb5a4a44cc25b97992761b436413f3e814",
+                        "codeDirectoryFlags": "0x10000",
+                        "hardenedRuntime": true,
+                        "teamIdentifier": "5H7KW7PC7C",
+                        "timestamp": "Nov 1, 2026 at 11:52:33 PM"
+                      }
+                    },
+                    "kind": "developer-id-application",
+                    "notarization": "not-checked",
+                    "requirement": "=anchor apple generic and certificate leaf[field.1.2.840.113635.100.6.1.13] exists and certificate leaf[subject.OU] = \"5H7KW7PC7C\"",
+                    "teamIdentifier": "5H7KW7PC7C",
+                    "valid": true
+                  }
+                }
+              ],
+              "minimumSystemVersion": "13.0",
+              "path": "TetoricaSPU.app",
+              "resources": {
+                "Roboto-Regular.ttf": "b2efabca5ea4bc56eea829713706b5cd0788b82aca153bd4adde9b1573933b4f",
+                "THIRD_PARTY_NOTICES.txt": "d26ed5d113ec81968e0f1c41560491631e9c77c5bddf6ad6608dbf8697ce5dcf"
+              },
+              "signature": {
+                "architectures": {
+                  "arm64": {
+                    "authorities": [
+                      "Developer ID Application: KIYOHIRO KAWAMURA (5H7KW7PC7C)",
+                      "Developer ID Certification Authority",
+                      "Apple Root CA"
+                    ],
+                    "cdhash": "5b14e5b04d024aa3d46c4e36190cc4d1a14cf7c0",
+                    "codeDirectoryFlags": "0x10000",
+                    "hardenedRuntime": true,
+                    "teamIdentifier": "5H7KW7PC7C",
+                    "timestamp": "Nov 1, 2026 at 11:52:33 PM"
+                  },
+                  "x86_64": {
+                    "authorities": [
+                      "Developer ID Application: KIYOHIRO KAWAMURA (5H7KW7PC7C)",
+                      "Developer ID Certification Authority",
+                      "Apple Root CA"
+                    ],
+                    "cdhash": "f52190fb5a4a44cc25b97992761b436413f3e814",
+                    "codeDirectoryFlags": "0x10000",
+                    "hardenedRuntime": true,
+                    "teamIdentifier": "5H7KW7PC7C",
+                    "timestamp": "Nov 1, 2026 at 11:52:33 PM"
+                  }
+                },
+                "kind": "developer-id-application",
+                "notarization": "not-checked",
+                "requirement": "=anchor apple generic and certificate leaf[field.1.2.840.113635.100.6.1.13] exists and certificate leaf[subject.OU] = \"5H7KW7PC7C\"",
+                "teamIdentifier": "5H7KW7PC7C",
+                "valid": true
+              },
+              "symlinks": [],
+              "version": "0.0.0"
+            },
+            {
+              "fileCount": 6,
+              "format": "au",
+              "machO": [
+                {
+                  "architectures": [
+                    "arm64",
+                    "x86_64"
+                  ],
+                  "dylibDependencies": [
+                    "/System/Library/Frameworks/Accelerate.framework/Versions/A/Accelerate",
+                    "/System/Library/Frameworks/AppKit.framework/Versions/C/AppKit",
+                    "/System/Library/Frameworks/AudioToolbox.framework/Versions/A/AudioToolbox",
+                    "/System/Library/Frameworks/AudioUnit.framework/Versions/A/AudioUnit",
+                    "/System/Library/Frameworks/Carbon.framework/Versions/A/Carbon",
+                    "/System/Library/Frameworks/Cocoa.framework/Versions/A/Cocoa",
+                    "/System/Library/Frameworks/CoreAudio.framework/Versions/A/CoreAudio",
+                    "/System/Library/Frameworks/CoreData.framework/Versions/A/CoreData",
+                    "/System/Library/Frameworks/CoreFoundation.framework/Versions/A/CoreFoundation",
+                    "/System/Library/Frameworks/CoreGraphics.framework/Versions/A/CoreGraphics",
+                    "/System/Library/Frameworks/CoreMIDI.framework/Versions/A/CoreMIDI",
+                    "/System/Library/Frameworks/CoreServices.framework/Versions/A/CoreServices",
+                    "/System/Library/Frameworks/CoreText.framework/Versions/A/CoreText",
+                    "/System/Library/Frameworks/Foundation.framework/Versions/C/Foundation",
+                    "/System/Library/Frameworks/Metal.framework/Versions/A/Metal",
+                    "/System/Library/Frameworks/MetalKit.framework/Versions/A/MetalKit",
+                    "/System/Library/Frameworks/QuartzCore.framework/Versions/A/QuartzCore",
+                    "/usr/lib/libSystem.B.dylib",
+                    "/usr/lib/libc++.1.dylib",
+                    "/usr/lib/libobjc.A.dylib"
+                  ],
+                  "minimumMacOS": [
+                    "13.0"
+                  ],
+                  "mode": "0o755",
+                  "path": "Contents/MacOS/TetoricaSPU",
+                  "rpaths": [],
+                  "sha256": "78269486ec4f920783d6c1b64f2cad1a442396aa0b7f21594f60c7c9cbe0761c",
+                  "signature": {
+                    "architectures": {
+                      "arm64": {
+                        "authorities": [
+                          "Developer ID Application: KIYOHIRO KAWAMURA (5H7KW7PC7C)",
+                          "Developer ID Certification Authority",
+                          "Apple Root CA"
+                        ],
+                        "cdhash": "377141e821361f2de5ef78087bde6301158de1ae",
+                        "codeDirectoryFlags": "0x10000",
+                        "hardenedRuntime": true,
+                        "teamIdentifier": "5H7KW7PC7C",
+                        "timestamp": "Nov 1, 2026 at 11:52:34 PM"
+                      },
+                      "x86_64": {
+                        "authorities": [
+                          "Developer ID Application: KIYOHIRO KAWAMURA (5H7KW7PC7C)",
+                          "Developer ID Certification Authority",
+                          "Apple Root CA"
+                        ],
+                        "cdhash": "78879ee48c2a2e90fc4ab9d6692c6afdc299861d",
+                        "codeDirectoryFlags": "0x10000",
+                        "hardenedRuntime": true,
+                        "teamIdentifier": "5H7KW7PC7C",
+                        "timestamp": "Nov 1, 2026 at 11:52:33 PM"
+                      }
+                    },
+                    "kind": "developer-id-application",
+                    "notarization": "not-checked",
+                    "requirement": "=anchor apple generic and certificate leaf[field.1.2.840.113635.100.6.1.13] exists and certificate leaf[subject.OU] = \"5H7KW7PC7C\"",
+                    "teamIdentifier": "5H7KW7PC7C",
+                    "valid": true
+                  }
+                }
+              ],
+              "minimumSystemVersion": "13.0",
+              "path": "TetoricaSPU.component",
+              "resources": {
+                "Roboto-Regular.ttf": "b2efabca5ea4bc56eea829713706b5cd0788b82aca153bd4adde9b1573933b4f",
+                "THIRD_PARTY_NOTICES.txt": "d26ed5d113ec81968e0f1c41560491631e9c77c5bddf6ad6608dbf8697ce5dcf"
+              },
+              "signature": {
+                "architectures": {
+                  "arm64": {
+                    "authorities": [
+                      "Developer ID Application: KIYOHIRO KAWAMURA (5H7KW7PC7C)",
+                      "Developer ID Certification Authority",
+                      "Apple Root CA"
+                    ],
+                    "cdhash": "377141e821361f2de5ef78087bde6301158de1ae",
+                    "codeDirectoryFlags": "0x10000",
+                    "hardenedRuntime": true,
+                    "teamIdentifier": "5H7KW7PC7C",
+                    "timestamp": "Nov 1, 2026 at 11:52:34 PM"
+                  },
+                  "x86_64": {
+                    "authorities": [
+                      "Developer ID Application: KIYOHIRO KAWAMURA (5H7KW7PC7C)",
+                      "Developer ID Certification Authority",
+                      "Apple Root CA"
+                    ],
+                    "cdhash": "78879ee48c2a2e90fc4ab9d6692c6afdc299861d",
+                    "codeDirectoryFlags": "0x10000",
+                    "hardenedRuntime": true,
+                    "teamIdentifier": "5H7KW7PC7C",
+                    "timestamp": "Nov 1, 2026 at 11:52:33 PM"
+                  }
+                },
+                "kind": "developer-id-application",
+                "notarization": "not-checked",
+                "requirement": "=anchor apple generic and certificate leaf[field.1.2.840.113635.100.6.1.13] exists and certificate leaf[subject.OU] = \"5H7KW7PC7C\"",
+                "teamIdentifier": "5H7KW7PC7C",
+                "valid": true
+              },
+              "symlinks": [],
+              "version": "0.0.0"
+            },
+            {
+              "fileCount": 6,
+              "format": "vst3",
+              "machO": [
+                {
+                  "architectures": [
+                    "arm64",
+                    "x86_64"
+                  ],
+                  "dylibDependencies": [
+                    "/System/Library/Frameworks/Accelerate.framework/Versions/A/Accelerate",
+                    "/System/Library/Frameworks/AppKit.framework/Versions/C/AppKit",
+                    "/System/Library/Frameworks/Carbon.framework/Versions/A/Carbon",
+                    "/System/Library/Frameworks/Cocoa.framework/Versions/A/Cocoa",
+                    "/System/Library/Frameworks/CoreData.framework/Versions/A/CoreData",
+                    "/System/Library/Frameworks/CoreFoundation.framework/Versions/A/CoreFoundation",
+                    "/System/Library/Frameworks/CoreGraphics.framework/Versions/A/CoreGraphics",
+                    "/System/Library/Frameworks/CoreServices.framework/Versions/A/CoreServices",
+                    "/System/Library/Frameworks/CoreText.framework/Versions/A/CoreText",
+                    "/System/Library/Frameworks/Foundation.framework/Versions/C/Foundation",
+                    "/System/Library/Frameworks/Metal.framework/Versions/A/Metal",
+                    "/System/Library/Frameworks/MetalKit.framework/Versions/A/MetalKit",
+                    "/System/Library/Frameworks/QuartzCore.framework/Versions/A/QuartzCore",
+                    "/usr/lib/libSystem.B.dylib",
+                    "/usr/lib/libc++.1.dylib",
+                    "/usr/lib/libobjc.A.dylib"
+                  ],
+                  "minimumMacOS": [
+                    "13.0"
+                  ],
+                  "mode": "0o755",
+                  "path": "Contents/MacOS/TetoricaSPU",
+                  "rpaths": [],
+                  "sha256": "3c47b35aa8556fca6e132f4e3a0932a7951a6d95b4da04baed607774dc247a6b",
+                  "signature": {
+                    "architectures": {
+                      "arm64": {
+                        "authorities": [
+                          "Developer ID Application: KIYOHIRO KAWAMURA (5H7KW7PC7C)",
+                          "Developer ID Certification Authority",
+                          "Apple Root CA"
+                        ],
+                        "cdhash": "582a2f7f73ebae1bf7caf6f2505b93266004e35f",
+                        "codeDirectoryFlags": "0x10000",
+                        "hardenedRuntime": true,
+                        "teamIdentifier": "5H7KW7PC7C",
+                        "timestamp": "Nov 1, 2026 at 11:52:34 PM"
+                      },
+                      "x86_64": {
+                        "authorities": [
+                          "Developer ID Application: KIYOHIRO KAWAMURA (5H7KW7PC7C)",
+                          "Developer ID Certification Authority",
+                          "Apple Root CA"
+                        ],
+                        "cdhash": "36c983abc523bcad533175b309166a890a0508b6",
+                        "codeDirectoryFlags": "0x10000",
+                        "hardenedRuntime": true,
+                        "teamIdentifier": "5H7KW7PC7C",
+                        "timestamp": "Nov 1, 2026 at 11:52:34 PM"
+                      }
+                    },
+                    "kind": "developer-id-application",
+                    "notarization": "not-checked",
+                    "requirement": "=anchor apple generic and certificate leaf[field.1.2.840.113635.100.6.1.13] exists and certificate leaf[subject.OU] = \"5H7KW7PC7C\"",
+                    "teamIdentifier": "5H7KW7PC7C",
+                    "valid": true
+                  }
+                }
+              ],
+              "minimumSystemVersion": "13.0",
+              "path": "TetoricaSPU.vst3",
+              "resources": {
+                "Roboto-Regular.ttf": "b2efabca5ea4bc56eea829713706b5cd0788b82aca153bd4adde9b1573933b4f",
+                "THIRD_PARTY_NOTICES.txt": "d26ed5d113ec81968e0f1c41560491631e9c77c5bddf6ad6608dbf8697ce5dcf"
+              },
+              "signature": {
+                "architectures": {
+                  "arm64": {
+                    "authorities": [
+                      "Developer ID Application: KIYOHIRO KAWAMURA (5H7KW7PC7C)",
+                      "Developer ID Certification Authority",
+                      "Apple Root CA"
+                    ],
+                    "cdhash": "582a2f7f73ebae1bf7caf6f2505b93266004e35f",
+                    "codeDirectoryFlags": "0x10000",
+                    "hardenedRuntime": true,
+                    "teamIdentifier": "5H7KW7PC7C",
+                    "timestamp": "Nov 1, 2026 at 11:52:34 PM"
+                  },
+                  "x86_64": {
+                    "authorities": [
+                      "Developer ID Application: KIYOHIRO KAWAMURA (5H7KW7PC7C)",
+                      "Developer ID Certification Authority",
+                      "Apple Root CA"
+                    ],
+                    "cdhash": "36c983abc523bcad533175b309166a890a0508b6",
+                    "codeDirectoryFlags": "0x10000",
+                    "hardenedRuntime": true,
+                    "teamIdentifier": "5H7KW7PC7C",
+                    "timestamp": "Nov 1, 2026 at 11:52:34 PM"
+                  }
+                },
+                "kind": "developer-id-application",
+                "notarization": "not-checked",
+                "requirement": "=anchor apple generic and certificate leaf[field.1.2.840.113635.100.6.1.13] exists and certificate leaf[subject.OU] = \"5H7KW7PC7C\"",
+                "teamIdentifier": "5H7KW7PC7C",
+                "valid": true
+              },
+              "symlinks": [],
+              "version": "0.0.0"
+            }
+          ],
+          "dependencyPolicy": "system-only",
+          "errors": [],
+          "expectedTeamIdentifier": "5H7KW7PC7C",
+          "input": "/Users/runner/work/tetorica-spu-plugin/tetorica-spu-plugin/build/.signed-extract-1imuhv2g",
+          "notarization": "not-checked",
+          "ok": true,
+          "schema": 1,
+          "signingPolicy": "developer-id-application-exact-team",
+          "signingRequirement": "=anchor apple generic and certificate leaf[field.1.2.840.113635.100.6.1.13] exists and certificate leaf[subject.OU] = \"5H7KW7PC7C\"",
+          "version": "0.0.0"
+        },
+        "notary_trust": {
+          "container": "signed-udif-dmg",
+          "gatekeeper_accepted": true,
+          "stapled_ticket_valid": true
+        },
+        "ok": true,
+        "platform": "macos",
+        "schema": 1,
+        "sha256": "e93fa1451cbebf418c95ab6ffda4c7594ccc28fbc0661b0f56288533b1d2205a",
+        "signature": {
+          "authorities": [
+            "Developer ID Application: KIYOHIRO KAWAMURA (5H7KW7PC7C)",
+            "Developer ID Certification Authority",
+            "Apple Root CA"
+          ],
+          "identifier": "com.Tetorica.TetoricaSPU.distribution.1e46aa64672d",
+          "kind": "developer-id-application",
+          "requirement": "=anchor apple generic and certificate leaf[field.1.2.840.113635.100.6.1.13] exists and certificate leaf[subject.OU] = \"5H7KW7PC7C\"",
+          "team_id": "5H7KW7PC7C",
+          "timestamp": "Nov 1, 2026 at 11:52:44 PM"
+        },
+        "source_commit": "1e46aa64672d44af6ae28b858f1219bc0c4c1d71",
+        "staging_directory": "/Users/runner/work/tetorica-spu-plugin/tetorica-spu-plugin/build/signed-extracted",
+        "team_id": "5H7KW7PC7C",
+        "version": "0.0.0"
+      },
+      "x86_64": {
+        "archive": "/Users/runner/work/tetorica-spu-plugin/tetorica-spu-plugin/build/downloaded-signed/tetorica-spu-plugin-0.0.0-preview-1e46aa64672d-macos-universal-signed.dmg",
+        "errors": [],
+        "image": "/Users/runner/work/tetorica-spu-plugin/tetorica-spu-plugin/build/downloaded-signed/tetorica-spu-plugin-0.0.0-preview-1e46aa64672d-macos-universal-signed.dmg",
+        "inspection": {
+          "architectures": [
+            "arm64",
+            "x86_64"
+          ],
+          "bundles": [
+            {
+              "fileCount": 7,
+              "format": "app",
+              "machO": [
+                {
+                  "architectures": [
+                    "arm64",
+                    "x86_64"
+                  ],
+                  "dylibDependencies": [
+                    "/System/Library/Frameworks/Accelerate.framework/Versions/A/Accelerate",
+                    "/System/Library/Frameworks/AppKit.framework/Versions/C/AppKit",
+                    "/System/Library/Frameworks/ApplicationServices.framework/Versions/A/ApplicationServices",
+                    "/System/Library/Frameworks/Carbon.framework/Versions/A/Carbon",
+                    "/System/Library/Frameworks/Cocoa.framework/Versions/A/Cocoa",
+                    "/System/Library/Frameworks/CoreAudio.framework/Versions/A/CoreAudio",
+                    "/System/Library/Frameworks/CoreData.framework/Versions/A/CoreData",
+                    "/System/Library/Frameworks/CoreFoundation.framework/Versions/A/CoreFoundation",
+                    "/System/Library/Frameworks/CoreGraphics.framework/Versions/A/CoreGraphics",
+                    "/System/Library/Frameworks/CoreMIDI.framework/Versions/A/CoreMIDI",
+                    "/System/Library/Frameworks/CoreServices.framework/Versions/A/CoreServices",
+                    "/System/Library/Frameworks/CoreText.framework/Versions/A/CoreText",
+                    "/System/Library/Frameworks/Foundation.framework/Versions/C/Foundation",
+                    "/System/Library/Frameworks/Metal.framework/Versions/A/Metal",
+                    "/System/Library/Frameworks/MetalKit.framework/Versions/A/MetalKit",
+                    "/System/Library/Frameworks/QuartzCore.framework/Versions/A/QuartzCore",
+                    "/usr/lib/libSystem.B.dylib",
+                    "/usr/lib/libc++.1.dylib",
+                    "/usr/lib/libobjc.A.dylib"
+                  ],
+                  "minimumMacOS": [
+                    "13.0"
+                  ],
+                  "mode": "0o755",
+                  "path": "Contents/MacOS/TetoricaSPU",
+                  "rpaths": [],
+                  "sha256": "13824ef223e1a9ba05e9e45a57345b667020a3d19925427a157e9757e4c5b03d",
+                  "signature": {
+                    "architectures": {
+                      "arm64": {
+                        "authorities": [
+                          "Developer ID Application: KIYOHIRO KAWAMURA (5H7KW7PC7C)",
+                          "Developer ID Certification Authority",
+                          "Apple Root CA"
+                        ],
+                        "cdhash": "5b14e5b04d024aa3d46c4e36190cc4d1a14cf7c0",
+                        "codeDirectoryFlags": "0x10000",
+                        "hardenedRuntime": true,
+                        "teamIdentifier": "5H7KW7PC7C",
+                        "timestamp": "Nov 1, 2026 at 11:52:33 PM"
+                      },
+                      "x86_64": {
+                        "authorities": [
+                          "Developer ID Application: KIYOHIRO KAWAMURA (5H7KW7PC7C)",
+                          "Developer ID Certification Authority",
+                          "Apple Root CA"
+                        ],
+                        "cdhash": "f52190fb5a4a44cc25b97992761b436413f3e814",
+                        "codeDirectoryFlags": "0x10000",
+                        "hardenedRuntime": true,
+                        "teamIdentifier": "5H7KW7PC7C",
+                        "timestamp": "Nov 1, 2026 at 11:52:33 PM"
+                      }
+                    },
+                    "kind": "developer-id-application",
+                    "notarization": "not-checked",
+                    "requirement": "=anchor apple generic and certificate leaf[field.1.2.840.113635.100.6.1.13] exists and certificate leaf[subject.OU] = \"5H7KW7PC7C\"",
+                    "teamIdentifier": "5H7KW7PC7C",
+                    "valid": true
+                  }
+                }
+              ],
+              "minimumSystemVersion": "13.0",
+              "path": "TetoricaSPU.app",
+              "resources": {
+                "Roboto-Regular.ttf": "b2efabca5ea4bc56eea829713706b5cd0788b82aca153bd4adde9b1573933b4f",
+                "THIRD_PARTY_NOTICES.txt": "d26ed5d113ec81968e0f1c41560491631e9c77c5bddf6ad6608dbf8697ce5dcf"
+              },
+              "signature": {
+                "architectures": {
+                  "arm64": {
+                    "authorities": [
+                      "Developer ID Application: KIYOHIRO KAWAMURA (5H7KW7PC7C)",
+                      "Developer ID Certification Authority",
+                      "Apple Root CA"
+                    ],
+                    "cdhash": "5b14e5b04d024aa3d46c4e36190cc4d1a14cf7c0",
+                    "codeDirectoryFlags": "0x10000",
+                    "hardenedRuntime": true,
+                    "teamIdentifier": "5H7KW7PC7C",
+                    "timestamp": "Nov 1, 2026 at 11:52:33 PM"
+                  },
+                  "x86_64": {
+                    "authorities": [
+                      "Developer ID Application: KIYOHIRO KAWAMURA (5H7KW7PC7C)",
+                      "Developer ID Certification Authority",
+                      "Apple Root CA"
+                    ],
+                    "cdhash": "f52190fb5a4a44cc25b97992761b436413f3e814",
+                    "codeDirectoryFlags": "0x10000",
+                    "hardenedRuntime": true,
+                    "teamIdentifier": "5H7KW7PC7C",
+                    "timestamp": "Nov 1, 2026 at 11:52:33 PM"
+                  }
+                },
+                "kind": "developer-id-application",
+                "notarization": "not-checked",
+                "requirement": "=anchor apple generic and certificate leaf[field.1.2.840.113635.100.6.1.13] exists and certificate leaf[subject.OU] = \"5H7KW7PC7C\"",
+                "teamIdentifier": "5H7KW7PC7C",
+                "valid": true
+              },
+              "symlinks": [],
+              "version": "0.0.0"
+            },
+            {
+              "fileCount": 6,
+              "format": "au",
+              "machO": [
+                {
+                  "architectures": [
+                    "arm64",
+                    "x86_64"
+                  ],
+                  "dylibDependencies": [
+                    "/System/Library/Frameworks/Accelerate.framework/Versions/A/Accelerate",
+                    "/System/Library/Frameworks/AppKit.framework/Versions/C/AppKit",
+                    "/System/Library/Frameworks/AudioToolbox.framework/Versions/A/AudioToolbox",
+                    "/System/Library/Frameworks/AudioUnit.framework/Versions/A/AudioUnit",
+                    "/System/Library/Frameworks/Carbon.framework/Versions/A/Carbon",
+                    "/System/Library/Frameworks/Cocoa.framework/Versions/A/Cocoa",
+                    "/System/Library/Frameworks/CoreAudio.framework/Versions/A/CoreAudio",
+                    "/System/Library/Frameworks/CoreData.framework/Versions/A/CoreData",
+                    "/System/Library/Frameworks/CoreFoundation.framework/Versions/A/CoreFoundation",
+                    "/System/Library/Frameworks/CoreGraphics.framework/Versions/A/CoreGraphics",
+                    "/System/Library/Frameworks/CoreMIDI.framework/Versions/A/CoreMIDI",
+                    "/System/Library/Frameworks/CoreServices.framework/Versions/A/CoreServices",
+                    "/System/Library/Frameworks/CoreText.framework/Versions/A/CoreText",
+                    "/System/Library/Frameworks/Foundation.framework/Versions/C/Foundation",
+                    "/System/Library/Frameworks/Metal.framework/Versions/A/Metal",
+                    "/System/Library/Frameworks/MetalKit.framework/Versions/A/MetalKit",
+                    "/System/Library/Frameworks/QuartzCore.framework/Versions/A/QuartzCore",
+                    "/usr/lib/libSystem.B.dylib",
+                    "/usr/lib/libc++.1.dylib",
+                    "/usr/lib/libobjc.A.dylib"
+                  ],
+                  "minimumMacOS": [
+                    "13.0"
+                  ],
+                  "mode": "0o755",
+                  "path": "Contents/MacOS/TetoricaSPU",
+                  "rpaths": [],
+                  "sha256": "78269486ec4f920783d6c1b64f2cad1a442396aa0b7f21594f60c7c9cbe0761c",
+                  "signature": {
+                    "architectures": {
+                      "arm64": {
+                        "authorities": [
+                          "Developer ID Application: KIYOHIRO KAWAMURA (5H7KW7PC7C)",
+                          "Developer ID Certification Authority",
+                          "Apple Root CA"
+                        ],
+                        "cdhash": "377141e821361f2de5ef78087bde6301158de1ae",
+                        "codeDirectoryFlags": "0x10000",
+                        "hardenedRuntime": true,
+                        "teamIdentifier": "5H7KW7PC7C",
+                        "timestamp": "Nov 1, 2026 at 11:52:34 PM"
+                      },
+                      "x86_64": {
+                        "authorities": [
+                          "Developer ID Application: KIYOHIRO KAWAMURA (5H7KW7PC7C)",
+                          "Developer ID Certification Authority",
+                          "Apple Root CA"
+                        ],
+                        "cdhash": "78879ee48c2a2e90fc4ab9d6692c6afdc299861d",
+                        "codeDirectoryFlags": "0x10000",
+                        "hardenedRuntime": true,
+                        "teamIdentifier": "5H7KW7PC7C",
+                        "timestamp": "Nov 1, 2026 at 11:52:33 PM"
+                      }
+                    },
+                    "kind": "developer-id-application",
+                    "notarization": "not-checked",
+                    "requirement": "=anchor apple generic and certificate leaf[field.1.2.840.113635.100.6.1.13] exists and certificate leaf[subject.OU] = \"5H7KW7PC7C\"",
+                    "teamIdentifier": "5H7KW7PC7C",
+                    "valid": true
+                  }
+                }
+              ],
+              "minimumSystemVersion": "13.0",
+              "path": "TetoricaSPU.component",
+              "resources": {
+                "Roboto-Regular.ttf": "b2efabca5ea4bc56eea829713706b5cd0788b82aca153bd4adde9b1573933b4f",
+                "THIRD_PARTY_NOTICES.txt": "d26ed5d113ec81968e0f1c41560491631e9c77c5bddf6ad6608dbf8697ce5dcf"
+              },
+              "signature": {
+                "architectures": {
+                  "arm64": {
+                    "authorities": [
+                      "Developer ID Application: KIYOHIRO KAWAMURA (5H7KW7PC7C)",
+                      "Developer ID Certification Authority",
+                      "Apple Root CA"
+                    ],
+                    "cdhash": "377141e821361f2de5ef78087bde6301158de1ae",
+                    "codeDirectoryFlags": "0x10000",
+                    "hardenedRuntime": true,
+                    "teamIdentifier": "5H7KW7PC7C",
+                    "timestamp": "Nov 1, 2026 at 11:52:34 PM"
+                  },
+                  "x86_64": {
+                    "authorities": [
+                      "Developer ID Application: KIYOHIRO KAWAMURA (5H7KW7PC7C)",
+                      "Developer ID Certification Authority",
+                      "Apple Root CA"
+                    ],
+                    "cdhash": "78879ee48c2a2e90fc4ab9d6692c6afdc299861d",
+                    "codeDirectoryFlags": "0x10000",
+                    "hardenedRuntime": true,
+                    "teamIdentifier": "5H7KW7PC7C",
+                    "timestamp": "Nov 1, 2026 at 11:52:33 PM"
+                  }
+                },
+                "kind": "developer-id-application",
+                "notarization": "not-checked",
+                "requirement": "=anchor apple generic and certificate leaf[field.1.2.840.113635.100.6.1.13] exists and certificate leaf[subject.OU] = \"5H7KW7PC7C\"",
+                "teamIdentifier": "5H7KW7PC7C",
+                "valid": true
+              },
+              "symlinks": [],
+              "version": "0.0.0"
+            },
+            {
+              "fileCount": 6,
+              "format": "vst3",
+              "machO": [
+                {
+                  "architectures": [
+                    "arm64",
+                    "x86_64"
+                  ],
+                  "dylibDependencies": [
+                    "/System/Library/Frameworks/Accelerate.framework/Versions/A/Accelerate",
+                    "/System/Library/Frameworks/AppKit.framework/Versions/C/AppKit",
+                    "/System/Library/Frameworks/Carbon.framework/Versions/A/Carbon",
+                    "/System/Library/Frameworks/Cocoa.framework/Versions/A/Cocoa",
+                    "/System/Library/Frameworks/CoreData.framework/Versions/A/CoreData",
+                    "/System/Library/Frameworks/CoreFoundation.framework/Versions/A/CoreFoundation",
+                    "/System/Library/Frameworks/CoreGraphics.framework/Versions/A/CoreGraphics",
+                    "/System/Library/Frameworks/CoreServices.framework/Versions/A/CoreServices",
+                    "/System/Library/Frameworks/CoreText.framework/Versions/A/CoreText",
+                    "/System/Library/Frameworks/Foundation.framework/Versions/C/Foundation",
+                    "/System/Library/Frameworks/Metal.framework/Versions/A/Metal",
+                    "/System/Library/Frameworks/MetalKit.framework/Versions/A/MetalKit",
+                    "/System/Library/Frameworks/QuartzCore.framework/Versions/A/QuartzCore",
+                    "/usr/lib/libSystem.B.dylib",
+                    "/usr/lib/libc++.1.dylib",
+                    "/usr/lib/libobjc.A.dylib"
+                  ],
+                  "minimumMacOS": [
+                    "13.0"
+                  ],
+                  "mode": "0o755",
+                  "path": "Contents/MacOS/TetoricaSPU",
+                  "rpaths": [],
+                  "sha256": "3c47b35aa8556fca6e132f4e3a0932a7951a6d95b4da04baed607774dc247a6b",
+                  "signature": {
+                    "architectures": {
+                      "arm64": {
+                        "authorities": [
+                          "Developer ID Application: KIYOHIRO KAWAMURA (5H7KW7PC7C)",
+                          "Developer ID Certification Authority",
+                          "Apple Root CA"
+                        ],
+                        "cdhash": "582a2f7f73ebae1bf7caf6f2505b93266004e35f",
+                        "codeDirectoryFlags": "0x10000",
+                        "hardenedRuntime": true,
+                        "teamIdentifier": "5H7KW7PC7C",
+                        "timestamp": "Nov 1, 2026 at 11:52:34 PM"
+                      },
+                      "x86_64": {
+                        "authorities": [
+                          "Developer ID Application: KIYOHIRO KAWAMURA (5H7KW7PC7C)",
+                          "Developer ID Certification Authority",
+                          "Apple Root CA"
+                        ],
+                        "cdhash": "36c983abc523bcad533175b309166a890a0508b6",
+                        "codeDirectoryFlags": "0x10000",
+                        "hardenedRuntime": true,
+                        "teamIdentifier": "5H7KW7PC7C",
+                        "timestamp": "Nov 1, 2026 at 11:52:34 PM"
+                      }
+                    },
+                    "kind": "developer-id-application",
+                    "notarization": "not-checked",
+                    "requirement": "=anchor apple generic and certificate leaf[field.1.2.840.113635.100.6.1.13] exists and certificate leaf[subject.OU] = \"5H7KW7PC7C\"",
+                    "teamIdentifier": "5H7KW7PC7C",
+                    "valid": true
+                  }
+                }
+              ],
+              "minimumSystemVersion": "13.0",
+              "path": "TetoricaSPU.vst3",
+              "resources": {
+                "Roboto-Regular.ttf": "b2efabca5ea4bc56eea829713706b5cd0788b82aca153bd4adde9b1573933b4f",
+                "THIRD_PARTY_NOTICES.txt": "d26ed5d113ec81968e0f1c41560491631e9c77c5bddf6ad6608dbf8697ce5dcf"
+              },
+              "signature": {
+                "architectures": {
+                  "arm64": {
+                    "authorities": [
+                      "Developer ID Application: KIYOHIRO KAWAMURA (5H7KW7PC7C)",
+                      "Developer ID Certification Authority",
+                      "Apple Root CA"
+                    ],
+                    "cdhash": "582a2f7f73ebae1bf7caf6f2505b93266004e35f",
+                    "codeDirectoryFlags": "0x10000",
+                    "hardenedRuntime": true,
+                    "teamIdentifier": "5H7KW7PC7C",
+                    "timestamp": "Nov 1, 2026 at 11:52:34 PM"
+                  },
+                  "x86_64": {
+                    "authorities": [
+                      "Developer ID Application: KIYOHIRO KAWAMURA (5H7KW7PC7C)",
+                      "Developer ID Certification Authority",
+                      "Apple Root CA"
+                    ],
+                    "cdhash": "36c983abc523bcad533175b309166a890a0508b6",
+                    "codeDirectoryFlags": "0x10000",
+                    "hardenedRuntime": true,
+                    "teamIdentifier": "5H7KW7PC7C",
+                    "timestamp": "Nov 1, 2026 at 11:52:34 PM"
+                  }
+                },
+                "kind": "developer-id-application",
+                "notarization": "not-checked",
+                "requirement": "=anchor apple generic and certificate leaf[field.1.2.840.113635.100.6.1.13] exists and certificate leaf[subject.OU] = \"5H7KW7PC7C\"",
+                "teamIdentifier": "5H7KW7PC7C",
+                "valid": true
+              },
+              "symlinks": [],
+              "version": "0.0.0"
+            }
+          ],
+          "dependencyPolicy": "system-only",
+          "errors": [],
+          "expectedTeamIdentifier": "5H7KW7PC7C",
+          "input": "/Users/runner/work/tetorica-spu-plugin/tetorica-spu-plugin/build/.signed-extract-t5ts5p1j",
+          "notarization": "not-checked",
+          "ok": true,
+          "schema": 1,
+          "signingPolicy": "developer-id-application-exact-team",
+          "signingRequirement": "=anchor apple generic and certificate leaf[field.1.2.840.113635.100.6.1.13] exists and certificate leaf[subject.OU] = \"5H7KW7PC7C\"",
+          "version": "0.0.0"
+        },
+        "notary_trust": {
+          "container": "signed-udif-dmg",
+          "gatekeeper_accepted": true,
+          "stapled_ticket_valid": true
+        },
+        "ok": true,
+        "platform": "macos",
+        "schema": 1,
+        "sha256": "e93fa1451cbebf418c95ab6ffda4c7594ccc28fbc0661b0f56288533b1d2205a",
+        "signature": {
+          "authorities": [
+            "Developer ID Application: KIYOHIRO KAWAMURA (5H7KW7PC7C)",
+            "Developer ID Certification Authority",
+            "Apple Root CA"
+          ],
+          "identifier": "com.Tetorica.TetoricaSPU.distribution.1e46aa64672d",
+          "kind": "developer-id-application",
+          "requirement": "=anchor apple generic and certificate leaf[field.1.2.840.113635.100.6.1.13] exists and certificate leaf[subject.OU] = \"5H7KW7PC7C\"",
+          "team_id": "5H7KW7PC7C",
+          "timestamp": "Nov 1, 2026 at 11:52:44 PM"
+        },
+        "source_commit": "1e46aa64672d44af6ae28b858f1219bc0c4c1d71",
+        "staging_directory": "/Users/runner/work/tetorica-spu-plugin/tetorica-spu-plugin/build/signed-extracted",
+        "team_id": "5H7KW7PC7C",
+        "version": "0.0.0"
+      }
+    },
+    "credential_cleanup": {
+      "status": "cleaned",
+      "observed_keychain_companion": ".flD3051040",
+      "deleted_by": "security delete-keychain",
+      "secrets_names_only_checked": true,
+      "secret_values_retrieved": false,
+      "private_key_exported_locally": false
+    }
+  },
+  "windows": {
+    "schema": 1,
+    "ok": true,
+    "version": "0.0.0",
+    "source_commit": "1e46aa64672d44af6ae28b858f1219bc0c4c1d71",
+    "run_id": 41363700169,
+    "job_id": 125019298206,
+    "job_url": "https://github.com/kyorohiro/tetorica-spu-plugin/actions/runs/41363700169/job/125019298206",
+    "job_result": "success",
+    "job_started_at": "2026-11-01T23:46:11Z",
+    "job_completed_at": "2026-11-01T23:52:42Z",
+    "steps": [
+      {
+        "name": "Set up job",
+        "status": "completed",
+        "conclusion": "success",
+        "number": 1,
+        "started_at": "2026-11-01T23:46:11Z",
+        "completed_at": "2026-11-01T23:46:12Z"
+      },
+      {
+        "name": "Run actions/checkout@v4",
+        "status": "completed",
+        "conclusion": "success",
+        "number": 2,
+        "started_at": "2026-11-01T23:46:12Z",
+        "completed_at": "2026-11-01T23:46:19Z"
+      },
+      {
+        "name": "Run actions/setup-python@v5",
+        "status": "completed",
+        "conclusion": "success",
+        "number": 3,
+        "started_at": "2026-11-01T23:46:19Z",
+        "completed_at": "2026-11-01T23:46:20Z"
+      },
+      {
+        "name": "Verify portable Windows tooling",
+        "status": "completed",
+        "conclusion": "success",
+        "number": 4,
+        "started_at": "2026-11-01T23:46:20Z",
+        "completed_at": "2026-11-01T23:46:26Z"
+      },
+      {
+        "name": "Run python scripts/bootstrap.py",
+        "status": "completed",
+        "conclusion": "success",
+        "number": 5,
+        "started_at": "2026-11-01T23:46:26Z",
+        "completed_at": "2026-11-01T23:46:35Z"
+      },
+      {
+        "name": "Run python scripts/bootstrap.py --check",
+        "status": "completed",
+        "conclusion": "success",
+        "number": 6,
+        "started_at": "2026-11-01T23:46:35Z",
+        "completed_at": "2026-11-01T23:46:36Z"
+      },
+      {
+        "name": "Run cmake --preset windows",
+        "status": "completed",
+        "conclusion": "success",
+        "number": 7,
+        "started_at": "2026-11-01T23:46:36Z",
+        "completed_at": "2026-11-01T23:47:32Z"
+      },
+      {
+        "name": "Run cmake --build --preset windows --parallel 4",
+        "status": "completed",
+        "conclusion": "success",
+        "number": 8,
+        "started_at": "2026-11-01T23:47:32Z",
+        "completed_at": "2026-11-01T23:50:49Z"
+      },
+      {
+        "name": "Run ctest --preset windows",
+        "status": "completed",
+        "conclusion": "success",
+        "number": 9,
+        "started_at": "2026-11-01T23:50:49Z",
+        "completed_at": "2026-11-01T23:51:13Z"
+      },
+      {
+        "name": "Check built Windows resources (EXE is not distributed)",
+        "status": "completed",
+        "conclusion": "success",
+        "number": 10,
+        "started_at": "2026-11-01T23:51:13Z",
+        "completed_at": "2026-11-01T23:51:14Z"
+      },
+      {
+        "name": "Package VST3 candidate",
+        "status": "completed",
+        "conclusion": "success",
+        "number": 11,
+        "started_at": "2026-11-01T23:51:14Z",
+        "completed_at": "2026-11-01T23:51:15Z"
+      },
+      {
+        "name": "Verify exact packaged VST3",
+        "status": "completed",
+        "conclusion": "success",
+        "number": 12,
+        "started_at": "2026-11-01T23:51:15Z",
+        "completed_at": "2026-11-01T23:52:35Z"
+      },
+      {
+        "name": "Run actions/upload-artifact@v4",
+        "status": "completed",
+        "conclusion": "success",
+        "number": 13,
+        "started_at": "2026-11-01T23:52:35Z",
+        "completed_at": "2026-11-01T23:52:37Z"
+      },
+      {
+        "name": "Run actions/upload-artifact@v4",
+        "status": "completed",
+        "conclusion": "success",
+        "number": 14,
+        "started_at": "2026-11-01T23:52:37Z",
+        "completed_at": "2026-11-01T23:52:37Z"
+      },
+      {
+        "name": "Post Run actions/setup-python@v5",
+        "status": "completed",
+        "conclusion": "success",
+        "number": 27,
+        "started_at": "2026-11-01T23:52:37Z",
+        "completed_at": "2026-11-01T23:52:38Z"
+      },
+      {
+        "name": "Post Run actions/checkout@v4",
+        "status": "completed",
+        "conclusion": "success",
+        "number": 28,
+        "started_at": "2026-11-01T23:52:38Z",
+        "completed_at": "2026-11-01T23:52:41Z"
+      },
+      {
+        "name": "Complete job",
+        "status": "completed",
+        "conclusion": "success",
+        "number": 29,
+        "started_at": "2026-11-01T23:52:41Z",
+        "completed_at": "2026-11-01T23:52:41Z"
+      }
+    ],
+    "scope": "ZIP and AMD64 PE verified in memory on macOS; no DLL extraction, execution, GUI, device or installation.",
+    "archive": {
+      "path": "release/v0.0.0/ci-41363700169/windows/tetorica-spu-plugin-0.0.0-preview-1e46aa64672d-windows-x64-vst3.zip",
+      "bytes": 840777,
+      "sha256": "efb1a0436a7454795ae4a4b74815de4b8f546f1e3c0d5cda5fc8e21255b24044",
+      "sidecar_matches": true,
+      "manifest_files": 5,
+      "no_standalone_exe": true
+    },
+    "manifest": {
+      "schema": 1,
+      "product": "tetorica-spu-plugin",
+      "version": "0.0.0",
+      "channel": "preview",
+      "source_commit": "1e46aa64672d44af6ae28b858f1219bc0c4c1d71",
+      "platform": "windows",
+      "label": "windows-x64-vst3",
+      "bundles": [
+        "TetoricaSPU.vst3"
+      ],
+      "signing": "unsigned",
+      "dependencies": {
+        "schema": 1,
+        "repositories": {
+          "vendor/iPlug2OOS": "9b214c1121a0da1e8db14b86a565c942a3bfea7e",
+          "vendor/iPlug2OOS/iPlug2": "b64192fe18afd9bc9a1fe324db5aceb48f4a0eee",
+          "vendor/tetorica-soundchip-native": "95cf71a857b15d0ea932ebf97d5fde80b5e80a95",
+          "vendor/vst3sdk": "9fad9770f2ae8542ab1a548a68c1ad1ac690abe0",
+          "vendor/vst3sdk/base": "3d2e82f8e6bff59c1d8b7a27491a29c2286b5206",
+          "vendor/vst3sdk/pluginterfaces": "31d6eeba6daaa3e2a8bfbe3e7a90ca0b7fbfbc1c",
+          "vendor/vst3sdk/public.sdk": "a3911a4615dabbfdfd9d181ee26b05c70c289a95",
+          "vendor/vst3sdk/cmake": "de6e54eeaaab35b7145f5c32c279b5e892146e04"
+        },
+        "notes": [
+          "Native SDK uses an immutable public commit after v0.1.6, including SPU Gaussian/headroom corrections, allocation-free reverb clear and live edits to two independent private host PCM banks, plus bounded long-host-PCM event distances and independent ADPCM loop flags; it is not a published v0.1.7 release.",
+          "VST3 SDK v3.8.0_build_66. Only base, pluginterfaces, public.sdk and cmake submodules are needed.",
+          "Gitlinks are authoritative. Never update a dependency to moving master as part of a normal build."
+        ]
+      },
+      "files": {
+        "INSTALL.txt": {
+          "kind": "file",
+          "mode": 438,
+          "bytes": 794,
+          "sha256": "1f88a810218ee7cfea8a4dfd09e7f0f422bb96c8e2288fbee7815cd49b4d5f8d"
+        },
+        "LICENSE.txt": {
+          "kind": "file",
+          "mode": 438,
+          "bytes": 1547,
+          "sha256": "fdba951f9a16bad45ed81b3b8548e43aff938c07008d97fdcccfb3e61a56735b"
+        },
+        "TetoricaSPU.vst3/Contents/x86_64-win/TetoricaSPU.vst3": {
+          "kind": "file",
+          "mode": 438,
+          "bytes": 1738240,
+          "sha256": "ed680e2d49327ea4b36b006943674e57487ffb529b963d255f8ff3e0eab2feb6"
+        },
+        "THIRD_PARTY_NOTICES.txt": {
+          "kind": "file",
+          "mode": 438,
+          "bytes": 60096,
+          "sha256": "bad8cdbb48c494d2c949c8f7377d873261f8ad6a344302eddc2a132c637c5650"
+        },
+        "WINDOWS_THIRD_PARTY_NOTICES.txt": {
+          "kind": "file",
+          "mode": 438,
+          "bytes": 4228,
+          "sha256": "c0308109ed72da4d8007840bee2d7563c83d41d245f52a1622d6460766af2c85"
+        }
+      }
+    },
+    "dependencies_match_exact_source": true,
+    "documentation_matches_exact_source": "Exact after Windows checkout CRLF normalization; packaged bytes are manifest-hashed unchanged.",
+    "vst3": {
+      "member": "TetoricaSPU.vst3/Contents/x86_64-win/TetoricaSPU.vst3",
+      "bytes": 1738240,
+      "sha256": "ed680e2d49327ea4b36b006943674e57487ffb529b963d255f8ff3e0eab2feb6",
+      "native_ci_report_matches": true,
+      "pe": {
+        "machine": "AMD64",
+        "machine_value": 34404,
+        "pe32_plus": true,
+        "dll": true,
+        "subsystem": 3,
+        "sections": 7
+      }
+    },
+    "font_native_ci": {
+      "name": "\"ROBOTO-REGULAR.TTF\"",
+      "requested_name": "Roboto-Regular.ttf",
+      "enumerated_names": [
+        "\"ROBOTO-REGULAR.TTF\""
+      ],
+      "type": "TTF",
+      "bytes": 145348,
+      "sha256": "b2efabca5ea4bc56eea829713706b5cd0788b82aca153bd4adde9b1573933b4f",
+      "exact_source_match": true,
+      "inspection": "LoadLibraryExW AS_DATAFILE|AS_IMAGE_RESOURCE; pinned iPlug LocateResource enumeration; FindResourceW"
+    },
+    "source_font_sha256": "b2efabca5ea4bc56eea829713706b5cd0788b82aca153bd4adde9b1573933b4f",
+    "verification": {
+      "python_portable_test_lines": [
+        "2026-11-01T23:46:26.3394938Z Ran 27 tests in 1.919s"
+      ],
+      "ctest": {
+        "passed": 29,
+        "failed": 0
+      },
+      "actual_vst3": {
+        "native_harness_PASS_lines": 57,
+        "rates": [
+          44100,
+          48000,
+          96000
+        ],
+        "wide_pitch_measurements_per_rate": 72
+      },
+      "official_validator": {
+        "passed": 47,
+        "failed": 0
+      },
+      "final_packaged_host_check": true
+    },
+    "github_artifacts": [
+      {
+        "id": 13106930255,
+        "name": "preview-windows-x64-vst3",
+        "size_in_bytes": 838466,
+        "digest": "sha256:7197347229578a257bb54b73882d306449a4f59fd1a7a08669695bd685bdb996",
+        "created_at": "2026-11-01T23:52:36Z",
+        "updated_at": "2026-11-01T23:52:36Z",
+        "expired": false,
+        "download_sha256_matches_api": true
+      },
+      {
+        "id": 13105474895,
+        "name": "preview-windows-report",
+        "size_in_bytes": 1940,
+        "digest": "sha256:b0367e17f859569e45f931b74a0ed96620ca9a83045881fc08a7d5143ef91689",
+        "created_at": "2026-11-01T23:52:37Z",
+        "updated_at": "2026-11-01T23:52:37Z",
+        "expired": false,
+        "download_sha256_matches_api": true
+      }
+    ],
+    "digest_scope": "Both downloaded outer artifact ZIP digests matched GitHub API; product ZIP SHA256 matched required sidecar and native packaging report.",
+    "evidence": {
+      "build/release-v0.0.0-20261102/fix1-windows-artifact.zip": {
+        "bytes": 838466,
+        "sha256": "7197347229578a257bb54b73882d306449a4f59fd1a7a08669695bd685bdb996"
+      },
+      "build/release-v0.0.0-20261102/fix1-windows-artifacts-api.json": {
+        "bytes": 2865,
+        "sha256": "9db89c756e97566680410a2063beab9bc02a3ce5d3697388203615d271862a72"
+      },
+      "build/release-v0.0.0-20261102/fix1-windows-job-api.json": {
+        "bytes": 3834,
+        "sha256": "56c7921b95514481698247a5704d7a03a42550abc96d6d371861510a8c22779b"
+      },
+      "build/release-v0.0.0-20261102/fix1-windows-jobs-api.json": {
+        "bytes": 10224,
+        "sha256": "55ed87d78b6c49eb4d3ab3b3be497489a9050a67eb2fd7a139bbec9585b4c1d1"
+      },
+      "build/release-v0.0.0-20261102/fix1-windows-pass.log": {
+        "bytes": 19514,
+        "sha256": "eaec9c93e5c79fd79f522cd2a0b780b8636a079332b98b57c2d90a71c140e9b0"
+      },
+      "build/release-v0.0.0-20261102/fix1-windows-report-artifact.zip": {
+        "bytes": 1940,
+        "sha256": "b0367e17f859569e45f931b74a0ed96620ca9a83045881fc08a7d5143ef91689"
+      },
+      "build/release-v0.0.0-20261102/fix1-windows-run-api.json": {
+        "bytes": 12947,
+        "sha256": "589c7ff43bf5d595dd66f5031bd774687d57e570acdd35c519b7cb5600456520"
+      },
+      "build/release-v0.0.0-20261102/fix1-windows-verify.json": {
+        "bytes": 308,
+        "sha256": "c7d67228f7a6b5c0a5a45e04976443e57324161b5bd412d1e80418ec4fcd5e8d"
+      },
+      "build/release-v0.0.0-20261102/fix1-windows.log": {
+        "bytes": 462650,
+        "sha256": "bd2a7c9b75a733da91a4b10d8127ea0c977b0bb9b47fd019374062cfd896399e"
+      },
+      "build/release-v0.0.0-20261102/fix1-windows-report/windows-inspection.json": {
+        "bytes": 2407,
+        "sha256": "c15cd19e89cb56e18df343a6b3787198f861adeba963bf04c80891653873c061"
+      },
+      "build/release-v0.0.0-20261102/fix1-windows-report/windows-preview.json": {
+        "bytes": 2163,
+        "sha256": "846efa48c33632f2cf6629a0318cee463b441d011910abb8b93f62ed4094d140"
+      }
+    }
+  },
+  "local_au": {
+    "path": "/Users/kyorohiro/Library/Audio/Plug-Ins/Components/TetoricaSPU.component/Contents/MacOS/TetoricaSPU",
+    "sha256": "3f82bcff46f182c2bd370f92516759796aa72aa8d4cf3474716376037d94aa81",
+    "matches_recorded_baseline": true,
+    "operation": "read-only SHA256; no installation or launch"
+  },
+  "initial_failures": {
+    "source": "da7131e9c8057b695cad7595313ebc5ab38b453d",
+    "preview_run": 41361594974,
+    "signed_run": 41361750027,
+    "notary_submitted": false,
+    "fixed": [
+      "stale static plist/AU version metadata",
+      "temporary keychain retained in user search list for codesign certificate-chain lookup",
+      "strict Apple keychain atomic companion cleanup",
+      "fixed-vocabulary public codesign diagnostics"
+    ]
+  },
+  "remaining_checks": [
+    "real DAW GUI/file dialogs and automation",
+    "physical-device sound and latency",
+    "long sessions and macOS 13 hardware",
+    "Linux DAW plugin platform support",
+    "Windows Standalone ASIO distribution terms"
+  ],
+  "evidence": [
+    {
+      "path": "build/release-v0.0.0-20261102/checkpoint.json",
+      "bytes": 1441,
+      "sha256": "482383964d568e3ebdb7bbdb5987bcb7822aeee60db0e1c3162bd03bde0679bc"
+    },
+    {
+      "path": "build/release-v0.0.0-20261102/python-tests-fix1.log",
+      "bytes": 18966,
+      "sha256": "aa89b7e430895da9c4f67f5266ac071e68b9c849858181d739da537abfc636c3"
+    },
+    {
+      "path": "build/release-v0.0.0-20261102/installed-au-unchanged.json",
+      "bytes": 295,
+      "sha256": "44de8a9c7ca61d87ea3eea2d0522b6ec9ec8801825b32b1ca0c2d524bcc4961c"
+    },
+    {
+      "path": "build/release-v0.0.0-20261102/published-release.json",
+      "bytes": 6099,
+      "sha256": "584f857bfa449d044710d1c625981aec0c8273700054acfc19dca46e608441d9"
+    },
+    {
+      "path": "build/release-v0.0.0-20261102/published-tag-ref.json",
+      "bytes": 353,
+      "sha256": "323fbdcf120910756893eff6421ab7b67f54ab0ecc4215d2d55c68104756054c"
+    },
+    {
+      "path": "build/release-v0.0.0-20261102/published-tag-object.json",
+      "bytes": 705,
+      "sha256": "03df7d01ba9a814c0d9659d0309885b26bdcfe1ca768cfa6d4cbf0f4f1ce9a24"
+    },
+    {
+      "path": "build/release-v0.0.0-20261102/published-assets-verified.json",
+      "bytes": 1830,
+      "sha256": "73208f8d2be737bf8429e63ce544c79b75053921e0236dc742b0048e51f12b2f"
+    },
+    {
+      "path": "build/release-v0.0.0-20261102/release-notes.md",
+      "bytes": 3287,
+      "sha256": "c705486bc1d9a34f1c0e4b12e2bd977595c9655d7dec7b07c819fbeeedae1edd"
+    },
+    {
+      "path": "build/release-v0.0.0-20261102/fix1-verify-run.json",
+      "bytes": 12940,
+      "sha256": "3d3d64d672e39cc2c164d49a2ae51306312e1e9fb49fa4244534e233611b626e"
+    },
+    {
+      "path": "build/release-v0.0.0-20261102/fix1-verify-jobs.json",
+      "bytes": 6346,
+      "sha256": "824b047985466f909b406e620a41f0d944abae9fa6c36ac61bc25bd3d03880ea"
+    },
+    {
+      "path": "build/release-v0.0.0-20261102/fix1-sign-run.json",
+      "bytes": 12940,
+      "sha256": "c65755b44645052e8e9f480b097c7d97449fcdd0f42b22451b810dec4abbcd13"
+    },
+    {
+      "path": "build/release-v0.0.0-20261102/fix1-sign-jobs.json",
+      "bytes": 9589,
+      "sha256": "13038c9e7ecb8bc60fedcfa718ea037e6fec3c9e3edf4c23e28db39f3ff54e98"
+    },
+    {
+      "path": "build/release-v0.0.0-20261102/fix1-sign-artifacts.json",
+      "bytes": 2879,
+      "sha256": "7162f292976599e649ed54814c52ddcb57aa0951b3bb550c730678598038c0fb"
+    },
+    {
+      "path": "build/release-v0.0.0-20261102/fix1-sign-complete.log",
+      "bytes": 145312,
+      "sha256": "c19abc5530d400081ec50651c5a0245ddbf4cf89f4018275a6aff257cddd97b9"
+    },
+    {
+      "path": "build/release-v0.0.0-20261102/fix1-macos-artifact.zip",
+      "bytes": 5810213,
+      "sha256": "a0b653079a3875ddc454916775f3e02e2ed08cff4e6dfe0c37528e92c4376ea3"
+    },
+    {
+      "path": "build/release-v0.0.0-20261102/fix1-macos-report-artifact.zip",
+      "bytes": 3344,
+      "sha256": "5385f35ced96592da8d0b7a9a7a5213408ddad03853c4eb58b94f5ff668fc0d5"
+    },
+    {
+      "path": "build/release-v0.0.0-20261102/fix1-windows-summary.json",
+      "bytes": 11832,
+      "sha256": "d32dd5d1806f28ed9a82dd47d70a8605f5dc5a6eb765dcb7a925c4d09ff6aa8f"
+    },
+    {
+      "path": "build/release-v0.0.0-20261102/fix1-windows-run-api.json",
+      "bytes": 12947,
+      "sha256": "589c7ff43bf5d595dd66f5031bd774687d57e570acdd35c519b7cb5600456520"
+    },
+    {
+      "path": "build/release-v0.0.0-20261102/fix1-windows-jobs-api.json",
+      "bytes": 10224,
+      "sha256": "55ed87d78b6c49eb4d3ab3b3be497489a9050a67eb2fd7a139bbec9585b4c1d1"
+    },
+    {
+      "path": "build/release-v0.0.0-20261102/fix1-windows-artifacts-api.json",
+      "bytes": 2865,
+      "sha256": "9db89c756e97566680410a2063beab9bc02a3ce5d3697388203615d271862a72"
+    },
+    {
+      "path": "build/release-v0.0.0-20261102/fix1-windows.log",
+      "bytes": 462650,
+      "sha256": "bd2a7c9b75a733da91a4b10d8127ea0c977b0bb9b47fd019374062cfd896399e"
+    },
+    {
+      "path": "build/release-v0.0.0-20261102/fix1-sign-public-report/build/macos-signed.json",
+      "bytes": 18429,
+      "sha256": "babd409fbac83a7fbc306094ff4895e89abcd8c3da1c2f7df6f7022af5d7f03d"
+    },
+    {
+      "path": "build/release-v0.0.0-20261102/fix1-sign-public-report/release/signed/tetorica-spu-plugin-0.0.0-preview-1e46aa64672d-macos-universal-signed.notary-log.json",
+      "bytes": 3684,
+      "sha256": "1c1e61489d91073fa8c46d6bdf4493914f01b613311d4ad5293f3b771a20ae1d"
+    },
+    {
+      "path": "build/release-v0.0.0-20261102/fix1-signed-verification/macos-signed-verification-arm64/signed-verified.json",
+      "bytes": 17824,
+      "sha256": "c1edf644be54b43e10dab3ee4e8f8a54da4823c64292793cf2fafc14e894fadb"
+    },
+    {
+      "path": "build/release-v0.0.0-20261102/fix1-signed-verification/macos-signed-verification-x86_64/signed-verified.json",
+      "bytes": 17824,
+      "sha256": "d356e45c7c045cf730c17c021968c8f774b4e22e0116cd58c027a2642c22bf19"
+    }
+  ]
+}
