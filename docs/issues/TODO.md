@@ -47,21 +47,25 @@ AUプリセット名warning解消と分割VH/VBのLoad sound対応も完了し�
 [最新の実装・配置・復元記録](../preset_split_vab_20261101.md) /[current installed AU manifest](../preset_split_vab_20261101.json)を参照。
 内蔵Sineの広域化も実装・CI成功した。[新build検証記録](../builtin_sine_range_20261102.md)を参照。手元installed AUは上のmanifestから変更していない。
 
-### 画面鍵盤のOctaveとPitch操作（2026-11-02、開始）
+### 画面鍵盤のOctaveとPitch操作（2026-11-02、実装・ローカル検証済み）
 
 開始Plugin `dc7d57b`、Native SDK `95cf71a`。ユーザーのPlugin再開指示により、実装前に今回のTODOを記録する。
 SPU Synthのitch.io devlogはユーザーが掲載済みと報告した。
 
-- [ ] 画面鍵盤へOctave − / ＋と範囲表示を追加する。初期MIDI48〜84の37鍵を保持し、開始位置0 / 12 / … / 84へ切り替える。DAW入力のMIDI noteは変更しない。
-- [ ] range変更前に元のmouse noteをNoteOffし、pointer cancel / mouse exit / editor closeでもnoteを残さない。Octaveはinstance別editor設定とし、host state / automationへ追加しない。
-- [ ] 固定±2半音のPitch wheelをMorph横へ追加する。既存のUI MIDI FIFOへchannel 1の14-bit Bendを送り、保持音へ反映する。
-- [ ] Pitchはrelease / cancel / mouse exit / editor closeで中心へ戻す。UI wheel操作がないeditor開閉で、DAW由来のBendを上書きしない。host restore後の表示と操作も整合させる。
-- [ ] 範囲上下限、変更中のNoteOff、Pitch両端 / 中心 / cancel、複数instance独立を検証する。core / 実AU / VST3のMIDI・旧state回帰とStandalone表示も確認する。
+- [x] 画面鍵盤へOctave − / ＋と範囲表示を追加する。初期MIDI48〜84の37鍵を保持し、開始位置0 / 12 / … / 84へ切り替える。DAW入力のMIDI noteは変更しない。
+- [x] range変更前に元のmouse noteをNoteOffし、pointer cancel / mouse exit / editor closeでもnoteを残さない。Octaveはinstance別editor設定とし、host state / automationへ追加しない。
+- [x] 固定±2半音のPitch wheelをMorph横へ追加する。既存のUI MIDI FIFOへchannel 1の14-bit Bendを送り、保持音へ反映する。
+- [x] Pitchはrelease / cancel / mouse exit / editor closeで中心へ戻す。UI wheel操作がないeditor開閉で、DAW由来のBendを上書きしない。host restore後の表示と操作も整合させる。reset直後の新gestureをtimerが消すraceも独立レビューで修正した。
+- [x] 範囲上下限 /Pitch全16,384値 /cancel /instance独立をunitで検証した。NoteOff-before-range /epochはsource review、core30件 /実AU19 PASS行 /VST3 57 PASS行 /validator47/0 /Python112件とStandalone表示を確認した。実DAWのpointer競合は別途追試する。
 - [ ] 操作仕様・検証結果・残る実DAW / 実聴確認をREADME / parity plan / progressへ記録し、commit / pushとCIを確認する。
 
 26個のhost parameter ID / rangeとstate schema10、音源・SDK pinを維持する。
 Gain 200%は既存parameter 0のnormalized automation互換を考慮して別途設計する。
 公開済み`v0.0.0` tag / assetsと手元installed AUは、この実装では更新しない。
+
+[操作・検証・残る確認](../keyboard_performance_20261102.md) /[source・bundle・log記録](../keyboard_performance_20261102.json)。
+
+- [ ] 実DAW内の画面鍵盤 /Pitch操作とMIDI併用・録音、gesture途中のclose /restore、実聴・長時間を追試する。
 
 ### macOS Developer ID署名・公証の今回の区切り（2026-11-02、v0.0.0 Preview公開完了）
 

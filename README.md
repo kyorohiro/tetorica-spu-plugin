@@ -140,6 +140,22 @@ them to the installation paths described in `INSTALL.txt`.
 
 ## MIDI performance
 
+Development builds after v0.0.0 add **Octave − / +** above the mouse keyboard
+and a momentary **Pitch** wheel beside **Morph**. Octave moves the 37 visible
+keys from their default MIDI 48–84 (C3–C6) in octave steps, with ranges from
+0–36 to 84–120. It affects this editor keyboard only; DAW MIDI notes are unchanged.
+The last Octave is kept while this plugin instance lives, rather than saved in
+a sound preset or exposed as automation.
+
+The editor keyboard and Pitch wheel send MIDI on channel 1. Pitch is fixed at
+±2 semitones and returns to center when released, cancelled, or dragged out of
+the control. Closing an active gesture also releases its note or centers its
+wheel. Opening or closing an idle editor leaves external MIDI Bend unchanged.
+The wheel displays its own local gesture, rather than tracking external MIDI;
+controllers on the same channel share the most recently processed Bend value.
+Reset/restore/stop invalidates old pointer gestures. These controls do not change
+the 26 host parameters or schema 10. See [editor keyboard verification](docs/keyboard_performance_20261102.md).
+
 All 16 MIDI channels have independent Pitch Bend and Sustain state.
 Pitch Bend is 14-bit, centered at 8192, with a fixed range of **±2 semitones**.
 It updates held notes and release tails without restarting samples and also

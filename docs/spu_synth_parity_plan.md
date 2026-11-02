@@ -45,7 +45,7 @@ Gainは現在0〜100%。WebのMaster 200%とは異なる。
 | 実装済み：PMON | 変調波形・Ratio・Depth・Decay | 隣接voiceの12組、4変調波形、live Ratio / Depth、次NoteのDecay、24params / state6を追加した。元音源保持・Noise優先・旧state互換をcore / 実AU・VST3で検証。Standalone操作・installed AU更新・CIも完了。実聴・実DAW automation録音等は残る。 |
 | 実装済み：Software Morph | A/B/Resultを同じcanvasへ表示し、編集対象を切替。保持音を再発音せずblend変更 | 元sourceとA/B原本を保つ26params / state7を実装。endpointはdraft / Apply、Amountだけlive。初期Off、A=Sine / B=Saw（振幅0.8）、Amount0。Offは元sourceへ戻す。PMON併用・Noise優先・実AU/VST3・Standalone・旧state復元・CIを検証。実聴・実DAW独自UIとautomation録音は残る。 |
 | 音色・素材の入力 | `.spu.json`、audio、PSF1/MiniPSFからの静的VAB抽出、VH+VB | `.spu.json` v1/v2とPCM16 / Float32 mono/stereo WAVをimportする。短いWAVはmono /44.1kHz ADPCM、RAMを超えるWAVはSoftware PCMとしてschema9へ保持し、C4 / One shotからRootと全体loopを編集できる。Save WebはADPCM等をv1、Software PCMをv2として書き出す。実Web reader / Chromium / WebKitで読み戻しを検証。Gainや全VAB bankは含めず、Morph等の形式差を説明する。長いAudio v2は32MiB PCM /48MiB JSONの範囲で実装（schema9、Software機能の明示、Root/全体loop、Morph使用不可・設定保持）。分割VH/VB file pickerとNative repeat flag互換は後続作業で実装・検証済み。他Audio format・PSF抽出は後続。 |
-| monitor・演奏UI | Envelope/Waveform/Spectrum、Guitar/Bass/Ukulele、Octave、Pitch/Morph wheel、Master 200% | Morph AmountはSourceとkeyboard横へ実装済み。残るmonitor・Pitch wheel・Octave等はDAWの代替機能とStandaloneの利便性を考慮して追加する。 |
+| monitor・演奏UI | Envelope/Waveform/Spectrum、Guitar/Bass/Ukulele、Octave、Pitch/Morph wheel、Master 200% | Morph AmountはSourceとkeyboard横へ実装済み。v0.0.0後の開発buildでは、37鍵のOctave − / ＋と固定±2半音Pitch wheelを追加した。Octaveは画面鍵盤だけ、PitchはMIDI channel 1の一時入力で、host parameter / schemaを維持する。[操作・検証](keyboard_performance_20261102.md)。monitor /配列 / Master 200%は残る。Gainの最大値変更は既存normalized automationの互換を考慮して設計する。 |
 
 各段階で、音の変化だけでなく、演奏中の編集・保存直後の復元・不正入力時の現音源保持を確認する。
 coreのoffline検証と実AU/VST3の検証を行い、実DAWのUI確認や実聴とは区別して記録する。

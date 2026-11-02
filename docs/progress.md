@@ -753,3 +753,10 @@
 - 検証済み`1e46aa64672d44af6ae28b858f1219bc0c4c1d71`へannotated tag `v0.0.0`を作り、[Preview Release](https://github.com/kyorohiro/tetorica-spu-plugin/releases/tag/v0.0.0)を公開した。Mac署名・公証済みDMG /Windows未署名VST3 ZIPと各SHA256の4 assetsを再downloadし、候補bytes・GitHub digestと一致した。remote tagの参照先も一致した。
 - [公開・公証・失敗修正・残る確認](release_v0_0_0_20261102.md) /[機械可読記録](release_v0_0_0_20261102.json)。Apple submissionは`2a012f72-2fcf-40e8-af6d-f516e9b53e8a` Accepted。credential cleanup `cleaned`、秘密鍵 /Secrets値はローカル取得せず、credential artifactも作らなかった。手元AU binaryの既知hashは不変。
 - 実DAW GUI /file panel /automation、実device・長時間・macOS13実機、Linux Plugin /Windows APPの作業はTODOに残す。tagや公開assetは無断で置き換えず、修正配布は次versionで行う。
+
+## 2026-11-02 JST — 画面鍵盤のOctaveとPitch
+
+- ユーザーのPlugin再開指示で、TODO `3abafff`からOctave − / ＋、37鍵の範囲表示、Morph横の固定±2半音Pitch wheelを追加した。Octaveは画面鍵盤のみ、PitchはMIDI channel1の一時入力。26params /schema10 /SDK pin /音源は維持する。
+- range変更前のNoteOff、mouse exit /close時の取消、reset /restore等の専用atomic epochを追加した。独立レビューでtimerがreset後の新しいgestureまで消すraceを見つけ、control自身のepochを比較して古い操作だけ取り消すよう修正した。
+- Mac APP /AU /VST3 build、CTest30件、Python112件、実AU19 PASS行 /実VST3 57 PASS行 /validator47/0が成功。StandaloneでOctave+1 /+3と上限無効化 /初期復帰、Pitch drag後+0.00、鍵盤離鍵表示を確認した。実DAWの操作競合と聴感は未確認として残す。
+- [操作・検証](keyboard_performance_20261102.md) /[source・bundle・log記録](keyboard_performance_20261102.json)。次は実装push後CIを確認する。公開済みv0.0.0とinstalled AUは変更していない。

@@ -1,0 +1,189 @@
+{
+  "schema": 1,
+  "date_jst": "2026-11-02",
+  "start_commit": "dc7d57b864d24a8e5958b5ab59c97ef5e03375a6",
+  "todo_commit": "3abafff1708e7911455f6958491e44d8a4a11f45",
+  "implementation_commit": null,
+  "ci": {
+    "status": "pending"
+  },
+  "changes": {
+    "host_parameters": 26,
+    "state_schema": 10,
+    "octave_range": [
+      -4,
+      3
+    ],
+    "default_notes": [
+      48,
+      84
+    ],
+    "visible_keys": 37,
+    "pitch_channel_human": 1,
+    "pitch_midi_range": [
+      0,
+      16383
+    ],
+    "pitch_center": 8192,
+    "pitch_semitones": 2,
+    "octave_saved_to_project": false,
+    "qwerty_added": false
+  },
+  "dependencies": {
+    "schema": 1,
+    "repositories": {
+      "vendor/iPlug2OOS": "9b214c1121a0da1e8db14b86a565c942a3bfea7e",
+      "vendor/iPlug2OOS/iPlug2": "b64192fe18afd9bc9a1fe324db5aceb48f4a0eee",
+      "vendor/tetorica-soundchip-native": "95cf71a857b15d0ea932ebf97d5fde80b5e80a95",
+      "vendor/vst3sdk": "9fad9770f2ae8542ab1a548a68c1ad1ac690abe0",
+      "vendor/vst3sdk/base": "3d2e82f8e6bff59c1d8b7a27491a29c2286b5206",
+      "vendor/vst3sdk/pluginterfaces": "31d6eeba6daaa3e2a8bfbe3e7a90ca0b7fbfbc1c",
+      "vendor/vst3sdk/public.sdk": "a3911a4615dabbfdfd9d181ee26b05c70c289a95",
+      "vendor/vst3sdk/cmake": "de6e54eeaaab35b7145f5c32c279b5e892146e04"
+    },
+    "notes": [
+      "Native SDK uses an immutable public commit after v0.1.6, including SPU Gaussian/headroom corrections, allocation-free reverb clear and live edits to two independent private host PCM banks, plus bounded long-host-PCM event distances and independent ADPCM loop flags; it is not a published v0.1.7 release.",
+      "VST3 SDK v3.8.0_build_66. Only base, pluginterfaces, public.sdk and cmake submodules are needed.",
+      "Gitlinks are authoritative. Never update a dependency to moving master as part of a normal build."
+    ]
+  },
+  "checks": {
+    "macos_build": "APP/AU/VST3 success",
+    "ctest": {
+      "passed": 30,
+      "failed": 0
+    },
+    "python_tests": 112,
+    "vst3_pass_rows": 57,
+    "vst3_validator": {
+      "passed": 47,
+      "failed": 0
+    },
+    "au_pass_rows": 19,
+    "standalone_ui": [
+      "Octave0/C3-C6 to+1/C4-C7",
+      "Octave+3/C6-C9 disablesupperbutton",
+      "returntoOctave0/C3-C6",
+      "Pitchdrag/release shows+0.00",
+      "mousekeyboarddrag/release showsnoremainingpressedkeys",
+      "Allsoundoffatend"
+    ],
+    "source_review": [
+      "NoteOff before range remap",
+      "idleeditorclose/open emits no Bend",
+      "stalegesture guards per event",
+      "timer preserves new gesture stamped after reset"
+    ],
+    "review_limitation": "Epoch interleavings were source-reviewed, not exercised in a real DAW UI stress test",
+    "au_sandbox_note": "Initial sandboxed direct AU registration failed; identical final bundle passed outside sandbox without installation",
+    "vst3_script_total_pass_rows": 58,
+    "bootstrap_pass_rows": 1
+  },
+  "source_files": [
+    {
+      "path": "CMakeLists.txt",
+      "bytes": 12935,
+      "sha256": "956033805d473f5a1aa8f622a3632b2530fa72c9c9d0a2f6ba01060ca1099c77"
+    },
+    {
+      "path": "CMakePresets.json",
+      "bytes": 6701,
+      "sha256": "1e0758a0a72c9c292f3541018addcfa0784d41f829ee7274a1427a06805b0442"
+    },
+    {
+      "path": "plugin/TetoricaSPU.h",
+      "bytes": 9308,
+      "sha256": "d7c7109345f0040084db90b210c4f02fa8d2655f3b06e41f1c5137ff5ffb40db"
+    },
+    {
+      "path": "plugin/TetoricaSPU.cpp",
+      "bytes": 16974,
+      "sha256": "d5ed060c053f522e060cda764011bb998f9ec2bb65c81e49f1cd370c4b14f22e"
+    },
+    {
+      "path": "plugin/InstrumentUI.cpp",
+      "bytes": 90871,
+      "sha256": "fcfba892185b64da4a607d9945e01851710f9c3d3ae5a50c448d27fdde169af2"
+    },
+    {
+      "path": "plugin/KeyboardPerformanceState.h",
+      "bytes": 2445,
+      "sha256": "f468883c81cd52da3c916b367259165bf023a2db058d8f415ed5ee870babfd4f"
+    },
+    {
+      "path": "plugin/PitchWheelControl.h",
+      "bytes": 3880,
+      "sha256": "7a0ee0dfa15913967e5b14bd774cf33e3beae64894035da94067625c8aa34c6c"
+    },
+    {
+      "path": "tests/keyboard_performance_test.cpp",
+      "bytes": 7506,
+      "sha256": "15e5e69969effb46b98f7144b5cd9dd6fd2fa71db82cc460770a0d03e45f5fa1"
+    }
+  ],
+  "logs": [
+    {
+      "path": "build/keyboard-performance-configure.log",
+      "bytes": 772,
+      "sha256": "45d5bd78fe960ec3d35fa9e99beeb97d4e83645f8c6a8ccaaf827f87cb43122c"
+    },
+    {
+      "path": "build/keyboard-performance-build.log",
+      "bytes": 6000,
+      "sha256": "5f917ad53a6d209aa5746379c479e7f4d334d667300c72f533b1880a19fd3540"
+    },
+    {
+      "path": "build/keyboard-performance-ctest.log",
+      "bytes": 3343,
+      "sha256": "627cdf73747682dfdaf1ec7b48df7c65866e4b2600d238bfaced3a89b794ed3a"
+    },
+    {
+      "path": "build/keyboard-performance-vst3.log",
+      "bytes": 18303,
+      "sha256": "72f591bb5cf45a4426839f3bd5a8a5d4c8e1f2fc24252d740fd4dad0da90b1fc"
+    },
+    {
+      "path": "build/keyboard-performance-validator.log",
+      "bytes": 263078,
+      "sha256": "b04afaf546f35c389a82b02bd66b59d27456e033e364fb682970cf6f98f40671"
+    },
+    {
+      "path": "build/keyboard-performance-au.log",
+      "bytes": 6327,
+      "sha256": "52ec704d660a34bd3b7bb7dc307ebe72f6809af8684f3bb3b0b197efd2410172"
+    },
+    {
+      "path": "build/keyboard-performance-python.log",
+      "bytes": 212,
+      "sha256": "fd770af7b63faf3659ae27da7bda46ff6454df209259e5b9ec6c2158eded0961"
+    }
+  ],
+  "bundles": [
+    {
+      "path": "build/macos/out/TetoricaSPU.app/Contents/MacOS/TetoricaSPU",
+      "bytes": 2428648,
+      "sha256": "2bd7dd2958bc6631b9025f240f0dfedc16da0eb67bcf9253f17b84f05a28b6f3"
+    },
+    {
+      "path": "build/macos/out/TetoricaSPU.component/Contents/MacOS/TetoricaSPU",
+      "bytes": 1901928,
+      "sha256": "40bc2b418fca3e745f2d10dcb92705b270793cbbb42672638c30837444055272"
+    },
+    {
+      "path": "build/macos/out/TetoricaSPU.vst3/Contents/MacOS/TetoricaSPU",
+      "bytes": 2201672,
+      "sha256": "9483a426b3e65314c196e6a5c130f220a3c753b2e0ea6eab1d3b0ae322aaf240"
+    }
+  ],
+  "installed_au": {
+    "path": "/Users/kyorohiro/Library/Audio/Plug-Ins/Components/TetoricaSPU.component/Contents/MacOS/TetoricaSPU",
+    "bytes": 1872632,
+    "sha256": "3f82bcff46f182c2bd370f92516759796aa72aa8d4cf3474716376037d94aa81"
+  },
+  "published_release_modified": false,
+  "remaining_checks": [
+    "real DAW custom UI and recording",
+    "gesture close/restore interleaving in real host",
+    "physical listening and long sessions"
+  ]
+}

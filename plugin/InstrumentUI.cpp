@@ -10,6 +10,8 @@
 #include "WaveformControl.h"
 #include "PcmDraftState.h"
 #include "MorphDraftState.h"
+#include "KeyboardPerformanceState.h"
+#include "PitchWheelControl.h"
 #include "AdpcmPlayback.h"
 #include <algorithm>
 #include <array>
@@ -74,12 +76,77 @@ void editSourceParameters(TetoricaSPU& plugin, SourceMode mode)
 class SpuKeyboardControl final : public IVKeyboardControl
 {
 public:
-  using IVKeyboardControl::IVKeyboardControl;
+  using Epoch = std::function<std::uint64_t()>;
+  SpuKeyboardControl(const IRECT& bounds, int minimum, int maximum, Epoch epoch)
+  : IVKeyboardControl(bounds, minimum, maximum), mEpoch(std::move(epoch)),
+    mMinimum(minimum), mMaximum(maximum) {}
+
+  void OnMouseDown(float x, float y, const IMouseMod& mod) override
+  {
+    if (!mod.L || IsDisabled() || IsHidden() || !std::isfinite(x) ||
+        !std::isfinite(y) || !mRECT.Contains(x, y)) return;
+    CancelPointerEdit();
+    mGestureEpoch = mEpoch();
+    mPointerGesture = true;
+    IVKeyboardControl::OnMouseDown(x, y, mod);
+  }
+
+  void OnMouseDrag(float x, float y, float dx, float dy, const IMouseMod& mod) override
+  {
+    if (!mPointerGesture) return;
+    if (mGestureEpoch != mEpoch()) { ResetPointerEdit(); return; }
+    if (IsDisabled() || IsHidden() || !std::isfinite(x) || !std::isfinite(y))
+    { CancelPointerEdit(); return; }
+    IVKeyboardControl::OnMouseDrag(x, y, dx, dy, mod);
+  }
+
+  void OnMouseUp(float, float, const IMouseMod&) override { CancelPointerEdit(); }
+  void OnTouchCancelled(float, float, const IMouseMod&) override { CancelPointerEdit(); }
   void OnMouseOut() override
   {
-    OnTouchCancelled(0.f, 0.f, IMouseMod{});
+    CancelPointerEdit();
     IVKeyboardControl::OnMouseOut();
   }
+
+  void CancelPointerEdit()
+  {
+    if (!mPointerGesture) return;
+    if (mGestureEpoch != mEpoch()) { ResetPointerEdit(); return; }
+    mPointerGesture = false;
+    IVKeyboardControl::OnTouchCancelled(0.f, 0.f, IMouseMod{});
+  }
+
+  void ResetPointerEdit()
+  {
+    // Restore/reset has already stopped the old sound. Never send an old
+    // NoteOff into a newly restored performance or a different octave.
+    mPointerGesture = false;
+    mLastTouchedKey = mMouseOverKey = -1;
+    mLastVelocity = 0.;
+    IVKeyboardControl::SetNoteRange(mMinimum, mMaximum);
+    SetDirty(false);
+  }
+
+  void ResetStalePointerEdit()
+  {
+    if (mGestureEpoch != mEpoch()) ResetPointerEdit();
+  }
+
+  void SetOctaveRange(int minimum, int maximum)
+  {
+    if (minimum == mMinimum && maximum == mMaximum) return;
+    // The upstream range setter clears the bitmap without releasing a note.
+    CancelPointerEdit();
+    mMinimum = minimum; mMaximum = maximum;
+    IVKeyboardControl::SetNoteRange(minimum, maximum);
+    SetDirty(false);
+  }
+
+private:
+  Epoch mEpoch;
+  std::uint64_t mGestureEpoch = 0;
+  int mMinimum, mMaximum;
+  bool mPointerGesture = false;
 };
 
 // These menus describe a particular bank, rather than an automatable enum.
@@ -245,6 +312,8 @@ struct TetoricaSPU::InstrumentUIState
     bool pendingPrompt = true;
   };
   std::optional<SplitVabPicker> splitPicker;
+  tetorica::ui::KeyboardOctaveState keyboardOctave;
+  std::uint64_t performanceEpoch = 0;
   InstrumentPage page = InstrumentPage::Reverb;
   std::optional<SourceMode> displayedSource;
   std::optional<bool> displayedMorph;
@@ -562,8 +631,28 @@ void TetoricaSPU::initializeInstrumentUI()
     graphics->AttachControl(new ITextControl(IRECT(24, 449, 696, 469),
       "Off: dry output. Choose a preset to enable reverb.",
       IText(12).WithAlign(EAlign::Near)), kCtrlReverbStatus);
-    graphics->AttachControl(new SpuKeyboardControl(IRECT(24, 478, 624, 602), 48, 84),
-      kCtrlKeyboard);
+    auto* octaveDown = new IVButtonControl(IRECT(24, 478, 110, 506),
+      [this](IControl*) { setKeyboardOctaveFromUI(mInstrumentUI->keyboardOctave.octave() - 1); },
+      "Octave -", smallStyle);
+    octaveDown->SetTooltip("Shift only the on-screen keyboard down one octave. DAW MIDI notes are unchanged.");
+    graphics->AttachControl(octaveDown, kCtrlKeyboardOctaveDown);
+    graphics->AttachControl(new ITextControl(IRECT(118, 478, 458, 506), "", IText(13)),
+      kCtrlKeyboardOctaveRange);
+    auto* octaveUp = new IVButtonControl(IRECT(466, 478, 552, 506),
+      [this](IControl*) { setKeyboardOctaveFromUI(mInstrumentUI->keyboardOctave.octave() + 1); },
+      "Octave +", smallStyle);
+    octaveUp->SetTooltip("Shift only the on-screen keyboard up one octave. DAW MIDI notes are unchanged.");
+    graphics->AttachControl(octaveUp, kCtrlKeyboardOctaveUp);
+    const auto performanceEpoch = [this]() { return mPerformanceUIEpoch.load(std::memory_order_acquire); };
+    const auto& octave = mInstrumentUI->keyboardOctave;
+    auto* keyboard = new SpuKeyboardControl(IRECT(24, 512, 552, 602),
+      octave.minNote(), octave.maxNote(), performanceEpoch);
+    keyboard->SetTooltip("Mouse keyboard on MIDI channel 1. Octave shifts this keyboard only.");
+    graphics->AttachControl(keyboard, kCtrlKeyboard);
+    graphics->AttachControl(new SpuPitchWheelControl(IRECT(560, 478, 624, 602),
+      [this](int value) {
+        SendMidiMsgFromUI(IMidiMsg(0, 0xe0, value & 127, value >> 7));
+      }, performanceEpoch), kCtrlKeyboardPitch);
     auto* keyboardMorph = new IVSliderControl(IRECT(632, 478, 696, 580),
       kParamMorphAmount, "Morph", smallStyle.WithShowValue(false), false, EDirection::Vertical);
     keyboardMorph->SetTooltip("Software Morph Amount, shared with Source. Live on the applied endpoints; available with Sample or PMON.");
@@ -614,6 +703,10 @@ void TetoricaSPU::closeInstrumentUI() noexcept
   }
   if (auto* graphics = GetUI())
   {
+    if (auto* keyboard = graphics->GetControlWithTag(kCtrlKeyboard))
+      static_cast<SpuKeyboardControl*>(keyboard)->CancelPointerEdit();
+    if (auto* pitch = graphics->GetControlWithTag(kCtrlKeyboardPitch))
+      static_cast<SpuPitchWheelControl*>(pitch)->CancelPointerEdit();
     if (auto* graph = graphics->GetControlWithTag(kCtrlEnvelopeGraph))
       static_cast<SpuEnvelopeGraphControl*>(graph)->CancelPointerEdit();
     if (auto* graph = graphics->GetControlWithTag(kCtrlPcmGraph))
@@ -634,6 +727,17 @@ void TetoricaSPU::OnUIClose()
 {
   closeInstrumentUI();
   iplug::Plugin::OnUIClose();
+}
+
+void TetoricaSPU::setKeyboardOctaveFromUI(int octave)
+{
+  if (!GetUI() || !mInstrumentUI) return;
+  auto next = mInstrumentUI->keyboardOctave;
+  if (!next.setOctave(octave)) return;
+  if (auto* keyboard = GetUI()->GetControlWithTag(kCtrlKeyboard))
+    static_cast<SpuKeyboardControl*>(keyboard)->SetOctaveRange(next.minNote(), next.maxNote());
+  mInstrumentUI->keyboardOctave = next;
+  updateInstrumentControls();
 }
 
 void TetoricaSPU::promptForVab()
@@ -1215,6 +1319,32 @@ void TetoricaSPU::updateInstrumentControls()
   auto* graphics = GetUI();
   if (!graphics || !mInstrumentUI) return;
   auto& ui = *mInstrumentUI;
+  const auto performanceEpoch = mPerformanceUIEpoch.load(std::memory_order_acquire);
+  if (ui.performanceEpoch != performanceEpoch)
+  {
+    // The audio/lifecycle side already reset controllers and old notes. This
+    // clears stale pointer visuals without queuing a new Bend or NoteOff.
+    if (auto* keyboard = graphics->GetControlWithTag(kCtrlKeyboard))
+      static_cast<SpuKeyboardControl*>(keyboard)->ResetStalePointerEdit();
+    if (auto* pitch = graphics->GetControlWithTag(kCtrlKeyboardPitch))
+      static_cast<SpuPitchWheelControl*>(pitch)->ResetStalePointerEdit();
+    ui.performanceEpoch = performanceEpoch;
+  }
+  if (auto* control = graphics->GetControlWithTag(kCtrlKeyboardOctaveRange))
+  {
+    char label[64];
+    std::snprintf(label, sizeof(label), "C%d - C%d  |  Octave %+d",
+      ui.keyboardOctave.minNote() / 12 - 1, ui.keyboardOctave.maxNote() / 12 - 1,
+      ui.keyboardOctave.octave());
+    auto* text = static_cast<ITextControl*>(control);
+    if (std::strcmp(text->GetStr(), label)) text->SetStr(label);
+  }
+  for (const auto& button : {std::pair{kCtrlKeyboardOctaveDown,
+      ui.keyboardOctave.octave() == tetorica::ui::KeyboardOctaveState::minOctave},
+      std::pair{kCtrlKeyboardOctaveUp,
+      ui.keyboardOctave.octave() == tetorica::ui::KeyboardOctaveState::maxOctave}})
+    if (auto* control = graphics->GetControlWithTag(button.first))
+      if (control->IsDisabled() != button.second) control->SetDisabled(button.second);
   const auto mode = effectiveSourceMode(*this);
   const bool noise = mode == SourceMode::Noise;
   const bool pmon = mode == SourceMode::Pmon;

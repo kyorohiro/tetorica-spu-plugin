@@ -106,7 +106,11 @@ enum ECtrlTags
   kCtrlKeyboardMorph,
   kCtrlKeyboardMorphStatus,
   kCtrlSaveWeb,
-  kCtrlSoftwareAudioInfo
+  kCtrlSoftwareAudioInfo,
+  kCtrlKeyboardOctaveDown,
+  kCtrlKeyboardOctaveRange,
+  kCtrlKeyboardOctaveUp,
+  kCtrlKeyboardPitch
 };
 
 class TetoricaSPU final : public iplug::Plugin
@@ -177,6 +181,7 @@ private:
     std::uint64_t revision, tetorica::SpuEngineExchange::Generation generation,
     std::uint32_t program, std::uint32_t tone);
   void updateInstrumentControls();
+  void setKeyboardOctaveFromUI(int octave);
   void copyToneEnvelopeFromUI();
   void showInstrumentPage(InstrumentPage page);
   void setPcmDraftFromUI(const tetorica::PcmCycle& cycle);
@@ -188,6 +193,9 @@ private:
   void notifyHostOfInstrumentEdit();
   std::shared_ptr<InstrumentUIState> mInstrumentUI;
   std::atomic<std::uint64_t> mInstrumentUIRevision{0};
+  // Reset/restore/stop invalidate only local pointer gestures. Merely opening
+  // the editor never resets MIDI controllers received from the DAW.
+  std::atomic<std::uint64_t> mPerformanceUIEpoch{1};
 #endif
   void applyMidi(const iplug::IMidiMsg& msg);
   void resetControllerCache() noexcept;

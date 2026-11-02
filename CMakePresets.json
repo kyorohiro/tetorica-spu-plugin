@@ -57,6 +57,7 @@
       "name": "offline",
       "configurePreset": "offline",
       "targets": [
+        "keyboard_performance_test",
         "gain_smoother_test",
         "spu_all_sound_off_test",
         "ui_midi_queue_test",
@@ -93,6 +94,7 @@
       "name": "macos",
       "configurePreset": "macos",
       "targets": [
+        "keyboard_performance_test",
         "gain_smoother_test",
         "spu_all_sound_off_test",
         "ui_midi_queue_test",
@@ -133,6 +135,7 @@
       "name": "macos-release",
       "configurePreset": "macos-release",
       "targets": [
+        "keyboard_performance_test",
         "gain_smoother_test",
         "spu_all_sound_off_test",
         "ui_midi_queue_test",
@@ -174,6 +177,7 @@
       "configurePreset": "windows",
       "configuration": "Release",
       "targets": [
+        "keyboard_performance_test",
         "gain_smoother_test",
         "spu_all_sound_off_test",
         "ui_midi_queue_test",

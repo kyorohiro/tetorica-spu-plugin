@@ -198,6 +198,9 @@ void TetoricaSPU::applyMidi(const iplug::IMidiMsg& msg)
 
 void TetoricaSPU::resetControllerCache() noexcept
 {
+#if IPLUG_EDITOR
+  mPerformanceUIEpoch.fetch_add(1, std::memory_order_release);
+#endif
   mBend.fill(0);
   mSustain.fill(false);
 }
