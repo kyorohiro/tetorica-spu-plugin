@@ -45,19 +45,24 @@ CC120のチャンネル別停止も実装・検証・[CI全2job成功](https://g
 [CC120版の配置・復元記録](../au_cc120_update_20261101.md)を参照。
 AUプリセット名warning解消と分割VH/VBのLoad sound対応も完了した。
 [最新の実装・配置・復元記録](../preset_split_vab_20261101.md) /[current installed AU manifest](../preset_split_vab_20261101.json)を参照。
-内蔵Sineの広域化も実装・CI成功した。[新build検証記録](../builtin_sine_range_20261102.md)を参照。手元installed AUは上のmanifestから変更していない。
+内蔵Sineの広域化も実装・CI成功した。[新build検証記録](../builtin_sine_range_20261102.md)を参照。手元installed AUはGain380版へ退避更新し、[最新manifest](../au_gain380_update_20261102.json)とGarageBand保存復元を確認した。
 
-### Gain 380%版AUの退避更新・GarageBand検証（2026-11-02、開始）
+### Gain 380%版AUの退避更新・GarageBand検証（2026-11-02、更新・保存復元完了）
 
 開始Plugin `d985587`、音源実装 `850a79f`。ユーザーの「進めて」により、既存AUの退避更新とGarageBandでの保存・復元、今回の操作確認を進める。実装前に作業範囲を記録する。
 
-- [ ] 現在のinstalled AUを`docs/preset_split_vab_20261101.json`の全file manifestと照合し、最新版buildも検証記録のhashと照合する。
-- [ ] 開いているGarageBand projectを特定する。既知検証copyは保存前に退避し、原本や未確認のユーザーprojectを上書きせず、hostを正常終了する。
-- [ ] 既存installerのhash照合・退避・journal・rollback手順でAUを更新する。unknown bundleを置き換えない。
-- [ ] 配置済みAUでauvalと実AU hostの全回帰を確認する（27params /schema11 /Gain380 /timed automation /旧state migration）。
-- [ ] 新しい検証project copyで旧VABのP3/T0/Gain99とBoost1復元を確認し、保存・完全終了・再起動後のstate11 /埋め込みbank /parameterを照合する。
-- [ ] 可能な範囲で実AU editorの380%表示・Auto apply On/Off・PCM/Morph・ReverbとDAW automation操作を確認する。AI入力がAU別processへ届かない操作は実行済み扱いにせず、必要な人の操作を具体化する。
-- [ ] 配置manifest /退避・戻し方 /検証範囲 /残る実聴・長時間確認を記録し、commit /pushする。version /tag /公開Release・Web配布は変更しない。
+- [x] 現在のinstalled AUを`docs/preset_split_vab_20261101.json`の全file manifestと照合し、最新版buildも検証記録のhashと照合する。
+- [x] 開いているGarageBand projectを特定する。既知検証copyは保存前に退避し、原本や未確認のユーザーprojectを上書きせず、hostを正常終了する。
+- [x] 既存installerのhash照合・退避・journal・rollback手順でAUを更新する。unknown bundleを置き換えない。
+- [x] 配置済みAUでauvalと実AU hostの全回帰を確認する（27params /schema11 /Gain380 /timed automation /旧state migration）。
+- [x] 新しい検証project copyで旧VABのP3/T0/Gain99とBoost1復元を確認し、保存・完全終了・再起動後のstate11 /埋め込みbank /parameterを照合する。
+- [x] 実AU editorの380% orangeとSource /Auto apply On /Triangle自動反映を人の入力と実画面で確認した。停止中は音声処理待ちとなり、DAW再生でLoadedへ進んだ。Triangle /380%も保存・完全終了・再起動でpayload一致を確認した。Offの描画・Morph /Reverb操作とDAW automation録音は後続の未確認項目へ分ける。
+- [x] 配置manifest /退避・戻し方 /検証範囲 /残る実聴・長時間確認を記録し、commit /pushする。version /tag /公開Release・Web配布は変更しない。
+
+配置済みAUのauval（27params）と実AU22 PASS、旧schema9 VAB→11のP3/T0/Gain99 /Boost1、Triangle /Gain100 /Boost3.8の保存復元が成功した。[配置・退避・戻し方と確認範囲](../au_gain380_update_20261102.md) /[current installed manifest](../au_gain380_update_20261102.json)。
+
+- [ ] worker準備中とReady（host音声処理待ち）をUIで区別する。GarageBand停止中はDAW再生が必要な場合があることを案内し、ReadyでもPreparingが続く表示を改善する。
+- [ ] 実AU editorのAuto apply Offで描画・manual Apply、Morph /Reverbの操作とautomation描画・録音を追試する。人の直接操作とAI入力の制約を区別する。
 
 ### Gain 380%・連続parameter automation・PCM即反映（2026-11-02、実装・CI完了）
 

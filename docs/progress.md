@@ -1,5 +1,14 @@
 # 作業記録
 
+## 2026-11-02 JST — Gain380版installed AU更新・GarageBand保存復元完了
+
+- 作業前TODO `e4d8967`、配置した実装`850a79f`。旧installed全5filesをpreset/split版manifestと照合し、`au-update-zs33cpnr`へ旧bundle2組とrollback journalを残して更新した。新source /installedの全5files一致。
+- 配置済みAUのauvalは27params・exit0・preset-name warningなし。実AU hostも48kHzで22 PASS（summary込み）。source /SDK pin /version /tag /公開Releaseは変更していない。
+- 新GarageBand検証copyで旧schema9 VABのP3/T0/Gain99 /Boost1をschema11へ保存し、完全終了・再起動後の実画面とpayload /bank一致を確認した。原本11filesと複製元7filesは不変。自動再開された旧検証copyは全file退避後に意図して保存した。
+- 人の入力でSource切替 /Auto apply既定On /Triangle選択 /380% orangeを確認。停止中はReady /音声処理待ちとなり、DAW masterを一時0にして既存MIDIを再生するとLoadedへ進んだ。再生・録音停止とmaster+0.0dB表示への復帰を確認した。
+- Triangle /base Gain100 /Boost3.8も保存・完全終了・再起動でpayloadとPCMが完全一致。最後は検証copyを表示・停止状態で残した。独自AUのAIクリック制約と人の操作を区別して記録した。
+- **残り:** Ready時のPreparing表示・DAW再生案内の改善、実AU上のOff描画 /Morph /Reverb /automation録音、実聴・長時間。[配置・操作と確認範囲](au_gain380_update_20261102.md) /[current installed manifest・検証証跡](au_gain380_update_20261102.json)。
+
 ## 2026-11-02 JST — Gain 380%・連続automation・PCM自動反映、検証・CI完了
 
 - 作業前TODO `c85e5e1`の後、画面Gainを0〜380%へ拡張した。旧ID0の0〜100% /normalized mappingを維持し、ID26へBoost 1〜3.8を追加。100%超をorangeで表示する。
