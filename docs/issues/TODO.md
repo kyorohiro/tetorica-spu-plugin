@@ -47,6 +47,17 @@ AUプリセット名warning解消と分割VH/VBのLoad sound対応も完了し�
 [最新の実装・配置・復元記録](../preset_split_vab_20261101.md) /[current installed AU manifest](../preset_split_vab_20261101.json)を参照。
 内蔵Sineの広域化も実装・CI成功した。[新build検証記録](../builtin_sine_range_20261102.md)を参照。手元installed AUは準備状態の表示改善版へ退避更新し、[最新manifest](../ready_status_20261102.json)とGarageBandのPCM /Gain380復元を確認した。
 
+### PSF1 /MiniPSF 静的VAB抽出のPlugin移植（2026-11-02、着手）
+
+開始`c46c378`。ユーザーがWeb版のPSF抽出をPluginへ追加するよう指示したため、実装前に範囲を記録する。
+
+- [ ] Web版のPSF1 header /CRC /zlib /PS-X EXE /PSFLib合成順と、RAM coverage /VAB body誤検出guardをNativeへ移植する。PSF2・曲再生・CPU /driver実行は今回の対象外。
+- [ ] 依存fileを含む読込・展開・探索をaudio callback外で処理し、file数・圧縮 /展開bytes・再帰・path範囲を制限する。取消・不正入力・古いworker結果・restore時は以前の音源を保つ。
+- [ ] Load soundからPSF /MiniPSFと必要なPSFLibを読み込み、抽出bank /Program /Toneを選べるUIを用意する。対応範囲と読めない理由を表示する。
+- [ ] 抽出VABを既存embedded state経路へ渡し、元PSF /PSFLibなしで保存・再起動復元できるようにする。既存parameter ID /state schema /SDK pinは維持する。
+- [ ] 自作demoと不正入力・依存順・欠損 /cycle /path /展開上限・coverage /曖昧bodyの自動検証、workerの失敗 /取消 /世代検証、実AU /VST3 /build /必要なCIを行う。
+- [ ] 結果・制約・操作方法・再開手順を記録してpushする。公開済みv0.0.1 tag /assetsと手元installed AU /GarageBand projectは今回変更しない。
+
 ### v0.0.1 Preview 公開（2026-11-02、公開・再download照合完了）
 
 開始`772bf41`。ユーザーがtag作成・GitHub Preview公開を指示したため、公開前に今回の範囲を記録する。
