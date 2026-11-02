@@ -3,9 +3,436 @@
   "date_jst": "2026-11-02",
   "start_commit": "dc7d57b864d24a8e5958b5ab59c97ef5e03375a6",
   "todo_commit": "3abafff1708e7911455f6958491e44d8a4a11f45",
-  "implementation_commit": null,
+  "implementation_commit": "94f9f46bc128b09387f2ebd29757b719e5298b0a",
   "ci": {
-    "status": "pending"
+    "status": "success",
+    "source_commit": "94f9f46bc128b09387f2ebd29757b719e5298b0a",
+    "runs": [
+      {
+        "conclusion": "success",
+        "created_at": "2026-11-02T03:20:31Z",
+        "head_sha": "94f9f46bc128b09387f2ebd29757b719e5298b0a",
+        "html_url": "https://github.com/kyorohiro/tetorica-spu-plugin/actions/runs/41382566323",
+        "id": 41382566323,
+        "name": "Verify SPU Plugin",
+        "status": "completed",
+        "updated_at": "2026-11-02T03:26:04Z",
+        "jobs": [
+          {
+            "completed_at": "2026-11-02T03:21:50Z",
+            "conclusion": "success",
+            "html_url": "https://github.com/kyorohiro/tetorica-spu-plugin/actions/runs/41382566323/job/125076326291",
+            "id": 125076326291,
+            "name": "offline",
+            "started_at": "2026-11-02T03:20:34Z",
+            "status": "completed",
+            "steps": [
+              {
+                "conclusion": "success",
+                "name": "Set up job",
+                "status": "completed"
+              },
+              {
+                "conclusion": "success",
+                "name": "Run actions/checkout@v4",
+                "status": "completed"
+              },
+              {
+                "conclusion": "success",
+                "name": "Verify safe AU installer in temporary directories",
+                "status": "completed"
+              },
+              {
+                "conclusion": "success",
+                "name": "Verify bounded GarageBand state inspection",
+                "status": "completed"
+              },
+              {
+                "conclusion": "success",
+                "name": "Initialize pinned native SDK and JSON header",
+                "status": "completed"
+              },
+              {
+                "conclusion": "success",
+                "name": "Run cmake --preset offline",
+                "status": "completed"
+              },
+              {
+                "conclusion": "success",
+                "name": "Run cmake --build --preset offline --parallel 4",
+                "status": "completed"
+              },
+              {
+                "conclusion": "success",
+                "name": "Run ctest --preset offline",
+                "status": "completed"
+              },
+              {
+                "conclusion": "success",
+                "name": "Post Run actions/checkout@v4",
+                "status": "completed"
+              },
+              {
+                "conclusion": "success",
+                "name": "Complete job",
+                "status": "completed"
+              }
+            ]
+          },
+          {
+            "completed_at": "2026-11-02T03:26:04Z",
+            "conclusion": "success",
+            "html_url": "https://github.com/kyorohiro/tetorica-spu-plugin/actions/runs/41382566323/job/125076326497",
+            "id": 125076326497,
+            "name": "macos",
+            "started_at": "2026-11-02T03:20:35Z",
+            "status": "completed",
+            "steps": [
+              {
+                "conclusion": "success",
+                "name": "Set up job",
+                "status": "completed"
+              },
+              {
+                "conclusion": "success",
+                "name": "Run actions/checkout@v4",
+                "status": "completed"
+              },
+              {
+                "conclusion": "success",
+                "name": "Verify safe AU installer in temporary directories",
+                "status": "completed"
+              },
+              {
+                "conclusion": "success",
+                "name": "Verify bounded GarageBand state inspection",
+                "status": "completed"
+              },
+              {
+                "conclusion": "success",
+                "name": "Initialize and verify pinned dependencies",
+                "status": "completed"
+              },
+              {
+                "conclusion": "success",
+                "name": "Run python3 scripts/bootstrap.py --check",
+                "status": "completed"
+              },
+              {
+                "conclusion": "success",
+                "name": "Run cmake --preset macos",
+                "status": "completed"
+              },
+              {
+                "conclusion": "success",
+                "name": "Run cmake --build --preset macos --parallel 4",
+                "status": "completed"
+              },
+              {
+                "conclusion": "success",
+                "name": "Run ctest --preset macos",
+                "status": "completed"
+              },
+              {
+                "conclusion": "success",
+                "name": "Install and validate the user AU",
+                "status": "completed"
+              },
+              {
+                "conclusion": "success",
+                "name": "Validate VST3",
+                "status": "completed"
+              },
+              {
+                "conclusion": "success",
+                "name": "Render and restore the actual VST3",
+                "status": "completed"
+              },
+              {
+                "conclusion": "success",
+                "name": "Restore embedded state in the actual AU",
+                "status": "completed"
+              },
+              {
+                "conclusion": "success",
+                "name": "Run actions/upload-artifact@v4",
+                "status": "completed"
+              },
+              {
+                "conclusion": "success",
+                "name": "Post Run actions/checkout@v4",
+                "status": "completed"
+              },
+              {
+                "conclusion": "success",
+                "name": "Complete job",
+                "status": "completed"
+              }
+            ]
+          }
+        ]
+      },
+      {
+        "conclusion": "success",
+        "created_at": "2026-11-02T03:20:31Z",
+        "head_sha": "94f9f46bc128b09387f2ebd29757b719e5298b0a",
+        "html_url": "https://github.com/kyorohiro/tetorica-spu-plugin/actions/runs/41382566348",
+        "id": 41382566348,
+        "name": "Build Preview Candidates",
+        "status": "completed",
+        "updated_at": "2026-11-02T03:30:48Z",
+        "jobs": [
+          {
+            "completed_at": "2026-11-02T03:26:32Z",
+            "conclusion": "success",
+            "html_url": "https://github.com/kyorohiro/tetorica-spu-plugin/actions/runs/41382566348/job/125076326236",
+            "id": 125076326236,
+            "name": "windows",
+            "started_at": "2026-11-02T03:20:34Z",
+            "status": "completed",
+            "steps": [
+              {
+                "conclusion": "success",
+                "name": "Set up job",
+                "status": "completed"
+              },
+              {
+                "conclusion": "success",
+                "name": "Run actions/checkout@v4",
+                "status": "completed"
+              },
+              {
+                "conclusion": "success",
+                "name": "Run actions/setup-python@v5",
+                "status": "completed"
+              },
+              {
+                "conclusion": "success",
+                "name": "Verify portable Windows tooling",
+                "status": "completed"
+              },
+              {
+                "conclusion": "success",
+                "name": "Run python scripts/bootstrap.py",
+                "status": "completed"
+              },
+              {
+                "conclusion": "success",
+                "name": "Run python scripts/bootstrap.py --check",
+                "status": "completed"
+              },
+              {
+                "conclusion": "success",
+                "name": "Run cmake --preset windows",
+                "status": "completed"
+              },
+              {
+                "conclusion": "success",
+                "name": "Run cmake --build --preset windows --parallel 4",
+                "status": "completed"
+              },
+              {
+                "conclusion": "success",
+                "name": "Run ctest --preset windows",
+                "status": "completed"
+              },
+              {
+                "conclusion": "success",
+                "name": "Check built Windows resources (EXE is not distributed)",
+                "status": "completed"
+              },
+              {
+                "conclusion": "success",
+                "name": "Package VST3 candidate",
+                "status": "completed"
+              },
+              {
+                "conclusion": "success",
+                "name": "Verify exact packaged VST3",
+                "status": "completed"
+              },
+              {
+                "conclusion": "success",
+                "name": "Run actions/upload-artifact@v4",
+                "status": "completed"
+              },
+              {
+                "conclusion": "success",
+                "name": "Run actions/upload-artifact@v4",
+                "status": "completed"
+              },
+              {
+                "conclusion": "success",
+                "name": "Post Run actions/setup-python@v5",
+                "status": "completed"
+              },
+              {
+                "conclusion": "success",
+                "name": "Post Run actions/checkout@v4",
+                "status": "completed"
+              },
+              {
+                "conclusion": "success",
+                "name": "Complete job",
+                "status": "completed"
+              }
+            ]
+          },
+          {
+            "completed_at": "2026-11-02T03:27:37Z",
+            "conclusion": "success",
+            "html_url": "https://github.com/kyorohiro/tetorica-spu-plugin/actions/runs/41382566348/job/125076326522",
+            "id": 125076326522,
+            "name": "macos",
+            "started_at": "2026-11-02T03:20:35Z",
+            "status": "completed",
+            "steps": [
+              {
+                "conclusion": "success",
+                "name": "Set up job",
+                "status": "completed"
+              },
+              {
+                "conclusion": "success",
+                "name": "Run actions/checkout@v4",
+                "status": "completed"
+              },
+              {
+                "conclusion": "success",
+                "name": "Run actions/setup-python@v5",
+                "status": "completed"
+              },
+              {
+                "conclusion": "success",
+                "name": "Run python3 -m unittest discover -s tests -p 'test_*.py' -v",
+                "status": "completed"
+              },
+              {
+                "conclusion": "success",
+                "name": "Run python3 scripts/bootstrap.py",
+                "status": "completed"
+              },
+              {
+                "conclusion": "success",
+                "name": "Run python3 scripts/bootstrap.py --check",
+                "status": "completed"
+              },
+              {
+                "conclusion": "success",
+                "name": "Run cmake --preset macos-release",
+                "status": "completed"
+              },
+              {
+                "conclusion": "success",
+                "name": "Run cmake --build --preset macos-release --parallel 4",
+                "status": "completed"
+              },
+              {
+                "conclusion": "success",
+                "name": "Run ctest --preset macos-release",
+                "status": "completed"
+              },
+              {
+                "conclusion": "success",
+                "name": "Package Universal staging copies with ad-hoc signatures",
+                "status": "completed"
+              },
+              {
+                "conclusion": "success",
+                "name": "Verify exact packaged AU and VST3",
+                "status": "completed"
+              },
+              {
+                "conclusion": "success",
+                "name": "Run actions/upload-artifact@v4",
+                "status": "completed"
+              },
+              {
+                "conclusion": "success",
+                "name": "Run actions/upload-artifact@v4",
+                "status": "completed"
+              },
+              {
+                "conclusion": "success",
+                "name": "Post Run actions/setup-python@v5",
+                "status": "completed"
+              },
+              {
+                "conclusion": "success",
+                "name": "Post Run actions/checkout@v4",
+                "status": "completed"
+              },
+              {
+                "conclusion": "success",
+                "name": "Complete job",
+                "status": "completed"
+              }
+            ]
+          },
+          {
+            "completed_at": "2026-11-02T03:30:47Z",
+            "conclusion": "success",
+            "html_url": "https://github.com/kyorohiro/tetorica-spu-plugin/actions/runs/41382566348/job/125078310394",
+            "id": 125078310394,
+            "name": "macos-intel",
+            "started_at": "2026-11-02T03:27:40Z",
+            "status": "completed",
+            "steps": [
+              {
+                "conclusion": "success",
+                "name": "Set up job",
+                "status": "completed"
+              },
+              {
+                "conclusion": "success",
+                "name": "Run actions/checkout@v4",
+                "status": "completed"
+              },
+              {
+                "conclusion": "success",
+                "name": "Run actions/setup-python@v5",
+                "status": "completed"
+              },
+              {
+                "conclusion": "success",
+                "name": "Run python3 scripts/bootstrap.py",
+                "status": "completed"
+              },
+              {
+                "conclusion": "success",
+                "name": "Run actions/download-artifact@v4",
+                "status": "completed"
+              },
+              {
+                "conclusion": "success",
+                "name": "Verify and unpack the same Universal candidate on Intel",
+                "status": "completed"
+              },
+              {
+                "conclusion": "success",
+                "name": "Run packaged Intel AU/VST3 and auval",
+                "status": "completed"
+              },
+              {
+                "conclusion": "success",
+                "name": "Post Run actions/setup-python@v5",
+                "status": "completed"
+              },
+              {
+                "conclusion": "success",
+                "name": "Post Run actions/checkout@v4",
+                "status": "completed"
+              },
+              {
+                "conclusion": "success",
+                "name": "Complete job",
+                "status": "completed"
+              }
+            ]
+          }
+        ]
+      }
+    ]
   },
   "changes": {
     "host_parameters": 26,
@@ -156,6 +583,26 @@
       "path": "build/keyboard-performance-python.log",
       "bytes": 212,
       "sha256": "fd770af7b63faf3659ae27da7bda46ff6454df209259e5b9ec6c2158eded0961"
+    },
+    {
+      "path": "build/keyboard-performance-ci-final-verify-run.json",
+      "bytes": 336,
+      "sha256": "607ff438de45cd5d3a03df1a9e892bc133772edc7c31adbc2d0779378112c727"
+    },
+    {
+      "path": "build/keyboard-performance-ci-final-verify-jobs.json",
+      "bytes": 4390,
+      "sha256": "74d0f307c2965ecfe21cf3274875879954bcb064231726625da415974660f0e1"
+    },
+    {
+      "path": "build/keyboard-performance-ci-final-preview-run.json",
+      "bytes": 343,
+      "sha256": "a32f4c01df5bc78476c8a52d829ca0f967fc1497a32ad0f81941d32c02ea10a2"
+    },
+    {
+      "path": "build/keyboard-performance-ci-final-preview-jobs.json",
+      "bytes": 7130,
+      "sha256": "a87a6c74b34eb5a0740197bb345bfe422c570cace1fedbb088809594bcb9e4a8"
     }
   ],
   "bundles": [

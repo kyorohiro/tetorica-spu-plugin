@@ -153,8 +153,9 @@ the control. Closing an active gesture also releases its note or centers its
 wheel. Opening or closing an idle editor leaves external MIDI Bend unchanged.
 The wheel displays its own local gesture, rather than tracking external MIDI;
 controllers on the same channel share the most recently processed Bend value.
-Reset/restore/stop invalidates old pointer gestures. These controls do not change
-the 26 host parameters or schema 10. See [editor keyboard verification](docs/keyboard_performance_20261102.md).
+Reset, restore, deactivation, overflow and bypass invalidate old pointer gestures.
+These controls do not change the 26 host parameters or schema 10.
+See [editor keyboard verification](docs/keyboard_performance_20261102.md).
 
 All 16 MIDI channels have independent Pitch Bend and Sustain state.
 Pitch Bend is 14-bit, centered at 8192, with a fixed range of **±2 semitones**.

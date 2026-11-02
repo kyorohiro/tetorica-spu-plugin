@@ -38,7 +38,9 @@ frameworkのQWERTY handlerはinstance間でstatic状態を共有するため、�
 - NoteOff-before-rangeとepoch判定はsource reviewで検査した。単体model /headless host /Standalone画面確認を、実DAW独自UIや聴感の検証とは区別する。
 
 最初のsandbox内AU検証はローカルfactory登録で停止した。同じ最終bundleをsandbox外で直接hostし、全検査が成功した。インストール先のAUは変更していない。
-CI結果・source /log /bundle hashは[機械可読記録](keyboard_performance_20261102.json)に記録する。
+実装source `94f9f46bc128b09387f2ebd29757b719e5298b0a`の[通常CI全2 jobs](https://github.com/kyorohiro/tetorica-spu-plugin/actions/runs/41382566323)と[配布CI全3 jobs](https://github.com/kyorohiro/tetorica-spu-plugin/actions/runs/41382566348)はすべて成功した。
+Mac ARM /Intelの同じUniversal候補とWindows VST3候補の実host検査も通過した。今回のCI候補はad-hoc /未署名の開発artifactであり、新しい公開Releaseではない。
+CI結果・source /log /bundle hashは[機械可読記録](keyboard_performance_20261102.json)に保存した。
 
 ## 残る確認
 

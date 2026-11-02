@@ -759,4 +759,5 @@
 - ユーザーのPlugin再開指示で、TODO `3abafff`からOctave − / ＋、37鍵の範囲表示、Morph横の固定±2半音Pitch wheelを追加した。Octaveは画面鍵盤のみ、PitchはMIDI channel1の一時入力。26params /schema10 /SDK pin /音源は維持する。
 - range変更前のNoteOff、mouse exit /close時の取消、reset /restore等の専用atomic epochを追加した。独立レビューでtimerがreset後の新しいgestureまで消すraceを見つけ、control自身のepochを比較して古い操作だけ取り消すよう修正した。
 - Mac APP /AU /VST3 build、CTest30件、Python112件、実AU19 PASS行 /実VST3 57 PASS行 /validator47/0が成功。StandaloneでOctave+1 /+3と上限無効化 /初期復帰、Pitch drag後+0.00、鍵盤離鍵表示を確認した。実DAWの操作競合と聴感は未確認として残す。
-- [操作・検証](keyboard_performance_20261102.md) /[source・bundle・log記録](keyboard_performance_20261102.json)。次は実装push後CIを確認する。公開済みv0.0.0とinstalled AUは変更していない。
+- 実装`94f9f46`の[通常CI全2 jobs](https://github.com/kyorohiro/tetorica-spu-plugin/actions/runs/41382566323)と[配布CI全3 jobs](https://github.com/kyorohiro/tetorica-spu-plugin/actions/runs/41382566348)が成功した。Mac ARM /Intelの同じUniversal候補とWindows VST3を実hostで検証した。
+- [操作・検証](keyboard_performance_20261102.md) /[source・bundle・log記録](keyboard_performance_20261102.json)。公開済みv0.0.0とinstalled AUは変更していない。実DAW独自UI・実聴・長時間など残る確認はTODOへ分けて記録した。

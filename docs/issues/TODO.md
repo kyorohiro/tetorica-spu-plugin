@@ -47,7 +47,7 @@ AUプリセット名warning解消と分割VH/VBのLoad sound対応も完了し�
 [最新の実装・配置・復元記録](../preset_split_vab_20261101.md) /[current installed AU manifest](../preset_split_vab_20261101.json)を参照。
 内蔵Sineの広域化も実装・CI成功した。[新build検証記録](../builtin_sine_range_20261102.md)を参照。手元installed AUは上のmanifestから変更していない。
 
-### 画面鍵盤のOctaveとPitch操作（2026-11-02、実装・ローカル検証済み）
+### 画面鍵盤のOctaveとPitch操作（2026-11-02、実装・CI完了）
 
 開始Plugin `dc7d57b`、Native SDK `95cf71a`。ユーザーのPlugin再開指示により、実装前に今回のTODOを記録する。
 SPU Synthのitch.io devlogはユーザーが掲載済みと報告した。
@@ -57,13 +57,14 @@ SPU Synthのitch.io devlogはユーザーが掲載済みと報告した。
 - [x] 固定±2半音のPitch wheelをMorph横へ追加する。既存のUI MIDI FIFOへchannel 1の14-bit Bendを送り、保持音へ反映する。
 - [x] Pitchはrelease / cancel / mouse exit / editor closeで中心へ戻す。UI wheel操作がないeditor開閉で、DAW由来のBendを上書きしない。host restore後の表示と操作も整合させる。reset直後の新gestureをtimerが消すraceも独立レビューで修正した。
 - [x] 範囲上下限 /Pitch全16,384値 /cancel /instance独立をunitで検証した。NoteOff-before-range /epochはsource review、core30件 /実AU19 PASS行 /VST3 57 PASS行 /validator47/0 /Python112件とStandalone表示を確認した。実DAWのpointer競合は別途追試する。
-- [ ] 操作仕様・検証結果・残る実DAW / 実聴確認をREADME / parity plan / progressへ記録し、commit / pushとCIを確認する。
+- [x] 操作仕様・検証結果・残る実DAW / 実聴確認をREADME / parity plan / progressへ記録し、commit / pushとCIを確認する（実装`94f9f46`、通常全2 /配布全3 jobs成功）。
 
 26個のhost parameter ID / rangeとstate schema10、音源・SDK pinを維持する。
 Gain 200%は既存parameter 0のnormalized automation互換を考慮して別途設計する。
 公開済み`v0.0.0` tag / assetsと手元installed AUは、この実装では更新しない。
 
 [操作・検証・残る確認](../keyboard_performance_20261102.md) /[source・bundle・log記録](../keyboard_performance_20261102.json)。
+[通常CI](https://github.com/kyorohiro/tetorica-spu-plugin/actions/runs/41382566323)と[配布CI](https://github.com/kyorohiro/tetorica-spu-plugin/actions/runs/41382566348)は、同じsource `94f9f46bc128b09387f2ebd29757b719e5298b0a`で全jobs成功した。Mac ARM /Intel /Windowsの実配布host検証を含む。
 
 - [ ] 実DAW内の画面鍵盤 /Pitch操作とMIDI併用・録音、gesture途中のclose /restore、実聴・長時間を追試する。
 
@@ -598,7 +599,7 @@ complete `.vab`を最初の対象とする。分割VH/VBの複数file dialogは�
 - [x] 初期Gain状態の保存・復元と44.1 / 48 / 96kHzの実VST3 offline renderを検査する。block sizeは公式validatorとcore分割一致で検査。
 - [x] wrapperのイベント境界・順序・queue overflow復帰を実VST3で追加検査する（44.1 / 48 / 96kHz）。
 - [x] GarageBandで読込・MIDI録音・保存・再読込・WAVE書出しを確認する。Gain99%復元、前後のPCM差最大1LSB。実聴は別。
-- [x] CIにオフライン検査とbuildを追加する。最初のLinux core / macOS build・VST3検査が成功。Windows build・各OSの実聴は未確認。
+- [x] CIにオフライン検査とbuildを追加する。Linux core、macOS ARM /IntelのAU /VST3、Windows VST3のbuild・配布検査も成功。各OSの実聴は別途確認する。
 
 ## 初期版の既知の制約・後続改善
 
@@ -608,6 +609,7 @@ complete `.vab`を最初の対象とする。分割VH/VBの複数file dialogは�
 - [x] CC120をチャンネル別の即時停止にする。CC123はpedalを尊重するchannel release、UI All sound offは全停止として区別する。
 - [x] Gain変更を約5msで滑らかにする。sampleごとの出力補間と、既存block単位targetの違いを説明する。
 - [ ] 通常parameter automationの各pointをsample offsetで処理する拡張を検討する（現在のGain smoothingはblock targetからの補間）。
+  調査メモ：`plugin/MidiAdapters.cpp`は通常parameter queueをpinned baseへ渡し、`IPlugVST3_ProcessorBase.cpp`は最後のpointだけを読む。`ProcessBlock()`は26paramsをblock開始時に適用する。次に進めるならGainのbounded schedulerから設計し、複数point /非zero offsetを実VST3とAUで検証する。今回のOctave /PitchはMIDI経路なので、この制限の解消とは扱わない。
 - [ ] AUでrender thread以外から届くMIDIのbounded ingressを検証・対応する。現状のhost MIDI / lifecycle操作は単一consumerとして直列化される前提。
 - [x] AU factory preset名とPresent/Current/ClassInfoのユーザー名保持を実装し、配置済みAUのauvalでpreset-name warning消失を確認した（[記録](../preset_split_vab_20261101.md)）。
 - [x] AU更新時は既存bundleと前回配置したhashを照合し、退避・更新できる手順を用意する（explicit update / 条件付きrollback、11 tests、実更新済み）。
@@ -640,5 +642,5 @@ complete `.vab`を最初の対象とする。分割VH/VBの複数file dialogは�
 
 - [ ] 実聴で音色・クリック・演奏latencyを確認する。
 - [ ] 実DAW / 実機の長時間リアルタイム動作を確認する。オフライン試験と区別する。
-- [ ] 署名・公証・配布・Release公開は具体的な成果物を確認してから進める。
-- [ ] 公開配布時に実際にlinkした第三者コード・fontのnotice同梱を再確認する。初期版bundleには収集したTHIRD_PARTY_NOTICES.txtを含める。
+- [x] 署名・公証・配布・Release公開は具体的な成果物を確認してから進める。`v0.0.0` Previewを公開し、公開後のdownload・hashも確認済み。
+- [x] 公開配布時に実際にlinkした第三者コード・fontのnotice同梱を再確認する。`v0.0.0`のMac /WindowsのpackageにTHIRD_PARTY_NOTICESとlicenseを同梱・照合した。次versionの配布でも再確認する。
