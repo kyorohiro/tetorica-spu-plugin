@@ -47,6 +47,17 @@ AUプリセット名warning解消と分割VH/VBのLoad sound対応も完了し�
 [最新の実装・配置・復元記録](../preset_split_vab_20261101.md) /[current installed AU manifest](../preset_split_vab_20261101.json)を参照。
 内蔵Sineの広域化も実装・CI成功した。[新build検証記録](../builtin_sine_range_20261102.md)を参照。手元installed AUは準備状態の表示改善版へ退避更新し、[最新manifest](../ready_status_20261102.json)とGarageBandのPCM /Gain380復元を確認した。
 
+### GarageBand Morph /Reverb automation（2026-11-02、開始）
+
+開始`3425b36`。ユーザーの続行指示により、既存自動検証に加えて実DAWの操作・保存復元を確認する。操作前に今回の範囲を記録する。
+
+- [ ] 現在のGarageBand projectとinstalled AUを確認し、既知検証projectの別copy・hashを保持して今回専用のcopyで作業する。未確認のユーザーprojectや原本を上書きしない。
+- [ ] Morph Enabled /Amountを実DAWで操作し、Amount automationの記録・再生時のparameterと画面追従を確認する。描画したautomationとリアルタイム録音を区別する。
+- [ ] Reverb preset /Enabled /Return左右も同様に確認する。共有presetのUI auto-enableとhost automationの独立Enableを区別する。
+- [ ] 記録したprojectを保存・正常終了・再起動し、音源とparameter /automationの保持を確認する。必要なら既存のproject state inspectorを補助に使い、active-track確認と混同しない。
+- [ ] AI入力が届かない箇所は人の最小操作を依頼し、その間に進められる検証・記録を行う。実聴未実施とautomation録音未確認を成功扱いしない。
+- [ ] 結果・残作業・再開手順を記録してcommit /pushする。今回version /tag /公開Releaseは変更せず、v0.0.1 Previewは検証後の別作業とする。
+
 ### 音源準備・音声処理待ちの表示改善（2026-11-02、実装・AU更新完了）
 
 開始`4139641`。ユーザーが表示改善の続行を指示したため、実装前に今回の範囲を記録する。
