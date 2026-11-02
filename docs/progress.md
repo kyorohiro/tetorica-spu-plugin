@@ -1,5 +1,12 @@
 # 作業記録
 
+## 2026-11-03 JST — PSF版installed AUへ更新・GarageBand検証中
+
+- 作業前TODO `211e9ac`。旧AU全5filesをReady版manifestと照合し、GarageBandを正常終了して退避付きでPSF実装`d379b60`へ更新した。旧AU2copyを保持し、新AUはbuild元 /installed /journal一致、auval成功・実AU host22 PASS。
+- 既知PCM検証projectを全7files照合付きで2copy保持し、今回専用copyの実URL /AU画面でEmbedded PCM cycle /Gain380% /Project sound restoredを確認した。再起動時に自動表示された既知automation copyも、切替前に全11files退避して保存した。
+- 人のPSF folder選択後、実AUでPSF1/2 /Embedded VAB /P3/T0 /Loadedを確認。保存Bank1の全3744bytesも期待値と一致した。Entry /Bank /Program /Toneの選択を人へ依頼中で、取消 /error保持・元PSF一式なしの保存再起動復元は未完了。
+- [配置・checkpoint・再開記録](au_psf_update_20261103.md) /[次回更新用installed AU manifest](au_psf_update_20261103.json)。公開済みv0.0.1 tag /assetsは変更していない。
+
 ## 2026-11-03 JST — PSF1 /MiniPSF folder import・静的VAB抽出、実装・CI完了
 
 - 作業前TODO `ed5a889`の後、実装`d379b60c4c695c6bb1cfbb26c16c52e91ab2b34d`でPSF1 /MiniPSF /PSFLib folder読込を追加した。PSF menuのEntry /Bankと既存Program /Toneで選び、抽出VABを従来のschema11へ埋め込む。PSF2 /曲再生 /CPU実行は含めない。

@@ -45,18 +45,20 @@ CC120のチャンネル別停止も実装・検証・[CI全2job成功](https://g
 [CC120版の配置・復元記録](../au_cc120_update_20261101.md)を参照。
 AUプリセット名warning解消と分割VH/VBのLoad sound対応も完了した。
 [最新の実装・配置・復元記録](../preset_split_vab_20261101.md) /[current installed AU manifest](../preset_split_vab_20261101.json)を参照。
-内蔵Sineの広域化も実装・CI成功した。[新build検証記録](../builtin_sine_range_20261102.md)を参照。手元installed AUは準備状態の表示改善版へ退避更新し、[最新manifest](../ready_status_20261102.json)とGarageBandのPCM /Gain380復元を確認した。
+内蔵Sineの広域化も実装・CI成功した。[新build検証記録](../builtin_sine_range_20261102.md)を参照。手元installed AUはPSF対応版へ退避更新し、[最新manifest](../au_psf_update_20261103.json)とGarageBandのPCM /Gain380復元を確認した。PSFの実DAW操作は下のcheckpointで継続する。
 
 ### PSF対応AU更新・GarageBand検証（2026-11-03、着手）
 
 開始`8423bac`、PSF実装`d379b60`。ユーザーがAU更新とGarageBand確認の続行を指示したため、更新前に今回の範囲を記録する。
 
-- [ ] 現在のGarageBand project /transportとinstalled AU全filesを確認し、検証projectの別copyと元filesのhashを保持する。未知のユーザーprojectを上書きしない。
-- [ ] 既知manifest `ready_status_20261102.json`と旧AUを照合して全hostを正常終了し、退避・rollback journal付きでPSF版AUへ更新する。
-- [ ] 更新したinstalled AUの全file一致・auval・実AU hostを確認し、既存検証projectの音源 /設定を保存復元する。
+- [x] 現在のGarageBand project /transportとinstalled AU全filesを確認し、検証projectの別copyと元filesのhashを保持した。既知PCM検証projectを2copy保持し、今回専用copyで作業している。
+- [x] 既知manifest `ready_status_20261102.json`と旧AUを照合して全hostを正常終了し、退避・rollback journal付きでPSF版AUへ更新した。journalは`build/au-backups/au-update-23f4rvfb/manifest.json`。
+- [x] installed AUの全5files一致・auval・実AU host22 PASSを確認し、GarageBand専用copyのEmbedded PCM cycle /Gain380% /Project sound restoredを実画面で確認した。
 - [ ] 今回専用projectでPSF folder＋階層PSFLib、Entry /Bank /Program /Tone、取消 /error時の音源保持を確認する。AI操作が届かない場合は人の最小操作を依頼する。
 - [ ] PSFから選んだVABを保存・正常終了・再起動し、元PSF一式に依存せずbank bytes /Program /Toneが復元されることを実画面と保存payloadの両方で確認する。
 - [ ] 更新manifest・rollback・project退避・確認範囲・未確認事項を記録してpushする。公開v0.0.1のtag /assetsは変更しない。
+
+[配置・checkpoint・再開手順](../au_psf_update_20261103.md)。PSF folderの実読込・Bank1保存bytes一致まで確認。AU内へのAIクリックが届かず、Entry /Bank /Program /Tone選択を人へ依頼中。
 
 ### PSF1 /MiniPSF 静的VAB抽出のPlugin移植（2026-11-02着手、11-03実装・CI結果記録）
 

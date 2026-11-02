@@ -715,17 +715,20 @@ The ordinary `--install` still refuses a different existing bundle.
 ```sh
 python3 -m unittest discover -s tests -p 'test_install_au.py' -v
 python3 scripts/install_au.py --update \
-  --expected docs/ready_status_20261102.json --backup-root build/au-backups
+  --expected docs/au_psf_update_20261103.json --backup-root build/au-backups
 # Use the printed manifest path to roll back; refuses an altered installation:
 python3 scripts/install_au.py --rollback build/au-backups/au-update-REPLACE/manifest.json
 ```
 
-The [Ready status AU update record](docs/ready_status_20261102.md) contains the
-[current installed manifest](docs/ready_status_20261102.json), retained backup
+The [PSF AU update record](docs/au_psf_update_20261103.md) contains the
+[current installed manifest](docs/au_psf_update_20261103.json), retained backup
 and rollback procedure. The installed AU passed auval and the full AU host
 regressions, including channel-only CC120, preserved shared Reverb tails,
 PMON pair reuse, live Gain ramps and restore/reset/reactivation/bypass,
 as well as the [loop compatibility fix](docs/loop_repeat_20261101.md).
+The PSF development AU also restored the existing PCM cycle and 380% Gain in
+the copied GarageBand project. Its DAW-specific PSF folder and save/reopen
+checks are in progress; the update record distinguishes them from host regressions.
 A copied GarageBand project also restored its embedded VAB, Program 3, Tone 0
 and Gain 99% / Boost 1 after schema11 save, full host exit and reopen.
 AU validation now passes without the preset-name warning. Host user-preset names
