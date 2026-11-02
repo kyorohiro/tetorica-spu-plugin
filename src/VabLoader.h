@@ -36,6 +36,8 @@ public:
   // Inputs are owned, never read from a file or decoded on the audio thread.
   // Oversized input starts a new generation then reports Failed, keeping audio.
   Generation request(std::vector<std::uint8_t> complete,std::size_t flatTone);
+  // Extracted PSF banks use the same worker/embedded definition path as files.
+  Generation requestFirstPlayable(std::vector<std::uint8_t> complete);
   // File operations and the <=1MiB read run on the worker. The one-argument
   // form chooses the first playable Tone; the explicit index is always exact.
   Generation requestFile(std::string utf8Path);
@@ -82,6 +84,7 @@ private:
     tetorica::MorphEndpoints endpoints{};
   };
   Generation requestFileImpl(std::string path,std::size_t flatTone,bool firstPlayable);
+  Generation requestBytesImpl(std::vector<std::uint8_t> bytes,std::size_t flatTone,bool firstPlayable);
   Generation requestSplitFilesImpl(std::string headerPath,std::string bodyPath,
                                    std::size_t flatTone,bool firstPlayable);
   void run();

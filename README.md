@@ -17,6 +17,8 @@ Current prototype: full-range built-in Sine with legacy project playback, MIDI N
 24 voices, channel-aware note ownership, Pitch Bend, Sustain, All sound off,
 Gain, a PCM waveform editor, Software Morph, SPU Noise, paired PMON, custom ADSR editing, shared SPU Reverb and mouse keyboard.
 Load a complete VAB from the editor and select a Program and Tone to audition.
+Development builds after v0.0.1 also extract static VAB sounds from PSF1 /MiniPSF
+files and folders; see [PSF import](#psf1--minipsf-sounds-development-builds).
 The bank, PCM cycle or imported ADPCM / Software PCM, Morph A/B endpoints, selection, Gain, ADSR, Reverb, Noise and PMON settings are embedded in the DAW project state.
 Additional SPU controls remain planned. The same VAB parser and selected-Tone
 engine can also be exercised with the offline tool below.
@@ -497,6 +499,35 @@ defers the switch. This layer does not make the entire host/framework callback
 lock-free. Each plugin instance owns its loader and joins it before destroying
 the engine exchange.
 
+## PSF1 / MiniPSF sounds (development builds)
+
+This feature is in the development tree after the published v0.0.1 Preview.
+Use **PSF... → Open PSF folder...** to select a folder containing the PSF,
+MiniPSF and related PSFLib files. Subdirectories and relative library references
+inside the selected folder are retained. **Entry** chooses the PSF; **Bank**
+chooses one of the extracted VAB banks. The first supported bank and playable
+Tone load automatically. Use the existing **Program /Tone** menus afterward.
+
+**Load sound...** can also open `.psf`, `.psf1`, `.minipsf`, `.minipsf1`,
+`.psflib` or `.psf1lib` directly, using that file's parent folder as the set root.
+If libraries live above it, choose a wider folder with the PSF menu instead.
+Missing libraries, invalid files or unsupported bank layouts keep the previous
+sound; a valid catalog remains available for choosing another Entry.
+
+This is static extraction of standard contiguous VAB data, without executing a
+game's CPU or sound driver. PSF2, full song playback, packed/runtime-generated
+banks and uncertain separate VH/VB layouts are not supported. Libraries never
+trigger network access or reads outside the selected folder.
+
+The selected VAB is embedded in the existing DAW state, so restoring it needs
+no original PSF/PSFLib files. The other entries/banks are an editor catalog,
+not an embedded PSF archive; open the folder again after restoring a project
+to browse them. Save Web exports the current Tone as before.
+
+Imports are limited to 512 files /64 MiB total, 4 MiB per file, and 8192
+directory entries. Expansion and RAM/body validation are bounded too.
+See [implementation, tests and current limitations](docs/psf_import_20261102.md).
+
 ## Import a Web SPU sound
 
 Save an instrument as `.spu.json` in the Web SPU Synth, then choose
@@ -514,7 +545,8 @@ editor or restoring a project cancels unfinished import preparation.
 Version 1 remains bounded to 8 MiB JSON and 520192 ADPCM bytes, and retains original packet flags. Version 2 reads mono PCM16LE
 base64, tuning and one-shot / whole-sample loop, up to 32 MiB decoded PCM and
 48 MiB JSON. This is a bounded subset of the Web format: larger Web recordings
-are rejected. PSF extraction remains follow-up work. Web export is available below.
+are rejected. PSF extraction is available in development builds through the
+separate PSF input described above. Web export is available below.
 
 Web saves the current Morph blend as the base sample; turning Morph Off after
 import returns to that saved sample. It cannot recover a pre-Morph VAB absent

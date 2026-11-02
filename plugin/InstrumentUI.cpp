@@ -293,6 +293,13 @@ struct TetoricaSPU::InstrumentUIState
   tetorica::SpuEngineExchange::Generation requested = 0;
   tetorica::WebInstrumentLoader::Ticket webTicket = 0;
   tetorica::AudioFileLoader::Ticket audioTicket = 0;
+  tetorica::PsfLoader::Ticket psfTicket = 0;
+  tetorica::SpuEngineExchange::Generation psfBaseGeneration = 0;
+  std::uint64_t psfRevision = 0;
+  std::shared_ptr<const tetorica::PsfLoader::Document> psfDocument;
+  std::shared_ptr<const tetorica::psf::Result> psfResult;
+  std::optional<std::size_t> psfSelectedBank;
+  std::string psfEntry, psfDetails;
   tetorica::SpuEngineExchange::Generation audioBaseGeneration = 0, audioCommitted = 0;
   std::uint64_t audioRevision = 0;
   std::string audioDetails;
@@ -346,12 +353,74 @@ void TetoricaSPU::initializeInstrumentUI()
     graphics->AttachControl(saveWeb,kCtrlSaveWeb);
     auto* loadSound=new IVButtonControl(IRECT(24, 64, 154, 99),
       [this](IControl*) { promptForVab(); }, "Load sound...");
-    loadSound->SetTooltip("Load complete VAB, a VH + VB pair (select either file first, then its matching partner), Web .spu.json v1/v2, or PCM16 / Float32 mono/stereo WAV (up to32MiB). Short WAV uses SPU ADPCM; longer WAV uses Software PCM outside SPU RAM, starts at C4 / One shot, and selects Sample / Morph Off. Gain, ADSR, Reverb and dormant settings are retained.");
+    loadSound->SetTooltip("Load PSF1 / MiniPSF sounds (related PSFLibs in the same folder; use PSF / Open folder for a wider set), complete VAB, a VH + VB pair (select either file first, then its matching partner), Web .spu.json v1/v2, or PCM16 / Float32 mono/stereo WAV (up to32MiB). Short WAV uses SPU ADPCM; longer WAV uses Software PCM outside SPU RAM, starts at C4 / One shot, and selects Sample / Morph Off. Gain, ADSR, Reverb and dormant settings are retained.");
     graphics->AttachControl(loadSound,kCtrlLoadVab);
     graphics->AttachControl(new IVButtonControl(IRECT(166, 64, 296, 99),
       [this](IControl*) { requestBuiltinFromUI(); }, "Builtin Sine"), kCtrlBuiltin);
-    graphics->AttachControl(new ITextControl(IRECT(306, 64, 550, 99),
-      "Builtin Sine", IText(14)), kCtrlBankLabel);
+    auto* psfMenu=new SpuMenuControl(IRECT(306,64,380,99),"PSF...",
+      [this](IPopupMenu& menu,SpuMenuControl::Choice& choice) {
+        const auto document=mInstrumentUI->psfDocument;
+        const auto result=mInstrumentUI->psfResult;
+        const auto revision=mInstrumentUIRevision.load(std::memory_order_acquire);
+        const auto generation=mEngines.latestGeneration();
+        menu.AddItem(new IPopupMenu::Item("Open PSF folder...",0,-1));
+        if(document)
+        {
+          auto* entries=new IPopupMenu;
+          for(std::size_t first=0;first<document->entries.size();first+=32)
+          {
+            auto* group=document->entries.size()>32?new IPopupMenu:entries;
+            for(std::size_t i=first;i<std::min(first+32,document->entries.size());++i)
+              group->AddItem(new IPopupMenu::Item(document->entries[i].c_str(),
+                document->entries[i]==mInstrumentUI->psfEntry?IPopupMenu::Item::kChecked:0,static_cast<int>(i)));
+            if(group!=entries)
+            {
+              const auto label=std::to_string(first+1)+" - "+std::to_string(std::min(first+32,document->entries.size()));
+              entries->AddItem(label.c_str(),group);
+            }
+          }
+          menu.AddItem("Entry",entries);
+        }
+        if(result&&!result->banks.empty())
+        {
+          auto* banks=new IPopupMenu;
+          for(std::size_t i=0;i<result->banks.size();++i)
+          {
+            char label[80];std::snprintf(label,sizeof(label),"Bank %zu / RAM 0x%08x",i+1,
+              0x80000000u+result->banks[i].address);
+            banks->AddItem(new IPopupMenu::Item(label,
+              mInstrumentUI->psfSelectedBank==i?IPopupMenu::Item::kChecked:0,1024+static_cast<int>(i)));
+          }
+          menu.AddItem("Bank",banks);
+        }
+        choice=[this,document,result,revision,generation](int item) {
+          if(mInstrumentUIRevision.load(std::memory_order_acquire)!=revision||
+             mEngines.latestGeneration()!=generation||mInstrumentUI->pickerOpen)return;
+          if(item==-1){promptForPsfFolder();return;}
+          if(item>=0&&item<512&&document&&static_cast<std::size_t>(item)<document->entries.size())
+          {requestPsfEntryFromUI(document,revision,generation,document->entries[item]);return;}
+          if(item<1024||!result||static_cast<std::size_t>(item-1024)>=result->banks.size())return;
+          std::lock_guard<std::mutex> lock(mStateMutex);
+          auto& ui=*mInstrumentUI;
+          if(ui.psfResult!=result||ui.psfDocument!=document||
+             mInstrumentUIRevision.load(std::memory_order_acquire)!=revision||
+             mEngines.latestGeneration()!=generation)return;
+          try
+          {
+            mPsfLoader.cancel();ui.psfTicket=0;
+            mWebLoader.cancel();ui.webTicket=0;ui.webCommitted=0;
+            mAudioLoader.cancel();ui.audioTicket=0;ui.audioCommitted=0;
+            ui.requested=mLoader.requestFirstPlayable(result->banks[item-1024].bytes);
+            ui.psfSelectedBank=static_cast<std::size_t>(item-1024);
+            ui.status="Preparing PSF bank. Previous sound remains until ready.";
+          }
+          catch(const std::exception& error){ui.status=std::string("Load failed: ")+error.what()+". Previous sound kept.";}
+        };
+      });
+    psfMenu->SetTooltip("Extract VAB sounds from PSF1 / MiniPSF. Open their folder with related PSFLib files, then choose Entry and Bank. This is not a song player.");
+    graphics->AttachControl(psfMenu,kCtrlPsf);
+    graphics->AttachControl(new ITextControl(IRECT(390,64,550,99),
+      "Builtin Sine", IText(12)), kCtrlBankLabel);
     graphics->AttachControl(new SpuMenuControl(IRECT(24, 108, 276, 144), "Program",
       [this](IPopupMenu& menu, SpuMenuControl::Choice& choice) {
         const auto& ui = *mInstrumentUI;
@@ -720,6 +789,7 @@ void TetoricaSPU::OnUIOpen()
 
 void TetoricaSPU::closeInstrumentUI() noexcept
 {
+  mPsfLoader.cancel();
   mWebLoader.cancel();
   mAudioLoader.cancel();
   const auto exportState=mWebExporter.status();
@@ -729,6 +799,8 @@ void TetoricaSPU::closeInstrumentUI() noexcept
   if(!acceptedExport)mWebExporter.cancel();
   if (mInstrumentUI)
   {
+    if(mInstrumentUI->psfTicket)mInstrumentUI->status="PSF extraction cancelled when the editor closed. Previous sound kept.";
+    mInstrumentUI->psfTicket=0;
     if(mInstrumentUI->splitPicker)
       mInstrumentUI->status="Split VAB selection cancelled when the editor closed. Previous sound kept.";
     mInstrumentUI->splitPicker.reset();
@@ -799,7 +871,7 @@ void TetoricaSPU::promptForVab()
   const auto revision = mInstrumentUIRevision.load(std::memory_order_acquire);
   const auto generation = mEngines.latestGeneration();
   WDL_String fileName, path;
-  GetUI()->PromptForFile(fileName, path, EFileAction::Open, "vab vh vb json wav",
+  GetUI()->PromptForFile(fileName, path, EFileAction::Open, "vab vh vb json wav psf psf1 minipsf minipsf1 psflib psf1lib",
     [lifetime, revision, generation, serial](const WDL_String& file, const WDL_String&) {
       const auto live = lifetime.lock();
       if (!live) return;
@@ -821,7 +893,17 @@ void TetoricaSPU::promptForVab()
           {
             std::string path(file.Get());
             const auto extension=fileExtension(path);
-            if(extension==".vh"||extension==".vb")
+            if(extension==".psf"||extension==".psf1"||extension==".minipsf"||
+               extension==".minipsf1"||extension==".psflib"||extension==".psf1lib")
+            {
+              ui.psfTicket=owner->mPsfLoader.requestFile(std::move(path));
+              ui.psfBaseGeneration=generation;ui.psfRevision=revision;
+              owner->mWebLoader.cancel();ui.webTicket=0;ui.webCommitted=0;
+              owner->mAudioLoader.cancel();ui.audioTicket=0;ui.audioCommitted=0;
+              ui.requested=0;
+              ui.status="Extracting PSF sounds. Previous sound remains until ready.";
+            }
+            else if(extension==".vh"||extension==".vb")
             {
               // Defer the second sheet to OnIdle. Opening it from this sheet's
               // completion while holding lifetime/state locks can reenter UI.
@@ -833,6 +915,7 @@ void TetoricaSPU::promptForVab()
             }
             else if(extension==".json")
             {
+              owner->mPsfLoader.cancel();ui.psfTicket=0;
               ui.webTicket=owner->mWebLoader.requestFile(std::move(path));
               owner->mAudioLoader.cancel();ui.audioTicket=0;ui.audioCommitted=0;
               ui.webBaseGeneration=generation;ui.webRevision=revision;
@@ -841,6 +924,7 @@ void TetoricaSPU::promptForVab()
             }
             else if(extension==".wav")
             {
+              owner->mPsfLoader.cancel();ui.psfTicket=0;
               const auto source=owner->mEngines.snapshotDefinition();
               ui.audioTicket=owner->mAudioLoader.requestFile(std::move(path),
                 source ? source->morphEndpoints() : tetorica::MorphEndpoints{});
@@ -851,6 +935,7 @@ void TetoricaSPU::promptForVab()
             }
             else
             {
+              owner->mPsfLoader.cancel();ui.psfTicket=0;
               owner->mWebLoader.cancel();ui.webTicket=0;ui.webCommitted=0;
               owner->mAudioLoader.cancel();ui.audioTicket=0;ui.audioCommitted=0;
               ui.requested = owner->mLoader.requestFile(std::move(path));
@@ -865,6 +950,71 @@ void TetoricaSPU::promptForVab()
         ui.status="Load cancelled. Previous sound kept.";
       owner->updateInstrumentControls();
     });
+}
+
+void TetoricaSPU::promptForPsfFolder()
+{
+  if(!GetUI()||!mInstrumentUI||mInstrumentUI->pickerOpen||!mInstrumentUI->lifetime)return;
+  auto& ui=*mInstrumentUI;
+  ui.pickerOpen=true;
+  const auto serial=++ui.pickerSerial;
+  const auto revision=mInstrumentUIRevision.load(std::memory_order_acquire);
+  const auto generation=mEngines.latestGeneration();
+  const std::weak_ptr<InstrumentUIState::Lifetime> lifetime=ui.lifetime;
+  updateInstrumentControls();
+  WDL_String directory;
+  if(ui.psfDocument)directory.Set(ui.psfDocument->root.c_str());
+  GetUI()->PromptForDirectory(directory,
+    [lifetime,serial,revision,generation](const WDL_String&,const WDL_String& directory) {
+      const auto live=lifetime.lock();if(!live)return;
+      std::lock_guard<std::mutex> lifetimeLock(live->mutex);
+      auto* owner=live->owner;if(!owner)return;
+      auto& ui=*owner->mInstrumentUI;
+      if(ui.pickerSerial!=serial)return;
+      ui.pickerOpen=false;
+      try
+      {
+        std::lock_guard<std::mutex> stateLock(owner->mStateMutex);
+        if(owner->mInstrumentUIRevision.load(std::memory_order_acquire)==revision&&
+           owner->mEngines.latestGeneration()==generation)
+        {
+          if(!directory.GetLength())ui.status="PSF folder selection cancelled. Previous sound kept.";
+          else
+          {
+            ui.psfTicket=owner->mPsfLoader.requestFolder(directory.Get());
+            ui.psfRevision=revision;ui.psfBaseGeneration=generation;
+            owner->mWebLoader.cancel();ui.webTicket=0;ui.webCommitted=0;
+            owner->mAudioLoader.cancel();ui.audioTicket=0;ui.audioCommitted=0;
+            ui.requested=0;
+            ui.status="Extracting PSF folder. Previous sound remains until ready.";
+          }
+        }
+      }
+      catch(const std::exception& error){ui.status=std::string("Load failed: ")+error.what()+". Previous sound kept.";}
+      owner->updateInstrumentControls();
+    });
+}
+
+void TetoricaSPU::requestPsfEntryFromUI(
+    std::shared_ptr<const tetorica::PsfLoader::Document> document,
+    std::uint64_t revision,tetorica::SpuEngineExchange::Generation generation,std::string entry)
+{
+  if(!GetUI()||!mInstrumentUI||mInstrumentUI->pickerOpen)return;
+  try
+  {
+    std::lock_guard<std::mutex> lock(mStateMutex);
+    auto& ui=*mInstrumentUI;
+    if(ui.psfDocument!=document||mInstrumentUIRevision.load(std::memory_order_acquire)!=revision||
+       mEngines.latestGeneration()!=generation)return;
+    ui.psfTicket=mPsfLoader.requestEntry(std::move(document),std::move(entry));
+    ui.psfRevision=revision;ui.psfBaseGeneration=generation;
+    mWebLoader.cancel();ui.webTicket=0;ui.webCommitted=0;
+    mAudioLoader.cancel();ui.audioTicket=0;ui.audioCommitted=0;
+    ui.requested=0;
+    ui.status="Extracting PSF entry. Previous sound remains until ready.";
+  }
+  catch(const std::exception& error){mInstrumentUI->status=std::string("Load failed: ")+error.what()+". Previous sound kept.";}
+  updateInstrumentControls();
 }
 
 void TetoricaSPU::promptForSplitVabPartner()
@@ -1011,6 +1161,7 @@ void TetoricaSPU::requestBuiltinFromUI()
   try
   {
     std::lock_guard<std::mutex> lock(mStateMutex);
+    mPsfLoader.cancel();mInstrumentUI->psfTicket=0;
     mWebLoader.cancel();mInstrumentUI->webTicket=0;mInstrumentUI->webCommitted=0;
     mAudioLoader.cancel();mInstrumentUI->audioTicket=0;mInstrumentUI->audioCommitted=0;
     mInstrumentUI->requested = mLoader.requestBuiltin();
@@ -1155,7 +1306,47 @@ void TetoricaSPU::OnIdle()
       mWebLoader.cancel();ui.webTicket=0;ui.webCommitted=0;
       mAudioLoader.cancel();ui.audioTicket=0;ui.audioCommitted=0;ui.audioDetails.clear();
       mWebExporter.cancel();ui.exportTicket=0;
+      mPsfLoader.cancel();ui.psfTicket=0;ui.psfDocument.reset();ui.psfResult.reset();
+      ui.psfSelectedBank.reset();ui.psfEntry.clear();ui.psfDetails.clear();
       ui.status = "Project sound restored.";
+    }
+    if(ui.psfTicket)
+    {
+      if(ui.psfRevision!=revision||ui.psfBaseGeneration!=mEngines.latestGeneration())
+      {mPsfLoader.cancel();ui.psfTicket=0;}
+      else
+      {
+        const auto status=mPsfLoader.status();
+        if(status.ticket==ui.psfTicket&&status.state==tetorica::PsfLoader::State::Failed)
+        {ui.status="PSF load failed: "+status.error+". Previous sound kept.";ui.psfTicket=0;}
+        else if(auto ready=mPsfLoader.takeReady(ui.psfTicket))
+        {
+          ui.psfTicket=0;ui.psfDocument=std::move(ready->document);
+          ui.psfEntry=std::move(ready->entryPath);ui.psfSelectedBank.reset();
+          ui.psfResult=std::make_shared<const tetorica::psf::Result>(std::move(ready->extraction));
+          ui.psfDetails=ui.psfEntry+"\n"+std::to_string(ui.psfResult->banks.size())+
+            " bank(s); "+std::to_string(ui.psfResult->diagnostics.size())+" candidate(s) skipped.";
+          for(std::size_t i=0;i<std::min<std::size_t>(3,ui.psfResult->diagnostics.size());++i)
+            ui.psfDetails+="\n"+ui.psfResult->diagnostics[i].reason;
+          if(!ready->error.empty())
+          {
+            ui.psfDetails+="\n"+ready->error;
+            ui.status="PSF extraction failed: "+ready->error+". Previous sound kept. Use PSF / Entry or Open PSF folder.";
+          }
+          else if(ui.psfResult->banks.empty())
+            ui.status="No supported contiguous VAB found. Previous sound kept. Choose another PSF / Entry.";
+          else
+          {
+            try
+            {
+              ui.requested=mLoader.requestFirstPlayable(ui.psfResult->banks.front().bytes);
+              ui.psfSelectedBank=0;
+              ui.status="Preparing PSF bank 1. Choose other banks with PSF / Bank.";
+            }
+            catch(const std::exception& error){ui.status=std::string("Load failed: ")+error.what()+". Previous sound kept.";}
+          }
+        }
+      }
     }
     if(ui.audioTicket)
     {
@@ -1338,6 +1529,13 @@ void TetoricaSPU::OnIdle()
       ui.morphDraft.refresh(definition ? definition->morphEndpoints() : tetorica::MorphEndpoints{},
         mEngines.latestGeneration(), restored);
       ui.definition = std::move(definition);
+      // The catalog can be reused after another source is loaded, but its
+      // previous Bank checkmark must not claim that source is still active.
+      ui.psfSelectedBank.reset();
+      if(ui.psfResult&&ui.definition&&ui.definition->kind()==tetorica::InstrumentDefinition::Kind::Vab)
+        for(std::size_t i=0;i<ui.psfResult->banks.size();++i)
+          if(ui.psfResult->banks[i].bytes==ui.definition->bankBytes())
+          {ui.psfSelectedBank=i;break;}
       if(restored && ui.definition && ui.definition->kind()==tetorica::InstrumentDefinition::Kind::Builtin)
         ui.status="Legacy Sine restored. Builtin Sine selects full range.";
     }
@@ -1431,6 +1629,16 @@ void TetoricaSPU::updateInstrumentControls()
     ui.definition->kind() == tetorica::InstrumentDefinition::Kind::AdpcmSample;
   if (auto* control = graphics->GetControlWithTag(kCtrlLoadVab))
     if (control->IsDisabled() != ui.pickerOpen) control->SetDisabled(ui.pickerOpen);
+  if(auto* control=graphics->GetControlWithTag(kCtrlPsf))
+  {
+    if(control->IsDisabled()!=ui.pickerOpen)control->SetDisabled(ui.pickerOpen);
+    auto* button=static_cast<IVButtonControl*>(control);
+    const auto label=ui.psfSelectedBank&&ui.psfResult?
+      "PSF "+std::to_string(*ui.psfSelectedBank+1)+"/"+std::to_string(ui.psfResult->banks.size()):"PSF...";
+    if(std::strcmp(button->GetLabelStr(),label.c_str()))button->SetLabelStr(label.c_str());
+    const auto details=std::string("PSF1 / MiniPSF static VAB extraction. Open folder with related PSFLibs, then choose Entry / Bank. No song playback or PSF2.\n")+ui.psfDetails;
+    control->SetTooltip(details.c_str());
+  }
   if(auto* control=graphics->GetControlWithTag(kCtrlSaveWeb))
   {
     const bool disabled=ui.pickerOpen||mWebExporter.status().state==tetorica::WebInstrumentExporter::State::Writing;

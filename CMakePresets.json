@@ -57,6 +57,9 @@
       "name": "offline",
       "configurePreset": "offline",
       "targets": [
+        "psf_import_test",
+        "psf_loader_test",
+        "psf_instrument_test",
         "pcm_apply_test",
         "continuous_automation_test",
         "keyboard_performance_test",
@@ -96,6 +99,9 @@
       "name": "macos",
       "configurePreset": "macos",
       "targets": [
+        "psf_import_test",
+        "psf_loader_test",
+        "psf_instrument_test",
         "pcm_apply_test",
         "continuous_automation_test",
         "keyboard_performance_test",
@@ -139,6 +145,9 @@
       "name": "macos-release",
       "configurePreset": "macos-release",
       "targets": [
+        "psf_import_test",
+        "psf_loader_test",
+        "psf_instrument_test",
         "pcm_apply_test",
         "continuous_automation_test",
         "keyboard_performance_test",
@@ -183,6 +192,9 @@
       "configurePreset": "windows",
       "configuration": "Release",
       "targets": [
+        "psf_import_test",
+        "psf_loader_test",
+        "psf_instrument_test",
         "pcm_apply_test",
         "continuous_automation_test",
         "keyboard_performance_test",

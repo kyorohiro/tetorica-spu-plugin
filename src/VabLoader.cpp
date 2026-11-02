@@ -66,6 +66,13 @@ VabLoader::~VabLoader() {
 }
 
 VabLoader::Generation VabLoader::request(std::vector<std::uint8_t> complete,std::size_t flatTone) {
+  return requestBytesImpl(std::move(complete),flatTone,false);
+}
+VabLoader::Generation VabLoader::requestFirstPlayable(std::vector<std::uint8_t> complete) {
+  return requestBytesImpl(std::move(complete),0,true);
+}
+VabLoader::Generation VabLoader::requestBytesImpl(std::vector<std::uint8_t> complete,
+                                                std::size_t flatTone,bool firstPlayable) {
   Generation generation;
   {
     // Serialize generation issuance and job replacement together. Separate
@@ -79,6 +86,7 @@ VabLoader::Generation VabLoader::request(std::vector<std::uint8_t> complete,std:
     } else {
       mStatus={generation,State::Loading,{}};
       Job job;job.generation=generation;job.bytes=std::move(complete);job.flatTone=flatTone;
+      job.firstPlayable=firstPlayable;
       job.endpoints=endpoints;
       mJob.emplace(std::move(job));
     }

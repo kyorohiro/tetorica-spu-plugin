@@ -12,6 +12,7 @@
 #include "WebInstrumentLoader.h"
 #include "WebInstrumentExporter.h"
 #include "AudioFileLoader.h"
+#include "PsfLoader.h"
 #include "GainSmoother.h"
 #include "ContinuousAutomation.h"
 #include "UiMidiQueue.h"
@@ -115,7 +116,8 @@ enum ECtrlTags
   kCtrlKeyboardPitch,
   kCtrlPcmAutoApply,
   kCtrlPcmAutoInfo,
-  kCtrlTotalGain
+  kCtrlTotalGain,
+  kCtrlPsf
 };
 
 class TetoricaSPU final : public iplug::Plugin
@@ -174,6 +176,10 @@ private:
   void closeInstrumentUI() noexcept;
   void promptForVab();
   void promptForSplitVabPartner();
+  void promptForPsfFolder();
+  void requestPsfEntryFromUI(std::shared_ptr<const tetorica::PsfLoader::Document> document,
+    std::uint64_t revision, tetorica::SpuEngineExchange::Generation generation,
+    std::string entry);
   void prepareWebExportFromUI();
   void promptForWebExport();
   void requestBuiltinFromUI();
@@ -247,6 +253,7 @@ private:
   tetorica::WebInstrumentLoader mWebLoader;
   tetorica::WebInstrumentExporter mWebExporter;
   tetorica::AudioFileLoader mAudioLoader;
+  tetorica::PsfLoader mPsfLoader;
   // The render thread installs a prepared import tuple together with its
   // engine. Serialization uses the accepted tuple until this release marker.
   std::atomic<tetorica::SpuEngineExchange::Generation> mImportAppliedGeneration{0};

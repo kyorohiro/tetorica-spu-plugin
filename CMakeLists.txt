@@ -24,6 +24,21 @@ add_library(tetorica_vab STATIC src/VabBank.cpp)
 target_include_directories(tetorica_vab PUBLIC src)
 
 find_package(Threads REQUIRED)
+# The pinned iPlug2 tree already includes WDL's zlib. Compile a private,
+# prefixed copy so PSF imports need no system DLL or moving dependency.
+set(_psf_zlib "${CMAKE_CURRENT_SOURCE_DIR}/vendor/iPlug2OOS/iPlug2/WDL/zlib")
+add_library(tetorica_psf_zlib STATIC
+  ${_psf_zlib}/adler32.c ${_psf_zlib}/compress.c ${_psf_zlib}/crc32.c
+  ${_psf_zlib}/deflate.c ${_psf_zlib}/infback.c ${_psf_zlib}/inffast.c
+  ${_psf_zlib}/inflate.c ${_psf_zlib}/inftrees.c ${_psf_zlib}/trees.c
+  ${_psf_zlib}/uncompr.c ${_psf_zlib}/zutil.c)
+target_include_directories(tetorica_psf_zlib PRIVATE ${_psf_zlib})
+target_compile_definitions(tetorica_psf_zlib PRIVATE Z_PREFIX ZLIB_CONST)
+set_target_properties(tetorica_psf_zlib PROPERTIES C_VISIBILITY_PRESET hidden)
+add_library(tetorica_psf STATIC src/PsfImport.cpp src/PsfLoader.cpp)
+target_include_directories(tetorica_psf PUBLIC src PRIVATE ${_psf_zlib})
+target_compile_definitions(tetorica_psf PRIVATE Z_PREFIX ZLIB_CONST)
+target_link_libraries(tetorica_psf PUBLIC tetorica_vab Threads::Threads PRIVATE tetorica_psf_zlib)
 add_library(tetorica_spu_instrument STATIC
   src/SpuInstrument.cpp src/SpuWaveform.cpp src/SpuMorph.cpp src/SpuAdpcm.cpp
   src/SpuEngineExchange.cpp src/VabLoader.cpp src/InstrumentState.cpp
@@ -33,7 +48,7 @@ add_library(tetorica_spu_instrument STATIC
 target_include_directories(tetorica_spu_instrument PUBLIC src)
 target_include_directories(tetorica_spu_instrument SYSTEM PRIVATE
   vendor/iPlug2OOS/iPlug2/Dependencies/Extras)
-target_link_libraries(tetorica_spu_instrument PUBLIC tetorica::ps1_spu tetorica_vab Threads::Threads)
+target_link_libraries(tetorica_spu_instrument PUBLIC tetorica::ps1_spu tetorica_vab Threads::Threads tetorica_psf)
 # Keep cyclic encoder scoring and Morph blending equivalent to the Web's
 # separate IEEE754 operations on supported toolchains.
 if(MSVC)
@@ -46,6 +61,23 @@ add_executable(spu_vab_render tools/spu-vab-render.cpp)
 target_link_libraries(spu_vab_render PRIVATE tetorica_spu_instrument)
 
 if(BUILD_TESTING)
+  foreach(_case psf_import psf_loader)
+    add_executable(${_case}_test tests/${_case}_test.cpp)
+    target_link_libraries(${_case}_test PRIVATE tetorica_psf tetorica_psf_zlib)
+    target_include_directories(${_case}_test PRIVATE ${_psf_zlib})
+    target_compile_definitions(${_case}_test PRIVATE Z_PREFIX ZLIB_CONST
+      PSF_FIXTURE_DIR="${CMAKE_CURRENT_SOURCE_DIR}/tests/fixtures/psf"
+      VAB_FIXTURE_DIR="${CMAKE_CURRENT_SOURCE_DIR}/tests/fixtures/vab")
+    add_test(NAME spu.${_case} COMMAND ${_case}_test)
+    set_tests_properties(spu.${_case} PROPERTIES TIMEOUT 60)
+  endforeach()
+  add_executable(psf_instrument_test tests/psf_instrument_test.cpp)
+  target_link_libraries(psf_instrument_test PRIVATE tetorica_spu_instrument)
+  target_compile_definitions(psf_instrument_test PRIVATE
+    PSF_FIXTURE_DIR="${CMAKE_CURRENT_SOURCE_DIR}/tests/fixtures/psf"
+    VAB_FIXTURE_DIR="${CMAKE_CURRENT_SOURCE_DIR}/tests/fixtures/vab")
+  add_test(NAME spu.psf.instrument COMMAND psf_instrument_test)
+  set_tests_properties(spu.psf.instrument PROPERTIES TIMEOUT 60)
   add_executable(pcm_apply_test tests/pcm_apply_test.cpp)
   add_executable(continuous_automation_test tests/continuous_automation_test.cpp)
   target_include_directories(continuous_automation_test PRIVATE src)
