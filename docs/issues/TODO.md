@@ -54,9 +54,9 @@ Previewはannotated `v0.0.2` tagに基づくGitHub Prereleaseとして公開す�
 
 - [x] v0.0.1との差分・配布範囲・既知制限を確認し、CMake /config /APP・AU・VST3のversionを0.0.2へ揃えた。state schema11 /parameter27個 /ID /固定依存を維持し、文字・数値version整合を確認した。
 - [x] [公開文面の草稿](../release_notes_v0_0_2.md)へPSF folder /Entry /Bank /Program /Tone、抽出VAB保存復元、未対応PSF2 /CPU実行 /曲再生、実ゲーム・実聴・長時間未確認を明記した。CI /公証結果と証跡linkは成功後に追記する。
-- [ ] version /metadata・ローカルbuild /必要な検証を通し、同じ候補source SHAの通常2 /配布3 /署名3 CI jobsを通す。Windows x64 VST3とmacOS Universal APP /AU /VST3を対象にする。
-- [ ] 既存の隔離署名workflowでDeveloper ID署名・公証・stapleとcredential cleanupを確認し、同じ最終DMGをApple Silicon /Intelの実hostで検証する。Secrets値を取得・表示しない。
-- [ ] 最終Mac DMG /Windows ZIPとSHA256 sidecarの4filesを取得し、manifest /source /version /hash /署名・公証を照合して検証記録を保存する。既存v0.0.0 /v0.0.1 tag /assetsとinstalled AUは保持する。
+- [x] version /metadata・ローカルPython114 /Universal build /CTest35/35が成功し、候補source `626dcecfe50ab80c6e97cce803478d0774a3241a`の通常2 /配布3 /署名3 CI jobsすべて成功。Windows x64 VST3とmacOS Universal APP /AU /VST3を検証した。
+- [x] 既存の隔離署名workflowでDeveloper ID署名・公証Accepted・stapleとcredential cleanup成功を確認し、同じ最終DMGをApple Silicon /Intelの実hostで検証した。Secrets値を取得・表示していない。
+- [x] 最終Mac DMG /Windows ZIPとSHA256 sidecarの4filesを取得し、manifest /source /version /hash /署名・公証を照合した。[候補検証記録](../preview_v0_0_2_20261103.md)に初回手元xcrun失敗と同じDMGでの再検証成功も分けて保存。installed AUは不変、既存v0.0.0 /v0.0.1 tag /assetsを保持する。
 - [ ] 検証済みsourceへannotated v0.0.2 tagを作成・pushし、確認済み4filesと公開本文をGitHub Prereleaseへ公開する。公開後に再downloadしてbyte一致・remote tag・Release metadataを照合する。
 - [ ] README /TODO /公開記録と再開手順を更新してpushする。今回GarageBand projectやinstalled AUの変更は行わない。
 

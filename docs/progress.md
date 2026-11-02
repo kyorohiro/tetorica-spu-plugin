@@ -1,5 +1,12 @@
 # 作業記録
 
+## 2026-11-03 JST — v0.0.2 PSF Preview候補・全8CI jobs成功、公開準備
+
+- ユーザーがtag /GitHub Prerelease公開を指示。作業前TODO `419254a`の後、候補source `626dcecfe50ab80c6e97cce803478d0774a3241a`でCMake /config /3種plistを0.0.2へ揃えた。PSF追加を公開本文へまとめ、schema11 /27params /IDs /固定依存を維持した。
+- 固定依存 /version整合、Python114 /Universal build /CTest35/35、同じsourceの通常2 /配布3 /署名3 jobsが成功。公証Accepted /issuesなし、cleanup成功、同じ最終DMGのARM /Intel実AU /VST3検査を確認した。
+- 最終DMG /Windows ZIP /各sidecarを取得し、全manifest /source /version /hash /署名 /ticketを手元でも照合。手元Mac初回xcrun失敗は保持し、同じDMGでの単体stapler成功と全検証再試行成功を別記録にした。Windowsの実行はCIで行う。
+- [候補検証記録](preview_v0_0_2_20261103.md) /[32証跡とCI・配布hash](preview_v0_0_2_20261103.json)。手元AU全5filesは不変、GarageBand操作なし。次は検証済みsourceのtag /4filesをPrerelease公開・再download照合する。実ゲームPSF・実聴・長時間はユーザーが後日行う。
+
 ## 2026-11-03 JST — PSF版installed AU更新・GarageBand folder /保存再起動検証完了
 
 - 作業前TODO `211e9ac`。旧AU全5filesをReady版manifestと照合し、GarageBandを正常終了して退避付きでPSF実装`d379b60`へ更新した。旧AU2copyを保持し、新AUはbuild元 /installed /journal一致、auval成功・実AU host22 PASS。

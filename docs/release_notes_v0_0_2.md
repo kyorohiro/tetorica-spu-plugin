@@ -33,6 +33,10 @@ Each package includes license notices, a source/file manifest and a SHA256 sidec
 
 ## Verification and remaining checks
 
+All eight CI jobs passed on source [`626dcecfe50ab80c6e97cce803478d0774a3241a`](https://github.com/kyorohiro/tetorica-spu-plugin/tree/626dcecfe50ab80c6e97cce803478d0774a3241a): [core/native checks](https://github.com/kyorohiro/tetorica-spu-plugin/actions/runs/41546527681), [Mac/Windows packaging](https://github.com/kyorohiro/tetorica-spu-plugin/actions/runs/41546527632), and [signing/notarization plus Apple Silicon/Intel verification](https://github.com/kyorohiro/tetorica-spu-plugin/actions/runs/41546578256). Both Mac architectures checked the same final DMG. Apple's notarization result was Accepted, with no issues. The downloaded Mac and Windows candidates also passed local package verification.
+
 GarageBand 10.4.12 checks with original demo fixtures cover folder / Entry / Bank / Program / Tone selection, cancel / CRC failure preservation, and full quit / reopen without the PSF source files. The selected VAB and complete saved payload matched before and after restoration. These GUI checks used the PSF development build before the v0.0.2 version metadata change.
 
 Real-game PSF sets, physical listening and long-running DAW sessions remain unverified and are planned separately. Real-time automation gesture recording, general Windows DAW GUI/file panels and macOS 13 hardware also remain unverified. The previously recorded 1–3 PCM16 LSB differences near the beginning of some GarageBand exports are unresolved; no bit-identical DAW export claim is made.
+
+See the [candidate verification record](https://github.com/kyorohiro/tetorica-spu-plugin/blob/main/docs/preview_v0_0_2_20261103.md), [GarageBand PSF checks](https://github.com/kyorohiro/tetorica-spu-plugin/blob/main/docs/au_psf_update_20261103.md) and [TODO](https://github.com/kyorohiro/tetorica-spu-plugin/blob/main/docs/issues/TODO.md).

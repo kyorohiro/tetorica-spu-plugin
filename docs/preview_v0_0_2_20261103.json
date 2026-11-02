@@ -1,0 +1,1542 @@
+{
+  "date_jst": "2026-11-03",
+  "status": "verified candidate; tag and Release not created yet",
+  "version": "0.0.2",
+  "source_commit": "626dcecfe50ab80c6e97cce803478d0774a3241a",
+  "todo_commit": "419254a",
+  "local": {
+    "python_tests": 114,
+    "ctest_passed": 35,
+    "universal_build": true,
+    "version_consistent": true,
+    "raw_unsigned_inspection": {
+      "ok": false,
+      "reason": "Raw build outputs are unsigned; signature-enforcing checker rejected them. Staging ad-hoc package inspection then passed."
+    },
+    "ad_hoc_package": {
+      "ok": true,
+      "public_asset": false,
+      "report": "build/preview-v0.0.2-20261103/local-preview.json"
+    },
+    "signed_dmg_verification": {
+      "ok": true,
+      "report": "build/preview-v0.0.2-20261103/macos-verified.json",
+      "first_attempt": {
+        "ok": false,
+        "error": "xcrun failed; raw output withheld",
+        "report": "build/preview-v0.0.2-20261103/macos-verify-first-failure.json"
+      },
+      "manual_stapler_validate_exit_code": 0,
+      "retry_same_dmg_sha256": "b341587e6dca64b4c41295e988d154dd22e9097f0245ee6b6439750b237a7cd5",
+      "first_failure_cause": "not established; first failure retained, full retry passed"
+    }
+  },
+  "ci": {
+    "verify": {
+      "run": {
+        "conclusion": "success",
+        "created_at": "2026-11-02T23:34:54Z",
+        "event": "push",
+        "head_branch": "main",
+        "head_sha": "626dcecfe50ab80c6e97cce803478d0774a3241a",
+        "html_url": "https://github.com/kyorohiro/tetorica-spu-plugin/actions/runs/41546527681",
+        "id": 41546527681,
+        "name": "Verify SPU Plugin",
+        "run_attempt": 1,
+        "status": "completed",
+        "updated_at": "2026-11-02T23:40:18Z"
+      },
+      "jobs": {
+        "jobs": [
+          {
+            "completed_at": "2026-11-02T23:40:18Z",
+            "conclusion": "success",
+            "id": 125623347664,
+            "labels": [
+              "macos-15"
+            ],
+            "name": "macos",
+            "runner_name": "GitHub Actions 1000011919",
+            "started_at": "2026-11-02T23:34:57Z",
+            "status": "completed",
+            "steps": [
+              {
+                "completed_at": "2026-11-02T23:34:58Z",
+                "conclusion": "success",
+                "name": "Set up job",
+                "number": 1,
+                "started_at": "2026-11-02T23:34:57Z",
+                "status": "completed"
+              },
+              {
+                "completed_at": "2026-11-02T23:35:00Z",
+                "conclusion": "success",
+                "name": "Run actions/checkout@v4",
+                "number": 2,
+                "started_at": "2026-11-02T23:34:58Z",
+                "status": "completed"
+              },
+              {
+                "completed_at": "2026-11-02T23:35:01Z",
+                "conclusion": "success",
+                "name": "Verify safe AU installer in temporary directories",
+                "number": 3,
+                "started_at": "2026-11-02T23:35:00Z",
+                "status": "completed"
+              },
+              {
+                "completed_at": "2026-11-02T23:35:03Z",
+                "conclusion": "success",
+                "name": "Verify bounded GarageBand state inspection",
+                "number": 4,
+                "started_at": "2026-11-02T23:35:01Z",
+                "status": "completed"
+              },
+              {
+                "completed_at": "2026-11-02T23:35:19Z",
+                "conclusion": "success",
+                "name": "Initialize and verify pinned dependencies",
+                "number": 5,
+                "started_at": "2026-11-02T23:35:03Z",
+                "status": "completed"
+              },
+              {
+                "completed_at": "2026-11-02T23:35:19Z",
+                "conclusion": "success",
+                "name": "Run python3 scripts/bootstrap.py --check",
+                "number": 6,
+                "started_at": "2026-11-02T23:35:19Z",
+                "status": "completed"
+              },
+              {
+                "completed_at": "2026-11-02T23:35:29Z",
+                "conclusion": "success",
+                "name": "Run cmake --preset macos",
+                "number": 7,
+                "started_at": "2026-11-02T23:35:19Z",
+                "status": "completed"
+              },
+              {
+                "completed_at": "2026-11-02T23:38:17Z",
+                "conclusion": "success",
+                "name": "Run cmake --build --preset macos --parallel 4",
+                "number": 8,
+                "started_at": "2026-11-02T23:35:29Z",
+                "status": "completed"
+              },
+              {
+                "completed_at": "2026-11-02T23:38:36Z",
+                "conclusion": "success",
+                "name": "Run ctest --preset macos",
+                "number": 9,
+                "started_at": "2026-11-02T23:38:17Z",
+                "status": "completed"
+              },
+              {
+                "completed_at": "2026-11-02T23:38:41Z",
+                "conclusion": "success",
+                "name": "Install and validate the user AU",
+                "number": 10,
+                "started_at": "2026-11-02T23:38:36Z",
+                "status": "completed"
+              },
+              {
+                "completed_at": "2026-11-02T23:39:18Z",
+                "conclusion": "success",
+                "name": "Validate VST3",
+                "number": 11,
+                "started_at": "2026-11-02T23:38:41Z",
+                "status": "completed"
+              },
+              {
+                "completed_at": "2026-11-02T23:40:04Z",
+                "conclusion": "success",
+                "name": "Render and restore the actual VST3",
+                "number": 12,
+                "started_at": "2026-11-02T23:39:18Z",
+                "status": "completed"
+              },
+              {
+                "completed_at": "2026-11-02T23:40:11Z",
+                "conclusion": "success",
+                "name": "Restore embedded state in the actual AU",
+                "number": 13,
+                "started_at": "2026-11-02T23:40:04Z",
+                "status": "completed"
+              },
+              {
+                "completed_at": "2026-11-02T23:40:12Z",
+                "conclusion": "success",
+                "name": "Run actions/upload-artifact@v4",
+                "number": 14,
+                "started_at": "2026-11-02T23:40:11Z",
+                "status": "completed"
+              },
+              {
+                "completed_at": "2026-11-02T23:40:14Z",
+                "conclusion": "success",
+                "name": "Post Run actions/checkout@v4",
+                "number": 28,
+                "started_at": "2026-11-02T23:40:12Z",
+                "status": "completed"
+              },
+              {
+                "completed_at": "2026-11-02T23:40:15Z",
+                "conclusion": "success",
+                "name": "Complete job",
+                "number": 29,
+                "started_at": "2026-11-02T23:40:14Z",
+                "status": "completed"
+              }
+            ]
+          },
+          {
+            "completed_at": "2026-11-02T23:36:48Z",
+            "conclusion": "success",
+            "id": 125623347927,
+            "labels": [
+              "ubuntu-24.04"
+            ],
+            "name": "offline",
+            "runner_name": "GitHub Actions 1000011918",
+            "started_at": "2026-11-02T23:34:57Z",
+            "status": "completed",
+            "steps": [
+              {
+                "completed_at": "2026-11-02T23:34:59Z",
+                "conclusion": "success",
+                "name": "Set up job",
+                "number": 1,
+                "started_at": "2026-11-02T23:34:58Z",
+                "status": "completed"
+              },
+              {
+                "completed_at": "2026-11-02T23:35:00Z",
+                "conclusion": "success",
+                "name": "Run actions/checkout@v4",
+                "number": 2,
+                "started_at": "2026-11-02T23:34:59Z",
+                "status": "completed"
+              },
+              {
+                "completed_at": "2026-11-02T23:35:00Z",
+                "conclusion": "success",
+                "name": "Verify safe AU installer in temporary directories",
+                "number": 3,
+                "started_at": "2026-11-02T23:35:00Z",
+                "status": "completed"
+              },
+              {
+                "completed_at": "2026-11-02T23:35:01Z",
+                "conclusion": "success",
+                "name": "Verify bounded GarageBand state inspection",
+                "number": 4,
+                "started_at": "2026-11-02T23:35:00Z",
+                "status": "completed"
+              },
+              {
+                "completed_at": "2026-11-02T23:35:04Z",
+                "conclusion": "success",
+                "name": "Initialize pinned native SDK and JSON header",
+                "number": 5,
+                "started_at": "2026-11-02T23:35:01Z",
+                "status": "completed"
+              },
+              {
+                "completed_at": "2026-11-02T23:35:09Z",
+                "conclusion": "success",
+                "name": "Run cmake --preset offline",
+                "number": 6,
+                "started_at": "2026-11-02T23:35:04Z",
+                "status": "completed"
+              },
+              {
+                "completed_at": "2026-11-02T23:36:28Z",
+                "conclusion": "success",
+                "name": "Run cmake --build --preset offline --parallel 4",
+                "number": 7,
+                "started_at": "2026-11-02T23:35:09Z",
+                "status": "completed"
+              },
+              {
+                "completed_at": "2026-11-02T23:36:46Z",
+                "conclusion": "success",
+                "name": "Run ctest --preset offline",
+                "number": 8,
+                "started_at": "2026-11-02T23:36:28Z",
+                "status": "completed"
+              },
+              {
+                "completed_at": "2026-11-02T23:36:46Z",
+                "conclusion": "success",
+                "name": "Post Run actions/checkout@v4",
+                "number": 16,
+                "started_at": "2026-11-02T23:36:46Z",
+                "status": "completed"
+              },
+              {
+                "completed_at": "2026-11-02T23:36:46Z",
+                "conclusion": "success",
+                "name": "Complete job",
+                "number": 17,
+                "started_at": "2026-11-02T23:36:46Z",
+                "status": "completed"
+              }
+            ]
+          }
+        ],
+        "total_count": 2
+      },
+      "artifacts": {
+        "artifacts": [
+          {
+            "created_at": "2026-11-02T23:40:13Z",
+            "digest": "sha256:5cfe4d760752154e7822cb4a543554d8eee4e7c078962da594aaa723a984ca85",
+            "expired": false,
+            "expires_at": "2027-01-31T23:34:54Z",
+            "id": 13189272234,
+            "name": "macos-development-bundles",
+            "size_in_bytes": 2926534,
+            "workflow_run": {
+              "head_branch": "main",
+              "head_repository_id": 1440604693,
+              "head_sha": "626dcecfe50ab80c6e97cce803478d0774a3241a",
+              "id": 41546527681,
+              "repository_id": 1440604693
+            }
+          }
+        ],
+        "total_count": 1
+      }
+    },
+    "preview": {
+      "run": {
+        "conclusion": "success",
+        "created_at": "2026-11-02T23:34:54Z",
+        "event": "push",
+        "head_branch": "main",
+        "head_sha": "626dcecfe50ab80c6e97cce803478d0774a3241a",
+        "html_url": "https://github.com/kyorohiro/tetorica-spu-plugin/actions/runs/41546527632",
+        "id": 41546527632,
+        "name": "Build Preview Candidates",
+        "run_attempt": 1,
+        "status": "completed",
+        "updated_at": "2026-11-02T23:48:59Z"
+      },
+      "jobs": {
+        "jobs": [
+          {
+            "completed_at": "2026-11-02T23:41:45Z",
+            "conclusion": "success",
+            "id": 125623347604,
+            "labels": [
+              "windows-2022"
+            ],
+            "name": "windows",
+            "runner_name": "GitHub Actions 1000011921",
+            "started_at": "2026-11-02T23:34:58Z",
+            "status": "completed",
+            "steps": [
+              {
+                "completed_at": "2026-11-02T23:35:00Z",
+                "conclusion": "success",
+                "name": "Set up job",
+                "number": 1,
+                "started_at": "2026-11-02T23:34:59Z",
+                "status": "completed"
+              },
+              {
+                "completed_at": "2026-11-02T23:35:05Z",
+                "conclusion": "success",
+                "name": "Run actions/checkout@v4",
+                "number": 2,
+                "started_at": "2026-11-02T23:35:00Z",
+                "status": "completed"
+              },
+              {
+                "completed_at": "2026-11-02T23:35:05Z",
+                "conclusion": "success",
+                "name": "Run actions/setup-python@v5",
+                "number": 3,
+                "started_at": "2026-11-02T23:35:05Z",
+                "status": "completed"
+              },
+              {
+                "completed_at": "2026-11-02T23:35:09Z",
+                "conclusion": "success",
+                "name": "Verify portable Windows tooling",
+                "number": 4,
+                "started_at": "2026-11-02T23:35:05Z",
+                "status": "completed"
+              },
+              {
+                "completed_at": "2026-11-02T23:35:24Z",
+                "conclusion": "success",
+                "name": "Run python scripts/bootstrap.py",
+                "number": 5,
+                "started_at": "2026-11-02T23:35:09Z",
+                "status": "completed"
+              },
+              {
+                "completed_at": "2026-11-02T23:35:25Z",
+                "conclusion": "success",
+                "name": "Run python scripts/bootstrap.py --check",
+                "number": 6,
+                "started_at": "2026-11-02T23:35:24Z",
+                "status": "completed"
+              },
+              {
+                "completed_at": "2026-11-02T23:36:10Z",
+                "conclusion": "success",
+                "name": "Run cmake --preset windows",
+                "number": 7,
+                "started_at": "2026-11-02T23:35:25Z",
+                "status": "completed"
+              },
+              {
+                "completed_at": "2026-11-02T23:39:42Z",
+                "conclusion": "success",
+                "name": "Run cmake --build --preset windows --parallel 4",
+                "number": 8,
+                "started_at": "2026-11-02T23:36:10Z",
+                "status": "completed"
+              },
+              {
+                "completed_at": "2026-11-02T23:40:16Z",
+                "conclusion": "success",
+                "name": "Run ctest --preset windows",
+                "number": 9,
+                "started_at": "2026-11-02T23:39:42Z",
+                "status": "completed"
+              },
+              {
+                "completed_at": "2026-11-02T23:40:16Z",
+                "conclusion": "success",
+                "name": "Check built Windows resources (EXE is not distributed)",
+                "number": 10,
+                "started_at": "2026-11-02T23:40:16Z",
+                "status": "completed"
+              },
+              {
+                "completed_at": "2026-11-02T23:40:17Z",
+                "conclusion": "success",
+                "name": "Package VST3 candidate",
+                "number": 11,
+                "started_at": "2026-11-02T23:40:16Z",
+                "status": "completed"
+              },
+              {
+                "completed_at": "2026-11-02T23:41:36Z",
+                "conclusion": "success",
+                "name": "Verify exact packaged VST3",
+                "number": 12,
+                "started_at": "2026-11-02T23:40:17Z",
+                "status": "completed"
+              },
+              {
+                "completed_at": "2026-11-02T23:41:38Z",
+                "conclusion": "success",
+                "name": "Run actions/upload-artifact@v4",
+                "number": 13,
+                "started_at": "2026-11-02T23:41:36Z",
+                "status": "completed"
+              },
+              {
+                "completed_at": "2026-11-02T23:41:39Z",
+                "conclusion": "success",
+                "name": "Run actions/upload-artifact@v4",
+                "number": 14,
+                "started_at": "2026-11-02T23:41:38Z",
+                "status": "completed"
+              },
+              {
+                "completed_at": "2026-11-02T23:41:39Z",
+                "conclusion": "success",
+                "name": "Post Run actions/setup-python@v5",
+                "number": 27,
+                "started_at": "2026-11-02T23:41:39Z",
+                "status": "completed"
+              },
+              {
+                "completed_at": "2026-11-02T23:41:43Z",
+                "conclusion": "success",
+                "name": "Post Run actions/checkout@v4",
+                "number": 28,
+                "started_at": "2026-11-02T23:41:39Z",
+                "status": "completed"
+              },
+              {
+                "completed_at": "2026-11-02T23:41:43Z",
+                "conclusion": "success",
+                "name": "Complete job",
+                "number": 29,
+                "started_at": "2026-11-02T23:41:43Z",
+                "status": "completed"
+              }
+            ]
+          },
+          {
+            "completed_at": "2026-11-02T23:44:19Z",
+            "conclusion": "success",
+            "id": 125623348068,
+            "labels": [
+              "macos-15"
+            ],
+            "name": "macos",
+            "runner_name": "GitHub Actions 1000011920",
+            "started_at": "2026-11-02T23:35:02Z",
+            "status": "completed",
+            "steps": [
+              {
+                "completed_at": "2026-11-02T23:35:04Z",
+                "conclusion": "success",
+                "name": "Set up job",
+                "number": 1,
+                "started_at": "2026-11-02T23:35:03Z",
+                "status": "completed"
+              },
+              {
+                "completed_at": "2026-11-02T23:35:06Z",
+                "conclusion": "success",
+                "name": "Run actions/checkout@v4",
+                "number": 2,
+                "started_at": "2026-11-02T23:35:04Z",
+                "status": "completed"
+              },
+              {
+                "completed_at": "2026-11-02T23:35:06Z",
+                "conclusion": "success",
+                "name": "Run actions/setup-python@v5",
+                "number": 3,
+                "started_at": "2026-11-02T23:35:06Z",
+                "status": "completed"
+              },
+              {
+                "completed_at": "2026-11-02T23:35:10Z",
+                "conclusion": "success",
+                "name": "Run python3 -m unittest discover -s tests -p 'test_*.py' -v",
+                "number": 4,
+                "started_at": "2026-11-02T23:35:06Z",
+                "status": "completed"
+              },
+              {
+                "completed_at": "2026-11-02T23:35:24Z",
+                "conclusion": "success",
+                "name": "Run python3 scripts/bootstrap.py",
+                "number": 5,
+                "started_at": "2026-11-02T23:35:10Z",
+                "status": "completed"
+              },
+              {
+                "completed_at": "2026-11-02T23:35:24Z",
+                "conclusion": "success",
+                "name": "Run python3 scripts/bootstrap.py --check",
+                "number": 6,
+                "started_at": "2026-11-02T23:35:24Z",
+                "status": "completed"
+              },
+              {
+                "completed_at": "2026-11-02T23:35:34Z",
+                "conclusion": "success",
+                "name": "Run cmake --preset macos-release",
+                "number": 7,
+                "started_at": "2026-11-02T23:35:24Z",
+                "status": "completed"
+              },
+              {
+                "completed_at": "2026-11-02T23:41:34Z",
+                "conclusion": "success",
+                "name": "Run cmake --build --preset macos-release --parallel 4",
+                "number": 8,
+                "started_at": "2026-11-02T23:35:34Z",
+                "status": "completed"
+              },
+              {
+                "completed_at": "2026-11-02T23:41:54Z",
+                "conclusion": "success",
+                "name": "Run ctest --preset macos-release",
+                "number": 9,
+                "started_at": "2026-11-02T23:41:34Z",
+                "status": "completed"
+              },
+              {
+                "completed_at": "2026-11-02T23:42:03Z",
+                "conclusion": "success",
+                "name": "Package Universal staging copies with ad-hoc signatures",
+                "number": 10,
+                "started_at": "2026-11-02T23:41:54Z",
+                "status": "completed"
+              },
+              {
+                "completed_at": "2026-11-02T23:44:08Z",
+                "conclusion": "success",
+                "name": "Verify exact packaged AU and VST3",
+                "number": 11,
+                "started_at": "2026-11-02T23:42:03Z",
+                "status": "completed"
+              },
+              {
+                "completed_at": "2026-11-02T23:44:10Z",
+                "conclusion": "success",
+                "name": "Run actions/upload-artifact@v4",
+                "number": 12,
+                "started_at": "2026-11-02T23:44:08Z",
+                "status": "completed"
+              },
+              {
+                "completed_at": "2026-11-02T23:44:12Z",
+                "conclusion": "success",
+                "name": "Run actions/upload-artifact@v4",
+                "number": 13,
+                "started_at": "2026-11-02T23:44:10Z",
+                "status": "completed"
+              },
+              {
+                "completed_at": "2026-11-02T23:44:12Z",
+                "conclusion": "success",
+                "name": "Post Run actions/setup-python@v5",
+                "number": 25,
+                "started_at": "2026-11-02T23:44:12Z",
+                "status": "completed"
+              },
+              {
+                "completed_at": "2026-11-02T23:44:14Z",
+                "conclusion": "success",
+                "name": "Post Run actions/checkout@v4",
+                "number": 26,
+                "started_at": "2026-11-02T23:44:12Z",
+                "status": "completed"
+              },
+              {
+                "completed_at": "2026-11-02T23:44:17Z",
+                "conclusion": "success",
+                "name": "Complete job",
+                "number": 27,
+                "started_at": "2026-11-02T23:44:14Z",
+                "status": "completed"
+              }
+            ]
+          },
+          {
+            "completed_at": "2026-11-02T23:48:59Z",
+            "conclusion": "success",
+            "id": 125627216124,
+            "labels": [
+              "macos-15-intel"
+            ],
+            "name": "macos-intel",
+            "runner_name": "GitHub Actions 1000011925",
+            "started_at": "2026-11-02T23:44:23Z",
+            "status": "completed",
+            "steps": [
+              {
+                "completed_at": "2026-11-02T23:44:27Z",
+                "conclusion": "success",
+                "name": "Set up job",
+                "number": 1,
+                "started_at": "2026-11-02T23:44:24Z",
+                "status": "completed"
+              },
+              {
+                "completed_at": "2026-11-02T23:44:30Z",
+                "conclusion": "success",
+                "name": "Run actions/checkout@v4",
+                "number": 2,
+                "started_at": "2026-11-02T23:44:27Z",
+                "status": "completed"
+              },
+              {
+                "completed_at": "2026-11-02T23:44:30Z",
+                "conclusion": "success",
+                "name": "Run actions/setup-python@v5",
+                "number": 3,
+                "started_at": "2026-11-02T23:44:30Z",
+                "status": "completed"
+              },
+              {
+                "completed_at": "2026-11-02T23:44:54Z",
+                "conclusion": "success",
+                "name": "Run python3 scripts/bootstrap.py",
+                "number": 4,
+                "started_at": "2026-11-02T23:44:30Z",
+                "status": "completed"
+              },
+              {
+                "completed_at": "2026-11-02T23:44:55Z",
+                "conclusion": "success",
+                "name": "Run actions/download-artifact@v4",
+                "number": 5,
+                "started_at": "2026-11-02T23:44:54Z",
+                "status": "completed"
+              },
+              {
+                "completed_at": "2026-11-02T23:44:56Z",
+                "conclusion": "success",
+                "name": "Verify and unpack the same Universal candidate on Intel",
+                "number": 6,
+                "started_at": "2026-11-02T23:44:55Z",
+                "status": "completed"
+              },
+              {
+                "completed_at": "2026-11-02T23:48:49Z",
+                "conclusion": "success",
+                "name": "Run packaged Intel AU/VST3 and auval",
+                "number": 7,
+                "started_at": "2026-11-02T23:44:56Z",
+                "status": "completed"
+              },
+              {
+                "completed_at": "2026-11-02T23:48:49Z",
+                "conclusion": "success",
+                "name": "Post Run actions/setup-python@v5",
+                "number": 13,
+                "started_at": "2026-11-02T23:48:49Z",
+                "status": "completed"
+              },
+              {
+                "completed_at": "2026-11-02T23:48:52Z",
+                "conclusion": "success",
+                "name": "Post Run actions/checkout@v4",
+                "number": 14,
+                "started_at": "2026-11-02T23:48:49Z",
+                "status": "completed"
+              },
+              {
+                "completed_at": "2026-11-02T23:48:53Z",
+                "conclusion": "success",
+                "name": "Complete job",
+                "number": 15,
+                "started_at": "2026-11-02T23:48:52Z",
+                "status": "completed"
+              }
+            ]
+          }
+        ],
+        "total_count": 3
+      },
+      "artifacts": {
+        "artifacts": [
+          {
+            "created_at": "2026-11-02T23:44:12Z",
+            "digest": "sha256:a3492fa7b2f1ce042e60b40303e9010d62bd2bccb4a7825426d116df1a55bd28",
+            "expired": false,
+            "expires_at": "2027-01-31T23:34:54Z",
+            "id": 13189491827,
+            "name": "preview-macos-report",
+            "size_in_bytes": 1553,
+            "workflow_run": {
+              "head_branch": "main",
+              "head_repository_id": 1440604693,
+              "head_sha": "626dcecfe50ab80c6e97cce803478d0774a3241a",
+              "id": 41546527632,
+              "repository_id": 1440604693
+            }
+          },
+          {
+            "created_at": "2026-11-02T23:44:11Z",
+            "digest": "sha256:f1b237d3143ade47ff9ee0dc4c4fc19b1cf975245f71df74236d9fe91e11b450",
+            "expired": false,
+            "expires_at": "2027-01-31T23:34:54Z",
+            "id": 13189187806,
+            "name": "preview-macos-universal",
+            "size_in_bytes": 5682948,
+            "workflow_run": {
+              "head_branch": "main",
+              "head_repository_id": 1440604693,
+              "head_sha": "626dcecfe50ab80c6e97cce803478d0774a3241a",
+              "id": 41546527632,
+              "repository_id": 1440604693
+            }
+          },
+          {
+            "created_at": "2026-11-02T23:41:39Z",
+            "digest": "sha256:2c4beef95d5091264d7e41519e734a8484aed69959b57721d4a5abaf32ff777c",
+            "expired": false,
+            "expires_at": "2027-01-31T23:34:54Z",
+            "id": 13189072586,
+            "name": "preview-windows-report",
+            "size_in_bytes": 1941,
+            "workflow_run": {
+              "head_branch": "main",
+              "head_repository_id": 1440604693,
+              "head_sha": "626dcecfe50ab80c6e97cce803478d0774a3241a",
+              "id": 41546527632,
+              "repository_id": 1440604693
+            }
+          },
+          {
+            "created_at": "2026-11-02T23:41:38Z",
+            "digest": "sha256:1b0656f9222fb357f226d89278b343394ab765f27b3b4b76e7c18887abdd11ae",
+            "expired": false,
+            "expires_at": "2027-01-31T23:34:54Z",
+            "id": 13187579673,
+            "name": "preview-windows-x64-vst3",
+            "size_in_bytes": 916422,
+            "workflow_run": {
+              "head_branch": "main",
+              "head_repository_id": 1440604693,
+              "head_sha": "626dcecfe50ab80c6e97cce803478d0774a3241a",
+              "id": 41546527632,
+              "repository_id": 1440604693
+            }
+          }
+        ],
+        "total_count": 4
+      }
+    },
+    "signed": {
+      "run": {
+        "conclusion": "success",
+        "created_at": "2026-11-02T23:35:16Z",
+        "event": "workflow_dispatch",
+        "head_branch": "main",
+        "head_sha": "626dcecfe50ab80c6e97cce803478d0774a3241a",
+        "html_url": "https://github.com/kyorohiro/tetorica-spu-plugin/actions/runs/41546578256",
+        "id": 41546578256,
+        "name": "Build Signed macOS Candidate",
+        "run_attempt": 1,
+        "status": "completed",
+        "updated_at": "2026-11-02T23:48:09Z"
+      },
+      "jobs": {
+        "jobs": [
+          {
+            "completed_at": "2026-11-02T23:43:15Z",
+            "conclusion": "success",
+            "id": 125623513330,
+            "labels": [
+              "macos-15"
+            ],
+            "name": "sign",
+            "runner_name": "GitHub Actions 1000011922",
+            "started_at": "2026-11-02T23:35:20Z",
+            "status": "completed",
+            "steps": [
+              {
+                "completed_at": "2026-11-02T23:35:21Z",
+                "conclusion": "success",
+                "name": "Set up job",
+                "number": 1,
+                "started_at": "2026-11-02T23:35:21Z",
+                "status": "completed"
+              },
+              {
+                "completed_at": "2026-11-02T23:35:24Z",
+                "conclusion": "success",
+                "name": "Run actions/checkout@v4",
+                "number": 2,
+                "started_at": "2026-11-02T23:35:21Z",
+                "status": "completed"
+              },
+              {
+                "completed_at": "2026-11-02T23:35:25Z",
+                "conclusion": "success",
+                "name": "Run actions/setup-python@v5",
+                "number": 3,
+                "started_at": "2026-11-02T23:35:24Z",
+                "status": "completed"
+              },
+              {
+                "completed_at": "2026-11-02T23:35:28Z",
+                "conclusion": "success",
+                "name": "Run python3 -m unittest discover -s tests -p 'test_*.py' -v",
+                "number": 4,
+                "started_at": "2026-11-02T23:35:25Z",
+                "status": "completed"
+              },
+              {
+                "completed_at": "2026-11-02T23:35:46Z",
+                "conclusion": "success",
+                "name": "Run python3 scripts/bootstrap.py",
+                "number": 5,
+                "started_at": "2026-11-02T23:35:28Z",
+                "status": "completed"
+              },
+              {
+                "completed_at": "2026-11-02T23:35:47Z",
+                "conclusion": "success",
+                "name": "Run python3 scripts/bootstrap.py --check",
+                "number": 6,
+                "started_at": "2026-11-02T23:35:46Z",
+                "status": "completed"
+              },
+              {
+                "completed_at": "2026-11-02T23:35:57Z",
+                "conclusion": "success",
+                "name": "Run cmake --preset macos-release",
+                "number": 7,
+                "started_at": "2026-11-02T23:35:47Z",
+                "status": "completed"
+              },
+              {
+                "completed_at": "2026-11-02T23:41:46Z",
+                "conclusion": "success",
+                "name": "Run cmake --build --preset macos-release --parallel 4",
+                "number": 8,
+                "started_at": "2026-11-02T23:35:57Z",
+                "status": "completed"
+              },
+              {
+                "completed_at": "2026-11-02T23:42:04Z",
+                "conclusion": "success",
+                "name": "Run ctest --preset macos-release",
+                "number": 9,
+                "started_at": "2026-11-02T23:41:46Z",
+                "status": "completed"
+              },
+              {
+                "completed_at": "2026-11-02T23:42:09Z",
+                "conclusion": "success",
+                "name": "Prepare isolated signing and notary credentials",
+                "number": 10,
+                "started_at": "2026-11-02T23:42:04Z",
+                "status": "completed"
+              },
+              {
+                "completed_at": "2026-11-02T23:43:06Z",
+                "conclusion": "success",
+                "name": "Sign, notarize and staple the Universal candidate",
+                "number": 11,
+                "started_at": "2026-11-02T23:42:09Z",
+                "status": "completed"
+              },
+              {
+                "completed_at": "2026-11-02T23:43:06Z",
+                "conclusion": "success",
+                "name": "Remove temporary credentials on every exit",
+                "number": 12,
+                "started_at": "2026-11-02T23:43:06Z",
+                "status": "completed"
+              },
+              {
+                "completed_at": "2026-11-02T23:43:08Z",
+                "conclusion": "success",
+                "name": "Run actions/upload-artifact@v4",
+                "number": 13,
+                "started_at": "2026-11-02T23:43:06Z",
+                "status": "completed"
+              },
+              {
+                "completed_at": "2026-11-02T23:43:09Z",
+                "conclusion": "success",
+                "name": "Upload public signing and notarization records",
+                "number": 14,
+                "started_at": "2026-11-02T23:43:08Z",
+                "status": "completed"
+              },
+              {
+                "completed_at": "2026-11-02T23:43:09Z",
+                "conclusion": "success",
+                "name": "Post Run actions/setup-python@v5",
+                "number": 27,
+                "started_at": "2026-11-02T23:43:09Z",
+                "status": "completed"
+              },
+              {
+                "completed_at": "2026-11-02T23:43:11Z",
+                "conclusion": "success",
+                "name": "Post Run actions/checkout@v4",
+                "number": 28,
+                "started_at": "2026-11-02T23:43:09Z",
+                "status": "completed"
+              },
+              {
+                "completed_at": "2026-11-02T23:43:14Z",
+                "conclusion": "success",
+                "name": "Complete job",
+                "number": 29,
+                "started_at": "2026-11-02T23:43:11Z",
+                "status": "completed"
+              }
+            ]
+          },
+          {
+            "completed_at": "2026-11-02T23:45:34Z",
+            "conclusion": "success",
+            "id": 125626784027,
+            "labels": [
+              "macos-15"
+            ],
+            "name": "verify (macos-15, arm64)",
+            "runner_name": "GitHub Actions 1000011924",
+            "started_at": "2026-11-02T23:43:18Z",
+            "status": "completed",
+            "steps": [
+              {
+                "completed_at": "2026-11-02T23:43:20Z",
+                "conclusion": "success",
+                "name": "Set up job",
+                "number": 1,
+                "started_at": "2026-11-02T23:43:18Z",
+                "status": "completed"
+              },
+              {
+                "completed_at": "2026-11-02T23:43:22Z",
+                "conclusion": "success",
+                "name": "Run actions/checkout@v4",
+                "number": 2,
+                "started_at": "2026-11-02T23:43:20Z",
+                "status": "completed"
+              },
+              {
+                "completed_at": "2026-11-02T23:43:23Z",
+                "conclusion": "success",
+                "name": "Run actions/setup-python@v5",
+                "number": 3,
+                "started_at": "2026-11-02T23:43:22Z",
+                "status": "completed"
+              },
+              {
+                "completed_at": "2026-11-02T23:43:40Z",
+                "conclusion": "success",
+                "name": "Run python3 scripts/bootstrap.py",
+                "number": 4,
+                "started_at": "2026-11-02T23:43:23Z",
+                "status": "completed"
+              },
+              {
+                "completed_at": "2026-11-02T23:43:41Z",
+                "conclusion": "success",
+                "name": "Run actions/download-artifact@v4",
+                "number": 5,
+                "started_at": "2026-11-02T23:43:40Z",
+                "status": "completed"
+              },
+              {
+                "completed_at": "2026-11-02T23:43:47Z",
+                "conclusion": "success",
+                "name": "Verify and extract the final signed DMG",
+                "number": 6,
+                "started_at": "2026-11-02T23:43:41Z",
+                "status": "completed"
+              },
+              {
+                "completed_at": "2026-11-02T23:45:27Z",
+                "conclusion": "success",
+                "name": "Exercise the exact signed AU and VST3",
+                "number": 7,
+                "started_at": "2026-11-02T23:43:47Z",
+                "status": "completed"
+              },
+              {
+                "completed_at": "2026-11-02T23:45:29Z",
+                "conclusion": "success",
+                "name": "Run actions/upload-artifact@v4",
+                "number": 8,
+                "started_at": "2026-11-02T23:45:27Z",
+                "status": "completed"
+              },
+              {
+                "completed_at": "2026-11-02T23:45:29Z",
+                "conclusion": "success",
+                "name": "Post Run actions/setup-python@v5",
+                "number": 15,
+                "started_at": "2026-11-02T23:45:29Z",
+                "status": "completed"
+              },
+              {
+                "completed_at": "2026-11-02T23:45:30Z",
+                "conclusion": "success",
+                "name": "Post Run actions/checkout@v4",
+                "number": 16,
+                "started_at": "2026-11-02T23:45:29Z",
+                "status": "completed"
+              },
+              {
+                "completed_at": "2026-11-02T23:45:31Z",
+                "conclusion": "success",
+                "name": "Complete job",
+                "number": 17,
+                "started_at": "2026-11-02T23:45:30Z",
+                "status": "completed"
+              }
+            ]
+          },
+          {
+            "completed_at": "2026-11-02T23:48:09Z",
+            "conclusion": "success",
+            "id": 125626784031,
+            "labels": [
+              "macos-15-intel"
+            ],
+            "name": "verify (macos-15-intel, x86_64)",
+            "runner_name": "GitHub Actions 1000011923",
+            "started_at": "2026-11-02T23:43:19Z",
+            "status": "completed",
+            "steps": [
+              {
+                "completed_at": "2026-11-02T23:43:22Z",
+                "conclusion": "success",
+                "name": "Set up job",
+                "number": 1,
+                "started_at": "2026-11-02T23:43:20Z",
+                "status": "completed"
+              },
+              {
+                "completed_at": "2026-11-02T23:43:24Z",
+                "conclusion": "success",
+                "name": "Run actions/checkout@v4",
+                "number": 2,
+                "started_at": "2026-11-02T23:43:22Z",
+                "status": "completed"
+              },
+              {
+                "completed_at": "2026-11-02T23:43:25Z",
+                "conclusion": "success",
+                "name": "Run actions/setup-python@v5",
+                "number": 3,
+                "started_at": "2026-11-02T23:43:24Z",
+                "status": "completed"
+              },
+              {
+                "completed_at": "2026-11-02T23:43:46Z",
+                "conclusion": "success",
+                "name": "Run python3 scripts/bootstrap.py",
+                "number": 4,
+                "started_at": "2026-11-02T23:43:25Z",
+                "status": "completed"
+              },
+              {
+                "completed_at": "2026-11-02T23:43:47Z",
+                "conclusion": "success",
+                "name": "Run actions/download-artifact@v4",
+                "number": 5,
+                "started_at": "2026-11-02T23:43:46Z",
+                "status": "completed"
+              },
+              {
+                "completed_at": "2026-11-02T23:44:01Z",
+                "conclusion": "success",
+                "name": "Verify and extract the final signed DMG",
+                "number": 6,
+                "started_at": "2026-11-02T23:43:47Z",
+                "status": "completed"
+              },
+              {
+                "completed_at": "2026-11-02T23:48:03Z",
+                "conclusion": "success",
+                "name": "Exercise the exact signed AU and VST3",
+                "number": 7,
+                "started_at": "2026-11-02T23:44:01Z",
+                "status": "completed"
+              },
+              {
+                "completed_at": "2026-11-02T23:48:05Z",
+                "conclusion": "success",
+                "name": "Run actions/upload-artifact@v4",
+                "number": 8,
+                "started_at": "2026-11-02T23:48:03Z",
+                "status": "completed"
+              },
+              {
+                "completed_at": "2026-11-02T23:48:05Z",
+                "conclusion": "success",
+                "name": "Post Run actions/setup-python@v5",
+                "number": 15,
+                "started_at": "2026-11-02T23:48:05Z",
+                "status": "completed"
+              },
+              {
+                "completed_at": "2026-11-02T23:48:07Z",
+                "conclusion": "success",
+                "name": "Post Run actions/checkout@v4",
+                "number": 16,
+                "started_at": "2026-11-02T23:48:05Z",
+                "status": "completed"
+              },
+              {
+                "completed_at": "2026-11-02T23:48:08Z",
+                "conclusion": "success",
+                "name": "Complete job",
+                "number": 17,
+                "started_at": "2026-11-02T23:48:07Z",
+                "status": "completed"
+              }
+            ]
+          }
+        ],
+        "total_count": 3
+      },
+      "artifacts": {
+        "artifacts": [
+          {
+            "created_at": "2026-11-02T23:43:09Z",
+            "digest": "sha256:8d84b021072c64e571f242dc6c0870f4d81ee4e56b3c71bf0b924d066bf05663",
+            "expired": false,
+            "expires_at": "2027-01-31T23:35:18Z",
+            "id": 13189422842,
+            "name": "macos-signing-report",
+            "size_in_bytes": 3348,
+            "workflow_run": {
+              "head_branch": "main",
+              "head_repository_id": 1440604693,
+              "head_sha": "626dcecfe50ab80c6e97cce803478d0774a3241a",
+              "id": 41546578256,
+              "repository_id": 1440604693
+            }
+          },
+          {
+            "created_at": "2026-11-02T23:43:08Z",
+            "digest": "sha256:317c542f0b0e3a4a1d1ce927ddbd2c75c64aab2f3fc5fc8e4c8f5be7ec470760",
+            "expired": false,
+            "expires_at": "2027-01-31T23:35:18Z",
+            "id": 13189412842,
+            "name": "macos-signed-candidate",
+            "size_in_bytes": 6348014,
+            "workflow_run": {
+              "head_branch": "main",
+              "head_repository_id": 1440604693,
+              "head_sha": "626dcecfe50ab80c6e97cce803478d0774a3241a",
+              "id": 41546578256,
+              "repository_id": 1440604693
+            }
+          },
+          {
+            "created_at": "2026-11-02T23:45:29Z",
+            "digest": "sha256:a75f42c35ba645bc307ba930b919e1740d85fb9bb9c46c367b23cf9ffc0612fe",
+            "expired": false,
+            "expires_at": "2027-01-31T23:35:18Z",
+            "id": 13188819655,
+            "name": "macos-signed-verification-arm64",
+            "size_in_bytes": 2229,
+            "workflow_run": {
+              "head_branch": "main",
+              "head_repository_id": 1440604693,
+              "head_sha": "626dcecfe50ab80c6e97cce803478d0774a3241a",
+              "id": 41546578256,
+              "repository_id": 1440604693
+            }
+          },
+          {
+            "created_at": "2026-11-02T23:48:04Z",
+            "digest": "sha256:166df5d80b8ea9104084fb2c806c4750bb623581ce132e1deac47fcc74af497a",
+            "expired": false,
+            "expires_at": "2027-01-31T23:35:18Z",
+            "id": 13188269684,
+            "name": "macos-signed-verification-x86_64",
+            "size_in_bytes": 2228,
+            "workflow_run": {
+              "head_branch": "main",
+              "head_repository_id": 1440604693,
+              "head_sha": "626dcecfe50ab80c6e97cce803478d0774a3241a",
+              "id": 41546578256,
+              "repository_id": 1440604693
+            }
+          }
+        ],
+        "total_count": 4
+      }
+    }
+  },
+  "notarization": {
+    "log": "/Users/runner/work/tetorica-spu-plugin/tetorica-spu-plugin/release/signed/tetorica-spu-plugin-0.0.2-preview-626dcecfe50a-macos-universal-signed.notary-log.json",
+    "log_status": "Accepted",
+    "status": "Accepted",
+    "submission_id": "bd58ad8c-09f0-49d8-9194-7c397a04264b"
+  },
+  "notary_trust": {
+    "container": "signed-udif-dmg",
+    "gatekeeper_accepted": true,
+    "stapled_ticket_valid": true
+  },
+  "team_id": "5H7KW7PC7C",
+  "credential_cleanup": "success; no Secret values retrieved locally",
+  "same_final_dmg_architecture_reports": {
+    "arm64": {
+      "file": "build/preview-v0.0.2-20261103/arm64-report/signed-verified.json",
+      "sha256": "b341587e6dca64b4c41295e988d154dd22e9097f0245ee6b6439750b237a7cd5",
+      "ok": true,
+      "notary_trust": {
+        "container": "signed-udif-dmg",
+        "gatekeeper_accepted": true,
+        "stapled_ticket_valid": true
+      }
+    },
+    "x86_64": {
+      "file": "build/preview-v0.0.2-20261103/intel-report/signed-verified.json",
+      "sha256": "b341587e6dca64b4c41295e988d154dd22e9097f0245ee6b6439750b237a7cd5",
+      "ok": true,
+      "notary_trust": {
+        "container": "signed-udif-dmg",
+        "gatekeeper_accepted": true,
+        "stapled_ticket_valid": true
+      }
+    }
+  },
+  "candidate_files": [
+    {
+      "path": "release/preview-v0.0.2-20261103-ci/macos/tetorica-spu-plugin-0.0.2-preview-626dcecfe50a-macos-universal-signed.dmg",
+      "name": "tetorica-spu-plugin-0.0.2-preview-626dcecfe50a-macos-universal-signed.dmg",
+      "bytes": 6378604,
+      "sha256": "b341587e6dca64b4c41295e988d154dd22e9097f0245ee6b6439750b237a7cd5"
+    },
+    {
+      "path": "release/preview-v0.0.2-20261103-ci/macos/tetorica-spu-plugin-0.0.2-preview-626dcecfe50a-macos-universal-signed.dmg.sha256",
+      "name": "tetorica-spu-plugin-0.0.2-preview-626dcecfe50a-macos-universal-signed.dmg.sha256",
+      "bytes": 140,
+      "sha256": "12b0858b4091bde6a9f89cac933d3357691bc5eb9ef0a273f46d2f897d22d0c1"
+    },
+    {
+      "path": "release/preview-v0.0.2-20261103-ci/windows/tetorica-spu-plugin-0.0.2-preview-626dcecfe50a-windows-x64-vst3.zip",
+      "name": "tetorica-spu-plugin-0.0.2-preview-626dcecfe50a-windows-x64-vst3.zip",
+      "bytes": 918904,
+      "sha256": "658240dbfea6d743586ac91e47afbd86793de823fae9865a0a0eb7d1b4eedcd9"
+    },
+    {
+      "path": "release/preview-v0.0.2-20261103-ci/windows/tetorica-spu-plugin-0.0.2-preview-626dcecfe50a-windows-x64-vst3.zip.sha256",
+      "name": "tetorica-spu-plugin-0.0.2-preview-626dcecfe50a-windows-x64-vst3.zip.sha256",
+      "bytes": 135,
+      "sha256": "929671b30d3d816b1ce1ce8887866ee05eed19d15a33f1754dd7713724979a4e"
+    }
+  ],
+  "installed_au": {
+    "unchanged": true,
+    "current_expected_record": "docs/au_psf_update_20261103.json",
+    "file_sha256": {
+      "Contents/Info.plist": "507381a9e508b81e5c4e1f38690b0dd2650bc841946719dcf482150d6801f65a",
+      "Contents/MacOS/TetoricaSPU": "3bf9850ad573a243deb4b07ee6006c75a92f310625bb36003b568c0fffcb3e52",
+      "Contents/PkgInfo": "d06a80ba92de0833d0ed03de1b02b7c8913f126d9e8c8931b190765dd5d83b11",
+      "Contents/Resources/Roboto-Regular.ttf": "b2efabca5ea4bc56eea829713706b5cd0788b82aca153bd4adde9b1573933b4f",
+      "Contents/Resources/THIRD_PARTY_NOTICES.txt": "3e1b10da4cab5fa74ba088458d8c254755409424aed0a268d7a13775250e0323"
+    }
+  },
+  "previous_public_release_baseline": [
+    {
+      "assets": [
+        {
+          "digest": "sha256:90d187ac7245953fc30b56ce777e412ddbc4e83891c8f7c805052519b1fb0406",
+          "id": 701524784,
+          "name": "tetorica-spu-plugin-0.0.1-preview-b80a8a01fd27-macos-universal-signed.dmg",
+          "size": 5972086
+        },
+        {
+          "digest": "sha256:78b813eba614e52f2a0d8a97f6cc1188d1e82891f2bb6193582d6768c5d506bb",
+          "id": 701524785,
+          "name": "tetorica-spu-plugin-0.0.1-preview-b80a8a01fd27-macos-universal-signed.dmg.sha256",
+          "size": 140
+        },
+        {
+          "digest": "sha256:0487c53638f5e39c670ddd8b5086df029a14793aa757190fae7bb9c6c9af8c78",
+          "id": 701524786,
+          "name": "tetorica-spu-plugin-0.0.1-preview-b80a8a01fd27-windows-x64-vst3.zip",
+          "size": 857319
+        },
+        {
+          "digest": "sha256:3e43631d4783396bf2bd79e6784c63cf62d85b5d34f3d92f336141bab78720a4",
+          "id": 701524787,
+          "name": "tetorica-spu-plugin-0.0.1-preview-b80a8a01fd27-windows-x64-vst3.zip.sha256",
+          "size": 135
+        }
+      ],
+      "draft": false,
+      "id": 431381204,
+      "name": "Tetorica SPU Plugin v0.0.1 Preview",
+      "prerelease": true,
+      "published_at": "2026-11-02T11:30:23Z",
+      "tag_name": "v0.0.1"
+    },
+    {
+      "assets": [
+        {
+          "digest": "sha256:e93fa1451cbebf418c95ab6ffda4c7594ccc28fbc0661b0f56288533b1d2205a",
+          "id": 699920246,
+          "name": "tetorica-spu-plugin-0.0.0-preview-1e46aa64672d-macos-universal-signed.dmg",
+          "size": 5841170
+        },
+        {
+          "digest": "sha256:a4fa979cd132a3ed15e347b94d1e532cbe04f6e9845bdaa33c8361dafa08a707",
+          "id": 699920248,
+          "name": "tetorica-spu-plugin-0.0.0-preview-1e46aa64672d-macos-universal-signed.dmg.sha256",
+          "size": 140
+        },
+        {
+          "digest": "sha256:efb1a0436a7454795ae4a4b74815de4b8f546f1e3c0d5cda5fc8e21255b24044",
+          "id": 699920247,
+          "name": "tetorica-spu-plugin-0.0.0-preview-1e46aa64672d-windows-x64-vst3.zip",
+          "size": 840777
+        },
+        {
+          "digest": "sha256:335452e4d8628c5209696f0b7db9079baae73e4d6e7116359341d794b91fccb4",
+          "id": 699920250,
+          "name": "tetorica-spu-plugin-0.0.0-preview-1e46aa64672d-windows-x64-vst3.zip.sha256",
+          "size": 135
+        }
+      ],
+      "draft": false,
+      "id": 430946364,
+      "name": "Tetorica SPU Plugin v0.0.0 Preview",
+      "prerelease": true,
+      "published_at": "2026-11-02T00:09:36Z",
+      "tag_name": "v0.0.0"
+    }
+  ],
+  "previous_tag_refs": [
+    {
+      "object": {
+        "sha": "c4513717b2954fd00cd11bef512ad2710e2bab0b",
+        "type": "tag",
+        "url": "https://api.github.com/repos/kyorohiro/tetorica-spu-plugin/git/tags/c4513717b2954fd00cd11bef512ad2710e2bab0b"
+      },
+      "ref": "refs/tags/v0.0.0"
+    },
+    {
+      "object": {
+        "sha": "92a4a714cfd0c36ebd237a600044ed713a4285da",
+        "type": "tag",
+        "url": "https://api.github.com/repos/kyorohiro/tetorica-spu-plugin/git/tags/92a4a714cfd0c36ebd237a600044ed713a4285da"
+      },
+      "ref": "refs/tags/v0.0.1"
+    }
+  ],
+  "public_release_created": false,
+  "scope": {
+    "plugin_ids_changed": false,
+    "state_schema": 11,
+    "parameter_count": 27,
+    "psf": "static PSF1/MiniPSF VAB extraction; no PSF2/song playback/CPU/game-driver execution",
+    "game_banks_bundled": false,
+    "garageband_gui_source": "d379b60c4c695c6bb1cfbb26c16c52e91ab2b34d before version metadata change",
+    "garageband_record": "docs/au_psf_update_20261103.md",
+    "installed_au_updated_this_stage": false,
+    "garageband_projects_modified_this_stage": false
+  },
+  "remaining_checks": [
+    "real-game PSF sets (user plans later)",
+    "physical listening (user plans later)",
+    "long-duration sessions (user plans later)",
+    "real-time automation gesture recording",
+    "GarageBand export initial 1-3 PCM16 LSB difference cause",
+    "Windows general DAW GUI/file panels",
+    "macOS 13 hardware"
+  ],
+  "evidence": {
+    "build/preview-v0.0.2-20261103/arm64-report/signed-verified.json": {
+      "bytes": 17824,
+      "sha256": "f96a0e343787fe52a4cd578c26b75e75438faf5516106158c38b7f7945b0800d"
+    },
+    "build/preview-v0.0.2-20261103/build.log": {
+      "bytes": 14657,
+      "sha256": "fc31467c2ec62c236f5da672a0f426e86b63b93e57030c91ceb2b3bf6bae257e"
+    },
+    "build/preview-v0.0.2-20261103/bundle-check.log": {
+      "bytes": 1027,
+      "sha256": "d4ca3329080898068ef3c43e6fb4d382a709468c616d2bf42c8d9bea5ee6be41"
+    },
+    "build/preview-v0.0.2-20261103/checkpoint.json": {
+      "bytes": 1535,
+      "sha256": "931ab2d86388f041afce86242b5ad8af186113fd171c530f17c7d2f439457c51"
+    },
+    "build/preview-v0.0.2-20261103/ci-preview-artifacts.json": {
+      "bytes": 2218,
+      "sha256": "c2831c7c6812936c3798ba17da019d81c87fa95deaa8575b1765bddca293eae3"
+    },
+    "build/preview-v0.0.2-20261103/ci-preview-jobs.json": {
+      "bytes": 12313,
+      "sha256": "514a689568ecbc1f45ebf1b0414bc983a688e1b901b6ad50e0d6d4669d80760a"
+    },
+    "build/preview-v0.0.2-20261103/ci-preview-run.json": {
+      "bytes": 407,
+      "sha256": "0ddecdc6f3808815c45868d8e2d20e1bf9a2bd53bca3f7788ba9b798bef3c7fb"
+    },
+    "build/preview-v0.0.2-20261103/ci-signed-artifacts.json": {
+      "bytes": 2232,
+      "sha256": "17a55ddb13926cf6eabb0087f229580862b803856f59e7898c0f46d9e202f3f1"
+    },
+    "build/preview-v0.0.2-20261103/ci-signed-jobs.json": {
+      "bytes": 11306,
+      "sha256": "2bb3839a296ecaeb34b53ef827146d076f3474a907229674cd6a1749af8a7a2d"
+    },
+    "build/preview-v0.0.2-20261103/ci-signed-run.json": {
+      "bytes": 424,
+      "sha256": "071cf1eec4438b1f68e6cc567000b2fed319552f0d7689e7e4848854b67778a0"
+    },
+    "build/preview-v0.0.2-20261103/ci-verify-artifacts.json": {
+      "bytes": 592,
+      "sha256": "3141f3577919f0ebc8fdda32358143e487909c7355c4f56d7a0740689e7ba085"
+    },
+    "build/preview-v0.0.2-20261103/ci-verify-jobs.json": {
+      "bytes": 7517,
+      "sha256": "20ef7c1c0143a47ad0113b6734ed15c2fce02c3a61a16fa73eef0ed20bc82f29"
+    },
+    "build/preview-v0.0.2-20261103/ci-verify-run.json": {
+      "bytes": 400,
+      "sha256": "35aebb6217bc0208957f566550a2d015bf9f64760fcd68d054921423b8bae98d"
+    },
+    "build/preview-v0.0.2-20261103/configure.log": {
+      "bytes": 780,
+      "sha256": "ca32a7b6605be2cd4248f3228c3d8e9e672c65366cdcde0bda06125fb2cf8d8a"
+    },
+    "build/preview-v0.0.2-20261103/ctest.log": {
+      "bytes": 3883,
+      "sha256": "6f61a580304a8efe12dc5ade16f80cc69418cd84f0cad72e5af921ca347ea3ae"
+    },
+    "build/preview-v0.0.2-20261103/intel-report/signed-verified.json": {
+      "bytes": 17824,
+      "sha256": "1a13a63d774643a3a14f2f2b625c84742514a0fb9ff70d4a7484f8529cf70516"
+    },
+    "build/preview-v0.0.2-20261103/local-bundles.json": {
+      "bytes": 1027,
+      "sha256": "d4ca3329080898068ef3c43e6fb4d382a709468c616d2bf42c8d9bea5ee6be41"
+    },
+    "build/preview-v0.0.2-20261103/local-package.log": {
+      "bytes": 9687,
+      "sha256": "302ed9965b06d4dc8b0b41f6d3abfcaca71848ffa2c272dbf1595c16f87d07ec"
+    },
+    "build/preview-v0.0.2-20261103/local-preview.json": {
+      "bytes": 9687,
+      "sha256": "302ed9965b06d4dc8b0b41f6d3abfcaca71848ffa2c272dbf1595c16f87d07ec"
+    },
+    "build/preview-v0.0.2-20261103/macos-verified.json": {
+      "bytes": 17826,
+      "sha256": "068716a8804b9354e0501cdd877979e616dfe24095f333ca24307eb3e1547ca8"
+    },
+    "build/preview-v0.0.2-20261103/macos-verify-first-failure.json": {
+      "bytes": 1201,
+      "sha256": "e5f9c297cfe54593abe5329d3e1782ecdaf751aa9d912ec030041e1cecbaa8af"
+    },
+    "build/preview-v0.0.2-20261103/macos-verify-first-failure.log": {
+      "bytes": 60,
+      "sha256": "fca6cd66d70789f8191c3db13917e703eb3e12f02f19af8d6e5bbe70b15b1f65"
+    },
+    "build/preview-v0.0.2-20261103/macos-verify.log": {
+      "bytes": 17826,
+      "sha256": "068716a8804b9354e0501cdd877979e616dfe24095f333ca24307eb3e1547ca8"
+    },
+    "build/preview-v0.0.2-20261103/preflight.json": {
+      "bytes": 4005,
+      "sha256": "9f6dfc55492e4b817db1cdac086ad3488d61a2d0ff625d7409a20501beb7b419"
+    },
+    "build/preview-v0.0.2-20261103/python.log": {
+      "bytes": 19278,
+      "sha256": "065a73af9fbc04e5cee9d2b84b81567a27dbc032d14623d8e96594f2e196a18c"
+    },
+    "build/preview-v0.0.2-20261103/signing-report/build/macos-signed.json": {
+      "bytes": 18429,
+      "sha256": "69f961ea77df297c5bc41f1b5b5a96c68d66da791dd039e21df27f478f64b6fd"
+    },
+    "build/preview-v0.0.2-20261103/signing-report/release/signed/tetorica-spu-plugin-0.0.2-preview-626dcecfe50a-macos-universal-signed.notary-log.json": {
+      "bytes": 3684,
+      "sha256": "349d98c7cdbf075612f5b9d0befc88ad0f269385444bd29907eed09a1d729ae8"
+    },
+    "build/preview-v0.0.2-20261103/version-check.log": {
+      "bytes": 68,
+      "sha256": "9f6eed7aa5298a456c287acc01b4f8a76831817d54c0f1778daea6ffaacddb2c"
+    },
+    "build/preview-v0.0.2-20261103/windows-report/windows-inspection.json": {
+      "bytes": 2407,
+      "sha256": "e33545fc9819c8787de836c7cc4be6e180ecac7c9b5f695255a533a654dfeee0"
+    },
+    "build/preview-v0.0.2-20261103/windows-report/windows-preview.json": {
+      "bytes": 2163,
+      "sha256": "653f510b4d92feb9cd29f135f5f442d49d4c10179153f553683e4e4be407636d"
+    },
+    "build/preview-v0.0.2-20261103/windows-verified.json": {
+      "bytes": 451,
+      "sha256": "752708e14374348a98bda4c677ff2d33c87d4866cf7a4a7e0ea04fa65c2059a6"
+    },
+    "build/preview-v0.0.2-20261103/windows-verify.log": {
+      "bytes": 451,
+      "sha256": "752708e14374348a98bda4c677ff2d33c87d4866cf7a4a7e0ea04fa65c2059a6"
+    }
+  }
+}
