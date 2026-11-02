@@ -47,6 +47,16 @@ AUプリセット名warning解消と分割VH/VBのLoad sound対応も完了し�
 [最新の実装・配置・復元記録](../preset_split_vab_20261101.md) /[current installed AU manifest](../preset_split_vab_20261101.json)を参照。
 内蔵Sineの広域化も実装・CI成功した。[新build検証記録](../builtin_sine_range_20261102.md)を参照。手元installed AUは準備状態の表示改善版へ退避更新し、[最新manifest](../ready_status_20261102.json)とGarageBandのPCM /Gain380復元を確認した。
 
+### v0.0.1 Preview 公開（2026-11-02、着手）
+
+開始`772bf41`。ユーザーがtag作成・GitHub Preview公開を指示したため、公開前に今回の範囲を記録する。
+
+- [ ] 候補source `b80a8a01fd278bda4a1463bdebb6cd8b1fc49422`、全8CI jobs、最終DMG /Windows ZIPと各sidecarの4filesを再照合する。
+- [ ] 互換性・既知制限と導入方法を含む公開文面を確定する。v0.0.1 tag /Releaseの既存有無も確認し、既存tagやassetを無断で置き換えない。
+- [ ] 検証済みsourceへannotated `v0.0.1` tagを作成・pushし、4filesをPrereleaseへ公開する。buildや署名をやり直して別bytesの配布物にしない。
+- [ ] 公開後に全4assetsを新しい保存先へ再downloadし、候補・sidecar・GitHub digest・remote tagの参照先を照合する。
+- [ ] README /公開記録 /TODOを更新してpushする。手元AU・GarageBand project、既存v0.0.0 tag /Releaseは変更しない。
+
 ### v0.0.1 Preview 配布準備（2026-11-02、候補検証完了・未公開）
 
 開始`9084858`。ユーザーの続行指示により、v0.0.0以降の改善をまとめた次の配布候補を準備する。実装・build前に今回の範囲を記録する。
