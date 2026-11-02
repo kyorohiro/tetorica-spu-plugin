@@ -1,8 +1,8 @@
 // Tetorica instrument configuration; based on the iPlug2OOS template.
 #define PLUG_NAME "TetoricaSPU"
 #define PLUG_MFR "Tetorica"
-#define PLUG_VERSION_HEX 0x00000000
-#define PLUG_VERSION_STR "0.0.0"
+#define PLUG_VERSION_HEX 0x00000001
+#define PLUG_VERSION_STR "0.0.1"
 #define PLUG_UNIQUE_ID 'Tspu'
 #define PLUG_MFR_ID 'Tetr'
 #define PLUG_URL_STR "https://github.com/kyorohiro/tetorica-spu-plugin"

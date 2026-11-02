@@ -51,8 +51,8 @@ AUプリセット名warning解消と分割VH/VBのLoad sound対応も完了し�
 
 開始`9084858`。ユーザーの続行指示により、v0.0.0以降の改善をまとめた次の配布候補を準備する。実装・build前に今回の範囲を記録する。
 
-- [ ] v0.0.0との差分とversion定義を確認し、v0.0.1へ揃える。parameter ID /state schema /固定SDKは維持する。
-- [ ] Previewの変更点・導入方法・既知の制限を記録する。GarageBand exportの冒頭1〜3LSB差、リアルタイム操作録音・実聴・長時間動作の未確認を残す。
+- [x] v0.0.0との差分とversion定義を確認し、CMake /config /3種のplistをv0.0.1へ揃えた。parameter ID /state schema11 /固定SDKは維持する。
+- [x] [公開文面の下書き](../release_notes_v0_0_1.md)へ変更点・導入物・互換性・既知の制限を記録した。GarageBand exportの冒頭1〜3LSB差、リアルタイム操作録音・実聴・長時間動作の未確認を残す。
 - [ ] version /metadata整合と関連自動検査を実行し、macOS Universal /Windows x64のCI候補を作成する。
 - [ ] 既存の隔離署名workflowでmacOS候補のDeveloper ID署名・公証・stapleとARM /Intelの実AU /VST3検査を行う。secret値は取得・表示しない。
 - [ ] 候補のsource commit /artifact /hash /CI結果と再開手順を記録する。手元installed AUやGarageBand projectは変更しない。
