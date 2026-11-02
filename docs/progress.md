@@ -1,5 +1,14 @@
 # 作業記録
 
+## 2026-11-03 JST — PSF1 /MiniPSF folder import・静的VAB抽出、実装・CI完了
+
+- 作業前TODO `ed5a889`の後、実装`d379b60c4c695c6bb1cfbb26c16c52e91ab2b34d`でPSF1 /MiniPSF /PSFLib folder読込を追加した。PSF menuのEntry /Bankと既存Program /Toneで選び、抽出VABを従来のschema11へ埋め込む。PSF2 /曲再生 /CPU実行は含めない。
+- 固定iPlug2のWDL zlibをprivate prefixed static targetで使い、CRC /展開 /RAM coverage /VAB body guard・folder /依存上限を移植した。準備は非audio worker、取消 /古いticket /restoreを抑止。選択音色は元PSFなしで復元できる。
+- macOS APP /AU /VST3 build、CTest35/35、最終関連3/3と固定zlib ASan /UBSan3/3が成功。実AU22 PASS、実VST3の3 ratesとvalidator47 /0も成功した。
+- Standalone画面でMiniPSF＋階層PSFLib folder → PSF1/2 → Bank2/2、Builtin復帰で選択解除、Load soundからPSF直接読込を確認した。元folder削除後のVAB /44.1・48k PCM完全一致、pending state保持はintegration testで確認した。実聴・DAW独自PSF panelは未確認。
+- 同じsourceの[通常CI全2jobs](https://github.com/kyorohiro/tetorica-spu-plugin/actions/runs/41444849100)と[配布CI全3jobs](https://github.com/kyorohiro/tetorica-spu-plugin/actions/runs/41444848856)成功。Windows x64 VST3 /Mac ARM・Intelの候補実host検査を含む。
+- [操作・制約・再開記録](psf_import_20261102.md) /[source・CI・hash・証跡](psf_import_20261102.json)。手元installed AUとGarageBand project、公開済みv0.0.1は変更していない。次は退避付きAU更新と実DAWのPSF操作確認。
+
 ## 2026-11-02 JST — v0.0.1 Preview公開・全4assets再取得照合完了
 
 - ユーザーの公開指示を受け、作業前TODO `55bc5e3`を保存した。候補source `b80a8a01fd278bda4a1463bdebb6cd8b1fc49422`と全8CI成功・4候補filesを再照合し、annotated `v0.0.1` tagをそのsourceへ作成・pushした。

@@ -47,7 +47,7 @@ AUプリセット名warning解消と分割VH/VBのLoad sound対応も完了し�
 [最新の実装・配置・復元記録](../preset_split_vab_20261101.md) /[current installed AU manifest](../preset_split_vab_20261101.json)を参照。
 内蔵Sineの広域化も実装・CI成功した。[新build検証記録](../builtin_sine_range_20261102.md)を参照。手元installed AUは準備状態の表示改善版へ退避更新し、[最新manifest](../ready_status_20261102.json)とGarageBandのPCM /Gain380復元を確認した。
 
-### PSF1 /MiniPSF 静的VAB抽出のPlugin移植（2026-11-02、実装・ローカル検証完了、CI待ち）
+### PSF1 /MiniPSF 静的VAB抽出のPlugin移植（2026-11-02着手、11-03実装・CI結果記録）
 
 開始`c46c378`。ユーザーがWeb版のPSF抽出をPluginへ追加するよう指示したため、実装前に範囲を記録する。
 
@@ -56,9 +56,10 @@ AUプリセット名warning解消と分割VH/VBのLoad sound対応も完了し�
 - [x] Load soundからPSF /MiniPSFと必要なPSFLibを読み込み、抽出bank /Program /Toneを選べるUIを用意する。対応範囲と読めない理由を表示する。
 - [x] 抽出VABを既存embedded state経路へ渡し、元PSF /PSFLibなしで保存・再起動復元できるようにする。既存parameter ID /state schema /SDK pinは維持する。
 - [x] 自作demoと不正入力・依存順・欠損 /cycle /path /展開上限・coverage /曖昧bodyの自動検証、workerの失敗 /取消 /世代検証、実AU /VST3 /build /ローカル検証を行った。CTest35/35・関連ASan/UBSan3/3・実AU /VST3とStandalone画面確認が成功。CIは次の項目。
-- [ ] 結果・制約・操作方法・再開手順を記録してpushする。公開済みv0.0.1 tag /assetsと手元installed AU /GarageBand projectは今回変更しない。
+- [x] 結果・制約・操作方法・再開手順を記録した。実装`d379b60`をpush済み。公開済みv0.0.1 tag /assetsと手元installed AU /GarageBand projectは今回変更していない。
 
-- [ ] Windows /Mac ARM /IntelのCIを通し、結果を[記録](../psf_import_20261102.md)へ追記する。
+- [x] Windows /Mac ARM /IntelのCIを通し、同じsourceの通常2 /配布3 jobsすべて成功した。[記録](../psf_import_20261102.md) /[証跡JSON](../psf_import_20261102.json)。
+- [ ] 次は既知manifest照合・退避付きAU更新と、GarageBand独自file panelでPSF folder /Entry /Bank /保存復元の確認。元ゲームPSF・実聴・新version公開は別段階とする。
 
 ### v0.0.1 Preview 公開（2026-11-02、公開・再download照合完了）
 

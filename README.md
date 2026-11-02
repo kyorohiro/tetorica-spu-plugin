@@ -514,6 +514,10 @@ If libraries live above it, choose a wider folder with the PSF menu instead.
 Missing libraries, invalid files or unsupported bank layouts keep the previous
 sound; a valid catalog remains available for choosing another Entry.
 
+Like VAB imports, this retains current Gain, ADSR, Reverb, Noise, PMON, Morph
+and A/B settings; it does not import a PSF driver's performance settings.
+Choose Sample and turn Morph off when auditioning the original VAB Tone.
+
 This is static extraction of standard contiguous VAB data, without executing a
 game's CPU or sound driver. PSF2, full song playback, packed/runtime-generated
 banks and uncertain separate VH/VB layouts are not supported. Libraries never

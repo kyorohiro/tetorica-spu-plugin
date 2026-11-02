@@ -1,4 +1,4 @@
-# PSF1 /MiniPSF静的VAB抽出（2026-11-02 JST）
+# PSF1 /MiniPSF静的VAB抽出（2026-11-02着手、11-03結果記録 JST）
 
 開始`c46c378`、実装前TODO `ed5a889`。
 Web版と同じPSF1 /MiniPSFからの静的VAB抽出をNative Pluginへ移植した。公開済みv0.0.1には含まれない開発版の機能。
@@ -13,6 +13,7 @@ version /parameter ID /state schema11 /固定SDK /手元installed AUは変更し
 
 依存不足や展開失敗では以前の音を保持する。有効な索引ができた後の抽出失敗でもEntry menuは残る。
 hover時のPSF tooltipにEntry・bank数・棄却候補の理由を表示する。folder取消と古いdialog /worker結果は音源を変えない。
+既存VAB読込と同じくGain /ADSR /Reverb /Noise /PMON /Morph /A/Bを維持し、PSF driverの演奏設定は取り込まない。元Toneを試すときはSample /Morph Offにする。
 Builtin /別素材へ移るとPSF bankの表示を解除し、残っているcatalogを現在の音源と取り違えない。
 
 ## 処理と制限
@@ -45,10 +46,11 @@ path照合は完全一致を優先し、ASCII大文字小文字のfallbackは曖
 - Standalone実画面でDemo folderのMiniPSF＋階層PSFLib読込、PSF1/2 → 2/2、Builtin復帰で選択表示解除、Load soundからstandalone.psf直接読込を確認した。最後は検証アプリを終了した。
 
 自作fixtureのみを使用し、ゲーム素材は同梱していない。実聴・実DAW独自file panelでのPSF操作・実ゲームPSFの追試は未実施。
-Windowsを含むCI結果は実行後にここへ追記する。証跡は`build/psf-import-20261102/`。
+実装source `d379b60c4c695c6bb1cfbb26c16c52e91ab2b34d`の[通常CI 41444849100](https://github.com/kyorohiro/tetorica-spu-plugin/actions/runs/41444849100)は全2jobs、[配布CI 41444848856](https://github.com/kyorohiro/tetorica-spu-plugin/actions/runs/41444848856)は全3jobs成功。Windows x64 VST3と同じMac候補のARM /Intel実AU /VST3検査を含む。
+[機械可読記録](psf_import_20261102.json)へlocal /CI /binary /fixture /画面と証跡hashを保存した。証跡は`build/psf-import-20261102/`。
 
 ## 再開点
 
 手元installed AU /GarageBand projectと公開v0.0.1 assetsは今回更新していない。
-CI成功後、次は既知manifest照合・退避付きのAU更新と、実DAWでPSF folderを読み込む操作確認。
+次は既知manifest照合・退避付きのAU更新と、実DAWでPSF folderを読み込む操作確認。
 新しい公開versionの作成は別段階とする。
