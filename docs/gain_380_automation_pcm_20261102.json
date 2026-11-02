@@ -1,0 +1,176 @@
+{
+  "recorded_at": "2026-11-02T06:09:36.420473+00:00",
+  "source_commit": "850a79f937b3cb6e36c502a434c93b2321aa1332",
+  "source_parent_web_commit": "04316186",
+  "schema": 11,
+  "host_parameters": 27,
+  "gain": {
+    "maximum_percent": 380,
+    "legacy_id0_percent_range": [
+      0,
+      100
+    ],
+    "boost_id": 26,
+    "boost_range": [
+      1,
+      3.8
+    ],
+    "boost_default": 1
+  },
+  "tests": {
+    "offline_ctest": [
+      32,
+      32
+    ],
+    "macos_ctest": [
+      32,
+      32
+    ],
+    "asan_ubsan_ctest": [
+      32,
+      32
+    ],
+    "python_unittest": 114,
+    "au_pass_rows_including_summary": 22,
+    "vst3_pass_rows_including_summary": 63,
+    "vst3_rates": [
+      44100,
+      48000,
+      96000
+    ],
+    "validator_passed": 47,
+    "validator_failed": 0,
+    "timeline_tsan_two_producers": true
+  },
+  "standalone_ui": {
+    "gain380_orange": true,
+    "auto_apply_default_on": true,
+    "shape_selection_loaded_without_apply": true,
+    "manual_draft_guidance_when_off": true,
+    "manual_apply": true,
+    "stroke_completed_auto_apply": true,
+    "final_state": "Builtin Sine / All sound off / Gain 0%",
+    "listening_performed": false,
+    "garageband_project_changed": false
+  },
+  "evidence": [
+    {
+      "path": "build/macos/out/TetoricaSPU.app/Contents/MacOS/TetoricaSPU",
+      "bytes": 2477208,
+      "sha256": "b8d82355ba882412d59db4b07d2a77379cac974dc266a574709ec99be341bb10"
+    },
+    {
+      "path": "build/macos/out/TetoricaSPU.component/Contents/MacOS/TetoricaSPU",
+      "bytes": 1934232,
+      "sha256": "3137685f0a0b5b481ebf39a9afbf4f83a3f6823a42aa1212dd67dede0f26bc12"
+    },
+    {
+      "path": "build/macos/out/TetoricaSPU.vst3/Contents/MacOS/TetoricaSPU",
+      "bytes": 2233832,
+      "sha256": "62e2cec66f8a7eeecd2b5ce0b4dea2de39daeb12a2173e35678e46ef9e8405ed"
+    },
+    {
+      "path": "build/automation-au-final.log",
+      "bytes": 7049,
+      "sha256": "43bc184f5210c67fd7b16c4480c43ccc8e4e514ec81166ba90b9a14e47334c08"
+    },
+    {
+      "path": "build/automation-vst3-final.log",
+      "bytes": 19173,
+      "sha256": "c9c97080b0ca6686f5d3b128683a4e061ee1ca6862080a0facb518c1eeb9dffb"
+    },
+    {
+      "path": "build/automation-vst3-validator-final.log",
+      "bytes": 251207,
+      "sha256": "cb8849673323dfb5b99486c6d5aa13bb5b7cddc57d5d47b471ce3e1f5b1129fc"
+    }
+  ],
+  "published_release_changed": false,
+  "native_sdk_pin_changed": false,
+  "installed_au_changed": false,
+  "installed_au_sha256": "3f82bcff46f182c2bd370f92516759796aa72aa8d4cf3474716376037d94aa81",
+  "ci": {
+    "recorded_at": "2026-11-02T06:11:56.612Z",
+    "source_commit": "850a79f937b3cb6e36c502a434c93b2321aa1332",
+    "source": "GitHub Actions REST API via gh api",
+    "all_jobs_success": true,
+    "total_jobs": 5,
+    "workflows": [
+      {
+        "conclusion": "success",
+        "created_at": "2026-11-02T05:55:36Z",
+        "event": "push",
+        "head_branch": "main",
+        "head_sha": "850a79f937b3cb6e36c502a434c93b2321aa1332",
+        "html_url": "https://github.com/kyorohiro/tetorica-spu-plugin/actions/runs/41396824927",
+        "id": 41396824927,
+        "name": "Verify SPU Plugin",
+        "status": "completed",
+        "updated_at": "2026-11-02T06:02:10Z",
+        "jobs": [
+          {
+            "completed_at": "2026-11-02T05:56:49Z",
+            "conclusion": "success",
+            "html_url": "https://github.com/kyorohiro/tetorica-spu-plugin/actions/runs/41396824927/job/125119835732",
+            "id": 125119835732,
+            "name": "offline",
+            "started_at": "2026-11-02T05:55:39Z",
+            "status": "completed"
+          },
+          {
+            "completed_at": "2026-11-02T06:02:10Z",
+            "conclusion": "success",
+            "html_url": "https://github.com/kyorohiro/tetorica-spu-plugin/actions/runs/41396824927/job/125119836045",
+            "id": 125119836045,
+            "name": "macos",
+            "started_at": "2026-11-02T05:55:40Z",
+            "status": "completed"
+          }
+        ]
+      },
+      {
+        "conclusion": "success",
+        "created_at": "2026-11-02T05:55:36Z",
+        "event": "push",
+        "head_branch": "main",
+        "head_sha": "850a79f937b3cb6e36c502a434c93b2321aa1332",
+        "html_url": "https://github.com/kyorohiro/tetorica-spu-plugin/actions/runs/41396824926",
+        "id": 41396824926,
+        "name": "Build Preview Candidates",
+        "status": "completed",
+        "updated_at": "2026-11-02T06:09:25Z",
+        "jobs": [
+          {
+            "completed_at": "2026-11-02T06:01:46Z",
+            "conclusion": "success",
+            "html_url": "https://github.com/kyorohiro/tetorica-spu-plugin/actions/runs/41396824926/job/125119835774",
+            "id": 125119835774,
+            "name": "windows",
+            "started_at": "2026-11-02T05:55:40Z",
+            "status": "completed"
+          },
+          {
+            "completed_at": "2026-11-02T06:04:59Z",
+            "conclusion": "success",
+            "html_url": "https://github.com/kyorohiro/tetorica-spu-plugin/actions/runs/41396824926/job/125119836095",
+            "id": 125119836095,
+            "name": "macos",
+            "started_at": "2026-11-02T05:55:40Z",
+            "status": "completed"
+          },
+          {
+            "completed_at": "2026-11-02T06:09:24Z",
+            "conclusion": "success",
+            "html_url": "https://github.com/kyorohiro/tetorica-spu-plugin/actions/runs/41396824926/job/125122565961",
+            "id": 125122565961,
+            "name": "macos-intel",
+            "started_at": "2026-11-02T06:05:05Z",
+            "status": "completed"
+          }
+        ]
+      }
+    ],
+    "workflow_dispatch_performed": false,
+    "artifacts_downloaded": false
+  }
+}

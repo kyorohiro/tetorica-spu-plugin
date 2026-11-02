@@ -47,23 +47,30 @@ AUプリセット名warning解消と分割VH/VBのLoad sound対応も完了し�
 [最新の実装・配置・復元記録](../preset_split_vab_20261101.md) /[current installed AU manifest](../preset_split_vab_20261101.json)を参照。
 内蔵Sineの広域化も実装・CI成功した。[新build検証記録](../builtin_sine_range_20261102.md)を参照。手元installed AUは上のmanifestから変更していない。
 
-### Gain 380%・連続parameter automation・PCM即反映（2026-11-02、実装済み・最終検証中）
+### Gain 380%・連続parameter automation・PCM即反映（2026-11-02、実装・CI完了）
 
 開始`9a82e5b`。ユーザーがDAW automation改善の続行に加え、FM Synth / Web SPU Synth / Native SPU Pluginの380%と、PCM編集の分かりやすい反映操作を指定したため、実装前に記録する。
 
 - [x] 既存Gain ID0のrange0〜100% /normalized mappingと旧音量を維持し、ID26へGain Boost（1〜3.8、既定1）を追加する。画面は合計0〜380%のGainとし、100%超をorangeで区別する。
 - [x] schema11へbase GainとBoostを保存し、旧schema1〜10 /Gain-onlyをBoost1で読む。source /parameter ID0〜25を保持し、Web /Audio import時にも両Gain値を保つ。
 - [x] Gain /Boostのautomation pointを指定sample offsetで処理し、既存5ms smoothingの開始時刻を守る。Morph Amount /Reverb return左右にも同じ連続parameter schedulerを使う。
-- [ ] VST3の複数point、AUの時刻付きSet /Schedule、同offset /未来offset /block分割 /MIDI順序 /容量上限 /reset /bypassを検証する。固定容量・audio callback内の確保と待機lockを避け、他の離散parameterのblock処理と区別する。
+- [x] VST3の複数point、AUの時刻付きSet /Schedule、同offset /未来offset /block分割 /MIDI順序 /容量上限 /reset /bypassを検証する。固定容量・audio callback内の確保と待機lockを避け、他の離散parameterのblock処理と区別する。
 - [x] PCM /Morph endpointへAuto applyを既定Onで追加する。shape選択 /stroke完了時だけworker要求し、音源交換で保持音・残響が止まることを明示する。Offでは未反映表示とApplyボタンへ誘導する。
-- [ ] 速い編集のsupersession、重複、A→B→A、失敗 /取消 /restore /closeを検証する。開くだけで現在のVABを初期PCMへ置き換えない。
-- [ ] unit /sanitizer /実AU /VST3 /Standalone /CIと旧state回帰を確認し、README /parity plan /progressと再開記録をcommit /pushする。
+- [x] 速い編集のsupersession、重複、A→B→A、失敗 /取消 /restore /closeを検証する。開くだけで現在のVABを初期PCMへ置き換えない。
+- [x] unit /sanitizer /実AU /VST3 /Standalone /CIと旧state回帰を確認し、README /parity plan /progressと再開記録をcommit /pushする。
+
+単体・最終bundle /Standalone UI /CIの検証を完了した。
+
+- [x] 固定容量timelineのstep /ramp /同時刻 /未来carry /block分割 /不正値 /overflow /reset世代 /import baseline /callback new・delete 0を検証する。2 producerとrender /resetのThreadSanitizerも成功した。
+- [x] base /Boostの保存往復、旧schema1〜10のunity migration、不正Boost拒否、32MiB Software PCMとpending import tupleを検証する。
+- [x] PCM apply modelの既定On /未編集source保持 /重複 /A→B→A /manual draft /明示retry /restore /最新編集を検証する。
+- [x] Offline /macOS /ASan+UBSanの全core CTest各32件とPython114件を確認する（全ASan194.16秒）。
 
 親repoのFM /Web SPU380%も並行する。公開済み`v0.0.0` tag /assets、installed AU、Native SDK pinはこの作業では変更しない。
 
-ローカル途中検証はOffline /macOS CTest各32 /32、Python114、実AU22 PASS行・実VST3 63 PASS行（各summary込み）、validator47 /0まで成功した。
-timeline単体ASan /UBSanと2 producerのThreadSanitizerも成功。全core ASan・最終bundle /Standalone UI・CIは検証中のため上の検証項目は未完了とする。
-[仕様・検証の途中記録と再開点](../gain_380_automation_pcm_20261102.md)を参照。
+ローカル検証はOffline /macOS CTest各32 /32、Python114、実AU22 PASS行・実VST3 63 PASS行（各summary込み）、validator47 /0まで成功した。
+全core ASan /UBSan32 /32と2 producerのThreadSanitizerも成功。実装`850a79f`の最終bundle、Standalone Gain /Auto applyと[通常CI全2 jobs](https://github.com/kyorohiro/tetorica-spu-plugin/actions/runs/41396824927)・[配布CI全3 jobs](https://github.com/kyorohiro/tetorica-spu-plugin/actions/runs/41396824926)も成功した。
+[仕様・検証と残る実DAW確認](../gain_380_automation_pcm_20261102.md)を参照。
 
 ### 画面鍵盤のOctaveとPitch操作（2026-11-02、実装・CI完了）
 

@@ -1,7 +1,7 @@
 # Gain 380%・連続automation・PCM自動反映（2026-11-02 JST）
 
 開始`9a82e5b`、実装前TODO `c85e5e1`。ユーザーの続行指示により、Native SPU Pluginの音量上限、DAW automationの時刻処理、PCM編集の反映操作を実装した。
-この記録はローカル検証の途中経過で、最終sourceの再検証・Standalone UI・CIは完了後に追記する。
+確定した実装sourceは`850a79f937b3cb6e36c502a434c93b2321aa1332`。最終bundleとStandalone UIの確認を含む。
 親repoのFM Synth / Web SPU Synthの380%対応は並行作業とし、ここではNative Pluginの仕様と証跡を記録する。
 
 ## Gainと保存互換
@@ -29,6 +29,8 @@ block末尾と同じoffsetのpointは次blockのsample 0へ持ち越す。ramp�
 
 audio consumerとhost ingressは別の固定配列を使い、try-onceのatomic guardで受け渡す。
 容量超過・競合時は待たず、scheduled point / rampを破棄して最新のpublic targetへ戻す。MIDIのpanicと分離し、automation overflowだけで保持音を止めない。
+AUのevent /public target更新もtry-once guardで組にして扱い、同じparameterへの並行setterで順序が逆転するのを防ぐ。重なった呼び出しではfallbackを使い、厳密なoffset順序は保証しない。
+UI通知はatomic dirty maskへ集約し、UI threadで表示へ反映する。複数host threadからframeworkのSPSC通知queueへ書き込まない。
 reset / restore / bypassは旧timelineを破棄する。importされた音源では、immutableなimport tupleを開始値とし、当該block用の新しいingress pointを保持する。
 UIの手動parameter変更はoffset 0の新しいtargetとして、既存rampを上書きできる。
 
@@ -57,8 +59,11 @@ Offでは編集結果をdraftとして保持し、未反映表示と`Apply PCM` 
 | 公式VST3 validator | 47 passed /0 failed |
 | timeline単体のASan /UBSan | 成功、diagnosticなし |
 | timeline単体のThreadSanitizer | 2 host producer・render /reset consumer、計50,000点で成功 |
-| 全core suiteのASan | 最終結果待ち |
-| 最終bundle再検証・Standalone UI・CI | 未完了 |
+| 全core suiteのASan /UBSan | 32 /32成功、194.16秒 |
+| 最終bundle再検証 | 実AU22 PASS /VST3 63 PASS /validator47成功・0失敗 |
+| Standalone UI | Gain 380% orange、PCM自動・手動Applyを確認 |
+| 通常CI | [全2 jobs成功](https://github.com/kyorohiro/tetorica-spu-plugin/actions/runs/41396824927) |
+| 配布CI | [Windows /Mac Universal /Intel全3 jobs成功](https://github.com/kyorohiro/tetorica-spu-plugin/actions/runs/41396824926) |
 
 timeline unitでは、sample offset /同時刻 /未来point /block境界 /render分割 /負ramp /整数限界 /有限double両端 /overflow /不正入力 /reset世代 /import baseline /instance独立と、callback中のC++ new /delete 0を確認した。
 state unitではschema1〜10のBoost 1 migration、schema11のbase /Boost往復、不正Boostの拒否、32MiB Software PCM stateとpending import tupleを確認した。
@@ -69,10 +74,20 @@ PCM反映modelでは既定On /未編集source保持 /重複 /A→B→A /manual d
 AUではscheduled Set /Schedule /rampと、不正batchの拒否も確認している。
 単体の同時ingress検証と、実DAW固有の並行API呼び出し・UI操作の網羅検証は区別する。
 
+## Standaloneの画面確認
+
+検証用StandaloneのGainを380.0%へ上げ、orangeのbar・数値を確認した。
+以降の編集確認はGain 0%で行った。Sourceを開いた時点でAuto apply ON、元Builtinを保持していた。
+ShapeからTriangleを選ぶだけで`Embedded PCM cycle` /`Loaded`となり、Applyボタンが無効化された。
+Auto applyをOffにしてcanvasを描くと、`manual draft` /`Draft changed. Apply PCM to hear it and save it with the project.`を表示した。
+手動Apply後、Auto applyをOnに戻して追加strokeを描き、描き終わりだけで反映済み表示へ戻ることを確認した。
+最後はBuiltin Sine /All sound off /Gain 0%へ戻した。実聴とAU独自editor内の操作はこの確認に含めない。
+
 ## 再開・仕上げ
 
-最終sourceの再build後に、core ASan、実AU /VST3 /validator、StandaloneのGain /Auto apply /手描きPCMを確認する。
-続いて通常CIと配布CIを確認し、確定source・run URL・bundle /log hashをこの記録へ追加する。
+core ASan、実AU /VST3 /validator、StandaloneのGain /Auto apply /手描きPCMは確認した。
+通常CI全2 jobsと配布CI全3 jobsが、同じ実装source `850a79f`で成功した。
+[source・bundle・log hash・CI job metadata](gain_380_automation_pcm_20261102.json)に保存した。
 実DAWでのautomation描画 /録音 /editor操作、実deviceの聴感と長時間動作は別途追試する。
 
 公開済み`v0.0.0` tag /Release assets、手元installed AU、Native SDK pinは今回更新しない。

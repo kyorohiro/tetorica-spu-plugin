@@ -1,13 +1,16 @@
 # 作業記録
 
-## 2026-11-02 JST — Gain 380%・連続automation・PCM自動反映を実装、最終検証中
+## 2026-11-02 JST — Gain 380%・連続automation・PCM自動反映、検証・CI完了
 
 - 作業前TODO `c85e5e1`の後、画面Gainを0〜380%へ拡張した。旧ID0の0〜100% /normalized mappingを維持し、ID26へBoost 1〜3.8を追加。100%超をorangeで表示する。
 - schema11へbase /Boostの組を保存し、旧schema1〜10 /Gain-onlyはBoost 1で復元する。Web /Audio importでも両値を保持する。
 - Gain /Boost /Morph Amount /Reverb return左右を、固定容量のsample-offset timelineで処理する。VST3複数pointとAU Set /Schedule /ramp、block末尾のcarry、同時刻の後勝ち、overflowの最新target復帰を実装した。既存5ms smoothingを保つ。
 - PCM /Morph endpointへ既定OnのAuto applyを追加。shape選択 /stroke完了時にworker準備し、Offは未反映表示とApplyへ誘導する。未操作のVABをeditor起動だけで置き換えない。
-- この時点でOffline /macOS CTest各32 /32、Python114、実AU22 PASS行・実VST3 63 PASS行（各summary込み）、validator47 /0が成功した。timeline単体ASan /UBSan・2 producerとrender /resetのThreadSanitizerも成功した。
-- **次:** 最終sourceの全core ASan・bundle再検証・Standalone UI・CIを完了し、確定sourceと証跡hashを追記する。[仕様・ローカル検証・再開点](gain_380_automation_pcm_20261102.md)。公開済み`v0.0.0` /installed AU /SDK pinは更新しない。
+- この時点でOffline /macOS /ASan+UBSanのCTest各32 /32（全ASan194.16秒）、Python114、実AU22 PASS行・実VST3 63 PASS行（各summary込み）、validator47 /0が成功した。timeline単体ASan /UBSan・2 producerとrender /resetのThreadSanitizerも成功した。
+- AUの並行setterはtry-once guardでevent /公開値を組にし、競合時はlatest target fallbackとする。通知はatomic dirty mask経由でUIへ送り、frameworkのSPSC queueへ複数host threadから書かない。
+- 実装`850a79f`の最終AU22 PASS /VST3 63 PASS /validator47成功・0失敗と、Standaloneの380% orange /Auto apply Onのshape・stroke反映 /Offの未反映案内・手動Applyを確認した。
+- [通常CI全2 jobs](https://github.com/kyorohiro/tetorica-spu-plugin/actions/runs/41396824927)と[配布CI全3 jobs](https://github.com/kyorohiro/tetorica-spu-plugin/actions/runs/41396824926)も同じsourceで成功。Mac ARM /Intelの同じ配布ZIPとWindows VST3の検査を含む。[仕様・検証](gain_380_automation_pcm_20261102.md) /[source・hash・CI証跡](gain_380_automation_pcm_20261102.json)。
+- **残り:** 実DAWでのautomation録音・独自UI操作と実聴・長時間。新機能は開発版に含まれ、公開済み`v0.0.0` /installed AU /SDK pinは今回更新していない。
 
 ## 2026-11-02 JST — macOS Universal /Windows VST3配布候補・CI検証完了
 
