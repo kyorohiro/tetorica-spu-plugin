@@ -1,5 +1,13 @@
 # 作業記録
 
+## 2026-11-02 JST — Preparing /Ready /Loaded表示を統一・AU更新完了
+
+- 作業前TODO `05a3772`の後、`6cac7e8`で準備中と音声処理待ちを区別した。ReadyではApplyを再度押さずDAW再生を促し、Standaloneにはaudio settingsを案内する。PCM /Morphのボタン・説明とVAB /Web /WAVの上段を揃えた。
+- 実workerの音声callback停止モデルでReady維持→最初のblockでLoadedを確認し、失敗 /新要求 /restore /import tuple待ちの古い表示を検証した。macOS APP /AU /VST3 build、関連CTest3/3、ASan/UBSan1/1が成功した。
+- AUを前回manifest照合・2コピー退避付きで更新し、auvalと実AU22 PASSが成功。GarageBandの検証copyを保存・終了・再起動し、PCM /380% orange /Project sound restoredとpayload不変を確認した。新Ready文言を実AUで長く保持する操作確認は残る。
+- 同じ実装SHAの通常CI全2 jobsと配布CI全3 jobsが成功した。Windows VST3とMac ARM /Intel配布物の検証を含む。
+- [仕様・検証・CIと残る確認](ready_status_20261102.md) /[current installed AU manifest・rollback](ready_status_20261102.json)。次は実AUのOff描画 /Morph /Reverb操作・automation録音。公開Releaseは今回変更していない。
+
 ## 2026-11-02 JST — Gain380版installed AU更新・GarageBand保存復元完了
 
 - 作業前TODO `e4d8967`、配置した実装`850a79f`。旧installed全5filesをpreset/split版manifestと照合し、`au-update-zs33cpnr`へ旧bundle2組とrollback journalを残して更新した。新source /installedの全5files一致。

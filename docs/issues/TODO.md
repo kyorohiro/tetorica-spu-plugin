@@ -45,17 +45,19 @@ CC120のチャンネル別停止も実装・検証・[CI全2job成功](https://g
 [CC120版の配置・復元記録](../au_cc120_update_20261101.md)を参照。
 AUプリセット名warning解消と分割VH/VBのLoad sound対応も完了した。
 [最新の実装・配置・復元記録](../preset_split_vab_20261101.md) /[current installed AU manifest](../preset_split_vab_20261101.json)を参照。
-内蔵Sineの広域化も実装・CI成功した。[新build検証記録](../builtin_sine_range_20261102.md)を参照。手元installed AUはGain380版へ退避更新し、[最新manifest](../au_gain380_update_20261102.json)とGarageBand保存復元を確認した。
+内蔵Sineの広域化も実装・CI成功した。[新build検証記録](../builtin_sine_range_20261102.md)を参照。手元installed AUは準備状態の表示改善版へ退避更新し、[最新manifest](../ready_status_20261102.json)とGarageBandのPCM /Gain380復元を確認した。
 
-### 音源準備・音声処理待ちの表示改善（2026-11-02、開始）
+### 音源準備・音声処理待ちの表示改善（2026-11-02、実装・AU更新完了）
 
 開始`4139641`。ユーザーが表示改善の続行を指示したため、実装前に今回の範囲を記録する。
 
-- [ ] worker準備中、準備完了・host音声処理待ち、適用済みを区別し、上段・PCM/Morph Applyボタン・説明文を揃える。
-- [ ] ReadyではDAW再生を促し、準備済みの音源が次の音声処理で反映されることを説明する。host停止を検出したとは表示せず、plugin内鍵盤だけでhostを起動できるとも案内しない。
-- [ ] PCM /MorphとVAB /Web /WAVの既存準備・採用markerを使い、失敗・新しい要求・restoreで古いReady表示を残さない。音源交換・queue・state/schema /parameter /SDKは変更しない。
-- [ ] 状態遷移の必要な検証、macOS APP /AU /VST3 buildと実画面を確認し、必要な回帰・CIを実施する。
-- [ ] 結果と配置済みAUとの差分を記録してcommit /pushする。公開Release・tag /versionは変更しない。手元AUを更新する場合は既知manifest照合と退避を使う。
+- [x] worker準備中、準備完了・host音声処理待ち、適用済みを区別し、上段・PCM/Morph Applyボタン・説明文を揃える。
+- [x] ReadyではDAW再生を促し、準備済みの音源が次の音声処理で反映されることを説明する。host停止を検出したとは表示せず、plugin内鍵盤だけでhostを起動できるとも案内しない。Standaloneはaudio settingsへの案内に分けた。
+- [x] PCM /MorphとVAB /Web /WAVの既存準備・採用markerを使い、失敗・新しい要求・restoreで古いReady表示を残さない。音源交換・queue・state/schema /parameter /SDKは変更しない。
+- [x] 実workerを音声callbackなしで準備しReady維持→最初のblockでLoaded、失敗 /supersession /restore /import tupleを検証した。macOS APP /AU /VST3 build、関連CTest3件とASan/UBSan、Standalone Loaded画面、更新済みAUのauval /実host22 PASS /GarageBand復元を確認した。CIは[記録](../ready_status_20261102.md)を参照。
+- [x] 結果と配置済みAUのmanifestを記録する。実装`6cac7e8`をpush済み。公開Release・tag /versionは変更せず、既知manifest照合・退避付きで手元AUを更新した。
+
+[仕様・検証と残る実画面確認](../ready_status_20261102.md) /[current installed AU manifest](../ready_status_20261102.json)。
 
 Morph /Reverbの実DAW automation録音とv0.0.1 Preview公開は別の区切りとする。
 
@@ -73,7 +75,7 @@ Morph /Reverbの実DAW automation録音とv0.0.1 Preview公開は別の区切り
 
 配置済みAUのauval（27params）と実AU22 PASS、旧schema9 VAB→11のP3/T0/Gain99 /Boost1、Triangle /Gain100 /Boost3.8の保存復元が成功した。[配置・退避・戻し方と確認範囲](../au_gain380_update_20261102.md) /[current installed manifest](../au_gain380_update_20261102.json)。
 
-- [ ] worker準備中とReady（host音声処理待ち）をUIで区別する。GarageBand停止中はDAW再生が必要な場合があることを案内し、ReadyでもPreparingが続く表示を改善する。
+- [x] worker準備中とReady（host音声処理待ち）をUIで区別する。GarageBand停止中はDAW再生が必要な場合があることを案内し、ReadyでもPreparingが続く表示を改善した。[今回の記録](../ready_status_20261102.md)。
 - [ ] 実AU editorのAuto apply Offで描画・manual Apply、Morph /Reverbの操作とautomation描画・録音を追試する。人の直接操作とAI入力の制約を区別する。
 
 ### Gain 380%・連続parameter automation・PCM即反映（2026-11-02、実装・CI完了）

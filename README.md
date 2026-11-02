@@ -246,6 +246,13 @@ audio block. Held notes and old reverb tails stop at that exchange; play a new
 note to hear the new cycle. Gain, custom ADSR, Reverb and live wheel/pedal values
 are retained. Draft editing never writes sample RAM on the audio thread.
 
+**Preparing...** means the sound is still being prepared. **Ready** means it is
+prepared and waiting for host audio processing; start DAW playback if it stays
+Ready. You do not need to press Apply again. **Loaded** means the new sound has
+been applied. The upper status, PCM/Morph Apply button and explanation use the
+same stages. In the standalone app, Ready instead suggests checking audio
+settings if audio does not resume. See the [status verification record](docs/ready_status_20261102.md).
+
 This is a **software authoring feature**: Tetorica converts the drawn PCM to four
 looping SPU ADPCM packets. The SPU plays the encoded result with its normal
 quantization and Gaussian interpolation. The cyclic encoder scores the second
@@ -661,13 +668,13 @@ The ordinary `--install` still refuses a different existing bundle.
 ```sh
 python3 -m unittest discover -s tests -p 'test_install_au.py' -v
 python3 scripts/install_au.py --update \
-  --expected docs/au_gain380_update_20261102.json --backup-root build/au-backups
+  --expected docs/ready_status_20261102.json --backup-root build/au-backups
 # Use the printed manifest path to roll back; refuses an altered installation:
 python3 scripts/install_au.py --rollback build/au-backups/au-update-REPLACE/manifest.json
 ```
 
-The [Gain 380% AU update record](docs/au_gain380_update_20261102.md) contains the
-[current installed manifest](docs/au_gain380_update_20261102.json), retained backup
+The [Ready status AU update record](docs/ready_status_20261102.md) contains the
+[current installed manifest](docs/ready_status_20261102.json), retained backup
 and rollback procedure. The installed AU passed auval and the full AU host
 regressions, including channel-only CC120, preserved shared Reverb tails,
 PMON pair reuse, live Gain ramps and restore/reset/reactivation/bypass,
