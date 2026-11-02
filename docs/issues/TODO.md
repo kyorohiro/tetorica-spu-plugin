@@ -47,6 +47,17 @@ AUプリセット名warning解消と分割VH/VBのLoad sound対応も完了し�
 [最新の実装・配置・復元記録](../preset_split_vab_20261101.md) /[current installed AU manifest](../preset_split_vab_20261101.json)を参照。
 内蔵Sineの広域化も実装・CI成功した。[新build検証記録](../builtin_sine_range_20261102.md)を参照。手元installed AUは準備状態の表示改善版へ退避更新し、[最新manifest](../ready_status_20261102.json)とGarageBandのPCM /Gain380復元を確認した。
 
+### PSF対応AU更新・GarageBand検証（2026-11-03、着手）
+
+開始`8423bac`、PSF実装`d379b60`。ユーザーがAU更新とGarageBand確認の続行を指示したため、更新前に今回の範囲を記録する。
+
+- [ ] 現在のGarageBand project /transportとinstalled AU全filesを確認し、検証projectの別copyと元filesのhashを保持する。未知のユーザーprojectを上書きしない。
+- [ ] 既知manifest `ready_status_20261102.json`と旧AUを照合して全hostを正常終了し、退避・rollback journal付きでPSF版AUへ更新する。
+- [ ] 更新したinstalled AUの全file一致・auval・実AU hostを確認し、既存検証projectの音源 /設定を保存復元する。
+- [ ] 今回専用projectでPSF folder＋階層PSFLib、Entry /Bank /Program /Tone、取消 /error時の音源保持を確認する。AI操作が届かない場合は人の最小操作を依頼する。
+- [ ] PSFから選んだVABを保存・正常終了・再起動し、元PSF一式に依存せずbank bytes /Program /Toneが復元されることを実画面と保存payloadの両方で確認する。
+- [ ] 更新manifest・rollback・project退避・確認範囲・未確認事項を記録してpushする。公開v0.0.1のtag /assetsは変更しない。
+
 ### PSF1 /MiniPSF 静的VAB抽出のPlugin移植（2026-11-02着手、11-03実装・CI結果記録）
 
 開始`c46c378`。ユーザーがWeb版のPSF抽出をPluginへ追加するよう指示したため、実装前に範囲を記録する。
