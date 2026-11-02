@@ -47,6 +47,17 @@ AUプリセット名warning解消と分割VH/VBのLoad sound対応も完了し�
 [最新の実装・配置・復元記録](../preset_split_vab_20261101.md) /[current installed AU manifest](../preset_split_vab_20261101.json)を参照。
 内蔵Sineの広域化も実装・CI成功した。[新build検証記録](../builtin_sine_range_20261102.md)を参照。手元installed AUは準備状態の表示改善版へ退避更新し、[最新manifest](../ready_status_20261102.json)とGarageBandのPCM /Gain380復元を確認した。
 
+### v0.0.1 Preview 配布準備（2026-11-02、着手）
+
+開始`9084858`。ユーザーの続行指示により、v0.0.0以降の改善をまとめた次の配布候補を準備する。実装・build前に今回の範囲を記録する。
+
+- [ ] v0.0.0との差分とversion定義を確認し、v0.0.1へ揃える。parameter ID /state schema /固定SDKは維持する。
+- [ ] Previewの変更点・導入方法・既知の制限を記録する。GarageBand exportの冒頭1〜3LSB差、リアルタイム操作録音・実聴・長時間動作の未確認を残す。
+- [ ] version /metadata整合と関連自動検査を実行し、macOS Universal /Windows x64のCI候補を作成する。
+- [ ] 既存の隔離署名workflowでmacOS候補のDeveloper ID署名・公証・stapleとARM /Intelの実AU /VST3検査を行う。secret値は取得・表示しない。
+- [ ] 候補のsource commit /artifact /hash /CI結果と再開手順を記録する。手元installed AUやGarageBand projectは変更しない。
+- [ ] tag /公開Releaseは候補の検証後の別段階とし、今回は候補と公開文面まで用意する。
+
 ### GarageBand Morph /Reverb automation（2026-11-02、曲線再生・保存復元完了）
 
 開始`3425b36`。ユーザーの続行指示により、既存自動検証に加えて実DAWの操作・保存復元を確認する。操作前に今回の範囲を記録する。
