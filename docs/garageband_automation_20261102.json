@@ -1,0 +1,63 @@
+{
+  "schema": 1,
+  "recorded_at_utc": "2026-11-02T09:22:45.486622+00:00",
+  "starting_commit": "3425b36",
+  "todo_commit": "875e9cc",
+  "source_commit": "6cac7e8791acf1f4837a3f7e660f73fd034e90e7",
+  "status": "awaiting_direct_au_setup",
+  "garageband": {
+    "version": "10.4.12",
+    "build": "6182",
+    "test_project": "/Users/kyorohiro/development8/wfm/hello_ymfm/w/tetorica-spu-plugin/build/garageband-automation-20261102-zphye0it/spu-morph-reverb-automation.band",
+    "baseline_backup": "/Users/kyorohiro/development8/wfm/hello_ymfm/w/tetorica-spu-plugin/build/garageband-automation-20261102-zphye0it/baseline-before-automation.band",
+    "baseline_backup_file_count": 11,
+    "baseline_backup_verified": true,
+    "initial_kind": "PcmCycle",
+    "initial_payload_sha256": "bd6756f7001539754c1bb84f21edc93ea44b43a43057c5afbc14b0bf436e8a8b",
+    "observed_selected_parameter": "TetoricaSPU: Software morph A to B",
+    "observed_hand_drawn_points": 3,
+    "curve_saved": true,
+    "master_value": 0,
+    "original_master_value": 0.7119110226631165,
+    "transport_stopped": true,
+    "recording_stopped": true
+  },
+  "installed_au_manifest_matches": "docs/ready_status_20261102.json",
+  "verification": {
+    "morph_curve_created_and_seen": true,
+    "morph_playback_checked": false,
+    "reverb_curves_created": false,
+    "automation_reopen_checked": false,
+    "realtime_automation_recorded": false,
+    "listening_performed": false
+  },
+  "input_limitations": [
+    "Track parameter menu required direct selection; open menu caused CUA AX timeout",
+    "AU Source click did not change the plugin page"
+  ],
+  "pending_user_setup": [
+    "Shared preset Room",
+    "Source page",
+    "Morph On; keep Amount unchanged"
+  ],
+  "remaining": [
+    "Morph enabled playback with Amount/Result UI following the track curve",
+    "Reverb return left/right curves, enabled preset and playback",
+    "Save/normal quit/reopen and verify state plus automation curves",
+    "Restore/check master and stopped transport; record actual scope"
+  ],
+  "artifacts": {
+    "preflight.json": {
+      "path": "build/garageband-automation-20261102-zphye0it/preflight.json",
+      "sha256": "f9bac8c9810ec305d3a5cd8966f08361fccdf7a85c1a0dbe1524d9022a45f300"
+    },
+    "project-before-automation.json": {
+      "path": "build/garageband-automation-20261102-zphye0it/project-before-automation.json",
+      "sha256": "e70d2500ded8d61b6d187efd6e46831908f061f1652a15ba3a50d8ee74c27cb4"
+    },
+    "session-checkpoint.json": {
+      "path": "build/garageband-automation-20261102-zphye0it/session-checkpoint.json",
+      "sha256": "3febc41b72d0321d6270a939da48063a704dd0adf7f7a34ab14b543efac53f8c"
+    }
+  }
+}

@@ -1,5 +1,11 @@
 # 作業記録
 
+## 2026-11-02 JST — GarageBand automation確認のcheckpoint
+
+- 開始前TODO `875e9cc`。installed AUがReady版manifestと一致することを確認し、既知検証copyの全11filesを退避した。専用copy `build/garageband-automation-20261102-zphye0it/spu-morph-reverb-automation.band`を手動保存版から開いた。
+- GarageBand10.4.12で、人のparameter選択後にAIでMorph Amountの低→高→低3点曲線を作成・保存した。AU SourceへのAI clickが届かず、Room preset /Source /Morph Onの直接操作を依頼中。再生・automation録音・聴感・再起動復元は未確認。
+- [作業記録・現在の画面と再開手順](garageband_automation_20261102.md)。今回copyのmaster0 /再生・録音停止で待機している。公開Releaseは変更していない。
+
 ## 2026-11-02 JST — Preparing /Ready /Loaded表示を統一・AU更新完了
 
 - 作業前TODO `05a3772`の後、`6cac7e8`で準備中と音声処理待ちを区別した。ReadyではApplyを再度押さずDAW再生を促し、Standaloneにはaudio settingsを案内する。PCM /Morphのボタン・説明とVAB /Web /WAVの上段を揃えた。
