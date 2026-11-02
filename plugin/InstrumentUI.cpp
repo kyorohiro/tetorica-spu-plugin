@@ -11,6 +11,7 @@
 #include "PcmDraftState.h"
 #include "MorphDraftState.h"
 #include "PcmApplyState.h"
+#include "SoundPreparationStatus.h"
 #include "KeyboardPerformanceState.h"
 #include "PitchWheelControl.h"
 #include "TotalGainControl.h"
@@ -1187,7 +1188,7 @@ void TetoricaSPU::OnIdle()
               ui.audioCommitted=mEngines.commitPreparedImport(std::move(ready->engine),std::move(state));
               ui.audioDetails=std::move(ready->details);
               notify=true;ui.requested=0;ui.audioTicket=0;
-              ui.status="Ready. Waiting for an audio block.";
+              ui.status=tetorica::ui::kSoundReadyStatus;
             }
             catch(const std::exception& error)
             {ui.audioTicket=0;ui.status=std::string("Load failed: ")+error.what()+". Previous sound kept.";}
@@ -1235,7 +1236,7 @@ void TetoricaSPU::OnIdle()
               std::move(ready->imported.state));
             notify=true;
             ui.requested=0;ui.webTicket=0;
-            ui.status="Ready. Waiting for an audio block.";
+            ui.status=tetorica::ui::kSoundReadyStatus;
           }
           catch(const std::exception& error)
           { ui.webTicket=0;ui.status=std::string("Load failed: ")+error.what()+". Previous sound kept."; }
@@ -1259,7 +1260,7 @@ void TetoricaSPU::OnIdle()
       {
         if(mEngines.adoptedGeneration()==ui.requested)
         {ui.status="Loaded. Play MIDI or the keyboard.";ui.requested=0;}
-        else ui.status="Ready. Waiting for an audio block.";
+        else ui.status=tetorica::ui::kSoundReadyStatus;
       }
       else if (status.state == tetorica::VabLoader::State::Failed)
       {
@@ -1620,7 +1621,20 @@ void TetoricaSPU::updateInstrumentControls()
      loaderStatus.state == tetorica::VabLoader::State::Ready);
   const bool sameRequest = morph ? ui.pcmApply.sameRequest(ui.morphDraft.endpoints(), latest) :
     ui.pcmApply.sameRequest(ui.pcmDraft.cycle(), latest);
-  const bool preparingDraft = pending && sameRequest;
+  using PreparationPhase = tetorica::ui::SoundPreparationPhase;
+  const auto preparation = tetorica::ui::soundPreparationPhase(
+    sameRequest ? loaderStatus.generation : 0, latest, mEngines.adoptedGeneration(),
+    loaderStatus.state == tetorica::VabLoader::State::Loading,
+    loaderStatus.state == tetorica::VabLoader::State::Ready);
+  const bool preparingDraft = preparation == PreparationPhase::Preparing;
+  const bool draftMatches = morph ? endpointsApplied : draftApplied;
+  const auto importRequest = ui.audioCommitted == latest ? ui.audioCommitted : ui.webCommitted;
+  const auto importPreparation = tetorica::ui::soundPreparationPhase(
+    importRequest, latest, mImportAppliedGeneration.load(std::memory_order_acquire), false, true);
+  const bool readyDraft = preparation == PreparationPhase::Ready ||
+    (draftMatches && importPreparation == PreparationPhase::Ready);
+  const bool loadedDraft = !pending && draftMatches &&
+    mEngines.adoptedGeneration() == latest && importPreparation != PreparationPhase::Ready;
   if (!pending)
   {
     if (draftApplied) ui.pcmApply.synchronized(tetorica::ui::PcmApplyState::Target::Pcm);
@@ -1645,8 +1659,13 @@ void TetoricaSPU::updateInstrumentControls()
     const bool disabled = !needed;
     if (control->IsDisabled() != disabled) control->SetDisabled(disabled);
     auto* button = static_cast<IVButtonControl*>(control);
-    const char* label = preparingDraft ? "Preparing..." : morph ? "Apply Morph" : "Apply PCM";
+    const auto phase = preparingDraft ? PreparationPhase::Preparing :
+      readyDraft ? PreparationPhase::Ready : loadedDraft ? PreparationPhase::Loaded : PreparationPhase::Idle;
+    const char* label = tetorica::ui::soundPreparationButtonLabel(phase);
+    if (!label) label = morph ? "Apply Morph" : "Apply PCM";
     if (std::strcmp(button->GetLabelStr(), label)) button->SetLabelStr(label);
+    control->SetTooltip(readyDraft ? tetorica::ui::kSoundReadyDetails :
+      "Prepare the draft off the audio thread, then replace the sound. Held notes and reverb tails stop.");
   }
   if (auto* control = graphics->GetControlWithTag(kCtrlPcmRevert))
     if (control->IsDisabled() != pending) control->SetDisabled(pending);
@@ -1694,7 +1713,7 @@ void TetoricaSPU::updateInstrumentControls()
   }
   if (auto* control = graphics->GetControlWithTag(kCtrlPcmStatus))
   {
-    const char* message = preparingDraft ?
+    const char* message = readyDraft ? tetorica::ui::kSoundReadyDetails : preparingDraft ?
       "Preparing the latest edit. The sound changes when ready; held notes and reverb tails stop." :
       ui.pcmApply.enabled() ? (morph ? (endpointsApplied ?
         "Auto apply ON. A/B are applied and saved with the project. Amount is live." :
@@ -1717,7 +1736,7 @@ void TetoricaSPU::updateInstrumentControls()
   }
   if (auto* control = graphics->GetControlWithTag(kCtrlPcmInfo))
   {
-    const char* message = ui.pcmApply.enabled() ?
+    const char* message = readyDraft ? tetorica::ui::kSoundReadyInfo : ui.pcmApply.enabled() ?
       "112 samples -> SPU ADPCM.\nSelect a shape or release a stroke to hear it." :
       "Manual draft: press Apply PCM to hear/save edits.\nUnapplied edits are not saved with the project.";
     auto* text = static_cast<ITextControl*>(control);

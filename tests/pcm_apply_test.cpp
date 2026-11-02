@@ -3,12 +3,87 @@
 #include "../plugin/PcmApplyState.h"
 #include "../plugin/PcmDraftState.h"
 #include "../plugin/MorphDraftState.h"
+#include "../plugin/SoundPreparationStatus.h"
+#include "VabLoader.h"
+#include <chrono>
+#include <cstring>
 #include <iostream>
 #include <stdexcept>
+#include <thread>
 
 namespace {
 void require(bool value, const char* message) {
   if (!value) throw std::runtime_error(message);
+}
+
+tetorica::VabLoader::Status awaitPreparation(tetorica::VabLoader& loader,
+    tetorica::VabLoader::Generation generation) {
+  const auto deadline = std::chrono::steady_clock::now() + std::chrono::seconds(5);
+  while (std::chrono::steady_clock::now() < deadline) {
+    const auto status = loader.status();
+    require(status.generation == generation, "Unexpected worker generation");
+    if (status.state != tetorica::VabLoader::State::Loading) return status;
+    std::this_thread::sleep_for(std::chrono::milliseconds(1));
+  }
+  throw std::runtime_error("Sound preparation timed out");
+}
+
+void stoppedHostPreparation() {
+  using namespace tetorica;
+  using namespace tetorica::ui;
+  SpuEngineExchange exchange;
+  VabLoader loader(exchange);
+  const auto triangle = makePcmCycle(WaveformShape::Triangle);
+  const auto pcm = loader.requestPcmCycle(triangle);
+  auto status = awaitPreparation(loader, pcm);
+  require(status.state == VabLoader::State::Ready, "PCM worker failed");
+  PcmApplyState apply;
+  apply.requested(pcm, triangle);
+  const auto phase = [&] {
+    const auto s = loader.status();
+    return soundPreparationPhase(s.generation, exchange.latestGeneration(), exchange.adoptedGeneration(),
+      s.state == VabLoader::State::Loading, s.state == VabLoader::State::Ready);
+  };
+  // Exactly the GarageBand case: publication has completed, but the host has
+  // not called the audio callback. UI polling alone must never say Loaded.
+  for (int poll = 0; poll < 4; ++poll) {
+    require(phase() == SoundPreparationPhase::Ready, "A stopped host was mislabeled Preparing/Loaded");
+    require(!std::strcmp(soundPreparationButtonLabel(phase()), "Ready"), "Ready button is misleading");
+    require(!apply.requestNeeded(triangle, true, pcm, true), "Ready required another Apply request");
+    require(exchange.adoptedGeneration() != pcm, "UI observation adopted the engine");
+  }
+  require(exchange.beginBlock(48000), "First audio block did not adopt PCM");
+  require(phase() == SoundPreparationPhase::Loaded, "First audio block did not complete the status");
+
+  const auto morph = loader.requestMorphEndpoints(exchange.snapshotDefinition(),
+    {triangle, makePcmCycle(WaveformShape::Square)});
+  status = awaitPreparation(loader, morph);
+  require(status.state == VabLoader::State::Ready && phase() == SoundPreparationPhase::Ready,
+    "Morph endpoints did not wait for audio");
+  const auto newer = loader.requestBuiltin();
+  require(soundPreparationPhase(morph, exchange.latestGeneration(), exchange.adoptedGeneration(), false, true)
+    == SoundPreparationPhase::Idle, "Superseded Morph left a stale Ready status");
+  status = awaitPreparation(loader, newer);
+  require(status.state == VabLoader::State::Ready && exchange.beginBlock(48000), "New source did not adopt");
+  require(phase() == SoundPreparationPhase::Loaded, "New source stayed Ready after adoption");
+
+  const auto failed = loader.request({1, 2, 3}, 0);
+  status = awaitPreparation(loader, failed);
+  require(status.state == VabLoader::State::Failed && phase() == SoundPreparationPhase::Idle,
+    "A preparation failure left a stale Ready status");
+  const auto definition = InstrumentDefinition::builtinWide();
+  exchange.commitPrepared(prepareDefinition(*definition), definition);
+  require(phase() == SoundPreparationPhase::Idle, "Restore retained an old worker status");
+
+  SavedInstrumentState imported; imported.definition = definition;
+  const auto importGeneration = exchange.commitPreparedImport(prepareDefinition(*definition), imported);
+  require(soundPreparationPhase(importGeneration, exchange.latestGeneration(), 0, false, true)
+    == SoundPreparationPhase::Ready, "Prepared import skipped the wait for audio");
+  require(exchange.beginBlock(48000), "Import engine did not adopt");
+  require(soundPreparationPhase(importGeneration, exchange.latestGeneration(), 0, false, true)
+    == SoundPreparationPhase::Ready, "Engine-only adoption falsely completed the import tuple");
+  require(soundPreparationPhase(importGeneration, exchange.latestGeneration(), importGeneration, false, true)
+    == SoundPreparationPhase::Loaded, "Applied import tuple stayed Ready");
 }
 }
 
@@ -64,7 +139,8 @@ int main() {
     morph.set(endpointsA); morph.requested(7); morph.set(endpointsB); morph.requested(8);
     morph.refresh(endpointsA, 8, false);
     require(sameMorphEndpoints(morph.endpoints(), endpointsB), "Intermediate automatic endpoints erased the latest edit");
-    std::cout << "PASS PCM apply defaultOn=true untouchedSource=true duplicateSuppression=true returnToActive=true manualDraft=true explicitRetry=true restore=true newestEdit=true\n";
+    stoppedHostPreparation();
+    std::cout << "PASS PCM apply defaultOn=true untouchedSource=true duplicateSuppression=true returnToActive=true manualDraft=true explicitRetry=true restore=true newestEdit=true stoppedHostReady=true firstBlockLoaded=true staleStatusCleared=true importTupleMarker=true\n";
   } catch (const std::exception& error) {
     std::cerr << "FAIL PCM apply: " << error.what() << '\n'; return 1;
   }
