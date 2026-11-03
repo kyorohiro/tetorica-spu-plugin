@@ -2,6 +2,7 @@
 
 開始`c46c378`、実装前TODO `ed5a889`。
 Web版と同じPSF1 /MiniPSFからの静的VAB抽出をNative Pluginへ移植した。公開済みv0.0.1には含まれない開発版の機能。
+その後、[v0.0.2 Previewとして公開済み](release_v0_0_2_20261103.md)。以下は実装段階の記録。
 version /parameter ID /state schema11 /固定SDK /手元installed AUは変更していない。
 
 ## 操作

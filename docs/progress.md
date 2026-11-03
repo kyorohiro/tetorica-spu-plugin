@@ -1,5 +1,12 @@
 # 作業記録
 
+## 2026-11-03 JST — v0.0.2 PSF Preview公開・4assets再取得照合完了
+
+- 候補記録commit `de8a40c`の後、検証済みsource `626dcecfe50ab80c6e97cce803478d0774a3241a`へannotated v0.0.2 tagを作成・pushした。tag objectは`3cedad7410be422c7ad1c57aa72673aadfac18b6`で、後続docs commitではなく候補sourceを指す。
+- draftで本文 /source /全4assetsのsize・digestを照合し、[v0.0.2 Preview](https://github.com/kyorohiro/tetorica-spu-plugin/releases/tag/v0.0.2)を08:58:51 JSTにPrerelease公開した。最終DMG /Windows ZIPと各sidecarを別pathへ再downloadし、候補とのbyte一致 /SHA256 /sidecar /GitHub digestを確認した。
+- tag後の[追加通常CI41549097435](https://github.com/kyorohiro/tetorica-spu-plugin/actions/runs/41549097435)も同じsourceで全2jobs成功。既存v0.0.0 /v0.0.1のtag objects /公開metadata /全assetsは不変、手元AU全5filesも不変。今回GarageBand projectへ操作していない。
+- README /公開記録を更新した。[導入・公開・残る確認](release_v0_0_2_20261103.md) /[tag・4assets・再取得・CI証跡](release_v0_0_2_20261103.json)。実ゲームPSF・実聴・長時間はユーザーが後日行う。操作録音・冒頭1〜3LSB差等は引き続きTODO。
+
 ## 2026-11-03 JST — v0.0.2 PSF Preview候補・全8CI jobs成功、公開準備
 
 - ユーザーがtag /GitHub Prerelease公開を指示。作業前TODO `419254a`の後、候補source `626dcecfe50ab80c6e97cce803478d0774a3241a`でCMake /config /3種plistを0.0.2へ揃えた。PSF追加を公開本文へまとめ、schema11 /27params /IDs /固定依存を維持した。

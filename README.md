@@ -3,22 +3,22 @@
 PS1 SPU instrument for DAWs, using iPlug2 and tetorica-soundchip-native.
 Targets macOS Universal Standalone, AUv2 and VST3, plus Windows x64 VST3.
 
-[Download v0.0.1 Preview](https://github.com/kyorohiro/tetorica-spu-plugin/releases/tag/v0.0.1):
+[Download v0.0.2 Preview](https://github.com/kyorohiro/tetorica-spu-plugin/releases/tag/v0.0.2):
 macOS 13+ Universal Developer ID signed and notarized DMG (APP / AUv2 / VST3),
 or unsigned Windows x64 VST3 ZIP. See the
-[release verification record and remaining checks](docs/release_v0_0_1_20261102.md).
+[release verification record and remaining checks](docs/release_v0_0_2_20261103.md).
 
-This preview adds editor Octave /Pitch, Gain up to 380%, PCM Auto apply and
-clearer sound-preparation status. See the
-[changes and project compatibility notes](docs/release_notes_v0_0_1.md) and
-[candidate verification record](docs/preview_v0_0_1_20261102.md).
+This preview adds PSF1 / MiniPSF folder import and static VAB sound extraction,
+with Entry / Bank / Program / Tone selection and embedded project restoration.
+See the [changes and project compatibility notes](docs/release_notes_v0_0_2.md)
+and [candidate verification record](docs/preview_v0_0_2_20261103.md).
 
 Current prototype: full-range built-in Sine with legacy project playback, MIDI Note On/Off and velocity,
 24 voices, channel-aware note ownership, Pitch Bend, Sustain, All sound off,
 Gain, a PCM waveform editor, Software Morph, SPU Noise, paired PMON, custom ADSR editing, shared SPU Reverb and mouse keyboard.
 Load a complete VAB from the editor and select a Program and Tone to audition.
-Development builds after v0.0.1 also extract static VAB sounds from PSF1 /MiniPSF
-files and folders; see [PSF import](#psf1--minipsf-sounds-development-builds).
+Version 0.0.2 also extracts static VAB sounds from PSF1 /MiniPSF
+files and folders; see [PSF import](#psf1--minipsf-sounds).
 The bank, PCM cycle or imported ADPCM / Software PCM, Morph A/B endpoints, selection, Gain, ADSR, Reverb, Noise and PMON settings are embedded in the DAW project state.
 Additional SPU controls remain planned. The same VAB parser and selected-Tone
 engine can also be exercised with the offline tool below.
@@ -499,9 +499,9 @@ defers the switch. This layer does not make the entire host/framework callback
 lock-free. Each plugin instance owns its loader and joins it before destroying
 the engine exchange.
 
-## PSF1 / MiniPSF sounds (development builds)
+## PSF1 / MiniPSF sounds
 
-This feature is in the development tree after the published v0.0.1 Preview.
+Available in the v0.0.2 Preview.
 Use **PSF... → Open PSF folder...** to select a folder containing the PSF,
 MiniPSF and related PSFLib files. Subdirectories and relative library references
 inside the selected folder are retained. **Entry** chooses the PSF; **Bank**

@@ -47,7 +47,7 @@ AUプリセット名warning解消と分割VH/VBのLoad sound対応も完了し�
 [最新の実装・配置・復元記録](../preset_split_vab_20261101.md) /[current installed AU manifest](../preset_split_vab_20261101.json)を参照。
 内蔵Sineの広域化も実装・CI成功した。[新build検証記録](../builtin_sine_range_20261102.md)を参照。手元installed AUはPSF対応版へ退避更新し、[最新manifest](../au_psf_update_20261103.json)とGarageBandのPCM /Gain380復元、PSFの実DAW操作・保存再起動復元も確認した。下の結果記録を参照。
 
-### v0.0.2 PSF Preview公開（2026-11-03、着手）
+### v0.0.2 PSF Preview公開（2026-11-03、公開・再download照合完了）
 
 開始`9015b62`。ユーザーがPSF対応版のtag /GitHub Release公開を指示したため、version変更・build前に今回の範囲を記録する。
 Previewはannotated `v0.0.2` tagに基づくGitHub Prereleaseとして公開する。実ゲームPSF・実聴・長時間テストはユーザーが後日行う。
@@ -57,8 +57,10 @@ Previewはannotated `v0.0.2` tagに基づくGitHub Prereleaseとして公開す�
 - [x] version /metadata・ローカルPython114 /Universal build /CTest35/35が成功し、候補source `626dcecfe50ab80c6e97cce803478d0774a3241a`の通常2 /配布3 /署名3 CI jobsすべて成功。Windows x64 VST3とmacOS Universal APP /AU /VST3を検証した。
 - [x] 既存の隔離署名workflowでDeveloper ID署名・公証Accepted・stapleとcredential cleanup成功を確認し、同じ最終DMGをApple Silicon /Intelの実hostで検証した。Secrets値を取得・表示していない。
 - [x] 最終Mac DMG /Windows ZIPとSHA256 sidecarの4filesを取得し、manifest /source /version /hash /署名・公証を照合した。[候補検証記録](../preview_v0_0_2_20261103.md)に初回手元xcrun失敗と同じDMGでの再検証成功も分けて保存。installed AUは不変、既存v0.0.0 /v0.0.1 tag /assetsを保持する。
-- [ ] 検証済みsourceへannotated v0.0.2 tagを作成・pushし、確認済み4filesと公開本文をGitHub Prereleaseへ公開する。公開後に再downloadしてbyte一致・remote tag・Release metadataを照合する。
-- [ ] README /TODO /公開記録と再開手順を更新してpushする。今回GarageBand projectやinstalled AUの変更は行わない。
+- [x] 検証済みsource `626dcec`へannotated v0.0.2 tagを作成・pushし、確認済み4filesと公開本文をGitHub Prereleaseへ公開した。全4assetsを再downloadして候補とのbyte一致・sidecar /GitHub digest・remote tagを照合した。
+- [x] README /TODO /公開記録と再開手順を更新する。tag後の[追加通常CI全2jobs](https://github.com/kyorohiro/tetorica-spu-plugin/actions/runs/41549097435)も同じsourceで成功。今回GarageBand projectやinstalled AUは変更していない。
+
+[v0.0.2公開URL](https://github.com/kyorohiro/tetorica-spu-plugin/releases/tag/v0.0.2) /[公開・再取得記録](../release_v0_0_2_20261103.md)。実ゲームPSF・実聴・長時間テストはユーザーが後日行う。
 
 ### PSF対応AU更新・GarageBand検証（2026-11-03、完了）
 
